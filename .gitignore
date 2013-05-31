@@ -1,0 +1,9 @@
+target/
+.idea/
+.idea_modules/
+.ensime_lucene/
+.ensime
+*~
+tt-I/
+tt-II/
+tt-III/
