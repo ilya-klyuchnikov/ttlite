@@ -6,18 +6,6 @@ trait Common {
   case class Local(i: Int) extends Name
   case class Quote(i: Int) extends Name
 
-  trait Type
-  case class TFree(n: Name) extends Type
-  case class Fun(t1: Type, t2: Type) extends Type
-
-  trait Kind
-  case object Star extends Kind
-
-  trait Info
-  case class HasKind(k: Kind) extends Info
-  case class HasType(t: Type) extends Info
-
-  type Context = List[(Name, Info)]
   type Result[A] = Either[String, A]
   type NameEnv[V] = List[(Name, V)]
 
@@ -30,4 +18,8 @@ trait Common {
 
   // TODO
   val vars: Stream[String] = null
+
+  // utility
+  def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =
+    kvs.find(_._1 == k).map(_._2)
 }

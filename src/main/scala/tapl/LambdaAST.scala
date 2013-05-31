@@ -2,13 +2,15 @@ package tapl
 
 trait LambdaAST extends Common { self =>
   // inferable terms
-  trait ITerm
+  trait Term
+  trait ITerm extends Term
+  case class Ann(c1: CTerm, t: Type) extends ITerm
   case class Bound(i: Int) extends ITerm
   case class Free(n: Name) extends ITerm
   case class :@:(it: ITerm, ct: CTerm) extends ITerm
 
   // checkable terms
-  trait CTerm {
+  trait CTerm extends Term {
     def :@:(it: ITerm) = self.:@:(it, this)
   }
   case class Inf(inf: ITerm) extends CTerm
@@ -29,4 +31,18 @@ trait LambdaAST extends Common { self =>
     case VLam(f) => f(v)
     case VNeutral(n) => VNeutral(NApp(n, v))
   }
+
+  trait Type
+  case class TFree(n: Name) extends Type
+  case class Fun(t1: Type, t2: Type) extends Type
+
+  trait Kind
+  case object Star extends Kind
+
+  trait Info
+  // Type n > 1
+  case class HasKind(k: Kind) extends Info
+  // Type 0
+  case class HasType(t: Type) extends Info
+  type Context = List[(Name, Info)]
 }
