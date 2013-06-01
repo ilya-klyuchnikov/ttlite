@@ -50,8 +50,8 @@ trait REPL extends Common {
       }
     }
   }
-
-  def helpTxt(cs: List[Cmd]): String = ???
+  // TODO
+  def helpTxt(cs: List[Cmd]): String = ""
   val commands: List[Cmd] =
     List(
       Cmd(List(":type"),      "<expr>", x => TypeOf(x),               "print type of expression"),
@@ -114,8 +114,34 @@ trait REPL extends Common {
         }
 
     }
-  def handleStmt[I, C, V, T, TInf, Inf](i: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf], stmt: Stmt[I, TInf]): State[V, Inf] =
-    stmt match {
-      case _ => ???
+  def handleStmt[I, C, V, T, TInf, Inf](int: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf], stmt: Stmt[I, TInf]): State[V, Inf] = {
+    def checkEval(s: String, i: I): State[V, Inf] = {
+      int.iinfer(state.ne, state.ctx, i) match {
+        case None =>
+          state
+        case Some(y) =>
+          val v = int.ieval(state.ne, i)
+          if (s == "it"){
+            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(y))
+          } else {
+            Console.println(s"$s :: ${int.itprint(y)}")
+          }
+          State(state.interactive, "", (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx)
+      }
     }
+    stmt match {
+      case Assume(ass) => ass.foldLeft(state)(int.iassume)
+      case Let(x, e) => checkEval(x, e)
+      case Eval(e) => checkEval("it", e)
+      case PutStrLn(x) => Console.println(x); state
+      case Out(f) => state.copy(outFile = f)
+    }
+  }
+
+  def loop[I, C, V, T, TInf, Inf](int: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf]) {
+    val in = Console.readLine()
+    val cmd = interpretCommand(in)
+    val state1 = handleCommand(int, state, cmd)
+    loop(int, state1)
+  }
 }
