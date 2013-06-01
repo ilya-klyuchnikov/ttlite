@@ -31,8 +31,8 @@ trait REPL extends Common {
     def ihastype(t: T): Inf
     def icprint(c: C): String
     def itprint(t: T): String
-    val iiparse: PackratParser[I]
-    val isparse: PackratParser[Stmt[I, TInf]]
+    val iiparse: Parser[I]
+    val isparse: Parser[Stmt[I, TInf]]
     def iassume(s: State[V, Inf], x: (String, TInf)): State[V, Inf]
 
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
@@ -64,8 +64,8 @@ trait REPL extends Common {
   def interpretCommand(s: String): Command = {
     val in = s.trim.replaceAll(" +", " ")
     if (in.startsWith(":")) {
-      val (cmd, t) = in.span(_.isWhitespace)
-      commands.filter(_.cs.exists(cmd.startsWith(_))) match {
+      val (cmd, t) = in.span(!_.isWhitespace)
+      commands.filter(_.cs.exists(_.startsWith(cmd))) match {
         case Nil =>
           Console.println(s"Unknown command `$cmd'. Type :? for help.")
           Noop
@@ -139,6 +139,7 @@ trait REPL extends Common {
   }
 
   def loop[I, C, V, T, TInf, Inf](int: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf]) {
+    Console.print(int.iprompt)
     val in = Console.readLine()
     val cmd = interpretCommand(in)
     val state1 = handleCommand(int, state, cmd)
