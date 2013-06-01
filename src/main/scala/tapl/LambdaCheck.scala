@@ -40,7 +40,7 @@ trait LambdaCheck extends LambdaAST {
     case (Inf(e), ty) =>
       iType(ii, g, e).right.flatMap(ty1 =>
         if (ty1 == ty)
-          Right(ty1)
+          Right()
         else
           Left("type mismatch")
       )
@@ -52,7 +52,7 @@ trait LambdaCheck extends LambdaAST {
     case Ann(e, ty) => Ann(cSubst(i, r, e), ty)
     case Bound(j) => if (i == j) r else Bound(j)
     case Free(y) => Free(y)
-    case (e1 :@: e2) => iSubst(i, r, e1 :@: cSubst(i, r, e2))
+    case (e1 :@: e2) => iSubst(i, r, e1) :@: cSubst(i, r, e2)
   }
   def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
     case Inf(e) => Inf(iSubst(ii, r, e))
