@@ -16,8 +16,8 @@ trait Common {
   case class PutStrLm(s: String) extends Stmt[Nothing, Nothing]
   case class Out(s: String) extends Stmt[Nothing, Nothing]
 
-  // TODO
-  val vars: Stream[String] = null
+  val ids = "abcdefghijklmnopqrstuvwxyz"
+  val vars: List[String] = (for {i <- ids; j <- 1 to 10} yield s"$i$j").toList
 
   // utility
   def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =
