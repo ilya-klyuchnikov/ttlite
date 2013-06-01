@@ -2,15 +2,14 @@ package tapl
 
 trait LambdaAST extends Common { self =>
   // inferable terms
-  trait Term
-  trait ITerm extends Term
+  trait ITerm
   case class Ann(c1: CTerm, t: Type) extends ITerm
   case class Bound(i: Int) extends ITerm
   case class Free(n: Name) extends ITerm
   case class :@:(it: ITerm, ct: CTerm) extends ITerm
 
   // checkable terms
-  trait CTerm extends Term {
+  trait CTerm {
     def :@:(it: ITerm) = self.:@:(it, this)
   }
   case class Inf(inf: ITerm) extends CTerm
