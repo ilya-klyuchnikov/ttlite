@@ -6,7 +6,7 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
 
   object LambdaInterpreter extends Interpreter[ITerm, CTerm, Value, Type, Info, Info] with ImplicitConversions {
     lexical.reserved += ("assume", "let")
-    lexical.delimiters += ("(", ")", "::", ":=", ",", "->", "=>", ":", "*", "=", "\\")
+    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";")
     val iname: String = "the simply typed lambda calculus"
     val iprompt: String = "ST> "
 
@@ -53,8 +53,8 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
     def parseLam(ns: List[String]): Parser[CTerm] =
       ("\\" ~> (ident+) <~ "->") >> {ids => parseCTErm(0, ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, Info]] =
-      ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns)) ^^ {case x ~ y => Let(x, y)} |
-        ("assume" ~> parseBindings) ^^ {Assume(_)} | parseITErm(0, ns) ^^ {Eval(_)}
+      ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
+        ("assume" ~> parseBindings <~ ";") ^^ {Assume(_)} | parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
     def parseBindings(): Parser[List[(String, Info)]] =
       parseBinding ^^ {x => List(x)} | (("(" ~> parseBinding <~ ")")+)
     def parseBinding(): Parser[(String, Info)] =
