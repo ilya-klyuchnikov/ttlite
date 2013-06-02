@@ -54,7 +54,7 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
       ("\\" ~> (ident+) <~ "->") >> {ids => parseCTErm(0, ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, Info]] =
       ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns)) ^^ {case x ~ y => Let(x, y)} |
-        ("assume" ~> parseBindings) ^^ {Assume(_)}
+        ("assume" ~> parseBindings) ^^ {Assume(_)} | parseITErm(0, ns) ^^ {Eval(_)}
     def parseBindings(): Parser[List[(String, Info)]] =
       parseBinding ^^ {x => List(x)} | (("(" ~> parseBinding <~ ")")+)
     def parseBinding(): Parser[(String, Info)] =
