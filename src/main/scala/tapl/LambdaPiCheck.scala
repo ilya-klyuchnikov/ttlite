@@ -46,11 +46,11 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
         if (quote0(ty1) == quote0(ty))
           Right()
         else
-          Left("type mismatch")
+          Left(s"type mismatch: ${quote0(ty1)} != ${quote0(ty)}")
       )
     case (Lam(e), VPi(ty, ty1)) =>
       cType(ii + 1, (g._1, (Local(ii), ty) :: g._2 ), cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
-    case _ => Left("type mismatch")
+    case _ => Left(s"type mismatch: $ct")
   }
   def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
     case Ann(c, c1) => Ann(cSubst(i, r, c), cSubst(i, r, c1))
