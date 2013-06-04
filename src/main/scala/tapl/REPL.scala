@@ -45,8 +45,11 @@ trait REPL extends Common {
 
     def iinfer(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Option[T] = {
       iitype(ne, ctx, i) match {
-        case Right(t) => Some(t)
-        case Left(msg) => Console.println(msg); None
+        case Right(t) =>
+          Some(t)
+        case Left(msg) =>
+          Console.println(msg);
+          None
       }
     }
   }
