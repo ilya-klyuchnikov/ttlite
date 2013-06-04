@@ -7,6 +7,7 @@ trait LambdaPiQuote extends LambdaPiAST {
   def quote(ii: Int, v: Value): CTerm = v match {
     case VLam(f) => Lam(quote(ii + 1, f(vfree(Quote(ii)))))
     case VStar => Inf(Star)
+    case VPi(v, f) => Inf(Pi(quote(ii, v), quote(ii + 1, vfree(Quote(ii)))))
     case VNeutral(n) => Inf(neutralQuote(ii, n))
   }
 
