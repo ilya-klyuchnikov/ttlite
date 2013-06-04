@@ -69,6 +69,6 @@ object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck wit
   }
 
   def main(args: Array[String]) {
-    loop(LambdaInterpreter, State(true, null, List(), List()))
+    loop(LambdaInterpreter, State(true, List(), List()))
   }
 }

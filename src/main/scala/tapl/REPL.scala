@@ -20,7 +20,7 @@ trait REPL extends Common {
   case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
   type Ctx[Inf] = List[(Name, Inf)]
 
-  case class State[V, Inf](interactive: Boolean, outFile: String, ne: NameEnv[V], ctx: Ctx[Inf])
+  case class State[V, Inf](interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
 
   trait Interpreter[I, C, V, T, TInf, Inf] extends StandardTokenParsers with PackratParsers {
     val iname: String
@@ -126,7 +126,7 @@ trait REPL extends Common {
           } else {
             Console.println(s"$s :: ${int.itprint(y)}")
           }
-          State(state.interactive, "", (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx)
+          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx)
       }
     }
     stmt match {
@@ -134,7 +134,6 @@ trait REPL extends Common {
       case Let(x, e) => checkEval(x, e)
       case Eval(e) => checkEval("it", e)
       case PutStrLn(x) => Console.println(x); state
-      case Out(f) => state.copy(outFile = f)
     }
   }
 

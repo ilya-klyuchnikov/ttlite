@@ -63,6 +63,6 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
   }
 
   def main(args: Array[String]) {
-    loop(LambdaInterpreter, State(true, null, List(), List()))
+    loop(LambdaInterpreter, State(true, List(), List()))
   }
 }
