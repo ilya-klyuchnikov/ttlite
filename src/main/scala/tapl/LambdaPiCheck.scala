@@ -19,7 +19,8 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
       cType(i, g, tyt, VStar).right.flatMap { _ =>
         val ty = cEval(tyt, (g._1, Nil))
         for {
-          _ <- cType(i + 1, (g._1, (Local(i), ty) :: g._2), null, null).right
+          // TODO!!
+          _ <- cType(i + 1, (g._1, (Local(i), ty) :: g._2), cSubst(0, Free(Local(i)), tyt1), VStar).right
         } yield VStar
       }
     case Free(x) =>
@@ -33,9 +34,9 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
           cType(i, g, e2, ty) match {
             case Right(_) =>
               Right(ty1(cEval(e2, (g._1, Nil))))
-            case Left(_) => Left("")
+            case Left(s) => Left(s)
           }
-        case _ => Left("")
+        case _ => Left(s"illegal application: $t")
       }
       }
   }

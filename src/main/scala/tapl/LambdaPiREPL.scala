@@ -4,7 +4,7 @@ import scala.util.parsing.combinator.ImplicitConversions
 
 object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
 
-  object LambdaInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
+  object LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
     val iname: String = "lambda-Pi"
@@ -23,12 +23,15 @@ object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck wit
     def itprint(t: Type): String =
       t.toString
     def iassume(state: State[Value, Value], x: (String, CTerm)): State[Value, Value] = {
-      val t = x._2
-      println(iitype(state.ne, state.ctx, Ann(t, Inf(Star))))
-      val t1 = iitype(state.ne, state.ctx, Ann(t, Inf(Star))).right.toOption.get
-      state.copy(ctx = (Global(x._1), t1) :: state.ctx)
+      iitype(state.ne, state.ctx, Ann(x._2, Inf(Star))) match {
+        case Right(_) =>
+          val v = ieval(state.ne, Ann(x._2, Inf(Star)))
+          println(v)
+          state.copy(ctx = (Global(x._1), v) :: state.ctx)
+        case Left(_) =>
+          state
+      }
     }
-    // TODO: continue here
     lazy val iiparse: Parser[ITerm] = parseITErm(0, Nil)
     val isparse: Parser[Stmt[ITerm, CTerm]] = parseStmt(Nil)
 
@@ -69,6 +72,6 @@ object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck wit
   }
 
   def main(args: Array[String]) {
-    loop(LambdaInterpreter, State(true, List(), List()))
+    loop(LambdaPIInterpreter, State(true, List(), List()))
   }
 }
