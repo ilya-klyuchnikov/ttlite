@@ -9,7 +9,7 @@ object LambdaPiREPLMain extends LambdaPiREPL {
 }
 
 trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
-
+  def toNat(i: Int): ITerm = sys.error("not implemented")
   trait LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
@@ -43,8 +43,8 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
 
     def parseITErm(i: Int, ns: List[String]): Parser[ITerm] = i match {
       case 0 =>
-        ("forall" ~> parseBindings(true, ns)) >> { fe => ("." ~> parseCTErm(0, fe.map(_._1))) ^^ { t1 =>
-          val t :: ts = fe.map(_._2)
+        ("forall" ~> parseBindings(true, ns)) >> { bs => ("." ~> parseCTErm(0, bs.reverse.map(_._1) ::: ns )) ^^ { t1 =>
+          val t :: ts = bs.map(_._2)
           ts.foldLeft(Pi(t, t1)){(p, t) => Pi(t, Inf(p))}
         }} |
           parseITErm(1, ns) ~ ("->" ~> parseCTErm(0, "" :: ns)) ^^ {case x ~ y => Pi(Inf(x), y)} |
@@ -59,8 +59,8 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
       // var
       case 3 =>
         ident ^^ {i => ns.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
-          "(" ~> parseITErm(0, ns) <~ ")" |
-        "*" ^^^ {Star}
+          "(" ~> parseITErm(0, ns) <~ ")" | numericLit ^^ {x => toNat(x.toInt)} |
+          "*" ^^^ {Star}
     }
     def parseCTErm(i: Int, ns: List[String]): Parser[CTerm] = i match {
       case 0 => parseLam(ns) | parseITErm(0, ns) ^^ {Inf(_)}

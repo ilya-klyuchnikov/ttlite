@@ -29,4 +29,10 @@ trait LambdaPiREPL1 extends LambdaPiREPL with NatAST with NatCheck with NatEval 
           (Nil, Nil))
     )
   trait NatInterpreter extends LambdaPIInterpreter
+
+  def toNat1(n: Int): CTerm =
+    if (n == 0) Zero else Succ(toNat1(n - 1))
+
+  override def toNat(i: Int): ITerm =
+    Ann(toNat1(i), Inf(Nat))
 }
