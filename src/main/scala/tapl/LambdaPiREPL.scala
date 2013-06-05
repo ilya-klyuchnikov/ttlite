@@ -2,9 +2,15 @@ package tapl
 
 import scala.util.parsing.combinator.ImplicitConversions
 
-object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
+object LambdaPiREPLMain extends LambdaPiREPL {
+  def main(args: Array[String]) {
+    loop(new LambdaPIInterpreter{}, State(true, Nil, Nil))
+  }
+}
 
-  object LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
+trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
+
+  trait LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
     val iname: String = "lambda-Pi"
@@ -69,9 +75,5 @@ object LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck wit
       parseBinding(e) ^^ {x => List(x)} | (("(" ~> parseBinding(e) <~ ")")+)
     def parseBinding(e: List[String]): Parser[(String, CTerm)] =
       ident ~ ("::" ~> parseCTErm(0, e)) ^^ {case i ~ x => (i, x)}
-  }
-
-  def main(args: Array[String]) {
-    loop(LambdaPIInterpreter, State(true, List(), List()))
   }
 }

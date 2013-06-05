@@ -1,16 +1,17 @@
 package tapl
 
 trait LambdaCheck extends LambdaAST {
-   def cKind(g: Context, t: Type, k: Kind): Result[Unit] = (t, k) match {
-     case (TFree(x), Star) => lookup(x, g) match {
-       case Some(HasKind(Star)) => Right()
-       case Some(_) => Left("wrong type")
-       case None => Left(s"unknown id: $x")
-     }
-     case (Fun(kk, kk1), Star) =>
-       for {x <- cKind(g, kk, Star).right}
-         yield cKind(g, kk1, Star)
-   }
+  // the goal is to throw exception
+  def cKind(g: Context, t: Type, k: Kind): Result[Unit] = (t, k) match {
+    case (TFree(x), Star) => lookup(x, g) match {
+      case Some(HasKind(Star)) => Right()
+      case Some(_) => Left("wrong type")
+      case None => Left(s"unknown id: $x")
+    }
+    case (Fun(kk, kk1), Star) =>
+      for {x <- cKind(g, kk, Star).right}
+      yield cKind(g, kk1, Star)
+  }
 
   def iType0(g: Context, i: ITerm): Result[Type] =
     iType(0, g, i)
@@ -28,11 +29,11 @@ trait LambdaCheck extends LambdaAST {
         case None => Left(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
-       iType(i, g, e1).right.flatMap { si => si match {
-         case Fun(ty, ty1) =>
-           for {_ <- cType(i, g, e2, ty).right} yield ty1
-         case _ => Left("")
-       }
+      iType(i, g, e1).right.flatMap { si => si match {
+        case Fun(ty, ty1) =>
+          for {_ <- cType(i, g, e2, ty).right} yield ty1
+        case _ => Left("")
+      }
       }
   }
 
