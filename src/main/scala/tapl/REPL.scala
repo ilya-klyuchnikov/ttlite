@@ -1,7 +1,6 @@
 package tapl
 
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
-import scala.util.parsing.combinator.{ImplicitConversions, PackratParsers}
 
 // generic component for REPL
 trait REPL extends Common {
@@ -22,7 +21,7 @@ trait REPL extends Common {
 
   case class State[V, Inf](interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
 
-  trait Interpreter[I, C, V, T, TInf, Inf] extends StandardTokenParsers with PackratParsers {
+  trait Interpreter[I, C, V, T, TInf, Inf] extends StandardTokenParsers {
     val iname: String
     val iprompt: String
     def iitype(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Result[T]

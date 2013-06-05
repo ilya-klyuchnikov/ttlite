@@ -5,7 +5,7 @@ trait LambdaCheck extends LambdaAST {
      case (TFree(x), Star) => lookup(x, g) match {
        case Some(HasKind(Star)) => Right()
        case Some(_) => Left("wrong type")
-       case None => Left("unknown id")
+       case None => Left(s"unknown id: $x")
      }
      case (Fun(kk, kk1), Star) =>
        for {x <- cKind(g, kk, Star).right}
@@ -25,7 +25,7 @@ trait LambdaCheck extends LambdaAST {
       lookup(x, g) match {
         case Some(HasType(ty)) => Right(ty)
         case Some(_) => Left("wrong type")
-        case None => Left("unknown id")
+        case None => Left(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
        iType(i, g, e1).right.flatMap { si => si match {

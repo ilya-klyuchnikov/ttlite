@@ -3,7 +3,6 @@ package tapl
 // could we rewrite it better with scalaz??
 // this is just terrific strange code
 trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
-  // TODO
   def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =
     iType(0, g, i)
 
@@ -19,17 +18,16 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
       cType(i, g, tyt, VStar).right.flatMap { _ =>
         val ty = cEval(tyt, (g._1, Nil))
         for {
-          // TODO!!
           _ <- cType(i + 1, (g._1, (Local(i), ty) :: g._2), cSubst(0, Free(Local(i)), tyt1), VStar).right
         } yield VStar
       }
     case Free(x) =>
       lookup(x, g._2) match {
         case Some(ty) => Right(ty)
-        case None => Left("unknown id")
+        case None => Left(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
-      iType(i, g, e1).right.flatMap { si => si match {
+      iType(i, g, e1).right.flatMap { _ match {
         case VPi(ty, ty1) =>
           cType(i, g, e2, ty) match {
             case Right(_) =>
