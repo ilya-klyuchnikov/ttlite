@@ -21,6 +21,12 @@ trait REPL extends Common {
 
   case class State[V, Inf](interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
 
+  // I - ITerm (inferrable term)
+  // C - CTerm (checkable term)
+  // V - Value
+  // T - Type
+  // TInf - type info (type of assumed term) - raw info - from parsing
+  // Inf - information about value
   trait Interpreter[I, C, V, T, TInf, Inf] extends StandardTokenParsers {
     val iname: String
     val iprompt: String
