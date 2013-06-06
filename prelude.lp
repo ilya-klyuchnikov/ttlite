@@ -1,6 +1,6 @@
 //assume (zz :: forall (a :: *) . a -> a);
 let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let const = (\ a b x y -> x) :: forall (a :: *) (b :: *) . a -> b -> a;
+let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
 
 //let const1 = (\a x b y -> x) :: forall (a :: *). a -> forall (b :: *) . b -> a;
 let const2 = (\a -> a) :: forall (a :: *) . *;

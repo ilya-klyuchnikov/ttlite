@@ -1,5 +1,5 @@
 let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let const = (\ a b x y -> x) :: forall (a :: *) (b :: *) . a -> b -> a;
+let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
 
 // addition of natural numbers
 let plus =
