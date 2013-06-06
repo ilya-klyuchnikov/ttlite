@@ -108,11 +108,17 @@ trait REPL extends Common {
           case None => state
         }
       case Compile(CompileFile(f)) =>
-        val input = scala.io.Source.fromFile(f).mkString("")
-        i.parseIO((i.isparse)+, input) match {
-          case Some(stmts) =>
-             stmts.foldLeft(state){(s, stm) => handleStmt(i, s, stm)}
-          case None => state
+        try {
+          val input = scala.io.Source.fromFile(f).mkString("")
+          i.parseIO((i.isparse)+, input) match {
+            case Some(stmts) =>
+              stmts.foldLeft(state){(s, stm) => handleStmt(i, s, stm)}
+            case None => state
+          }
+        } catch {
+          case io: java.io.IOException =>
+            Console.println(s"Error: ${io.getMessage}")
+            state
         }
 
     }
