@@ -43,9 +43,9 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
 
     def parseITErm(i: Int, ns: List[String]): Parser[ITerm] = i match {
       case 0 =>
-        ("forall" ~> parseBindings(true, ns)) >> { bs => ("." ~> parseCTErm(0, bs.reverse.map(_._1) ::: ns )) ^^ { t1 =>
-          val t :: ts = bs.map(_._2)
-          ts.foldLeft(Pi(t, t1)){(p, t) => Pi(t, Inf(p))}
+        ("forall" ~> parseBindings(true, ns)) >> { case List(b) => ("." ~> parseCTErm(0, b._1 :: ns )) ^^ { t1 =>
+          val t = b._2
+          Pi(t, t1)
         }} |
           parseITErm(1, ns) ~ ("->" ~> parseCTErm(0, "" :: ns)) ^^ {case x ~ y => Pi(Inf(x), y)} |
           parseITErm(1, ns) |
@@ -71,8 +71,16 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, CTerm]] =
       ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
         ("assume" ~> parseBindings(false, Nil) <~ ";") ^^ {Assume(_)} | parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
+
     def parseBindings(b: Boolean, e: List[String]): Parser[List[(String, CTerm)]] =
-      parseBinding(e) ^^ {x => List(x)} | (("(" ~> parseBinding(e) <~ ")")+)
+      parseBinding(e) ^^ {x => List(x)} | "(" ~> parseBinding(e) <~ ")" ^^ {x => List(x)} //| parseBindings2(b, e)
+
+    def parseBindings2(b: Boolean, e: List[String]): Parser[List[(String, CTerm)]] =
+      "(" ~> parseBinding(e) <~ ")" >> {case (i, x) =>
+        val e1 = if (b) i :: e else Nil
+        (parseBindings2(b, e1)?) ^^ {o => List((i, x)) ::: o.getOrElse(Nil) }
+      }
+
     def parseBinding(e: List[String]): Parser[(String, CTerm)] =
       ident ~ ("::" ~> parseCTErm(0, e)) ^^ {case i ~ x => (i, x)}
   }
