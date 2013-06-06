@@ -4,3 +4,7 @@
    and encode lambda pi as a generalization of lambda??
 
 It will be cool for Nat to be able to extend both simple lambda and lambda pi.
+
+
+object LambdaInterpreter extends  Interpreter[ITerm, CTerm, Value, Type,  Info, Info]
+trait LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value]
