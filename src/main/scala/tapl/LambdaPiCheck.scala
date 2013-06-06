@@ -39,7 +39,7 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
       }
   }
 
-  //
+  // checks that ct has type t
   def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Inf(e), ty) =>
       iType(ii, g, e).right.flatMap(ty1 =>
