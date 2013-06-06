@@ -99,3 +99,25 @@ trait EqQuote extends LambdaPiQuote with EqAST {
     case _ => super.neutralQuote(ii, n)
   }
 }
+
+trait EqREPL extends LambdaPiREPL with EqAST with EqCheck with EqEval with EqQuote {
+  val eqTE: Ctx[Value] =
+    List(
+      Global("Refl") -> VPi(VStar, {a => VPi(a, {x => VEq(a, x, x)})}),
+      Global("Eq") -> VPi(VStar, {a => VPi(a, {x => VPi(a, {y => VStar})})}),
+      Global("eqElim") ->
+        VPi(VStar, {a =>
+        VPi(VPi(a, {x => VPi(a, {y => VPi(VEq(a, x, y), {_ => VStar})})}), {m =>
+        VPi(VPi(a, {x => vapp(vapp(vapp(m, x), x), VRefl(a, x))}), {_ =>
+        VPi(a, {x => VPi(a, {y =>
+        VPi(VEq(a, x, y), {eq =>
+        vapp(vapp(vapp(m, x), y), eq)}) })})})})})
+    )
+  val eqVE: Ctx[Value] =
+    List(
+      Global("Refl") -> VLam({a => VLam({x => VRefl(a, x)})}),
+      Global("Eq") -> VLam(a => VLam(x => VLam(y =>VEq(a, x, y)))),
+      Global("eqElim") ->
+        cEval(Lam(Lam(Lam(Lam(Lam(Lam(Inf(EqElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) ))))))), (Nil,Nil))
+    )
+}

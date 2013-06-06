@@ -1,0 +1,79 @@
+let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
+let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
+// addition of natural numbers
+let plus =
+  natElim
+    ( \ _ -> Nat -> Nat )           // motive
+    ( \ n -> n )                    // case for Zero
+    ( \ p rec n -> Succ (rec n) );   // case for Succ
+
+// predecessor, mapping 0 to 0
+let pred =
+  natElim
+    ( \ _ -> Nat )
+    Zero
+    ( \ n1 _rec -> n1 );
+
+// a simpler elimination scheme for natural numbers
+let natFold =
+  ( \ m mz ms -> natElim
+                   ( \ _ -> m )
+                   mz
+                   ( \ n1 rec -> ms rec ) )
+  :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
+
+let nat1Elim =
+  ( \ m m0 m1 ms -> natElim m m0
+                            (\ p rec -> natElim (\ n -> m (Succ n)) m1 ms p) )
+  :: forall (m :: Nat -> *) . m 0 -> m 1 ->
+     (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
+     forall (n :: Nat) . m n;
+
+let nat2Elim =
+  ( \ m m0 m1 m2 ms -> nat1Elim m m0 m1
+                                (\ p rec -> natElim (\ n -> m (Succ (Succ n))) m2 ms p) )
+  :: forall (m :: Nat -> *) . m 0 -> m 1 -> m 2 ->
+     (forall n :: Nat . m (Succ (Succ n)) -> m (Succ (Succ (Succ n)))) ->
+     forall (n :: Nat) . m n;
+// increment by one
+let inc = natFold Nat (Succ Zero) Succ;
+
+// Leibniz prinicple (look at the type signature)
+let leibniz =
+  ( \ a b f -> eqElim a
+                 (\ x y eq_x_y -> Eq b (f x) (f y))
+                 (\ x -> Refl b (f x)) )
+  :: forall (a :: *). forall (b :: *). forall (f :: a -> b). forall (x :: a). forall (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+// symmetry of (general) equality
+let symm =
+  ( \ a -> eqElim a
+             (\ x y eq_x_y -> Eq a y x)
+             (\ x -> Refl a x) )
+  :: forall (a :: *). forall (x :: a). forall (y :: a) .
+     Eq a x y -> Eq a y x;
+
+// transitivity of (general) equality
+let tran =
+  ( \ a x y z eq_x_y -> eqElim a
+                          (\ x y eq_x_y -> forall (z :: a) . Eq a y z -> Eq a x z)
+                          (\ x z eq_x_z -> eq_x_z)
+                          x y eq_x_y z )
+  :: forall (a :: *). forall (x :: a). forall (y :: a). forall (z :: a) .
+     Eq a x y -> Eq a y z -> Eq a x z;
+
+// proofs that 0 is the neutral element of addition
+
+let nLeft  = forall n :: Nat . Eq Nat (plus 0 n) n;
+let nRight = forall n :: Nat . Eq Nat (plus n 0) n;
+// one direction is trivial by definition of plus:
+let p0PlusNisN = Refl Nat :: nLeft;
+
+// the other direction requires induction on N:
+let pNPlus0isN =
+  natElim ( \ n -> Eq Nat (plus n 0) n )
+          ( Refl Nat 0 )
+          ( \ n1 rec -> leibniz Nat Nat Succ (plus n1 0) n1 rec )
+  :: nRight;
+
