@@ -1,13 +1,13 @@
 package tapl
 
-object LambdaPiREPL1Main extends LambdaPiREPL1 {
+object NatREPLMain extends NatREPL {
   def main(args: Array[String]) {
-    loop(new NatInterpreter{}, State(true, lpve, lpte))
+    loop(new LambdaPIInterpreter{}, State(true, natVE, natTE))
   }
 }
 
-trait LambdaPiREPL1 extends LambdaPiREPL with NatAST with NatCheck with NatEval with NatQuote {
-  val lpte: Ctx[Value] =
+trait NatREPL extends LambdaPiREPL with NatAST with NatCheck with NatEval with NatQuote {
+  val natTE: Ctx[Value] =
     List(
       Global("Zero") -> VNat,
       Global("Succ") -> VPi(VNat, _ => VNat),
@@ -18,7 +18,7 @@ trait LambdaPiREPL1 extends LambdaPiREPL with NatAST with NatCheck with NatEval 
             VPi(VPi(VNat, {k => VPi( (vapp(m, k)), { _ => (vapp(m,VSucc(k)) )} )} ), { xx =>
               VPi(VNat, {n => vapp(m, n)}) } ) }  ) })
     )
-  val lpve: Ctx[Value] =
+  val natVE: Ctx[Value] =
     List(
       Global("Zero") -> VZero,
       Global("Succ") -> VLam(n => VSucc(n)),
@@ -28,7 +28,6 @@ trait LambdaPiREPL1 extends LambdaPiREPL with NatAST with NatCheck with NatEval 
           Lam(Lam(Lam(Lam(Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))   ))))),
           (Nil, Nil))
     )
-  trait NatInterpreter extends LambdaPIInterpreter
 
   def toNat1(n: Int): CTerm =
     if (n == 0) Zero else Succ(toNat1(n - 1))
