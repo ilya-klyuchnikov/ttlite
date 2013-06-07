@@ -2,7 +2,7 @@ package tapl.lambda
 
 import org.scalatest.FunSpec
 
-class LambdaExamples extends LambdaAST with LambdaEval with LambdaCheck with LambdaQuote with FunSpec{
+class LambdaSpec extends LambdaAST with LambdaEval with LambdaCheck with LambdaQuote with FunSpec{
   // \x -> x
   val id: CTerm = Lam(Inf(Bound(0)))
   val const: CTerm = Lam(Lam(Inf(Bound(1))))
