@@ -1,4 +1,6 @@
-package tapl
+package tapl.lambda
+
+import tapl._
 
 import scala.util.parsing.combinator.ImplicitConversions
 

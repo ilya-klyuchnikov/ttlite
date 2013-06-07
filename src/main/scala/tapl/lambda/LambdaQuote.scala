@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambda
 
 trait LambdaQuote extends LambdaAST {
   def quote0(v: Value): CTerm =
