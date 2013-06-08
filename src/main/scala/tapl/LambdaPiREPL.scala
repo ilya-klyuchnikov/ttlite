@@ -3,14 +3,18 @@ package tapl
 import scala.util.parsing.combinator.ImplicitConversions
 
 object LambdaPiREPLMain extends LambdaPiREPL {
-  def main(args: Array[String]) {
-    loop(new LambdaPIInterpreter{}, State(true, Nil, Nil))
-  }
+  override def initialState = State(true, Nil, Nil)
 }
 
 trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
-  def toNat(i: Int): ITerm = sys.error("not implemented")
-  trait LambdaPIInterpreter extends Interpreter[ITerm, CTerm, Value, Value, CTerm, Value] with ImplicitConversions {
+  type I = ITerm
+  type C = CTerm
+  type V = Value
+  type T = Value
+  type TInf = CTerm
+  type Inf = Value
+  override val int = LambdaPIInterpreter
+  object LambdaPIInterpreter extends Interpreter with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
     val iname: String = "lambda-Pi"
@@ -28,7 +32,7 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
       c.toString
     def itprint(t: Type): String =
       t.toString
-    def iassume(state: State[Value, Value], x: (String, CTerm)): State[Value, Value] = {
+    def iassume(state: State, x: (String, CTerm)): State = {
       iitype(state.ne, state.ctx, Ann(x._2, Inf(Star))) match {
         case Right(_) =>
           val v = ieval(state.ne, Ann(x._2, Inf(Star)))
@@ -84,4 +88,5 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
     def parseBinding(e: List[String]): Parser[(String, CTerm)] =
       ident ~ ("::" ~> parseCTErm(0, e)) ^^ {case i ~ x => (i, x)}
   }
+  def toNat(i: Int): ITerm = sys.error("not implemented")
 }

@@ -77,3 +77,27 @@ let pNPlus0isN =
           ( \ n1 rec -> leibniz Nat Nat Succ (plus n1 0) n1 rec )
   :: nRight;
 
+assume (k1 :: Nat);
+assume (k2 :: Nat);
+assume (z :: Eq Nat k1 k2);
+symm Nat k1 k2 z;
+
+let pp = Eq Nat (plus k1 0) k1;
+let zz = pNPlus0isN k1 :: pp;
+
+// theorem
+let plusAssociativity = forall y :: Nat. forall z :: Nat. forall x :: Nat. Eq Nat (plus (plus x y) z) (plus x (plus y z));
+
+let plusAssociativity0 =
+  forall y :: Nat. forall z :: Nat. Eq Nat (plus (plus 0 y) z) (plus 0 (plus y z));
+
+let plusAssociativity0Proof =
+  (\y z -> Refl Nat (plus y z)) :: plusAssociativity0;
+
+// real proof of associativity of addition!!
+let plusAssociativityProof =
+  (\y z ->
+    natElim
+      (\x -> Eq Nat (plus (plus x y) z) (plus x (plus y z)))
+      (plusAssociativity0Proof y z)
+      (\x1 rec -> leibniz Nat Nat Succ (plus (plus x1 y) z) (plus x1 (plus y z)) rec)) :: plusAssociativity;

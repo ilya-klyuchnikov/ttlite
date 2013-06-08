@@ -5,8 +5,15 @@ import tapl._
 import scala.util.parsing.combinator.ImplicitConversions
 
 object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with LambdaQuote with REPL {
-
-  object LambdaInterpreter extends Interpreter[ITerm, CTerm, Value, Type, Info, Info] with ImplicitConversions {
+  type I = ITerm
+  type C = CTerm
+  type V = Value
+  type T = Type
+  type TInf = Info
+  type Inf = Info
+  override val int = LambdaInterpreter
+  override val initialState = State(true, List(), List())
+  object LambdaInterpreter extends Interpreter with ImplicitConversions {
     lexical.reserved += ("assume", "let")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";")
     val iname: String = "the simply typed lambda calculus"
@@ -26,7 +33,7 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
     // TODO
     def itprint(t: Type): String =
       t.toString
-    def iassume(state: State[Value, Info], x: (String, Info)): State[Value, Info] =
+    def iassume(state: State, x: (String, Info)): State =
       state.copy(ctx = (Global(x._1), x._2) :: state.ctx)
     lazy val iiparse: Parser[ITerm] = parseITErm(0, Nil)
     val isparse: Parser[Stmt[ITerm, Info]] = parseStmt(Nil)
@@ -61,9 +68,5 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
     def parseBinding(): Parser[(String, Info)] =
       ident ~ ("::" ~> pInfo()) ^^ {case i ~ x => (i, x)}
     def pInfo(): Parser[Info] = parseType(0, Nil) ^^ HasType | "*" ^^^ {HasKind(Star)}
-  }
-
-  def main(args: Array[String]) {
-    loop(LambdaInterpreter, State(true, List(), List()))
   }
 }

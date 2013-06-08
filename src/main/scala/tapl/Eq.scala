@@ -19,12 +19,11 @@ trait EqEval extends LambdaPiEval with EqAST {
     case Eq(a, x, y) =>
       VEq(cEval(a, d), cEval(x, d), cEval(y, d))
     case EqElim(a, m, mr, x, y, eq) =>
-      def rec(eqVal: Value): Value = eqVal match {
+      cEval(eq, d) match {
         case VRefl(_, z) => vapp(cEval(mr, d), z)
         case VNeutral(n) =>
           VNeutral(NEqElim(cEval(a, d), cEval(m, d), cEval(mr, d), cEval(x, d), cEval(y, d), n))
       }
-      rec(cEval(eq, d))
     case _ =>
       super.iEval(i, d)
   }

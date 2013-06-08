@@ -4,6 +4,7 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 
 // generic component for REPL
 trait REPL extends Common {
+
   trait Command
   case class TypeOf(in: String) extends Command
   case class Compile(cf: CompileForm) extends Command
@@ -19,15 +20,32 @@ trait REPL extends Common {
   case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
   type Ctx[Inf] = List[(Name, Inf)]
 
-  case class State[V, Inf](interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
+  type I // inferable term
+  type C // checkable term
+  type V // value
+  type T // type
+  type TInf // type info
+  type Inf // definition info
 
-  // I - ITerm (inferrable term)
+  val int: Interpreter
+  def initialState: State
+  private var batch: Boolean = false
+
+  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
+
+  def handleError() {
+    if (batch) {
+      throw new Exception
+    }
+  }
+
+  // I - ITerm (inferable term)
   // C - CTerm (checkable term)
   // V - Value
   // T - Type
   // TInf - type info (type of assumed term) - raw info - from parsing
   // Inf - information about value
-  trait Interpreter[I, C, V, T, TInf, Inf] extends StandardTokenParsers {
+  trait Interpreter extends StandardTokenParsers {
     val iname: String
     val iprompt: String
     def iitype(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Result[T]
@@ -38,7 +56,7 @@ trait REPL extends Common {
     def itprint(t: T): String
     val iiparse: Parser[I]
     val isparse: Parser[Stmt[I, TInf]]
-    def iassume(s: State[V, Inf], x: (String, TInf)): State[V, Inf]
+    def iassume(s: State, x: (String, TInf)): State
 
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
       case t if t.successful =>
@@ -88,7 +106,7 @@ trait REPL extends Common {
     }
   }
 
-  def handleCommand[I, C, V, T, TInf, Inf](i: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf], cmd: Command): State[V, Inf] =
+  def handleCommand(state: State, cmd: Command): State =
     cmd match {
       case Quit =>
         sys.exit()
@@ -101,37 +119,45 @@ trait REPL extends Common {
         state.ne.map(_._1).distinct.reverse.foreach(Console.println(_))
         state
       case TypeOf(x) =>
-        for {
-          e <- i.parseIO(i.iiparse, x)
-          t <- i.iinfer(state.ne, state.ctx, e)
-        } {
-          Console.println(i.itprint(t))
+        int.parseIO(int.iiparse, x) match {
+          case Some(e) => int.iinfer(state.ne, state.ctx, e) match {
+            case Some(t) =>
+              Console.println(int.itprint(t))
+            case None =>
+              handleError()
+          }
+          case None =>
+            handleError()
         }
         state
       case Compile(CompileInteractive(s)) =>
-        i.parseIO(i.isparse, s) match {
-          case Some(stm) => handleStmt(i, state, stm)
+        int.parseIO(int.isparse, s) match {
+          case Some(stm) => handleStmt(state, stm)
           case None => state
         }
       case Compile(CompileFile(f)) =>
         try {
           val input = scala.io.Source.fromFile(f).mkString("")
-          i.parseIO((i.isparse)+, input) match {
+          int.parseIO((int.isparse)+, input) match {
             case Some(stmts) =>
-              stmts.foldLeft(state){(s, stm) => handleStmt(i, s, stm)}
-            case None => state
+              stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
+            case None =>
+              handleError()
+              state
           }
         } catch {
           case io: java.io.IOException =>
+            handleError()
             Console.println(s"Error: ${io.getMessage}")
             state
         }
 
     }
-  def handleStmt[I, C, V, T, TInf, Inf](int: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf], stmt: Stmt[I, TInf]): State[V, Inf] = {
-    def checkEval(s: String, i: I): State[V, Inf] = {
+  def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
+    def checkEval(s: String, i: I): State = {
       int.iinfer(state.ne, state.ctx, i) match {
         case None =>
+          handleError()
           state
         case Some(y) =>
           val v = int.ieval(state.ne, i)
@@ -151,11 +177,26 @@ trait REPL extends Common {
     }
   }
 
-  def loop[I, C, V, T, TInf, Inf](int: Interpreter[I, C, V, T, TInf, Inf], state: State[V, Inf]) {
+  def loop(state: State) {
     Console.print(int.iprompt)
     val in = Console.readLine()
     val cmd = interpretCommand(in)
-    val state1 = handleCommand(int, state, cmd)
-    loop(int, state1)
+    val state1 = handleCommand(state, cmd)
+    loop(state1)
+  }
+
+  def main(args: Array[String]) {
+    args match {
+      case Array() =>
+        loop(initialState)
+      case _ =>
+        batch = true
+        val cmds = args.map(f => Compile(CompileFile(f)))
+        var state = initialState
+        for (cmd <- cmds) {
+          state = handleCommand(state, cmd)
+        }
+    }
+
   }
 }
