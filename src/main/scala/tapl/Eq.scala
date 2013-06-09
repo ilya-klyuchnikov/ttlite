@@ -1,13 +1,21 @@
 package tapl
 
 trait EqAST extends LambdaPiAST {
-  // Refl t e -> Eq t e e
-  case class Refl(t: CTerm, e: CTerm) extends CTerm
-  case class Eq(t: CTerm, e1: CTerm, e2: CTerm) extends ITerm
-  case class EqElim(c1: CTerm, c2: CTerm, c3: CTerm, c4: CTerm, c5: CTerm, c6: CTerm) extends ITerm
-  case class VEq(t: Value, e1: Value, e2: Value) extends Value
-  case class VRefl(t: Value, e: Value) extends Value
-  case class NEqElim(v1: Value, v2: Value, v3: Value, v4: Value, v5: Value, n: Neutral) extends Neutral
+  // Refl A x :: Eq A x x
+  case class Refl(A: CTerm, x: CTerm) extends CTerm
+  case class Eq(A: CTerm, x: CTerm, y: CTerm) extends ITerm
+  // EqElim(A, prop, propR, x, y, eq)
+  // A - type of x and y (that is, x :: A, y :: A)
+  // prop(x, y, eq) - proposition we would like to infer (which involves both x and y and Eq A x y)
+  // propR(a, refl) - "reflexive" proposition ( prop(x, y, eq)[x -> a, y -> a, eq -> refl]
+  // x, y - elems
+  // eq - proof that x = y
+  // This is also called Leibniz principle.
+  // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
+  case class EqElim(A: CTerm, prop: CTerm, propR: CTerm, x: CTerm, y: CTerm, eq: CTerm) extends ITerm
+  case class VEq(A: Value, x: Value, y: Value) extends Value
+  case class VRefl(A: Value, x: Value) extends Value
+  case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
 }
 
 trait EqEval extends LambdaPiEval with EqAST {
@@ -18,11 +26,11 @@ trait EqEval extends LambdaPiEval with EqAST {
   override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
     case Eq(a, x, y) =>
       VEq(cEval(a, d), cEval(x, d), cEval(y, d))
-    case EqElim(a, m, mr, x, y, eq) =>
+    case EqElim(a, prop, propR, x, y, eq) =>
       cEval(eq, d) match {
-        case VRefl(_, z) => vapp(cEval(mr, d), z)
+        case VRefl(_, z) => vapp(cEval(propR, d), z)
         case VNeutral(n) =>
-          VNeutral(NEqElim(cEval(a, d), cEval(m, d), cEval(mr, d), cEval(x, d), cEval(y, d), n))
+          VNeutral(NEqElim(cEval(a, d), cEval(prop, d), cEval(propR, d), cEval(x, d), cEval(y, d), n))
       }
     case _ =>
       super.iEval(i, d)
@@ -37,11 +45,12 @@ trait EqCheck extends LambdaPiCheck with EqAST {
       assert(cType(i, g, x, aVal).isRight)
       assert(cType(i, g, x, aVal).isRight)
       Right(VStar)
-    case EqElim(a, m, mr, x, y, eq) =>
+    case EqElim(a, prop, propR, x, y, eq) =>
       val aVal = cEval(a, (g._1, Nil))
-      assert(cType(i, g, m, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
-      val mVal = cEval(m, (g._1, Nil))
-      assert(cType(i, g, mr, VPi(aVal, {x => vapp(vapp(mVal, x), x)})).isRight)
+      assert(cType(i, g, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
+      val propVal = cEval(prop, (g._1, Nil))
+      // TODO: insert Refl
+      assert(cType(i, g, propR, VPi(aVal, {x => vapp(vapp(propVal, x), x)})).isRight)
       assert(cType(i, g, x, aVal).isRight)
       val xVal = cEval(x, (g._1, Nil))
       assert(cType(i, g, y, aVal).isRight)
@@ -49,7 +58,7 @@ trait EqCheck extends LambdaPiCheck with EqAST {
       assert(cType(i, g, eq, VEq(aVal, xVal, yVal)).isRight)
       // why??
       val eqVal = cEval(eq, (g._1, Nil))
-      Right(vapp(vapp(mVal, xVal), yVal))
+      Right(vapp(vapp(propVal, xVal), yVal))
     case _ =>
       super.iType(i, g, t)
   }
@@ -100,18 +109,32 @@ trait EqQuote extends LambdaPiQuote with EqAST {
 }
 
 trait EqREPL extends LambdaPiREPL with EqAST with EqCheck with EqEval with EqQuote {
-  val eqTE: Ctx[Value] =
+  lazy val eqTE: Ctx[Value] =
     List(
-      Global("Refl") -> VPi(VStar, {a => VPi(a, {x => VEq(a, x, x)})}),
-      Global("Eq") -> VPi(VStar, {a => VPi(a, {x => VPi(a, {y => VStar})})}),
-      Global("eqElim") ->
-        VPi(VStar, {a =>
-        VPi(VPi(a, {x => VPi(a, {y => VPi(VEq(a, x, y), {_ => VStar})})}), {m =>
-        VPi(VPi(a, {x => vapp(vapp(vapp(m, x), x), VRefl(a, x))}), {_ =>
-        VPi(a, {x => VPi(a, {y =>
-        VPi(VEq(a, x, y), {eq =>
-        vapp(vapp(vapp(m, x), y), eq)}) })})})})})
+      Global("Refl") -> ReflType,
+      Global("Eq") -> EqType,
+      Global("eqElim") -> eqElimType
     )
+
+  val EqTypeIn =
+    "forall (A :: *) . forall (x :: A) . forall (y :: A) . *"
+  val ReflTypeIn =
+    "forall (A :: *) . forall (a :: A) . Eq A a a"
+  val eqElimTypeIn =
+    """
+      |forall (A :: *) .
+      |forall (prop :: forall (x :: A) . forall (y :: A) . forall (_ :: Eq A x y) . * ) .
+      |forall (propR :: forall a :: A . prop a a (Refl A a)) .
+      |forall (x :: A) .
+      |forall (y :: A) .
+      |forall (eq :: Eq A x y) .
+      |prop x y eq
+    """.stripMargin
+
+  lazy val EqType = int.ieval(eqVE, int.parseIO(int.iiparse, EqTypeIn).get)
+  lazy val ReflType = int.ieval(eqVE, int.parseIO(int.iiparse, ReflTypeIn).get)
+  lazy val eqElimType = int.ieval(eqVE, int.parseIO(int.iiparse, eqElimTypeIn).get)
+
   val eqVE: Ctx[Value] =
     List(
       Global("Refl") -> VLam({a => VLam({x => VRefl(a, x)})}),
