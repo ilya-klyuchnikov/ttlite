@@ -15,7 +15,9 @@ trait LambdaPiAST extends Common { self =>
   case class Free(n: Name) extends ITerm
   case class :@:(it: ITerm, ct: CTerm) extends ITerm
   // Value
-  trait Value
+  trait Value {
+    def :@:(x: Value): Value = vapp(x, this)
+  }
   case class VLam(l: Value => Value) extends Value
   case object VStar extends Value
   case class VPi(t: Value, e: Value => Value) extends Value
