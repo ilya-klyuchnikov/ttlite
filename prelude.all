@@ -39,6 +39,133 @@ let nat2Elim =
 // increment by one
 let inc = natFold Nat (Succ Zero) Succ;
 
+// embed Fin into Nat
+let finNat = finElim (\ _ _ -> Nat)
+                     (\ _ -> Zero)
+                     (\ _ _ rec -> Succ rec);
+
+// unit type
+let Unit = Fin 1;
+// constructor
+let U = FZero 0;
+
+// eliminator
+let unitElim =
+  ( \ m mu -> finElim ( nat1Elim (\ n -> Fin n -> *)
+                                 (\ _ -> Unit)
+                                 (\ x -> m x)
+                                 (\ _ _ _ -> Unit) )
+                      ( natElim (\ n -> natElim (\ n -> Fin (Succ n) -> *)
+                                                (\ x -> m x)
+                                                (\ _ _ _ -> Unit)
+                                                n (FZero n))
+                                mu
+                                (\ _ _ -> U) )
+                      ( \ n f _ -> finElim (\ n f -> natElim (\ n -> Fin (Succ n) -> *)
+                                                             (\ x -> m x)
+                                                             (\ _ _ _ -> Unit)
+                                                             n (FSucc n f))
+                                           (\ _ -> U)
+                                           (\ _ _ _ -> U)
+                                           n f )
+                      1 )
+  :: forall (m :: Unit -> *) . m U -> forall (u :: Unit) . m u;
+
+// empty type
+let Void = Fin Zero;
+// eliminator
+let voidElim =
+  ( \ m -> finElim (natElim (\ n -> Fin n -> *)
+                            (\ x -> m x)
+                            (\ _ _ _ -> Unit))
+                   (\ _ -> U)
+                   (\ _ _ _ -> U)
+                   0 )
+  :: forall (m :: Void -> *) . forall (v :: Void) . m v;
+
+// type of booleans
+let Bool = Fin (Succ (Succ Zero));
+// constructors
+let False = FZero (Succ Zero);
+let True  = FSucc (Succ Zero) (FZero Zero);
+
+// eliminator
+let boolElim =
+  ( \ m mf mt -> finElim ( nat2Elim (\ n -> Fin n -> *)
+                                    (\ _ -> Unit) (\ _ -> Unit)
+                                    (\ x -> m x)
+                                    (\ _ _ _ -> Unit) )
+                         ( nat1Elim ( \ n -> nat1Elim (\ n -> Fin (Succ n) -> *)
+                                                      (\ _ -> Unit)
+                                                      (\ x -> m x)
+                                                      (\ _ _ _ -> Unit)
+                                                      n (FZero n))
+                                    U mf (\ _ _ -> U) )
+                         ( \ n f _ -> finElim ( \ n f -> nat1Elim (\ n -> Fin (Succ n) -> *)
+                                                                  (\ _ -> Unit)
+                                                                  (\ x -> m x)
+                                                                  (\ _ _ _ -> Unit)
+                                                                  n (FSucc n f) )
+                                              ( natElim
+                                                  ( \ n -> natElim
+                                                             (\ n -> Fin (Succ (Succ n)) -> *)
+                                                             (\ x -> m x)
+                                                             (\ _ _ _ -> Unit)
+                                                             n (FSucc (Succ n) (FZero n)) )
+                                                  mt (\ _ _ -> U) )
+                                              ( \ n f _ -> finElim
+                                                             (\ n f -> natElim
+                                                                         (\ n -> Fin (Succ (Succ n)) -> *)
+                                                                         (\ x -> m x)
+                                                                         (\ _ _ _ -> Unit)
+                                                                         n (FSucc (Succ n) (FSucc n f)))
+                                                             (\ _ -> U)
+                                                             (\ _ _ _ -> U)
+                                                             n f )
+                                              n f )
+                         (Succ (Succ Zero)) )
+  :: forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+
+// boolean not, and, or, equivalence, xor
+let not = boolElim (\ _ -> Bool) True False;
+let and = boolElim (\ _ -> Bool -> Bool) (\ _ -> False) (id Bool);
+let or  = boolElim (\ _ -> Bool -> Bool) (id Bool) (\ _ -> True);
+let iff = boolElim (\ _ -> Bool -> Bool) not (id Bool);
+let xor = boolElim (\ _ -> Bool -> Bool) (id Bool) not;
+
+// even, odd, isZero, isSucc
+let even    = natFold Bool True not;
+let odd     = natFold Bool False not;
+let isZero  = natFold Bool True (\ _ -> False);
+let isSucc  = natFold Bool False (\ _ -> True);
+
+// equality on natural numbers
+let natEq =
+  natElim
+    ( \ _ -> Nat -> Bool )
+    ( natElim
+        ( \ _ -> Bool )
+        True
+        ( \ n1 _ -> False ) )
+    ( \ m1 rec_m1 -> natElim
+                       ( \ _ -> Bool )
+                       False
+                       ( \ n1 _ -> rec_m1 n1 ));
+
+// "oh so true"
+let Prop = boolElim (\ _ -> *) Void Unit;
+
+// reflexivity of equality on natural numbers
+let pNatEqRefl =
+  natElim
+    (\ n -> Prop (natEq n n))
+    U
+    (\ _ rec -> rec)
+  :: forall (n :: Nat) . Prop (natEq n n);
+
+// alias for type-level negation
+let Not = (\ a -> a -> Void) :: * -> *;
+
 // Leibniz prinicple (look at the type signature)
 let leibniz =
   ( \ a b f -> eqElim a
@@ -62,6 +189,33 @@ let tran =
                           x y eq_x_y z )
   :: forall (a :: *). forall (x :: a). forall (y :: a). forall (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
+
+// apply an equality proof on two types
+let apply =
+  eqElim * (\ a b _ -> a -> b) (\ _ x -> x)
+  :: forall (a :: *) . forall (b :: *) . forall (p :: Eq * a b) . a -> b;
+
+// proof that 1 is not 0
+let p1IsNot0 =
+  (\ p -> apply Unit Void
+                (leibniz Nat *
+                         (natElim (\ _ -> *) Void (\ _ _ -> Unit))
+                         (Succ Zero) Zero p)
+                U)
+  :: Not (Eq Nat 1 0);
+
+// proof that 0 is not 1
+let p0IsNot1 =
+  (\ p -> p1IsNot0 (symm Nat Zero (Succ Zero) p))
+  :: Not (Eq Nat Zero (Succ Zero));
+
+// proof that zero is not a successor
+let p0IsNoSucc =
+  natElim
+    ( \ n -> Not (Eq Nat Zero (Succ n)) )
+    p0IsNot1
+    ( \ n1 rec_n1 eq_0_SSn1 ->
+      rec_n1 (leibniz Nat Nat pred Zero (Succ (Succ n1)) eq_0_SSn1) );
 
 // proofs that 0 is the neutral element of addition
 
@@ -131,4 +285,52 @@ let append =
       forall (w :: Vec a n) .
         Vec a (plus m n);
 
-// helper function for tail, see below -- voidElim
+// helper function for tail, see below
+let tail1 =
+  (\ a -> vecElim a ( \ m v -> forall (n :: Nat) . Eq Nat m (Succ n) -> Vec a n )
+                    ( \ n eq_0_SuccN -> voidElim ( \ _ -> Vec a n )
+                                                 ( p0IsNoSucc n eq_0_SuccN ) )
+                    ( \ m1 v vs rec_m1 n eq_SuccM1_SuccN ->
+                      eqElim Nat
+                             (\ m1 n e -> Vec a m1 -> Vec a n)
+                             (\ _ v -> v)
+                             m1 n
+                             (leibniz Nat Nat pred (Succ m1) (Succ n) eq_SuccM1_SuccN) vs))
+  :: forall (a :: *) . forall (m :: Nat) . Vec a m -> forall (n :: Nat) . Eq Nat m (Succ n) -> Vec a n;
+
+// compute the tail of a vector
+let tail =
+  (\ a n v -> tail1 a (Succ n) v n (Refl Nat (Succ n)))
+  :: forall (a :: *) . forall (n :: Nat) . Vec a (Succ n) -> Vec a n;
+
+// projection out of a vector
+let at =
+  (\ a -> vecElim a ( \ n v -> Fin n -> a )
+                    ( \ f -> voidElim (\ _ -> a) f )
+                    ( \ n1 v vs rec_n1 f_SuccN1 ->
+                      finElim ( \ n _ -> Eq Nat n (Succ n1) -> a )
+                              ( \ n e -> v )
+                              ( \ n f_N _ eq_SuccN_SuccN1 ->
+                                rec_n1 (eqElim Nat
+                                               (\ x y e -> Fin x -> Fin y)
+                                               (\ _ f -> f)
+                                               n n1
+                                               (leibniz Nat Nat pred
+                                                        (Succ n) (Succ n1) eq_SuccN_SuccN1)
+                                               f_N))
+                              (Succ n1)
+                              f_SuccN1
+                              (Refl Nat (Succ n1))))
+  :: forall (a :: *) . forall (n :: Nat) . Vec a n -> Fin n -> a;
+
+// head of a vector
+let head =
+  (\ a n v -> at a (Succ n) v (FZero n))
+  :: forall (a :: *) . forall (n :: Nat) . Vec a (Succ n) -> a;
+
+// vector map
+let map =
+  (\ a b f -> vecElim a ( \ n _ -> Vec b n )
+                        ( Nil b )
+                        ( \ n x _ rec -> Cons b n (f x) rec ))
+  :: forall (a :: *) . forall (b :: *) . forall (f :: a -> b) . forall (n :: Nat) . Vec a n -> Vec b n;
