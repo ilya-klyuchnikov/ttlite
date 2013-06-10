@@ -101,3 +101,34 @@ let plusAssociativityProof =
       (\x -> Eq Nat (plus (plus x y) z) (plus x (plus y z)))
       (plusAssociativity0Proof y z)
       (\x1 rec -> leibniz Nat Nat Succ (plus (plus x1 y) z) (plus x1 (plus y z)) rec)) :: plusAssociativity;
+
+// vectors
+// generate a vector of given length from a specified element (replicate)
+let replicate =
+  ( natElim
+      ( \ n -> forall (a :: *) . a -> Vec a n )
+      ( \ a _ -> Nil a )
+      ( \ n1 rec_n1 a x -> Cons a n1 x (rec_n1 a x) ) )
+  :: forall (n :: Nat) . forall (a :: *) . a -> Vec a n;
+
+// generate a vector of given length n, containing the natural numbers smaller than n
+let fromto =
+  natElim
+    ( \ n -> Vec Nat n )
+    ( Nil Nat )
+    ( \ n1 rec_n1 -> Cons Nat n1 n1 rec_n1 );
+
+// append two vectors
+let append =
+  ( \ a -> vecElim a
+             (\ m _ -> forall (n :: Nat) . Vec a n -> Vec a (plus m n))
+             (\ _ v -> v)
+             (\ m v vs rec n w -> Cons a (plus m n) v (rec n w)))
+  ::  forall (a :: *) .
+      forall (m :: Nat) .
+      forall (v :: Vec a m) .
+      forall (n :: Nat) .
+      forall (w :: Vec a n) .
+        Vec a (plus m n);
+
+// helper function for tail, see below -- voidElim
