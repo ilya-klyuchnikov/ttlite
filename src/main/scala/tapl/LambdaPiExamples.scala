@@ -1,5 +1,0 @@
-package tapl
-
-object LambdaPiExamples {
-
-}

@@ -108,17 +108,22 @@ trait NatQuote extends LambdaPiQuote with NatAST {
 }
 
 trait NatREPL extends LambdaPiREPL with NatAST with NatCheck with NatEval with NatQuote {
-  val natTE: Ctx[Value] =
+  lazy val natTE: Ctx[Value] =
     List(
       Global("Zero") -> VNat,
       Global("Succ") -> VPi(VNat, _ => VNat),
       Global("Nat") -> VStar,
-      Global("natElim") ->
-        VPi(VPi(VNat, {x => VStar}), {m =>
-          VPi(vapp(m, VZero), {_ =>
-            VPi(VPi(VNat, {k => VPi( (vapp(m, k)), { _ => (vapp(m,VSucc(k)) )} )} ), { xx =>
-              VPi(VNat, {n => vapp(m, n)}) } ) }  ) })
+      Global("natElim") -> natElimType
     )
+  val natElimTypeIn =
+    """
+      |forall (m :: forall x :: Nat . *) .
+      |forall (zCase :: m Zero) .
+      |forall (sCase :: forall (n :: Nat) . forall (a :: m n) . m (Succ n)) .
+      |forall (n :: Nat) .
+      |m n
+    """.stripMargin
+  lazy val natElimType = int.ieval(natVE, int.parseIO(int.iiparse, natElimTypeIn).get)
   val natVE: Ctx[Value] =
     List(
       Global("Zero") -> VZero,
@@ -126,8 +131,7 @@ trait NatREPL extends LambdaPiREPL with NatAST with NatCheck with NatEval with N
       Global("Nat") -> VNat,
       Global("natElim") ->
         cEval(
-          Lam(Lam(Lam(Lam(Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))   ))))),
-          (Nil, Nil))
+          Lam(Lam(Lam(Lam(Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))))))), (Nil, Nil))
     )
 
   def toNat1(n: Int): CTerm =
