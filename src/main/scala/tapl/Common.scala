@@ -1,6 +1,8 @@
 package tapl
 
-trait Common {
+import org.kiama.output.PrettyPrinter
+
+trait Common extends PrettyPrinter {
   trait Name
   case class Global(n: String) extends Name
   case class Local(i: Int) extends Name
@@ -22,4 +24,7 @@ trait Common {
   // utility
   def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =
     kvs.find(_._1 == k).map(_._2)
+
+  def parensIf(b: Boolean, d: Doc) =
+    if (b) parens(d) else d
 }
