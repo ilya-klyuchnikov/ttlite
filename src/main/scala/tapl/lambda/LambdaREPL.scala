@@ -4,7 +4,7 @@ import tapl._
 
 import scala.util.parsing.combinator.ImplicitConversions
 
-object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with LambdaQuote with REPL {
+object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with LambdaQuote with LambdaPrinter with REPL {
   type I = ITerm
   type C = CTerm
   type V = Value
@@ -27,12 +27,11 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
       iEval(i, (ne, List()))
     def ihastype(t: Type): Info =
       HasType(t)
-    // TODO
     def icprint(c: CTerm): String =
-      c.toString
+      pretty(cPrint(0, 0, c))
     // TODO
     def itprint(t: Type): String =
-      t.toString
+      pretty(tPrint(0, t))
     def iassume(state: State, x: (String, Info)): State =
       state.copy(ctx = (Global(x._1), x._2) :: state.ctx)
     lazy val iiparse: Parser[ITerm] = parseITErm(0, Nil)

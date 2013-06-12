@@ -116,7 +116,7 @@ trait REPL extends Common {
         Console.println(helpTxt(commands))
         state
       case Browse =>
-        state.ne.map(_._1).distinct.reverse.foreach(Console.println(_))
+        state.ne.map(_._1).distinct.reverse.foreach{case Global(n) => Console.println(n)}
         state
       case TypeOf(x) =>
         int.parseIO(int.iiparse, x) match {
