@@ -18,6 +18,24 @@ trait EqAST extends LambdaPiAST {
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
 }
 
+trait EqPrinter extends LambdaPiPrinter with EqAST {
+  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+    case Eq(a, x, y) =>
+      iPrint(p, ii, Free(Global("Eq")) @@ a @@ x @@ y)
+    case EqElim(a, m, mr, x, y, eq) =>
+      iPrint(p, ii, Free(Global("eqElim")) @@ a @@ m @@ mr @@ x @@ y @@ eq)
+    case _ =>
+      super.iPrint(p, ii, t)
+  }
+
+  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+    case Refl(a, x) =>
+      iPrint(p, ii, Free(Global("Refl")) @@ a @@ x)
+    case _ =>
+      super.cPrint(p, ii, t)
+  }
+}
+
 trait EqEval extends LambdaPiEval with EqAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Refl(a, x) => VRefl(cEval(a, d), cEval(x, d))

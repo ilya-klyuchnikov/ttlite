@@ -7,7 +7,9 @@ trait LambdaPiAST extends Common { self =>
   case class Inf(inf: ITerm) extends CTerm
   case class Lam(t: CTerm) extends CTerm
   // ITerm
-  trait ITerm
+  trait ITerm {
+    def @@(t1: CTerm) = :@:(this, t1)
+  }
   case class Ann(c1: CTerm, ct2: CTerm) extends ITerm
   case object Star extends ITerm
   case class Pi(c1: CTerm, c2: CTerm) extends ITerm

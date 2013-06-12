@@ -14,6 +14,33 @@ trait NatAST extends LambdaPiAST {
   case class NNatElim(v1: Value, v2: Value, v3: Value, n: Neutral) extends Neutral
 }
 
+trait NatPrinter extends LambdaPiPrinter with NatAST {
+  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+    case Nat =>
+      "Nat"
+    case NatElim(m, z, s, n) =>
+      iPrint(p, ii, Free(Global("natElim")) @@ m @@ z @@ s @@ n)
+    case _ => super.iPrint(p, ii, t)
+  }
+
+  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+    case Zero =>
+      fromNat(0, ii, Zero)
+    case Succ(n) =>
+      fromNat(0, ii, Succ(n))
+    case _ => super.cPrint(p, ii, t)
+  }
+
+  def fromNat(n: Int, ii: Int, t: CTerm): Doc = t match {
+    case Zero =>
+      n.toString
+    case Succ(k) =>
+      fromNat(n + 1, ii, k)
+    case _ =>
+      parens(n.toString <> " + " <> cPrint(0, ii, t))
+  }
+}
+
 trait NatEval extends LambdaPiEval with NatAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Zero =>
