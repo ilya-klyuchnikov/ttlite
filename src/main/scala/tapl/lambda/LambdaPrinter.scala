@@ -8,11 +8,11 @@ trait LambdaPrinter extends LambdaAST {
 
   def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Ann(c, ty) =>
-      parensIf(p > 1, cPrint(2, ii, c) <> text(" :: ") <> tPrint(0, ty))
+      parensIf(p > 1, cPrint(2, ii, c) <> " :: " <> tPrint(0, ty))
     case Bound(k) =>
-      text(vars(ii - k - 1))
+      vars(ii - k - 1)
     case Free(Global(s)) =>
-      text(s)
+      s
     case i :@: c =>
       parensIf(p > 2, sep(Seq(iPrint(2, ii, i), nest(cPrint(3, ii, c), 2))))
   }
@@ -21,6 +21,6 @@ trait LambdaPrinter extends LambdaAST {
     case Inf(i) =>
       iPrint(p, ii, i)
     case Lam(c) =>
-      parensIf(p > 0, text("\\ ") <> text(vars(ii)) <> text(" -> ") <> cPrint(0, ii + 1, c))
+      parensIf(p > 0, "\\ " <> text(vars(ii)) <> " -> " <> cPrint(0, ii + 1, c))
   }
 }
