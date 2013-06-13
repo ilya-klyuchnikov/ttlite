@@ -6,7 +6,7 @@ object LambdaPiREPLMain extends LambdaPiREPL {
   override def initialState = State(true, Nil, Nil)
 }
 
-trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
+trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
   type I = ITerm
   type C = CTerm
   type V = Value
@@ -29,9 +29,9 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiEval with LambdaPiCheck with
     def ihastype(t: Type): Type =
       t
     def icprint(c: CTerm): String =
-      c.toString
+      pretty(cPrint(0, 0, c))
     def itprint(t: Type): String =
-      t.toString
+      pretty(cPrint(0, 0, quote0(t)))
     def iassume(state: State, x: (String, CTerm)): State = {
       iitype(state.ne, state.ctx, Ann(x._2, Inf(Star))) match {
         case Right(_) =>

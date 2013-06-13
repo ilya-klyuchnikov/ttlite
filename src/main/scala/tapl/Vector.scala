@@ -14,6 +14,26 @@ trait VectorAST extends LambdaPiAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
+trait VectorPrinter extends NatPrinter with VectorAST {
+  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+    case Vec(a, n) =>
+      iPrint(p, ii, Free(Global("Eq")) @@ a @@ n)
+    case VecElim(a, m, mn, mc, n, xs) =>
+      iPrint(p, ii, Free(Global("eqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
+    case _ =>
+      super.iPrint(p, ii, t)
+  }
+
+  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+    case Nil(a) =>
+      iPrint(p, ii, Free(Global("Nil")) @@ a)
+    case Cons(a, n, x, xs) =>
+      iPrint(p, ii, Free(Global("Nil")) @@ a @@ n @@ x @@ xs)
+    case _ =>
+      super.cPrint(p, ii, t)
+  }
+}
+
 trait VectorEval extends LambdaPiEval with VectorAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Nil(a) =>
@@ -132,7 +152,7 @@ trait VectorQuote extends LambdaPiQuote with VectorAST {
   }
 }
 
-trait VectorREPL extends NatREPL with VectorAST with VectorCheck with VectorEval with VectorQuote {
+trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCheck with VectorEval with VectorQuote {
   lazy val vectorTE: Ctx[Value] =
     List(
       Global("Vec") -> VecType,

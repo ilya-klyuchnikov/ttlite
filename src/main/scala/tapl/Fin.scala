@@ -18,6 +18,26 @@ trait FinAST extends LambdaPiAST {
   case class NFinElim(A: Value, c1: Value, c2: Value, c3: Value, c4: Neutral) extends Neutral
 }
 
+trait FinPrinter extends NatPrinter with FinAST {
+  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+    case Fin(n) =>
+      iPrint(p, ii, Free(Global("Fin")) @@ n)
+    case FinElim(m, mz, ms, n, f) =>
+      iPrint(p, ii, Free(Global("finElim")) @@ m @@ mz @@ ms @@ n @@ f)
+    case _ =>
+      super.iPrint(p, ii, t)
+  }
+
+  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+    case FZero(n) =>
+      iPrint(p, ii, Free(Global("Fin")) @@ n)
+    case FSucc(n, f) =>
+      iPrint(p, ii, Free(Global("FSucc")) @@ n @@ f)
+    case _ =>
+      super.cPrint(p, ii, t)
+  }
+}
+
 trait FinEval extends LambdaPiEval with FinAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case FZero(n) =>
@@ -83,7 +103,7 @@ trait FinQuote extends LambdaPiQuote with FinAST {
   }
 }
 
-trait FinREPL extends NatREPL with FinAST with FinCheck with FinEval with FinQuote {
+trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
   lazy val finTE: Ctx[Value] =
     List(
       Global("FZero") -> FZeroType,

@@ -126,7 +126,7 @@ trait EqQuote extends LambdaPiQuote with EqAST {
   }
 }
 
-trait EqREPL extends LambdaPiREPL with EqAST with EqCheck with EqEval with EqQuote {
+trait EqREPL extends LambdaPiREPL with EqAST with EqPrinter with EqCheck with EqEval with EqQuote {
   lazy val eqTE: Ctx[Value] =
     List(
       Global("Refl") -> ReflType,

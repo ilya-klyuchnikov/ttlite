@@ -134,7 +134,7 @@ trait NatQuote extends LambdaPiQuote with NatAST {
   }
 }
 
-trait NatREPL extends LambdaPiREPL with NatAST with NatCheck with NatEval with NatQuote {
+trait NatREPL extends LambdaPiREPL with NatAST with NatPrinter with NatCheck with NatEval with NatQuote {
   lazy val natTE: Ctx[Value] =
     List(
       Global("Zero") -> VNat,
