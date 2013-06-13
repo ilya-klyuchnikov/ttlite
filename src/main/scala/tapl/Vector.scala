@@ -8,8 +8,8 @@ trait VectorAST extends LambdaPiAST {
   case class VecElim(A: CTerm, motive: CTerm, nilCase: CTerm, consCase: CTerm, n: CTerm, vec: CTerm) extends ITerm
 
   case class VVec(A: Value, n: Value) extends Value
-  case class VNil(A: Value) extends Value
-  case class VCons(A: Value, n: Value, head: Value, tail: Value) extends Value
+  case class VVNil(A: Value) extends Value
+  case class VVCons(A: Value, n: Value, head: Value, tail: Value) extends Value
 
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
@@ -26,9 +26,9 @@ trait VectorPrinter extends NatPrinter with VectorAST {
 
   override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
     case Nil(a) =>
-      iPrint(p, ii, Free(Global("Nil")) @@ a)
+      iPrint(p, ii, Free(Global("VNil")) @@ a)
     case Cons(a, n, x, xs) =>
-      iPrint(p, ii, Free(Global("Nil")) @@ a @@ n @@ x @@ xs)
+      iPrint(p, ii, Free(Global("VCons")) @@ a @@ n @@ x @@ xs)
     case _ =>
       super.cPrint(p, ii, t)
   }
@@ -37,9 +37,9 @@ trait VectorPrinter extends NatPrinter with VectorAST {
 trait VectorEval extends LambdaPiEval with VectorAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Nil(a) =>
-      VNil(cEval(a, d))
+      VVNil(cEval(a, d))
     case Cons(a, n, head, tail) =>
-      VCons(cEval(a, d), cEval(n, d), cEval(head, d), cEval(tail, d))
+      VVCons(cEval(a, d), cEval(n, d), cEval(head, d), cEval(tail, d))
     case _ =>
       super.cEval(c, d)
   }
@@ -51,9 +51,9 @@ trait VectorEval extends LambdaPiEval with VectorAST {
       val nilCaseVal = cEval(nilCase, d)
       val consCaseVal = cEval(consCase, d)
       def rec(nVal: Value, vecVal: Value): Value = vecVal match {
-        case VNil(_) =>
+        case VVNil(_) =>
           nilCaseVal
-        case VCons(_, n, head, tail) =>
+        case VVCons(_, n, head, tail) =>
           consCaseVal @@ n @@ head @@ tail @@ rec(n, tail)
         case VNeutral(n) =>
           VNeutral(NVecElim(cEval(a, d), cEval(m, d), nilCaseVal, consCaseVal, nVal, n))
@@ -76,13 +76,13 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
       assert(cType(i, g, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
 
       val mVal = cEval(m, (g._1, List()))
-      assert(cType(i, g, nilCase, mVal @@ VZero @@ VNil(aVal)).isRight)
+      assert(cType(i, g, nilCase, mVal @@ VZero @@ VVNil(aVal)).isRight)
 
       assert(cType(i, g, consCase, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
-              mVal @@ VSucc(n) @@ VCons(aVal, n, y, ys)
+              mVal @@ VSucc(n) @@ VVCons(aVal, n, y, ys)
             })
           })
         })
@@ -140,8 +140,8 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
 trait VectorQuote extends LambdaPiQuote with VectorAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VVec(a, n) => Inf(Vec(quote(ii, a), quote(ii, n)))
-    case VNil(a) => Nil(quote(ii, a))
-    case VCons(a, n, head, tail) => Cons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
+    case VVNil(a) => Nil(quote(ii, a))
+    case VVCons(a, n, head, tail) => Cons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
     case _ => super.quote(ii, v)
   }
   override def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
@@ -157,8 +157,8 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
     List(
       Global("Vec") -> VecType,
       Global("vecElim") -> vecElimType,
-      Global("Nil") -> NilType,
-      Global("Cons") -> ConsType
+      Global("VNil") -> NilType,
+      Global("VCons") -> ConsType
     )
 
   val VecTypeIn =
@@ -167,8 +167,8 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
     """
       |forall (x :: *) .
       |forall (y :: forall (y :: Nat) . forall (z :: Vec x y) . *) .
-      |forall (z :: y Zero (Nil x)) .
-      |forall (a :: forall (a :: Nat) . forall (b :: x) . forall (c :: Vec x a) . forall (d :: y a c) . y (Succ a) (Cons x a b c)) .
+      |forall (z :: y Zero (VNil x)) .
+      |forall (a :: forall (a :: Nat) . forall (b :: x) . forall (c :: Vec x a) . forall (d :: y a c) . y (Succ a) (VCons x a b c)) .
       |forall (b :: Nat) .
       |forall (c :: Vec x b) .
       |  y b c
@@ -188,7 +188,7 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
       Global("Vec") -> VLam(a => VLam(n =>  VVec (a, n))),
       Global("vecElim") ->
         cEval(Lam(Lam(Lam(Lam(Lam(Lam(Inf(VecElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) ))))))), (List(),List())),
-      Global("Nil") -> VLam(a => VNil(a)),
-      Global("Cons") -> VLam(a => VLam(n => VLam(x => VLam(y => VCons(a, n, x, y)))))
+      Global("VNil") -> VLam(a => VVNil(a)),
+      Global("VCons") -> VLam(a => VLam(n => VLam(x => VLam(y => VVCons(a, n, x, y)))))
     )
 }

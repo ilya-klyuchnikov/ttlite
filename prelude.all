@@ -1,5 +1,5 @@
 let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+let VConst = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
 
 // addition of natural numbers
 let plus =
@@ -46,7 +46,7 @@ let finNat = finElim (\ _ _ -> Nat)
 
 // unit type
 let Unit = Fin 1;
-// constructor
+// VConstructor
 let U = FZero 0;
 
 // eliminator
@@ -85,7 +85,7 @@ let voidElim =
 
 // type of booleans
 let Bool = Fin (Succ (Succ Zero));
-// constructors
+// VConstructors
 let False = FZero (Succ Zero);
 let True  = FSucc (Succ Zero) (FZero Zero);
 
@@ -261,23 +261,23 @@ let plusAssociativityProof =
 let replicate =
   ( natElim
       ( \ n -> forall (a :: *) . a -> Vec a n )
-      ( \ a _ -> Nil a )
-      ( \ n1 rec_n1 a x -> Cons a n1 x (rec_n1 a x) ) )
+      ( \ a _ -> VNil a )
+      ( \ n1 rec_n1 a x -> VCons a n1 x (rec_n1 a x) ) )
   :: forall (n :: Nat) . forall (a :: *) . a -> Vec a n;
 
 // generate a vector of given length n, containing the natural numbers smaller than n
 let fromto =
   natElim
     ( \ n -> Vec Nat n )
-    ( Nil Nat )
-    ( \ n1 rec_n1 -> Cons Nat n1 n1 rec_n1 );
+    ( VNil Nat )
+    ( \ n1 rec_n1 -> VCons Nat n1 n1 rec_n1 );
 
 // append two vectors
 let append =
   ( \ a -> vecElim a
              (\ m _ -> forall (n :: Nat) . Vec a n -> Vec a (plus m n))
              (\ _ v -> v)
-             (\ m v vs rec n w -> Cons a (plus m n) v (rec n w)))
+             (\ m v vs rec n w -> VCons a (plus m n) v (rec n w)))
   ::  forall (a :: *) .
       forall (m :: Nat) .
       forall (v :: Vec a m) .
@@ -331,6 +331,6 @@ let head =
 // vector map
 let map =
   (\ a b f -> vecElim a ( \ n _ -> Vec b n )
-                        ( Nil b )
-                        ( \ n x _ rec -> Cons b n (f x) rec ))
+                        ( VNil b )
+                        ( \ n x _ rec -> VCons b n (f x) rec ))
   :: forall (a :: *) . forall (b :: *) . forall (f :: a -> b) . forall (n :: Nat) . Vec a n -> Vec b n;
