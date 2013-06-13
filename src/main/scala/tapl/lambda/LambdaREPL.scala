@@ -28,10 +28,9 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
     def ihastype(t: Type): Info =
       HasType(t)
     def icprint(c: CTerm): String =
-      pretty(cPrint(0, 0, c))
-    // TODO
+      pretty(cPrint(0, 0, c), 100)
     def itprint(t: Type): String =
-      pretty(tPrint(0, t))
+      pretty(tPrint(0, t), 100)
     def iassume(state: State, x: (String, Info)): State =
       state.copy(ctx = (Global(x._1), x._2) :: state.ctx)
     lazy val iiparse: Parser[ITerm] = parseITErm(0, Nil)

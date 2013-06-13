@@ -19,7 +19,7 @@ trait Common extends PrettyPrinter {
   case class Out(s: String) extends Stmt[Nothing, Nothing]
 
   val ids = "abcdefghijklmnopqrstuvwxyz"
-  val vars: List[String] = (for {i <- ids; j <- 1 to 10} yield s"$i$j").toList
+  val vars: List[String] = (for {j <- 0 to 10; i <- ids} yield (if (j > 0) s"$i$j" else s"$i")).toList
 
   // utility
   def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =

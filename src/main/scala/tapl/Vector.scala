@@ -17,9 +17,9 @@ trait VectorAST extends LambdaPiAST {
 trait VectorPrinter extends NatPrinter with VectorAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Vec(a, n) =>
-      iPrint(p, ii, Free(Global("Eq")) @@ a @@ n)
+      iPrint(p, ii, Free(Global("Vec")) @@ a @@ n)
     case VecElim(a, m, mn, mc, n, xs) =>
-      iPrint(p, ii, Free(Global("eqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
+      iPrint(p, ii, Free(Global("VeqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
     case _ =>
       super.iPrint(p, ii, t)
   }
