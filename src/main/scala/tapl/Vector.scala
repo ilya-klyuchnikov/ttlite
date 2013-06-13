@@ -1,15 +1,15 @@
 package tapl
 
 trait VectorAST extends LambdaPiAST {
-  case class Nil(A: CTerm) extends CTerm
-  case class Cons(A: CTerm, n: CTerm, head: CTerm, tail: CTerm) extends CTerm
+  case class VecNil(A: CTerm) extends CTerm
+  case class VecCons(A: CTerm, n: CTerm, head: CTerm, tail: CTerm) extends CTerm
 
   case class Vec(A: CTerm, n: CTerm) extends ITerm
   case class VecElim(A: CTerm, motive: CTerm, nilCase: CTerm, consCase: CTerm, n: CTerm, vec: CTerm) extends ITerm
 
   case class VVec(A: Value, n: Value) extends Value
-  case class VVNil(A: Value) extends Value
-  case class VVCons(A: Value, n: Value, head: Value, tail: Value) extends Value
+  case class VVecNil(A: Value) extends Value
+  case class VVecCons(A: Value, n: Value, head: Value, tail: Value) extends Value
 
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
@@ -25,9 +25,9 @@ trait VectorPrinter extends NatPrinter with VectorAST {
   }
 
   override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
-    case Nil(a) =>
+    case VecNil(a) =>
       iPrint(p, ii, Free(Global("VNil")) @@ a)
-    case Cons(a, n, x, xs) =>
+    case VecCons(a, n, x, xs) =>
       iPrint(p, ii, Free(Global("VCons")) @@ a @@ n @@ x @@ xs)
     case _ =>
       super.cPrint(p, ii, t)
@@ -36,10 +36,10 @@ trait VectorPrinter extends NatPrinter with VectorAST {
 
 trait VectorEval extends LambdaPiEval with VectorAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
-    case Nil(a) =>
-      VVNil(cEval(a, d))
-    case Cons(a, n, head, tail) =>
-      VVCons(cEval(a, d), cEval(n, d), cEval(head, d), cEval(tail, d))
+    case VecNil(a) =>
+      VVecNil(cEval(a, d))
+    case VecCons(a, n, head, tail) =>
+      VVecCons(cEval(a, d), cEval(n, d), cEval(head, d), cEval(tail, d))
     case _ =>
       super.cEval(c, d)
   }
@@ -51,9 +51,9 @@ trait VectorEval extends LambdaPiEval with VectorAST {
       val nilCaseVal = cEval(nilCase, d)
       val consCaseVal = cEval(consCase, d)
       def rec(nVal: Value, vecVal: Value): Value = vecVal match {
-        case VVNil(_) =>
+        case VVecNil(_) =>
           nilCaseVal
-        case VVCons(_, n, head, tail) =>
+        case VVecCons(_, n, head, tail) =>
           consCaseVal @@ n @@ head @@ tail @@ rec(n, tail)
         case VNeutral(n) =>
           VNeutral(NVecElim(cEval(a, d), cEval(m, d), nilCaseVal, consCaseVal, nVal, n))
@@ -76,13 +76,13 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
       assert(cType(i, g, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
 
       val mVal = cEval(m, (g._1, List()))
-      assert(cType(i, g, nilCase, mVal @@ VZero @@ VVNil(aVal)).isRight)
+      assert(cType(i, g, nilCase, mVal @@ VZero @@ VVecNil(aVal)).isRight)
 
       assert(cType(i, g, consCase, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
-              mVal @@ VSucc(n) @@ VVCons(aVal, n, y, ys)
+              mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)
             })
           })
         })
@@ -99,12 +99,12 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
   }
 
   override def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
-    case (Nil(a), VVec(bVal, VZero)) =>
+    case (VecNil(a), VVec(bVal, VZero)) =>
       assert(cType(ii, g, a, VStar).isRight)
       val aVal = cEval(a, (g._1, List()))
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
       Right()
-    case (Cons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
+    case (VecCons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
       assert(cType(ii, g, a, VStar).isRight)
       val aVal = cEval(a, (g._1, List()))
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
@@ -127,10 +127,10 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
   }
 
   override def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
-    case Nil(a) =>
-      Nil(cSubst(ii, r, a))
-    case Cons(a, n, head, tail) =>
-      Cons(cSubst(ii, r, a), cSubst(ii, r, n), cSubst(ii, r, head), cSubst(ii, r, tail))
+    case VecNil(a) =>
+      VecNil(cSubst(ii, r, a))
+    case VecCons(a, n, head, tail) =>
+      VecCons(cSubst(ii, r, a), cSubst(ii, r, n), cSubst(ii, r, head), cSubst(ii, r, tail))
     case _ =>
       super.cSubst(ii, r, ct)
   }
@@ -140,8 +140,8 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
 trait VectorQuote extends LambdaPiQuote with VectorAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VVec(a, n) => Inf(Vec(quote(ii, a), quote(ii, n)))
-    case VVNil(a) => Nil(quote(ii, a))
-    case VVCons(a, n, head, tail) => Cons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
+    case VVecNil(a) => VecNil(quote(ii, a))
+    case VVecCons(a, n, head, tail) => VecCons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
     case _ => super.quote(ii, v)
   }
   override def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
@@ -188,7 +188,7 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
       Global("Vec") -> VLam(a => VLam(n =>  VVec (a, n))),
       Global("vecElim") ->
         cEval(Lam(Lam(Lam(Lam(Lam(Lam(Inf(VecElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) ))))))), (List(),List())),
-      Global("VNil") -> VLam(a => VVNil(a)),
-      Global("VCons") -> VLam(a => VLam(n => VLam(x => VLam(y => VVCons(a, n, x, y)))))
+      Global("VNil") -> VLam(a => VVecNil(a)),
+      Global("VCons") -> VLam(a => VLam(n => VLam(x => VLam(y => VVecCons(a, n, x, y)))))
     )
 }
