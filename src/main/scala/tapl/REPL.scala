@@ -122,7 +122,7 @@ trait REPL extends Common {
         int.parseIO(int.iiparse, x) match {
           case Some(e) => int.iinfer(state.ne, state.ctx, e) match {
             case Some(t) =>
-              Console.println(int.itprint(t))
+              Console.println(s"${int.itprint(t)};")
             case None =>
               handleError()
           }
@@ -162,9 +162,9 @@ trait REPL extends Common {
         case Some(y) =>
           val v = int.ieval(state.ne, i)
           if (s == "it"){
-            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(y))
+            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(y) + ";")
           } else {
-            Console.println(s"$s :: ${int.itprint(y)}")
+            Console.println(s"$s :: ${int.itprint(y)};")
           }
           State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx)
       }

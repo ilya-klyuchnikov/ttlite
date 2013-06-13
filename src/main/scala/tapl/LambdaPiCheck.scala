@@ -58,7 +58,7 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
     case Pi(ty, ty1) => Pi(cSubst(i, r, ty), cSubst(i + 1, r, ty1))
     case Bound(j) => if (i == j) r else Bound(j)
     case Free(y) => Free(y)
-    case (e1 :@: e2) => iSubst(i, r, e1) :@: cSubst(i, r, e2)
+    case (e1 :@: e2) => iSubst(i, r, e1) @@ cSubst(i, r, e2)
   }
   def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
     case Inf(e) => Inf(iSubst(ii, r, e))

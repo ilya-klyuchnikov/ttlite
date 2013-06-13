@@ -54,7 +54,7 @@ trait VectorEval extends LambdaPiEval with VectorAST {
         case VNil(_) =>
           nilCaseVal
         case VCons(_, n, head, tail) =>
-          (((consCaseVal :@: n) :@: head) :@: tail) :@: rec(n, tail)
+          consCaseVal @@ n @@ head @@ tail @@ rec(n, tail)
         case VNeutral(n) =>
           VNeutral(NVecElim(cEval(a, d), cEval(m, d), nilCaseVal, consCaseVal, nVal, n))
       }
@@ -76,13 +76,13 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
       assert(cType(i, g, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
 
       val mVal = cEval(m, (g._1, List()))
-      assert(cType(i, g, nilCase, (mVal :@: VZero) :@: VNil(aVal)).isRight)
+      assert(cType(i, g, nilCase, mVal @@ VZero @@ VNil(aVal)).isRight)
 
       assert(cType(i, g, consCase, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
-            VPi((mVal :@: n) :@: ys, {_ =>
-              (mVal :@: VSucc(n)) :@: VCons(aVal, n, y, ys)
+            VPi(mVal @@ n @@ ys, {_ =>
+              mVal @@ VSucc(n) @@ VCons(aVal, n, y, ys)
             })
           })
         })
@@ -93,7 +93,7 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
       val nVal = cEval(n, (g._1, List()))
       assert(cType(i, g, vec, VVec(aVal, nVal)).isRight)
       val vecVal = cEval(vec, (g._1, List()))
-      Right((mVal :@: nVal) :@: vecVal)
+      Right(mVal @@ nVal @@ vecVal)
     case _ =>
       super.iType(i, g, t)
   }

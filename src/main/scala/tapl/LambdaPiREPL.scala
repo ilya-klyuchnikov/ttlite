@@ -59,7 +59,7 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
           parseITErm(2, ns) |
           ("(" ~> parseLam(ns) <~ ")") ~ ("::" ~> parseCTErm(0, ns)) ^^ {case e ~ t => Ann(e, t)}
       case 2 =>
-        parseITErm(3, ns) ~ (parseCTErm(3, ns)*) ^^ {case t ~ ts => ts.foldLeft(t){_ :@: _} }
+        parseITErm(3, ns) ~ (parseCTErm(3, ns)*) ^^ {case t ~ ts => ts.foldLeft(t){_ @@ _} }
       // var
       case 3 =>
         ident ^^ {i => ns.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |

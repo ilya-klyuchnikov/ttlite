@@ -56,9 +56,9 @@ trait FinEval extends LambdaPiEval with FinAST {
 
       def rec(fVal: Value): Value = fVal match {
         case VFZero(k) =>
-          mzVal :@: k
+          mzVal @@ k
         case VFSucc(k, g) =>
-          ((msVal :@: k) :@: g) :@: rec(g)
+          msVal @@ k @@ g @@ rec(g)
         case VNeutral(n1) =>
           VNeutral(NFinElim(cEval(m, d), cEval(mz, d), cEval(ms, d), cEval(n, d), n1))
       }

@@ -67,15 +67,12 @@ trait EqCheck extends LambdaPiCheck with EqAST {
       val aVal = cEval(a, (g._1, Nil))
       assert(cType(i, g, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
       val propVal = cEval(prop, (g._1, Nil))
-      // TODO: insert Refl
-      assert(cType(i, g, propR, VPi(aVal, {x => vapp(vapp(propVal, x), x)})).isRight)
+      assert(cType(i, g, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)})).isRight)
       assert(cType(i, g, x, aVal).isRight)
       val xVal = cEval(x, (g._1, Nil))
       assert(cType(i, g, y, aVal).isRight)
       val yVal = cEval(y, (g._1, Nil))
       assert(cType(i, g, eq, VEq(aVal, xVal, yVal)).isRight)
-      // why??
-      val eqVal = cEval(eq, (g._1, Nil))
       Right(vapp(vapp(propVal, xVal), yVal))
     case _ =>
       super.iType(i, g, t)

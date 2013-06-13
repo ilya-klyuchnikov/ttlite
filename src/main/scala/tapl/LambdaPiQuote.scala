@@ -13,7 +13,7 @@ trait LambdaPiQuote extends LambdaPiAST {
 
   def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
     case NFree(x) => boundFree(ii, x)
-    case NApp(n, v) => neutralQuote(ii, n) :@: quote(ii, v)
+    case NApp(n, v) => neutralQuote(ii, n) @@ quote(ii, v)
   }
 
   def boundFree(ii: Int, n: Name): ITerm = n match {

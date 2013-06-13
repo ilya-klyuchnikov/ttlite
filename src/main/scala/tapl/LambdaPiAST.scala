@@ -1,9 +1,7 @@
 package tapl
 
-trait LambdaPiAST extends Common { self =>
-  trait CTerm  {
-    def :@:(it: ITerm) = self.:@:(it, this)
-  }
+trait LambdaPiAST extends Common {
+  trait CTerm
   case class Inf(inf: ITerm) extends CTerm
   case class Lam(t: CTerm) extends CTerm
   // ITerm
@@ -18,7 +16,7 @@ trait LambdaPiAST extends Common { self =>
   case class :@:(it: ITerm, ct: CTerm) extends ITerm
   // Value
   trait Value {
-    def :@:(x: Value): Value = vapp(x, this)
+    def @@(x: Value): Value = vapp(this, x)
   }
   case class VLam(l: Value => Value) extends Value
   case object VStar extends Value
