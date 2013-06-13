@@ -1,6 +1,7 @@
 package tapl
 
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+import org.kiama.util.JLineConsole
 
 // generic component for REPL
 trait REPL extends Common {
@@ -178,8 +179,7 @@ trait REPL extends Common {
   }
 
   def loop(state: State) {
-    Console.print(int.iprompt)
-    val in = Console.readLine()
+    val in = JLineConsole.readLine(int.iprompt)
     val cmd = interpretCommand(in)
     val state1 = handleCommand(state, cmd)
     loop(state1)
