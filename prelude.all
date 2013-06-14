@@ -1,5 +1,4 @@
-let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let VConst = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+import "core.pi";
 
 // addition of natural numbers
 let plus =
@@ -165,35 +164,6 @@ let pNatEqRefl =
 
 // alias for type-level negation
 let Not = (\ a -> a -> Void) :: * -> *;
-
-// Leibniz prinicple (look at the type signature)
-let leibniz =
-  ( \ a b f -> eqElim a
-                 (\ x y eq_x_y -> Eq b (f x) (f y))
-                 (\ x -> Refl b (f x)) )
-  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
-
-// symmetry of (general) equality
-let symm =
-  ( \ a -> eqElim a
-             (\ x y eq_x_y -> Eq a y x)
-             (\ x -> Refl a x) )
-  :: forall (a :: *). forall (x :: a). forall (y :: a) .
-     Eq a x y -> Eq a y x;
-
-// transitivity of (general) equality
-let tran =
-  ( \ a x y z eq_x_y -> eqElim a
-                          (\ x y eq_x_y -> forall (z :: a) . Eq a y z -> Eq a x z)
-                          (\ x z eq_x_z -> eq_x_z)
-                          x y eq_x_y z )
-  :: forall (a :: *). forall (x :: a). forall (y :: a). forall (z :: a) .
-     Eq a x y -> Eq a y z -> Eq a x z;
-
-// apply an equality proof on two types
-let apply =
-  eqElim * (\ a b _ -> a -> b) (\ _ x -> x)
-  :: forall (a :: *) . forall (b :: *) . forall (p :: Eq * a b) . a -> b;
 
 // proof that 1 is not 0
 let p1IsNot0 =
