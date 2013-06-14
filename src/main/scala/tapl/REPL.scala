@@ -2,6 +2,8 @@ package tapl
 
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import org.kiama.util.JLineConsole
+import scala.util.parsing.combinator.lexical.StdLexical
+import scala.util.parsing.input.CharArrayReader._
 
 // generic component for REPL
 trait REPL extends Common {
@@ -48,6 +50,16 @@ trait REPL extends Common {
   // TInf - type info (type of assumed term) - raw info - from parsing
   // Inf - information about value
   trait Interpreter extends StandardTokenParsers {
+    override val lexical = new StdLexical {
+      override def whitespace: Parser[Any] = rep(
+        whitespaceChar
+          | '/' ~ '*' ~ comment
+          | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
+          | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
+          | '/' ~ '*' ~ failure("unclosed comment")
+      )
+    }
+
     val iname: String
     val iprompt: String
     def iitype(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Result[T]
