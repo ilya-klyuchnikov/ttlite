@@ -4,6 +4,7 @@ import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import org.kiama.util.JLineConsole
 import scala.util.parsing.combinator.lexical.StdLexical
 import scala.util.parsing.input.CharArrayReader._
+import scala.util.parsing.combinator.PackratParsers
 
 // generic component for REPL
 trait REPL extends Common {
@@ -49,7 +50,7 @@ trait REPL extends Common {
   // T - Type
   // TInf - type info (type of assumed term) - raw info - from parsing
   // Inf - information about value
-  trait Interpreter extends StandardTokenParsers {
+  trait Interpreter extends StandardTokenParsers with PackratParsers {
     override val lexical = new StdLexical {
       override def whitespace: Parser[Any] = rep(
         whitespaceChar
@@ -183,10 +184,14 @@ trait REPL extends Common {
   def load(f: String, state: State, reload: Boolean): State = {
     if (state.modules(f) && ! reload) return state;
     try {
+      println(s"${new java.util.Date()} loading $f")
       val input = scala.io.Source.fromFile(f).mkString("")
-      int.parseIO((int.isparse)+, input) match {
+      val parsed = int.parseIO((int.isparse)+, input)
+      println(s"${new java.util.Date()} parsed $f")
+      parsed match {
         case Some(stmts) =>
           val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
+          println(s"${new java.util.Date()} loaded $f")
           s1.copy(modules = s1.modules + f)
         case None =>
           handleError()
