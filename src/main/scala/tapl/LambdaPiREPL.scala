@@ -3,7 +3,7 @@ package tapl
 import scala.util.parsing.combinator.ImplicitConversions
 
 object LambdaPiREPLMain extends LambdaPiREPL {
-  override def initialState = State(true, Nil, Nil)
+  override def initialState = State(true, Nil, Nil, Set())
 }
 
 trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
@@ -15,7 +15,7 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
   type Inf = Value
   override val int = LambdaPIInterpreter
   object LambdaPIInterpreter extends Interpreter with ImplicitConversions {
-    lexical.reserved += ("assume", "let", "forall")
+    lexical.reserved += ("assume", "let", "forall", "import")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
     val iname: String = "lambda-Pi"
     val iprompt: String = "LP> "
@@ -74,7 +74,9 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
       ("\\" ~> (ident+) <~ "->") >> {ids => parseCTErm(0, ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, CTerm]] =
       ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
-        ("assume" ~> parseBindings(false, Nil) <~ ";") ^^ {Assume(_)} | parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
+        ("assume" ~> parseBindings(false, Nil) <~ ";") ^^ {Assume(_)} |
+        ("import" ~> stringLit <~ ";") ^^ Import |
+        parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
 
     def parseBindings(b: Boolean, e: List[String]): Parser[List[(String, CTerm)]] =
       parseBinding(e) ^^ {x => List(x)} | "(" ~> parseBinding(e) <~ ")" ^^ {x => List(x)} //| parseBindings2(b, e)

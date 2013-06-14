@@ -17,6 +17,7 @@ trait Common extends PrettyPrinter {
   case class Eval[I](e: I) extends Stmt[I, Nothing]
   case class PutStrLn(s: String) extends Stmt[Nothing, Nothing]
   case class Out(s: String) extends Stmt[Nothing, Nothing]
+  case class Import(s: String) extends Stmt[Nothing, Nothing]
 
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val vars: List[String] = (for {j <- 0 to 10; i <- ids} yield (if (j > 0) s"$i$j" else s"$i")).toList

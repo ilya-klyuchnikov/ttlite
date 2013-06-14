@@ -12,7 +12,7 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
   type TInf = Info
   type Inf = Info
   override val int = LambdaInterpreter
-  override val initialState = State(true, List(), List())
+  override val initialState = State(true, List(), List(), Set())
   object LambdaInterpreter extends Interpreter with ImplicitConversions {
     lexical.reserved += ("assume", "let")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";")
@@ -60,7 +60,9 @@ object LambdaREPL extends LambdaAST with LambdaEval with LambdaCheck with Lambda
       ("\\" ~> (ident+) <~ "->") >> {ids => parseCTErm(0, ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, Info]] =
       ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
-        ("assume" ~> parseBindings <~ ";") ^^ {Assume(_)} | parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
+        ("assume" ~> parseBindings <~ ";") ^^ {Assume(_)}|
+        ("import" ~> stringLit <~ ";") ^^ Import |
+        parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
     def parseBindings(): Parser[List[(String, Info)]] =
       parseBinding ^^ {x => List(x)} | (("(" ~> parseBinding <~ ")")+)
     def parseBinding(): Parser[(String, Info)] =

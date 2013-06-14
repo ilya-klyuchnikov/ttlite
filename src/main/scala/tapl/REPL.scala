@@ -9,6 +9,7 @@ trait REPL extends Common {
   trait Command
   case class TypeOf(in: String) extends Command
   case class Compile(cf: CompileForm) extends Command
+  case class Reload(f: String) extends Command
   case object Browse extends Command
   case object Quit extends Command
   case object Help extends Command
@@ -32,7 +33,7 @@ trait REPL extends Common {
   def initialState: State
   private var batch: Boolean = false
 
-  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf])
+  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf], modules: Set[String])
 
   def handleError() {
     if (batch) {
@@ -84,6 +85,7 @@ trait REPL extends Common {
       Cmd(List(":type"),      "<expr>", x => TypeOf(x),               "print type of expression"),
       Cmd(List(":browse"),    "",       x => Browse,                  "browse names in scope"),
       Cmd(List(":load"),      "<file>", x => Compile(CompileFile(x)), "load program from file"),
+      Cmd(List(":reload"),    "<file>", x => Reload(x),               "reload program from file"),
       Cmd(List(":quit"),      "",       x => Quit,                    "exit interpreter"),
       Cmd(List(":help",":?"), "",       x => Help,                    "display this list of commands")
     )
@@ -137,22 +139,9 @@ trait REPL extends Common {
           case None => state
         }
       case Compile(CompileFile(f)) =>
-        try {
-          val input = scala.io.Source.fromFile(f).mkString("")
-          int.parseIO((int.isparse)+, input) match {
-            case Some(stmts) =>
-              stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
-            case None =>
-              handleError()
-              state
-          }
-        } catch {
-          case io: java.io.IOException =>
-            handleError()
-            Console.println(s"Error: ${io.getMessage}")
-            state
-        }
-
+        load(f, state, false)
+      case Reload(f) =>
+        load(f, state, true)
     }
   def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
     def checkEval(s: String, i: I): State = {
@@ -167,7 +156,7 @@ trait REPL extends Common {
           } else {
             Console.println(s"$s :: ${int.itprint(y)};")
           }
-          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx)
+          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx, state.modules)
       }
     }
     stmt match {
@@ -175,6 +164,27 @@ trait REPL extends Common {
       case Let(x, e) => checkEval(x, e)
       case Eval(e) => checkEval("it", e)
       case PutStrLn(x) => Console.println(x); state
+      case Import(f) => load(f, state, false)
+    }
+  }
+
+  def load(f: String, state: State, reload: Boolean): State = {
+    if (state.modules(f) && ! reload) return state;
+    try {
+      val input = scala.io.Source.fromFile(f).mkString("")
+      int.parseIO((int.isparse)+, input) match {
+        case Some(stmts) =>
+          val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
+          s1.copy(modules = s1.modules + f)
+        case None =>
+          handleError()
+          state
+      }
+    } catch {
+      case io: java.io.IOException =>
+        handleError()
+        Console.println(s"Error: ${io.getMessage}")
+        state
     }
   }
 

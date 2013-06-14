@@ -1,3 +1,5 @@
+import "prelude.all";
+
 let len =
   (\a -> listElim a (\ _ -> Nat) 0 (\ v vs w -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
