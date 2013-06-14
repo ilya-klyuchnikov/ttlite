@@ -1,15 +1,6 @@
 import "core.pi";
 import "nats.pi";
-
-// embed Fin into Nat
-let finNat = finElim (\ _ _ -> Nat)
-                     (\ _ -> Zero)
-                     (\ _ _ rec -> Succ rec);
-
-// unit type
-let Unit = Fin 1;
-// VConstructor
-let U = FZero 0;
+import "fin.pi";
 
 // eliminator
 let unitElim =
@@ -33,8 +24,6 @@ let unitElim =
                       1 )
   :: forall (m :: Unit -> *) . m U -> forall (u :: Unit) . m u;
 
-// empty type
-let Void = Fin Zero;
 // eliminator
 let voidElim =
   ( \ m -> finElim (natElim (\ n -> Fin n -> *)
@@ -44,12 +33,6 @@ let voidElim =
                    (\ _ _ _ -> U)
                    0 )
   :: forall (m :: Void -> *) (v :: Void) . m v;
-
-// type of booleans
-let Bool = Fin (Succ (Succ Zero));
-// VConstructors
-let False = FZero (Succ Zero);
-let True  = FSucc (Succ Zero) (FZero Zero);
 
 // eliminator
 let boolElim =

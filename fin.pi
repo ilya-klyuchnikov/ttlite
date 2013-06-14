@@ -1,0 +1,27 @@
+-- Finite types
+import "nats.pi";
+
+-- empty type
+let Void = Fin Zero;
+-- no constructor of empty type
+
+-- unit type
+let Unit = Fin 1;
+-- constructor
+let U = FZero 0;
+
+-- booleans
+let Bool = Fin 2;
+-- constructors
+let False = FZero 1;
+let True  = FSucc 1 U;
+
+-- embed Fin into Nat
+let finNat = finElim (\ _ _ -> Nat)
+                     (\ _ -> Zero)
+                     (\ _ _ rec -> Succ rec);
+
+-- 0
+finNat 2 False;
+-- 1
+finNat 2 True;
