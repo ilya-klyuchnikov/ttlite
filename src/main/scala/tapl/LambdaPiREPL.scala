@@ -42,58 +42,61 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
           state
       }
     }
-    lazy val iiparse: Parser[ITerm] = parseITErm(0, Nil)
+    lazy val iiparse: Parser[ITerm] = parseITErm0(Nil)
     val isparse: Parser[Stmt[ITerm, CTerm]] = parseStmt(Nil)
 
-    def parseITErm(i: Int, ns: List[String]): Parser[ITerm] = i match {
-      case 0 =>
-        ("forall" ~> parseBinding(ns)) >> { b => ("." ~> parseCTErm(0, b._1 :: ns )) ^^ { t1 =>
+    def parseITErm0(ns: List[String]): Parser[ITerm] =
+      "forall" ~> parseBinding(ns) >> { b => "." ~> parseCTErm0(b._1 :: ns ) ^^ { t1 =>
+        val t = b._2
+        Pi(t, t1)
+      }} |
+        "forall" ~> parseBindingPar(ns) >> { b => parseForall(0, b._1 :: ns ) ^^ { t1 =>
           val t = b._2
           Pi(t, t1)
         }} |
-          ("forall" ~> parseBindingPar(ns)) >> { b => (parseForall(0, b._1 :: ns )) ^^ { t1 =>
-            val t = b._2
-            Pi(t, t1)
-          }} |
-          parseITErm(1, ns) ~ ("->" ~> parseCTErm(0, "" :: ns)) ^^ {case x ~ y => Pi(Inf(x), y)} |
-          parseITErm(1, ns) |
-          ("(" ~> parseLam(ns) <~ ")") ~ ("->" ~> parseCTErm(0, "" :: ns)) ^^ {case x ~ y => Pi(x, y)}
-      case 1 =>
-        parseITErm(2, ns) ~ ("::" ~> parseCTErm(0, ns)) ^^ {case e ~ t => Ann(Inf(e), t)} |
-          parseITErm(2, ns) |
-          ("(" ~> parseLam(ns) <~ ")") ~ ("::" ~> parseCTErm(0, ns)) ^^ {case e ~ t => Ann(e, t)}
-      case 2 =>
-        parseITErm(3, ns) ~ (parseCTErm(3, ns)*) ^^ {case t ~ ts => ts.foldLeft(t){_ @@ _} }
-      // var
-      case 3 =>
-        ident ^^ {i => ns.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
-          "(" ~> parseITErm(0, ns) <~ ")" | numericLit ^^ {x => toNat(x.toInt)} |
-          "*" ^^^ {Star}
-    }
+        parseITErm1(ns) ~ ("->" ~> parseCTErm0("" :: ns)) ^^ {case x ~ y => Pi(Inf(x), y)} |
+        parseITErm1(ns) |
+        ("(" ~> parseLam(ns) <~ ")") ~ ("->" ~> parseCTErm0("" :: ns)) ^^ {case x ~ y => Pi(x, y)}
+    def parseITErm1(ns: List[String]): Parser[ITerm] =
+      parseITErm2(ns) ~ ("::" ~> parseCTErm0(ns)) ^^ {case e ~ t => Ann(Inf(e), t)} |
+        parseITErm2(ns) |
+        ("(" ~> parseLam(ns) <~ ")") ~ ("::" ~> parseCTErm0(ns)) ^^ {case e ~ t => Ann(e, t)}
+    def parseITErm2(ns: List[String]): Parser[ITerm] =
+      parseITErm3(ns) ~ (parseCTErm3(ns)*) ^^ {case t ~ ts => ts.foldLeft(t){_ @@ _} }
+    def parseITErm3(ns: List[String]): Parser[ITerm] =
+      ident ^^ {i => ns.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
+        "(" ~> parseITErm0(ns) <~ ")" | numericLit ^^ {x => toNat(x.toInt)} |
+        "*" ^^^ Star
     def parseForall(i: Int, ns: List[String]): Parser[CTerm] = {
-      ("." ~> parseCTErm(0, ns )) |
-        (parseBindingPar(ns) >> { b => (parseForall(0, b._1 :: ns )) ^^ { t1 =>
+      "." ~> parseCTErm0(ns ) |
+        parseBindingPar(ns) >> { b => parseForall(0, b._1 :: ns ) ^^ { t1 =>
           val t = b._2
           Inf(Pi(t, t1))
-        }})
+        }}
     }
-    def parseCTErm(i: Int, ns: List[String]): Parser[CTerm] = i match {
-      case 0 => parseLam(ns) | parseITErm(0, ns) ^^ {Inf(_)}
-      case p => "(" ~> parseLam(ns) <~ ")" | parseITErm(p, ns) ^^ {Inf(_)}
-    }
+
+    def parseCTErm0(ns: List[String]): Parser[CTerm] =
+      parseLam(ns) | parseITErm0(ns) ^^ {Inf(_)}
+    def parseCTErm1(ns: List[String]): Parser[CTerm] =
+      "(" ~> parseLam(ns) <~ ")" | parseITErm1(ns) ^^ {Inf(_)}
+    def parseCTErm2(ns: List[String]): Parser[CTerm] =
+      "(" ~> parseLam(ns) <~ ")" | parseITErm2(ns) ^^ {Inf(_)}
+    def parseCTErm3(ns: List[String]): Parser[CTerm] =
+      "(" ~> parseLam(ns) <~ ")" | parseITErm3(ns) ^^ {Inf(_)}
+
     def parseLam(ns: List[String]): Parser[CTerm] =
-      ("\\" ~> (ident+) <~ "->") >> {ids => parseCTErm(0, ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
+      "\\" ~> (ident+) <~ "->" >> {ids => parseCTErm0(ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
     def parseStmt(ns: List[String]): Parser[Stmt[ITerm, CTerm]] =
-      ("let" ~> ident) ~ ("=" ~> parseITErm(0, ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
-        ("assume" ~> (parseBinding(Nil) | parseBindingPar(Nil)) <~ ";") ^^ {b => Assume(List(b))} |
-        ("import" ~> stringLit <~ ";") ^^ Import |
-        parseITErm(0, ns) <~ ";" ^^ {Eval(_)}
+      "let" ~> ident ~ ("=" ~> parseITErm0(ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
+        "assume" ~> (parseBinding(Nil) | parseBindingPar(Nil)) <~ ";" ^^ {b => Assume(List(b))} |
+        "import" ~> stringLit <~ ";" ^^ Import |
+        parseITErm0(ns) <~ ";" ^^ {Eval(_)}
 
     def parseBindingPar(e: List[String]): Parser[(String, CTerm)] =
       "(" ~> parseBinding(e) <~ ")"
 
     def parseBinding(e: List[String]): Parser[(String, CTerm)] =
-      ident ~ ("::" ~> parseCTErm(0, e)) ^^ {case i ~ x => (i, x)}
+      ident ~ ("::" ~> parseCTErm0(e)) ^^ {case i ~ x => (i, x)}
   }
   def toNat(i: Int): ITerm = sys.error("not implemented")
 }
