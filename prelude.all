@@ -81,7 +81,7 @@ let voidElim =
                    (\ _ -> U)
                    (\ _ _ _ -> U)
                    0 )
-  :: forall (m :: Void -> *) . forall (v :: Void) . m v;
+  :: forall (m :: Void -> *) (v :: Void) . m v;
 
 // type of booleans
 let Bool = Fin (Succ (Succ Zero));
@@ -171,7 +171,7 @@ let leibniz =
   ( \ a b f -> eqElim a
                  (\ x y eq_x_y -> Eq b (f x) (f y))
                  (\ x -> Refl b (f x)) )
-  :: forall (a :: *). forall (b :: *). forall (f :: a -> b). forall (x :: a). forall (y :: a) . Eq a x y -> Eq b (f x) (f y);
+  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
 // symmetry of (general) equality
 let symm =
