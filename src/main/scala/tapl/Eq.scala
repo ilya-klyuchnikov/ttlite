@@ -10,7 +10,6 @@ trait EqAST extends LambdaPiAST {
   // propR(a, refl) - "reflexive" proposition ( prop(x, y, eq)[x -> a, y -> a, eq -> refl]
   // x, y - elems
   // eq - proof that x = y
-  // This is also called Leibniz principle.
   // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
   case class EqElim(A: CTerm, prop: CTerm, propR: CTerm, x: CTerm, y: CTerm, eq: CTerm) extends ITerm
   case class VEq(A: Value, x: Value, y: Value) extends Value
