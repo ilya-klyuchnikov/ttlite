@@ -1,0 +1,14 @@
+let len =
+  (\a -> listElim a (\ _ -> Nat) 0 (\ v vs w -> Succ w)) ::
+    forall (a :: *) . forall (v :: List a) . Nat;
+
+let append =
+  (\a xs ys -> listElim a (\_ -> List a) ys (\v vs w -> Cons a v w) xs) ::
+    forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+
+let l0 = Nil Nat :: List Nat;
+let l1 = Cons Nat 1 l0 :: List Nat;
+let l2 = Cons Nat 2 l1 :: List Nat;
+
+let len2 = len Nat l2;
+let lz = append Nat l2 l2;
