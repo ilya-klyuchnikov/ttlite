@@ -1,14 +1,14 @@
-let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+let id    = (\ _ x -> x) :: forall (A :: *) . A -> A;
+let const = (\ _ _ x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
 
-// Leibniz prinicple (look at the type signature)
+-- Leibniz principle (look at the type signature)
 let leibniz =
   ( \ a b f -> eqElim a
                  (\ x y eq_x_y -> Eq b (f x) (f y))
                  (\ x -> Refl b (f x)) )
   :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
-// symmetry of (general) equality
+-- symmetry of (general) equality
 let symm =
   ( \ a -> eqElim a
              (\ x y eq_x_y -> Eq a y x)
@@ -16,7 +16,7 @@ let symm =
   :: forall (a :: *) (x :: a) (y :: a) .
      Eq a x y -> Eq a y x;
 
-// transitivity of (general) equality
+-- transitivity of (general) equality
 let tran =
   ( \ a x y z eq_x_y -> eqElim a
                           (\ x y eq_x_y -> forall (z :: a) . Eq a y z -> Eq a x z)
@@ -25,7 +25,7 @@ let tran =
   :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
 
-// apply an equality proof on two types
+-- apply an equality proof on two types
 let apply =
   eqElim * (\ a b _ -> a -> b) (\ _ x -> x)
   :: forall (a :: *) (b :: *) (p :: Eq * a b) . a -> b;
