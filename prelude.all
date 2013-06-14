@@ -272,8 +272,8 @@ let fromto =
     ( VNil Nat )
     ( \ n1 rec_n1 -> VCons Nat n1 n1 rec_n1 );
 
-// append two vectors
-let append =
+// vappend two vectors
+let vappend =
   ( \ a -> vecElim a
              (\ m _ -> forall (n :: Nat) . Vec a n -> Vec a (plus m n))
              (\ _ v -> v)

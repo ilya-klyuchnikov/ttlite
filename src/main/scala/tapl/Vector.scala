@@ -19,7 +19,7 @@ trait VectorPrinter extends NatPrinter with VectorAST {
     case Vec(a, n) =>
       iPrint(p, ii, Free(Global("Vec")) @@ a @@ n)
     case VecElim(a, m, mn, mc, n, xs) =>
-      iPrint(p, ii, Free(Global("VeqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
+      iPrint(p, ii, Free(Global("veqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
     case _ =>
       super.iPrint(p, ii, t)
   }
@@ -157,8 +157,8 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
     List(
       Global("Vec") -> VecType,
       Global("vecElim") -> vecElimType,
-      Global("VNil") -> NilType,
-      Global("VCons") -> ConsType
+      Global("VNil") -> VNilType,
+      Global("VCons") -> VConsType
     )
 
   val VecTypeIn =
@@ -173,15 +173,15 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
       |forall (c :: Vec x b) .
       |  y b c
     """.stripMargin
-  val NilTypeIn =
+  val VNilTypeIn =
     "forall x :: * . Vec x Zero"
-  val ConsTypeIn =
+  val VConsTypeIn =
     "forall (x :: *) . forall (y :: Nat) . forall (z :: x) . forall (a :: Vec x y) . Vec x (Succ y)"
 
   lazy val VecType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VecTypeIn).get)
   lazy val vecElimType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, vecElimTypeIn).get)
-  lazy val NilType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, NilTypeIn).get)
-  lazy val ConsType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, ConsTypeIn).get)
+  lazy val VNilType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VNilTypeIn).get)
+  lazy val VConsType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VConsTypeIn).get)
 
   val vectorVE: Ctx[Value] =
     List(
