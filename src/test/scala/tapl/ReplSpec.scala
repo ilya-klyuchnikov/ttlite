@@ -17,7 +17,7 @@ class ReplSpec extends FunSpec {
     NatREPLMain.main(Array("prelude.nat"))
   }
 
-  describe("All REPL should process prelude.all without errors") {
-    AllREPLMain.main(Array("prelude.all"))
+  describe("All REPL should process prelude.all and lists.pi without errors") {
+    AllREPLMain.main(Array("prelude.all", "lists.pi"))
   }
 }
