@@ -15,7 +15,8 @@ trait LambdaPiPrinter extends LambdaPiAST {
       s
     case i :@: c =>
       parensIf(p > 2, (sep(Seq(iPrint(2, ii, i), nest(cPrint(3, ii, c))))))
-    case _ => ???
+    case _ =>
+      t.toString
   }
 
   def cPrint(p: Int, ii: Int, t: CTerm/*, cont: Doc = empty*/): Doc = t match {

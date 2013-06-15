@@ -2,7 +2,7 @@ package tapl
 
 // could we rewrite it better with scalaz??
 // this is just terrific strange code
-trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
+trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval with LambdaPiPrinter {
   def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =
     iType(0, g, i)
 
@@ -41,12 +41,12 @@ trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval {
 
   // checks that ct has type t
   def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
-    case (Inf(e), ty) =>
+    case (Inf(e), _) =>
       iType(ii, g, e).right.flatMap(ty1 =>
-        if (quote0(ty1) == quote0(ty))
+        if (quote0(ty1) == quote0(t))
           Right()
         else
-          Left(s"type mismatch: ${quote0(ty1)} != ${quote0(ty)}")
+          Left(s"type mismatch. inferred: ${pretty(cPrint(0, 0, quote0(ty1)))}. expected: ${pretty(cPrint(0, 0, quote0(t)))}. for expression ${pretty(iPrint(0, 0, e))}")
       )
     case (Lam(e), VPi(ty, ty1)) =>
       cType(ii + 1, (g._1, (Local(ii), ty) :: g._2 ), cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
