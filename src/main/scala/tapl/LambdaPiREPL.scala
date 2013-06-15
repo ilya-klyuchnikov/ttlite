@@ -1,6 +1,6 @@
 package tapl
 
-import scala.util.parsing.combinator.ImplicitConversions
+import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
 
 object LambdaPiREPLMain extends LambdaPiREPL {
   override def initialState = State(true, Nil, Nil, Set())
@@ -14,7 +14,7 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
   type TInf = CTerm
   type Inf = Value
   override val int = LambdaPIInterpreter
-  object LambdaPIInterpreter extends Interpreter with ImplicitConversions {
+  object LambdaPIInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
     val iname: String = "lambda-Pi"
@@ -42,61 +42,69 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
           state
       }
     }
-    lazy val iiparse: Parser[ITerm] = parseITErm0(Nil)
-    val isparse: Parser[Stmt[ITerm, CTerm]] = parseStmt(Nil)
+    lazy val iiparse: Parser[ITerm] = parseITErm0 ^^ {_(Nil)}
+    val isparse: Parser[Stmt[ITerm, CTerm]] = parseStmt
 
-    def parseITErm0(ns: List[String]): Parser[ITerm] =
-      "forall" ~> parseBinding(ns) >> { b => "." ~> parseCTErm0(b._1 :: ns ) ^^ { t1 =>
-        val t = b._2
-        Pi(t, t1)
-      }} |
-        "forall" ~> parseBindingPar(ns) >> { b => parseForall(0, b._1 :: ns ) ^^ { t1 =>
-          val t = b._2
-          Pi(t, t1)
-        }} |
-        parseITErm1(ns) ~ ("->" ~> parseCTErm0("" :: ns)) ^^ {case x ~ y => Pi(Inf(x), y)} |
-        parseITErm1(ns) |
-        ("(" ~> parseLam(ns) <~ ")") ~ ("->" ~> parseCTErm0("" :: ns)) ^^ {case x ~ y => Pi(x, y)}
-    def parseITErm1(ns: List[String]): Parser[ITerm] =
-      parseITErm2(ns) ~ ("::" ~> parseCTErm0(ns)) ^^ {case e ~ t => Ann(Inf(e), t)} |
-        parseITErm2(ns) |
-        ("(" ~> parseLam(ns) <~ ")") ~ ("::" ~> parseCTErm0(ns)) ^^ {case e ~ t => Ann(e, t)}
-    def parseITErm2(ns: List[String]): Parser[ITerm] =
-      parseITErm3(ns) ~ (parseCTErm3(ns)*) ^^ {case t ~ ts => ts.foldLeft(t){_ @@ _} }
-    def parseITErm3(ns: List[String]): Parser[ITerm] =
-      ident ^^ {i => ns.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
-        "(" ~> parseITErm0(ns) <~ ")" | numericLit ^^ {x => toNat(x.toInt)} |
-        "*" ^^^ Star
-    def parseForall(i: Int, ns: List[String]): Parser[CTerm] = {
-      "." ~> parseCTErm0(ns ) |
-        parseBindingPar(ns) >> { b => parseForall(0, b._1 :: ns ) ^^ { t1 =>
-          val t = b._2
-          Inf(Pi(t, t1))
-        }}
+    type C = List[String]
+    type Res[A] = C => A
+
+    lazy val parseITErm0: PackratParser[Res[ITerm]] =
+      ("forall" ~> parseBinding) ~ ("." ~> parseCTErm0) ^^ { case b ~ t1 => ctx: C =>
+        val bb = b(ctx)
+        val t = bb._2
+        Pi(t, t1(bb._1 :: ctx))
+      } |
+        ("forall" ~> parseBindingPar) ~ parseForall ^^ { case b ~ t1 => ctx: C =>
+          val bb = b(ctx)
+          val t = bb._2
+          Pi(t, t1(bb._1 :: ctx))
+        } |
+        parseITErm1 ~ ("->" ~> parseCTErm0) ^^ {case x ~ y => ctx: C => Pi(Inf(x(ctx)), y(""::ctx))} |
+        parseITErm1 |
+        ("(" ~> parseLam <~ ")") ~ ("->" ~> parseCTErm0) ^^ {case x ~ y => ctx: C => Pi(x(ctx), y(""::ctx))}
+    lazy val parseITErm1: PackratParser[Res[ITerm]] =
+      parseITErm2 ~ ("::" ~> parseCTErm0) ^^ {case e ~ t => ctx: C => Ann(Inf(e(ctx)), t(ctx))} |
+        parseITErm2 |
+        ("(" ~> parseLam <~ ")") ~ ("::" ~> parseCTErm0) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))}
+
+    lazy val parseITErm2: PackratParser[Res[ITerm]] =
+      parseITErm3 ~ (parseCTErm3*) ^^ {case t ~ ts => ctx: C => ts.map{_(ctx)}.foldLeft(t(ctx)){_ @@ _} }
+    lazy val parseITErm3: PackratParser[Res[ITerm]] =
+      ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
+        "(" ~> parseITErm0 <~ ")" | numericLit ^^ {x => ctx: C => toNat(x.toInt)} |
+        "*" ^^^ {ctx: C => Star}
+    lazy val parseForall: PackratParser[Res[CTerm]] = {
+      "." ~> parseCTErm0 |
+        parseBindingPar ~ parseForall ^^ { case b ~ t1 => ctx: C =>
+          val bb = b(ctx)
+          val t = bb._2
+          Inf(Pi(t, t1(bb._1 :: ctx)))
+        }
     }
 
-    def parseCTErm0(ns: List[String]): Parser[CTerm] =
-      parseLam(ns) | parseITErm0(ns) ^^ {Inf(_)}
-    def parseCTErm1(ns: List[String]): Parser[CTerm] =
-      "(" ~> parseLam(ns) <~ ")" | parseITErm1(ns) ^^ {Inf(_)}
-    def parseCTErm2(ns: List[String]): Parser[CTerm] =
-      "(" ~> parseLam(ns) <~ ")" | parseITErm2(ns) ^^ {Inf(_)}
-    def parseCTErm3(ns: List[String]): Parser[CTerm] =
-      "(" ~> parseLam(ns) <~ ")" | parseITErm3(ns) ^^ {Inf(_)}
+    lazy val parseCTErm0: PackratParser[Res[CTerm]] =
+      parseLam | parseITErm0 ^^ {t => ctx: C => Inf(t(ctx))}
+    lazy val parseCTErm1: PackratParser[Res[CTerm]] =
+      "(" ~> parseLam <~ ")" | parseITErm1 ^^ {t => ctx: C => Inf(t(ctx))}
+    lazy val parseCTErm2: PackratParser[Res[CTerm]] =
+      "(" ~> parseLam <~ ")" | parseITErm2 ^^ {t => ctx: C => Inf(t(ctx))}
+    lazy val parseCTErm3: PackratParser[Res[CTerm]] =
+      "(" ~> parseLam <~ ")" | parseITErm3 ^^ {t => ctx: C => Inf(t(ctx))}
 
-    def parseLam(ns: List[String]): Parser[CTerm] =
-      "\\" ~> (ident+) <~ "->" >> {ids => parseCTErm0(ids.reverse ::: ns) ^^ {t => ids.foldLeft(t){(t, z) => Lam(t)}}}
-    def parseStmt(ns: List[String]): Parser[Stmt[ITerm, CTerm]] =
-      "let" ~> ident ~ ("=" ~> parseITErm0(ns) <~ ";") ^^ {case x ~ y => Let(x, y)} |
-        "assume" ~> (parseBinding(Nil) | parseBindingPar(Nil)) <~ ";" ^^ {b => Assume(List(b))} |
+    lazy val parseLam: PackratParser[Res[CTerm]] =
+      ("\\" ~> (ident+) <~ "->") ~ parseCTErm0 ^^ {case ids ~ t => ctx: C => ids.foldLeft(t(ids.reverse ::: ctx)){(t, z) => Lam(t)}}
+
+    lazy val parseStmt: PackratParser[Stmt[ITerm, CTerm]] =
+      "let" ~> ident ~ ("=" ~> parseITErm0 <~ ";") ^^ {case x ~ y => Let(x, y(Nil))} |
+        "assume" ~> (parseBinding | parseBindingPar) <~ ";" ^^ {b => Assume(List(b(Nil)))} |
         "import" ~> stringLit <~ ";" ^^ Import |
-        parseITErm0(ns) <~ ";" ^^ {Eval(_)}
+        parseITErm0 <~ ";" ^^ {t => Eval(t(Nil))}
 
-    def parseBindingPar(e: List[String]): Parser[(String, CTerm)] =
-      "(" ~> parseBinding(e) <~ ")"
+    lazy val parseBindingPar: PackratParser[Res[(String, CTerm)]] =
+      "(" ~> parseBinding <~ ")"
 
-    def parseBinding(e: List[String]): Parser[(String, CTerm)] =
-      ident ~ ("::" ~> parseCTErm0(e)) ^^ {case i ~ x => (i, x)}
+    lazy val parseBinding: PackratParser[Res[(String, CTerm)]] =
+      ident ~ ("::" ~> parseCTErm0) ^^ {case i ~ x => ctx: C => (i, x(ctx))}
   }
   def toNat(i: Int): ITerm = sys.error("not implemented")
 }
