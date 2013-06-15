@@ -1,4 +1,5 @@
 -- basic functions over natural numbers
+import "core.pi";
 
 -- addition of natural numbers
 let plus =
@@ -23,20 +24,41 @@ let pred =
     Zero
     ( \ n1 _ -> n1 );
 
+-- fZSucc0 Z        = a1 :: A
+-- fZSucc0 (Succ _) = a2 :: A
+-- this function allows to eliminate nats
+-- in simple (homo) way
+let fZSucc0 =
+    (\A a1 a2 -> natElim (\n -> A) a1 (\n pred -> a2))
+    :: forall (A :: *) (a1 :: A) (a2 :: A) . Nat -> A;
+
+-- fZSucc0 Z        = a :: A
+-- fZSucc0 (Succ _) = b :: b
+-- note that the type of result depends on n
+let fZSucc =
+    (\A B a b -> natElim (\n -> fZSucc0 * A B n) a (\n pred -> b) )
+    :: forall (A :: *) (B :: *) (_ :: A) (_ :: B) (n :: Nat) . fZSucc0 * A B n;
+
 -- a simpler elimination scheme for natural numbers
 -- type of result doesn't depend on n
 let natFold =
   ( \ m mz ms -> natElim
-                   ( \ _ -> m )
+                   (const * Nat m)
                    mz
-                   ( \ _ rec -> ms rec ) )
+                   (\ n1 rec -> ms rec ) )
   :: forall (a :: *) . a -> (a -> a) -> Nat -> a;
 
 -- an eliminator for natural numbers that has special
 -- cases for 0 and 1
 let nat1Elim =
-  ( \ m m0 m1 ms -> natElim m m0
-                            (\ p rec -> natElim (\ n -> m (Succ n)) m1 ms p) )
+  ( \ m m0 m1 ms -> natElim
+                      (m :: Nat -> *)
+                      (m0 :: m 0)
+                      ((\ n1 -> ((\ _ -> ((natElim
+                                    ((\ n -> m (Succ n)) :: forall (n :: Nat) . * )
+                                    (m1 :: m 1)
+                                    (ms :: forall (n :: Nat) . m (Succ n) -> m (Succ (Succ n))) :: forall (a :: Nat) . m (Succ a))
+                                    n1) :: m (Succ n1) )     :: forall (ss :: m n1) . m (Succ n1)    ))))
   :: forall (m :: Nat -> *) . m 0 -> m 1 ->
      (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
      forall (n :: Nat) . m n;
