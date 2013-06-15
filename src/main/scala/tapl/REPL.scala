@@ -184,14 +184,11 @@ trait REPL extends Common {
   def load(f: String, state: State, reload: Boolean): State = {
     if (state.modules(f) && ! reload) return state;
     try {
-      println(s"${new java.util.Date()} loading $f")
       val input = scala.io.Source.fromFile(f).mkString("")
       val parsed = int.parseIO((int.isparse)+, input)
-      println(s"${new java.util.Date()} parsed $f")
       parsed match {
         case Some(stmts) =>
           val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
-          println(s"${new java.util.Date()} loaded $f")
           s1.copy(modules = s1.modules + f)
         case None =>
           handleError()
