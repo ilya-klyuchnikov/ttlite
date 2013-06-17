@@ -18,6 +18,6 @@ class ReplSpec extends FunSpec {
   }
 
   describe("All REPL should process prelude.all and lists.pi without errors") {
-    AllREPLMain.main(Array("prelude.all", "lists.pi"))
+    AllREPLMain.main(Array("prelude.all"))
   }
 }

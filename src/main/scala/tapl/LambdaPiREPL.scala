@@ -92,7 +92,8 @@ trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval wi
       "(" ~> parseLam <~ ")" | parseITErm3 ^^ {t => ctx: C => Inf(t(ctx))}
 
     lazy val parseLam: PackratParser[Res[CTerm]] =
-      ("\\" ~> (ident+) <~ "->") ~ parseCTErm0 ^^ {case ids ~ t => ctx: C => ids.foldLeft(t(ids.reverse ::: ctx)){(t, z) => Lam(t)}}
+      ("\\" ~> (ident+) <~ "->") ~ parseCTErm0 ^^ {case ids ~ t => ctx: C => ids.foldLeft(t(ids.reverse ::: ctx)){(t, z) => Lam(t)}} |
+        "(" ~> parseLam <~ ")"
 
     lazy val parseStmt: PackratParser[Stmt[ITerm, CTerm]] =
       "let" ~> ident ~ ("=" ~> parseITErm0 <~ ";") ^^ {case x ~ y => Let(x, y(Nil))} |

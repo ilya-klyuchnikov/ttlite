@@ -1,0 +1,45 @@
+let p1 = Pair Nat Nat 1 1;
+
+let th1 = forall (A :: *) (B :: *) . Product A B -> Product B A;
+let pr1 = (\a b p -> Pair b a (snd a b p) (fst a b p)) :: th1;
+
+-- Exercise 4.1
+-- (A /\ B) /\ C => A /\ (B /\ C)
+let th2 =
+    forall (A :: *) (B :: *) (C :: *) .
+        Product (Product A B) C -> Product A (Product B C);
+
+-- p1 = fst (Product A B) C p
+-- a = fst A B p1 = fst A B (fst (Product A B) C p)
+-- b = snd A B p1 = snd A B (fst (Product A B) C p)
+-- c = snd (Product A B) C p
+-- (b, c) = Pair B C b c = Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p)
+-- (a, (b, c)) = Pair A (Product B C) a (b, c) =
+--   =  Pair A (Product B C) (fst A B (fst (Product A B) C p)) (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))
+let pr2 =
+    (\A B C p ->
+        Pair A (Product B C)
+            (fst A B (fst (Product A B) C p))
+            (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
+
+-- type without elements
+assume (Bot :: *);
+
+let Not = (\ A -> (A -> Bot)) :: * -> *;
+let th3 = (\A -> Not (Not A)) :: * -> *;
+
+let Impl = (\A -> (A -> A)) :: forall (_ :: *) . *;
+
+let id    = (\ _ x -> x) :: forall (A :: *) . A -> A;
+let idNat =  id Nat :: Impl Nat;
+
+let ff = (\A -> id A) :: forall (a :: *) . Impl a;
+--let xx =
+
+--;
+
+assume (A :: *);
+
+
+
+
