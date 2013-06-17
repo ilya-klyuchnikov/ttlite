@@ -35,14 +35,14 @@ let f3_1 = FZero 2 :: Fin3;
 let f3_2 = FSucc 2 False :: Fin3;
 let f3_3 = FSucc 2 True :: Fin3;
 
-let z = (\m -> (natElim (\ n -> Fin n -> *)
+let z1 = (\m -> (natElim (\ n -> Fin n -> *)
                         (\ x -> m x)
                         (\ _ _ _ -> Unit))) ::
                  forall (m :: Void -> *) . forall (a :: Nat) (b :: Fin a) . *;
 
 -- void eliminator
 let voidElim =
-  ( \ m -> finElim (z m)
+  ( \ m -> finElim (z1 m)
                    (\ _ -> U)
                    (\ _ _ _ -> U)
                    0 )
