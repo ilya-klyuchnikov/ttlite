@@ -1,0 +1,62 @@
+let id    = (\ _ x -> x)
+            :: forall (A :: *) . A -> A;
+let const = (\ _ _ x y -> x)
+            :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
+-- assuming that
+assume (A :: *);
+assume (B :: *);
+assume (f :: A -> B);
+assume (z :: A);
+
+-- Leibniz principle for types a and b
+
+let propAB  = (\ x y eq_x_y -> Eq B (f x) (f y)) :: forall (x :: A) (y :: A) (eq :: Eq A x y) . *;
+let propRAB = (\ x -> Refl B (f x)) :: forall (x :: A) . Eq B (f x) (f x);
+
+let leibnizABF =
+    eqElim A propAB propRAB :: forall (x :: A) (y :: A) . Eq A x y -> Eq B (f x) (f y);
+
+
+let prop  = (\A B g x y eq_x_y -> Eq B (g x) (g y))
+            :: forall (A :: *) (B :: *) (g :: A -> B) (x :: A) (y :: A) (_ :: Eq A x y) . *;
+let propR = (\A B g x -> Refl B (g x))
+            :: forall (A :: *) (B :: *) (g :: A -> B) (x :: A) . Eq B (g x) (g x);
+
+let leibniz = (\A B f -> eqElim A (prop A B f) (propR A B f))
+                :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+-- apply an equality proof on two types
+-- input: proof that two types A and P are equal
+-- output is a function from A to B (it is constructed in a trivial way (as id))
+let apply =
+  eqElim * (\ a b eq_a_b -> a -> b) id
+  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
+
+-- False proposition
+assume (Void :: *);
+-- True proposition
+assume (Unit :: *);
+assume (U :: Unit);
+
+let Not = (\ a -> a -> Void) :: * -> *;
+
+-- maps zero to Void and (Succ _) to Unit
+let natVoidUnit = natElim (\n -> *) Void (\ _ _ -> Unit);
+
+
+-- contr. Input: proof that 1 is 0. Output is proof that Unit = Void.
+let contr = leibniz Nat * natVoidUnit 1 0
+            :: forall(a :: Eq Nat 1 0). Eq * Unit Void;
+
+-- proof that 1 is not 0
+let p1IsNot0 =
+  (\ p1eq0 -> apply Unit Void (contr p1eq0) U)
+  :: Not (Eq Nat 1 0);
+
+-- thompson 4.3 (b)
+let doubleNeg = forall (A :: *) . A -> Not (Not A); -- = A -> Not A -> Void
+let doubleNegProof = (\A a notA -> notA a) :: doubleNeg;
+
+--
+-- Not (Not A) -> A  = (Not A -> Void) -> A   =    ((A -> Void) -> Void ) -> A
