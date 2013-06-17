@@ -120,13 +120,13 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
     "forall x :: Nat . *"
   val finElimTypeIn =
     """
-      |forall (x :: forall (x :: Nat) . forall (y :: Fin x) . *) .
-      |forall (y :: forall y :: Nat . x (Succ y) (FZero y)) .
-      |forall (z :: forall (z :: Nat) . forall (a :: Fin z) . forall (b :: x z a) .
-      |             x (Succ z) (FSucc z a)) .
+      |forall (m :: forall (x :: Nat) . forall (y :: Fin x) . *) .
+      |forall (_ :: forall y :: Nat . m (Succ y) (FZero y)) .
+      |forall (z :: forall (z :: Nat) . forall (a :: Fin z) . forall (b :: m z a) .
+      |             m (Succ z) (FSucc z a)) .
       |forall (a :: Nat) .
       |forall (b :: Fin a) .
-      |x a b
+      |m a b
     """.stripMargin
 
   lazy val FZeroType = int.ieval(finVE ++ natVE, int.parseIO(int.iiparse, FZeroTypeIn).get)
