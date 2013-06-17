@@ -56,7 +56,6 @@ trait ListEval extends LambdaPiEval with ListAST {
         case VPiCons(_, head, tail) =>
           consCaseVal @@ head @@ tail @@ rec(tail)
         case VNeutral(n) =>
-          println(listVal)
           VNeutral(NPiListElim(cEval(a, d), cEval(m, d), nilCaseVal, consCaseVal, n))
       }
       rec(cEval(ls, d))
