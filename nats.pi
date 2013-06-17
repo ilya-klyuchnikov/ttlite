@@ -55,10 +55,10 @@ let nat1Elim =
                       (m :: Nat -> *)
                       (m0 :: m 0)
                       ( (\ n1 -> ((\ _ -> ((natElim
-                                    ((\ n -> m (Succ n)) :: forall (n :: Nat) . * )
-                                    (m1 :: m 1)
-                                    (ms :: forall (n :: Nat) . m (Succ n) -> m (Succ (Succ n))) :: forall (a :: Nat) . m (Succ a))
-                                    n1) :: m (Succ n1) )     :: forall (ss :: m n1) . m (Succ n1)    )) :: forall (n1 :: Nat) (ss :: m n1) . m (Succ n1) ))
+                                    (\ n -> m (Succ n))
+                                    m1
+                                    ms :: forall (a :: Nat) . m (Succ a))
+                                    n1) ) )) :: forall (nn :: Nat) (_ :: m nn) . m (Succ nn) ))
   :: forall (m :: Nat -> *) . m 0 -> m 1 ->
      (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
      forall (n :: Nat) . m n;

@@ -2,7 +2,7 @@ import "core.pi";
 import "nats.pi";
 import "fin.pi";
 
-// eliminator
+// unit eliminator
 let unitElim =
   ( \ m mu -> finElim ( nat1Elim (\ n -> Fin n -> *)
                                  (\ _ -> Unit)
@@ -24,17 +24,7 @@ let unitElim =
                       1 )
   :: forall (m :: Unit -> *) . m U -> forall (u :: Unit) . m u;
 
-// eliminator
-let voidElim =
-  ( \ m -> finElim (natElim (\ n -> Fin n -> *)
-                            (\ x -> m x)
-                            (\ _ _ _ -> Unit))
-                   (\ _ -> U)
-                   (\ _ _ _ -> U)
-                   0 )
-  :: forall (m :: Void -> *) (v :: Void) . m v;
-
-// eliminator
+// bool eliminator
 let boolElim =
   ( \ m mf mt -> finElim ( nat2Elim (\ n -> Fin n -> *)
                                     (\ _ -> Unit) (\ _ -> Unit)

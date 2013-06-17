@@ -16,12 +16,34 @@ let Bool = Fin 2;
 let False = FZero 1;
 let True  = FSucc 1 U;
 
+-- False -> 1 :: Nat, False -> True :: Bool
+
 -- embed Fin into Nat
-let finNat = finElim (\ _ _ -> Nat)
-                     (\ _ -> Zero)
-                     (\ _ _ rec -> Succ rec);
+-- calculate "number" of an element of Fin n
+-- explicitly writing types for easier understanding
+let finNat = finElim ((\ n finN -> Nat) :: forall (n :: Nat) (x :: Fin n) . *)
+                     ((\ n -> Zero) :: forall (n :: Nat) . Nat )-- zero case
+                     ((\ n finN rec -> Succ rec) :: forall (n:: Nat) (x:: Fin n) (y :: Nat) . Nat);
 
 -- 0
 finNat 2 False;
 -- 1
 finNat 2 True;
+
+let Fin3 = Fin 3;
+let f3_1 = FZero 2 :: Fin3;
+let f3_2 = FSucc 2 False :: Fin3;
+let f3_3 = FSucc 2 True :: Fin3;
+
+let z = (\m -> (natElim (\ n -> Fin n -> *)
+                        (\ x -> m x)
+                        (\ _ _ _ -> Unit))) ::
+                 forall (m :: Void -> *) . forall (a :: Nat) (b :: Fin a) . *;
+
+-- void eliminator
+let voidElim =
+  ( \ m -> finElim (z m)
+                   (\ _ -> U)
+                   (\ _ _ _ -> U)
+                   0 )
+  :: forall (m :: Void -> *) (v :: Void) . m v;
