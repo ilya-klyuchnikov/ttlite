@@ -4,7 +4,7 @@ let const = (\ _ _ x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
 -- Leibniz principle (look at the type signature)
 let leibniz =
   ( \ a b f -> eqElim a
-                 (\ x y eq_x_y -> Eq b (f x) (f y))
+                 (\ x y eq_x_y -> Eq b (f x) (f y)) -- prop = x y eq_x_y, when substituting, we have Eq b (f x) (f x)
                  (\ x -> Refl b (f x)) )
   :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
@@ -26,6 +26,8 @@ let tran =
      Eq a x y -> Eq a y z -> Eq a x z;
 
 -- apply an equality proof on two types
+-- input: proof that two types A and P are equal
+-- output is a function from A to B (it is constructed in a trivial way (as id))
 let apply =
-  eqElim * (\ a b _ -> a -> b) (\ _ x -> x)
-  :: forall (a :: *) (b :: *) (p :: Eq * a b) . a -> b;
+  eqElim * (\ a b eq_a_b -> a -> b) id
+  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
