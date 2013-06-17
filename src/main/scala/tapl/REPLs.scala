@@ -5,7 +5,7 @@ object NatREPLMain extends NatREPL {
 }
 
 object AllREPLMain extends LambdaPiREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with PairREPL {
-  val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ pairTE
-  val ve = natVE ++ eqVE ++ vectorVE ++ finVE ++ listVE ++ pairVE
+  val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ productTE
+  val ve = natVE ++ eqVE ++ vectorVE ++ finVE ++ listVE ++ productVE
   override def initialState = State(true, ve, te, Set())
 }

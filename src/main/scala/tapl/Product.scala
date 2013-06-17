@@ -2,14 +2,14 @@ package tapl
 
 trait PairAST extends LambdaPiAST {
   // pair data
-  case class PairD(A: CTerm, B: CTerm, a: CTerm, b: CTerm) extends CTerm
+  case class Pair(A: CTerm, B: CTerm, a: CTerm, b: CTerm) extends CTerm
   // type of pair
-  case class PairT(A: CTerm, B: CTerm) extends ITerm
+  case class Product(A: CTerm, B: CTerm) extends ITerm
   case class Fst(A: CTerm, B: CTerm, p: CTerm) extends ITerm
   case class Snd(A: CTerm, B: CTerm, p: CTerm) extends ITerm
 
-  case class VPairD(A: Value, B: Value, a: Value, b: Value) extends Value
-  case class VPairT(A: Value, B: Value) extends Value
+  case class VPair(A: Value, B: Value, a: Value, b: Value) extends Value
+  case class VProduct(A: Value, B: Value) extends Value
 
   case class NFst(A: Value, B: Value, p: Neutral) extends Neutral
   case class NSnd(A: Value, B: Value, p: Neutral) extends Neutral
@@ -17,7 +17,7 @@ trait PairAST extends LambdaPiAST {
 
 trait PairPrinter extends LambdaPiPrinter with PairAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
-    case PairT(a, b) =>
+    case Product(a, b) =>
       iPrint(p, ii, Free(Global("Product")) @@ a @@ b)
     case Fst(a, b, pr) =>
       iPrint(p, ii, Free(Global("fst")) @@ a @@ b @@ pr)
@@ -28,7 +28,7 @@ trait PairPrinter extends LambdaPiPrinter with PairAST {
   }
 
   override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
-    case PairD(a, b, x, y) =>
+    case Pair(a, b, x, y) =>
       iPrint(p, ii, Free(Global("Pair")) @@ a @@ b @@ x @@ y)
     case _ =>
       super.cPrint(p, ii, t)
@@ -37,25 +37,25 @@ trait PairPrinter extends LambdaPiPrinter with PairAST {
 
 trait PairEval extends LambdaPiEval with PairAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
-    case PairD(a, b, x, y) =>
-      VPairD(cEval(a, d), cEval(b, d), cEval(x, d), cEval(y, d))
+    case Pair(a, b, x, y) =>
+      VPair(cEval(a, d), cEval(b, d), cEval(x, d), cEval(y, d))
     case _ =>
       super.cEval(c, d)
   }
 
   override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
-    case PairT(a, b) =>
-      VPairT(cEval(a, d), cEval(b, d))
+    case Product(a, b) =>
+      VProduct(cEval(a, d), cEval(b, d))
     case Fst(a, b, p) =>
       cEval(p, d) match {
-        case VPairD(_, _, x, _) =>
+        case VPair(_, _, x, _) =>
           x
         case VNeutral(n) =>
           VNeutral(NFst(cEval(a, d), cEval(b, d), n))
       }
     case Snd(a, b, p) =>
       cEval(p, d) match {
-        case VPairD(_, _, _, y) =>
+        case VPair(_, _, _, y) =>
           y
         case VNeutral(n) =>
           VNeutral(NSnd(cEval(a, d), cEval(b, d), n))
@@ -67,7 +67,7 @@ trait PairEval extends LambdaPiEval with PairAST {
 
 trait PairCheck extends LambdaPiCheck with PairAST {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
-    case PairT(a, b) =>
+    case Product(a, b) =>
       assert(cType(i, g, a, VStar).isRight)
       assert(cType(i, g, b, VStar).isRight)
       Right(VStar)
@@ -78,7 +78,7 @@ trait PairCheck extends LambdaPiCheck with PairAST {
       assert(cType(i, g, b, VStar).isRight)
       val bVal = cEval(b, (g._1, List()))
 
-      assert(cType(i, g, p, VPairT(aVal, bVal)).isRight)
+      assert(cType(i, g, p, VProduct(aVal, bVal)).isRight)
       Right((aVal))
     case Snd(a, b, p) =>
       assert(cType(i, g, a, VStar).isRight)
@@ -87,7 +87,7 @@ trait PairCheck extends LambdaPiCheck with PairAST {
       assert(cType(i, g, b, VStar).isRight)
       val bVal = cEval(b, (g._1, List()))
 
-      assert(cType(i, g, p, VPairT(aVal, bVal)).isRight)
+      assert(cType(i, g, p, VProduct(aVal, bVal)).isRight)
       Right((bVal))
     case _ =>
       super.iType(i, g, t)
@@ -95,7 +95,7 @@ trait PairCheck extends LambdaPiCheck with PairAST {
 
 
   override def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
-    case (PairD(a, b, x, y), VPairT(aVal, bVal)) =>
+    case (Pair(a, b, x, y), VProduct(aVal, bVal)) =>
       assert(cType(ii, g, a, VStar).isRight)
       if (quote0(cEval(a, (g._1, List()))) != quote0(aVal))
         return Left("type mismatch")
@@ -110,8 +110,8 @@ trait PairCheck extends LambdaPiCheck with PairAST {
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
-    case PairT(a, b) =>
-      PairT(cSubst(i, r, a), cSubst(i, r, b))
+    case Product(a, b) =>
+      Product(cSubst(i, r, a), cSubst(i, r, b))
     case Fst(a, b, p) =>
       Fst(cSubst(i, r, a), cSubst(i, r, b), cSubst(i, r, p))
     case Snd(a, b, p) =>
@@ -120,8 +120,8 @@ trait PairCheck extends LambdaPiCheck with PairAST {
   }
 
   override def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
-    case PairD(a, b, x, y) =>
-      PairD(cSubst(ii, r, a), cSubst(ii, r, b), cSubst(ii, r, x), cSubst(ii, r, y))
+    case Pair(a, b, x, y) =>
+      Pair(cSubst(ii, r, a), cSubst(ii, r, b), cSubst(ii, r, x), cSubst(ii, r, y))
     case _ =>
       super.cSubst(ii, r, ct)
   }
@@ -130,8 +130,8 @@ trait PairCheck extends LambdaPiCheck with PairAST {
 
 trait PairQuote extends LambdaPiQuote with PairAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
-    case VPairT(a, b) => Inf(PairT(quote(ii, a), quote(ii, b)))
-    case VPairD(a, b, x, y) => PairD(quote(ii, a), quote(ii, b), quote(ii, x), quote(ii, y))
+    case VProduct(a, b) => Inf(Product(quote(ii, a), quote(ii, b)))
+    case VPair(a, b, x, y) => Pair(quote(ii, a), quote(ii, b), quote(ii, x), quote(ii, y))
     case _ => super.quote(ii, v)
   }
 
@@ -145,18 +145,18 @@ trait PairQuote extends LambdaPiQuote with PairAST {
 }
 
 trait PairREPL extends LambdaPiREPL with PairAST with PairPrinter with PairCheck with PairEval with PairQuote {
-  lazy val pairTE: Ctx[Value] =
+  lazy val productTE: Ctx[Value] =
     List(
       Global("Product") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),
-      Global("Pair") -> VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VPairT(a, b))))),
-      Global("fst") -> VPi(VStar, a => VPi(VStar, b => VPi(VPairT(a, b), _ => a))),
-      Global("snd") -> VPi(VStar, a => VPi(VStar, b => VPi(VPairT(a, b), _ => b)))
+      Global("Pair") -> VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VProduct(a, b))))),
+      Global("fst") -> VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => a))),
+      Global("snd") -> VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => b)))
     )
 
-  val pairVE: Ctx[Value] =
+  val productVE: Ctx[Value] =
     List(
-      Global("Product") -> VLam(a => VLam(b => VPairT(a, b))),
-      Global("Pair") -> VLam(a => VLam(b => VLam(x => VLam(y => VPairD(a, b, x, y))) )),
+      Global("Product") -> VLam(a => VLam(b => VProduct(a, b))),
+      Global("Pair") -> VLam(a => VLam(b => VLam(x => VLam(y => VPair(a, b, x, y))) )),
       Global("fst") -> cEval(Lam(Lam(Lam( Inf(Fst(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), (Nil, Nil)),
       Global("snd") -> cEval(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), (Nil, Nil))
     )
