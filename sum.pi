@@ -1,0 +1,15 @@
+--import "core1.pi";
+import "prelude.all";
+
+let thSum01 = forall (A :: *) (B :: *). Sum A B -> Sum B A;
+
+let proofSum01 =
+    (\A B s -> cases A B (\_ -> Sum B A) (InR B A) (InL B A) s) :: thSum01;
+
+-- (¬A ∨ B) => (A => B)
+
+let thSum02 =
+    forall (A :: *) (B :: *). Sum (Not A) B -> (A -> B);
+
+let proofSum02 =
+    (\A B s a -> cases (Not A) B (\_ -> B) (\notA -> voidElim B (notA a)) (\b -> b) s) :: thSum02;
