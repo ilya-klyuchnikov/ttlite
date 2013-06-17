@@ -63,15 +63,23 @@ trait EqCheck extends LambdaPiCheck with EqAST {
       assert(cType(i, g, x, aVal).isRight)
       Right(VStar)
     case EqElim(a, prop, propR, x, y, eq) =>
+      assert(cType(i, g, a, VStar).isRight)
+
       val aVal = cEval(a, (g._1, Nil))
+      assert(cType(i, g, x, aVal).isRight)
+
       assert(cType(i, g, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
       val propVal = cEval(prop, (g._1, Nil))
+
+      // the main point is here: we check that prop x x (Refl A x) is well-typed
+      // propR :: {a => x => prop x x (Refl a x)}
       assert(cType(i, g, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)})).isRight)
-      assert(cType(i, g, x, aVal).isRight)
+
       val xVal = cEval(x, (g._1, Nil))
       assert(cType(i, g, y, aVal).isRight)
       val yVal = cEval(y, (g._1, Nil))
       assert(cType(i, g, eq, VEq(aVal, xVal, yVal)).isRight)
+
       Right(vapp(vapp(propVal, xVal), yVal))
     case _ =>
       super.iType(i, g, t)
