@@ -1,4 +1,4 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
 trait PairAST extends LambdaPiAST {
   // pair data

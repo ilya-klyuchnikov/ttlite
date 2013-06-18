@@ -1,6 +1,6 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
-import tapl._
+import superspec._
 
 trait EqAST extends LambdaPiAST {
   // Refl A x :: Eq A x x

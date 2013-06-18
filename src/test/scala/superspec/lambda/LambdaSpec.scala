@@ -1,4 +1,4 @@
-package tapl.lambda
+package superspec.lambda
 
 import org.scalatest.FunSpec
 

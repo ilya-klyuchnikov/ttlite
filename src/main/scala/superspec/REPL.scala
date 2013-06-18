@@ -1,4 +1,4 @@
-package tapl
+package superspec
 
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import org.kiama.util.JLineConsole

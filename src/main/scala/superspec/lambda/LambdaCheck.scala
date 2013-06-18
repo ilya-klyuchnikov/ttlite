@@ -1,4 +1,4 @@
-package tapl.lambda
+package superspec.lambda
 
 trait LambdaCheck extends LambdaAST {
   // the goal is to throw exception

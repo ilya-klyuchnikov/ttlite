@@ -1,4 +1,4 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
 trait LambdaPiEval extends LambdaPiAST {
   def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {

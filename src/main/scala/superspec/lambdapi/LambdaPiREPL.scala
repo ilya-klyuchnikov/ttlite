@@ -1,6 +1,6 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
-import tapl._
+import superspec._
 
 import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
 

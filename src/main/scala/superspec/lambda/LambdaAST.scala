@@ -1,6 +1,6 @@
-package tapl.lambda
+package superspec.lambda
 
-import tapl._
+import superspec._
 
 trait LambdaAST extends Common { self =>
   // inferable terms

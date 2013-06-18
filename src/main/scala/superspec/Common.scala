@@ -1,4 +1,4 @@
-package tapl
+package superspec
 
 import org.kiama.output.PrettyPrinter
 

@@ -1,6 +1,6 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
-import tapl._
+import superspec._
 
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type

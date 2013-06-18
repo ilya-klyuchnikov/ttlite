@@ -1,6 +1,6 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
-import tapl._
+import superspec._
 
 trait LambdaPiAST extends Common {
   trait CTerm

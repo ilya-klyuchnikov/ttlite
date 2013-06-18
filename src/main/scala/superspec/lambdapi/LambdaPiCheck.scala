@@ -1,4 +1,4 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
 trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval with LambdaPiPrinter {
   def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =

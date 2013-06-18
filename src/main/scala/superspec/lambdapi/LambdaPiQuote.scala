@@ -1,4 +1,4 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
 trait LambdaPiQuote extends LambdaPiAST {
   def quote0(v: Value): CTerm =

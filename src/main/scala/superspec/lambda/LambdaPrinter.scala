@@ -1,4 +1,4 @@
-package tapl.lambda
+package superspec.lambda
 
 trait LambdaPrinter extends LambdaAST {
   def tPrint(p: Int, t: Type): Doc = t match {

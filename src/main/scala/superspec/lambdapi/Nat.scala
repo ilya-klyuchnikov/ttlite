@@ -1,4 +1,4 @@
-package tapl.lambdapi
+package superspec.lambdapi
 
 trait NatAST extends LambdaPiAST {
   case object Zero extends CTerm
