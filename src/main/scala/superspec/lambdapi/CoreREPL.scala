@@ -4,11 +4,7 @@ import superspec._
 
 import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
 
-object LambdaPiREPLMain extends LambdaPiREPL {
-  override def initialState = State(true, Nil, Nil, Set())
-}
-
-trait LambdaPiREPL extends LambdaPiAST with LambdaPiPrinter with LambdaPiEval with LambdaPiCheck with LambdaPiQuote with REPL {
+trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
   type I = ITerm
   type C = CTerm
   type V = Value

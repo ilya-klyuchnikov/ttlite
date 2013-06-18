@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait NatAST extends LambdaPiAST {
+trait NatAST extends CoreAST {
   case object Zero extends CTerm
   case class Succ(e: CTerm) extends CTerm
 
@@ -14,7 +14,7 @@ trait NatAST extends LambdaPiAST {
   case class NNatElim(v1: Value, v2: Value, v3: Value, n: Neutral) extends Neutral
 }
 
-trait NatPrinter extends LambdaPiPrinter with NatAST {
+trait NatPrinter extends CorePrinter with NatAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Nat =>
       "Nat"
@@ -42,7 +42,7 @@ trait NatPrinter extends LambdaPiPrinter with NatAST {
   }
 }
 
-trait NatEval extends LambdaPiEval with NatAST {
+trait NatEval extends CoreEval with NatAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Zero =>
       VZero
@@ -71,7 +71,7 @@ trait NatEval extends LambdaPiEval with NatAST {
   }
 }
 
-trait NatCheck extends LambdaPiCheck with NatAST {
+trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
     case Nat =>
       Right(VStar)
@@ -121,7 +121,7 @@ trait NatCheck extends LambdaPiCheck with NatAST {
 
 }
 
-trait NatQuote extends LambdaPiQuote with NatAST {
+trait NatQuote extends CoreQuote with NatAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VNat => Inf(Nat)
     case VZero => Zero
@@ -135,7 +135,7 @@ trait NatQuote extends LambdaPiQuote with NatAST {
   }
 }
 
-trait NatREPL extends LambdaPiREPL with NatAST with NatPrinter with NatCheck with NatEval with NatQuote {
+trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with NatEval with NatQuote {
   lazy val natTE: Ctx[Value] =
     List(
       Global("Zero") -> VNat,

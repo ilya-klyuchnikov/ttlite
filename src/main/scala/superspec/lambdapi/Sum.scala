@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait SumAST extends LambdaPiAST {
+trait SumAST extends CoreAST {
   // left injection
   case class InL(L: CTerm, R: CTerm, l: CTerm) extends CTerm
   // righ injection
@@ -17,7 +17,7 @@ trait SumAST extends LambdaPiAST {
   case class NSumElim(L: Value, R: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
-trait SumPrinter extends LambdaPiPrinter with SumAST {
+trait SumPrinter extends CorePrinter with SumAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Sum(a, b) =>
       iPrint(p, ii, Free(Global("Sum")) @@ a @@ b)
@@ -37,7 +37,7 @@ trait SumPrinter extends LambdaPiPrinter with SumAST {
   }
 }
 
-trait SumEval extends LambdaPiEval with SumAST {
+trait SumEval extends CoreEval with SumAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case InL(lt, rt, l) =>
       VInL(cEval(lt, d), cEval(rt, d), cEval(l, d))
@@ -67,7 +67,7 @@ trait SumEval extends LambdaPiEval with SumAST {
   }
 }
 
-trait SumCheck extends LambdaPiCheck with SumAST {
+trait SumCheck extends CoreCheck with SumAST {
   // I have an assumption, that there is not need of this
   // It will be done automatically
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
@@ -143,7 +143,7 @@ trait SumCheck extends LambdaPiCheck with SumAST {
 
 }
 
-trait SumQuote extends LambdaPiQuote with SumAST {
+trait SumQuote extends CoreQuote with SumAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VSum(a, b) => Inf(Sum(quote(ii, a), quote(ii, b)))
     case VInL(a, b, x) => InL(quote(ii, a), quote(ii, b), quote(ii, x))
@@ -158,7 +158,7 @@ trait SumQuote extends LambdaPiQuote with SumAST {
   }
 }
 
-trait SumREPL extends LambdaPiREPL with SumAST with SumPrinter with SumCheck with SumEval with SumQuote {
+trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with SumEval with SumQuote {
   lazy val sumTE: Ctx[Value] =
     List(
       Global("Sum") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),

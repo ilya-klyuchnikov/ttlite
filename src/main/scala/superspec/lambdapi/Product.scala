@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait PairAST extends LambdaPiAST {
+trait PairAST extends CoreAST {
   // pair data
   case class Pair(A: CTerm, B: CTerm, a: CTerm, b: CTerm) extends CTerm
   // type of pair
@@ -15,7 +15,7 @@ trait PairAST extends LambdaPiAST {
   case class NSnd(A: Value, B: Value, p: Neutral) extends Neutral
 }
 
-trait PairPrinter extends LambdaPiPrinter with PairAST {
+trait PairPrinter extends CorePrinter with PairAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Product(a, b) =>
       iPrint(p, ii, Free(Global("Product")) @@ a @@ b)
@@ -35,7 +35,7 @@ trait PairPrinter extends LambdaPiPrinter with PairAST {
   }
 }
 
-trait PairEval extends LambdaPiEval with PairAST {
+trait PairEval extends CoreEval with PairAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Pair(a, b, x, y) =>
       VPair(cEval(a, d), cEval(b, d), cEval(x, d), cEval(y, d))
@@ -65,7 +65,7 @@ trait PairEval extends LambdaPiEval with PairAST {
   }
 }
 
-trait PairCheck extends LambdaPiCheck with PairAST {
+trait PairCheck extends CoreCheck with PairAST {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
     case Product(a, b) =>
       assert(cType(i, g, a, VStar).isRight)
@@ -128,7 +128,7 @@ trait PairCheck extends LambdaPiCheck with PairAST {
 
 }
 
-trait PairQuote extends LambdaPiQuote with PairAST {
+trait PairQuote extends CoreQuote with PairAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VProduct(a, b) => Inf(Product(quote(ii, a), quote(ii, b)))
     case VPair(a, b, x, y) => Pair(quote(ii, a), quote(ii, b), quote(ii, x), quote(ii, y))
@@ -144,7 +144,7 @@ trait PairQuote extends LambdaPiQuote with PairAST {
   }
 }
 
-trait PairREPL extends LambdaPiREPL with PairAST with PairPrinter with PairCheck with PairEval with PairQuote {
+trait PairREPL extends CoreREPL with PairAST with PairPrinter with PairCheck with PairEval with PairQuote {
   lazy val productTE: Ctx[Value] =
     List(
       Global("Product") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),

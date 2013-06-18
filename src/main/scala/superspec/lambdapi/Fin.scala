@@ -6,7 +6,7 @@ import superspec._
 // Fin 0 - empty type
 // Fin 1 - unit type
 // Fin 2 - booleans
-trait FinAST extends LambdaPiAST {
+trait FinAST extends CoreAST {
   case class FZero(A: CTerm) extends CTerm
   case class FSucc(A: CTerm, n: CTerm) extends CTerm
 
@@ -40,7 +40,7 @@ trait FinPrinter extends NatPrinter with FinAST {
   }
 }
 
-trait FinEval extends LambdaPiEval with FinAST {
+trait FinEval extends CoreEval with FinAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case FZero(n) =>
       VFZero(cEval(n, d))
@@ -71,7 +71,7 @@ trait FinEval extends LambdaPiEval with FinAST {
   }
 }
 
-trait FinCheck extends LambdaPiCheck with FinAST {
+trait FinCheck extends CoreCheck with FinAST {
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
     case Fin(n) =>
       Fin(cSubst(i, r, n))
@@ -91,7 +91,7 @@ trait FinCheck extends LambdaPiCheck with FinAST {
 
 }
 
-trait FinQuote extends LambdaPiQuote with FinAST {
+trait FinQuote extends CoreQuote with FinAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VFin(n) => Inf(Fin(quote(ii, n)))
     case VFZero(n) => FZero(quote(ii, n))

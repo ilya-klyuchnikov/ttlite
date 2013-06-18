@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait LambdaPiPrinter extends LambdaPiAST {
+trait CorePrinter extends CoreAST {
   def iPrint(p: Int, ii: Int, t: ITerm/*, cont: Doc = empty*/): Doc = t match {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(cPrint(2, ii, c) <> " :: " , nest(cPrint(0, ii, ty))))))

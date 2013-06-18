@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait ListAST extends LambdaPiAST {
+trait ListAST extends CoreAST {
   case class PiNil(A: CTerm) extends CTerm
   case class PiCons(A: CTerm, head: CTerm, tail: CTerm) extends CTerm
 
@@ -14,7 +14,7 @@ trait ListAST extends LambdaPiAST {
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
-trait ListPrinter extends LambdaPiPrinter with ListAST {
+trait ListPrinter extends CorePrinter with ListAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case PiList(a) =>
       iPrint(p, ii, Free(Global("List")) @@ a)
@@ -34,7 +34,7 @@ trait ListPrinter extends LambdaPiPrinter with ListAST {
   }
 }
 
-trait ListEval extends LambdaPiEval with ListAST {
+trait ListEval extends CoreEval with ListAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case PiNil(a) =>
       VPiNil(cEval(a, d))
@@ -64,7 +64,7 @@ trait ListEval extends LambdaPiEval with ListAST {
   }
 }
 
-trait ListCheck extends LambdaPiCheck with ListAST with ListEval {
+trait ListCheck extends CoreCheck with ListAST with ListEval {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
     case PiList(a) =>
       assert(cType(i, g, a, VStar).isRight)
@@ -123,7 +123,7 @@ trait ListCheck extends LambdaPiCheck with ListAST with ListEval {
   }
 }
 
-trait ListQuote extends LambdaPiQuote with ListAST {
+trait ListQuote extends CoreQuote with ListAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VPiList(a) => Inf(PiList(quote(ii, a)))
     case VPiNil(a) => PiNil(quote(ii, a))
@@ -138,7 +138,7 @@ trait ListQuote extends LambdaPiQuote with ListAST {
   }
 }
 
-trait ListREPL extends LambdaPiREPL with ListAST with ListPrinter with ListCheck with ListEval with ListQuote {
+trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck with ListEval with ListQuote {
   lazy val listTE: Ctx[Value] =
     List(
       Global("List") -> ListType,

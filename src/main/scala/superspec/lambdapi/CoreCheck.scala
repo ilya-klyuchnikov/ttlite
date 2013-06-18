@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval with LambdaPiPrinter {
+trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =
     iType(0, g, i)
 

@@ -2,7 +2,7 @@ package superspec.lambdapi
 
 import superspec._
 
-trait LambdaPiAST extends Common {
+trait CoreAST extends Common {
   trait CTerm
   case class Inf(inf: ITerm) extends CTerm
   case class Lam(t: CTerm) extends CTerm

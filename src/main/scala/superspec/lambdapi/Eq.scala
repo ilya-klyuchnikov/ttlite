@@ -2,7 +2,7 @@ package superspec.lambdapi
 
 import superspec._
 
-trait EqAST extends LambdaPiAST {
+trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
   case class Refl(A: CTerm, x: CTerm) extends CTerm
   case class Eq(A: CTerm, x: CTerm, y: CTerm) extends ITerm
@@ -19,7 +19,7 @@ trait EqAST extends LambdaPiAST {
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
 }
 
-trait EqPrinter extends LambdaPiPrinter with EqAST {
+trait EqPrinter extends CorePrinter with EqAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Eq(a, x, y) =>
       iPrint(p, ii, Free(Global("Eq")) @@ a @@ x @@ y)
@@ -37,7 +37,7 @@ trait EqPrinter extends LambdaPiPrinter with EqAST {
   }
 }
 
-trait EqEval extends LambdaPiEval with EqAST {
+trait EqEval extends CoreEval with EqAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case Refl(a, x) => VRefl(cEval(a, d), cEval(x, d))
     case _ => super.cEval(c, d)
@@ -56,7 +56,7 @@ trait EqEval extends LambdaPiEval with EqAST {
   }
 }
 
-trait EqCheck extends LambdaPiCheck with EqAST {
+trait EqCheck extends CoreCheck with EqAST {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
     case Eq(a, x, y) =>
       assert(cType(i, g, a, VStar).isRight)
@@ -117,7 +117,7 @@ trait EqCheck extends LambdaPiCheck with EqAST {
   }
 }
 
-trait EqQuote extends LambdaPiQuote with EqAST {
+trait EqQuote extends CoreQuote with EqAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VEq(a, x, y) =>
       Inf(Eq(quote(ii, a), quote(ii, x), quote(ii, y)))
@@ -132,7 +132,7 @@ trait EqQuote extends LambdaPiQuote with EqAST {
   }
 }
 
-trait EqREPL extends LambdaPiREPL with EqAST with EqPrinter with EqCheck with EqEval with EqQuote {
+trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval with EqQuote {
   lazy val eqTE: Ctx[Value] =
     List(
       Global("Refl") -> ReflType,

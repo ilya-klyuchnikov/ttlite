@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait VectorAST extends LambdaPiAST {
+trait VectorAST extends CoreAST {
   case class VecNil(A: CTerm) extends CTerm
   case class VecCons(A: CTerm, n: CTerm, head: CTerm, tail: CTerm) extends CTerm
 
@@ -34,7 +34,7 @@ trait VectorPrinter extends NatPrinter with VectorAST {
   }
 }
 
-trait VectorEval extends LambdaPiEval with VectorAST {
+trait VectorEval extends CoreEval with VectorAST {
   override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
     case VecNil(a) =>
       VVecNil(cEval(a, d))
@@ -64,7 +64,7 @@ trait VectorEval extends LambdaPiEval with VectorAST {
   }
 }
 
-trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEval {
+trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
   override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
     case Vec(a, n) =>
       assert(cType(i, g, a, VStar).isRight)
@@ -137,7 +137,7 @@ trait VectorCheck extends LambdaPiCheck with VectorAST with NatAST with VectorEv
 
 }
 
-trait VectorQuote extends LambdaPiQuote with VectorAST {
+trait VectorQuote extends CoreQuote with VectorAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VVec(a, n) => Inf(Vec(quote(ii, a), quote(ii, n)))
     case VVecNil(a) => VecNil(quote(ii, a))

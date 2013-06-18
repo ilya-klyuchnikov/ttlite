@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait LambdaPiEval extends LambdaPiAST {
+trait CoreEval extends CoreAST {
   def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
     case Ann(e, _) => cEval(e, d)
     case Star => VStar

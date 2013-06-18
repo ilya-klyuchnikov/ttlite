@@ -1,6 +1,6 @@
 package superspec.lambdapi
 
-trait LambdaPiQuote extends LambdaPiAST {
+trait CoreQuote extends CoreAST {
   def quote0(v: Value): CTerm =
     quote(0, v)
 

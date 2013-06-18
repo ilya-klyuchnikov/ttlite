@@ -11,7 +11,7 @@ class ReplSpec extends FunSpec {
   }
 
   describe("Lambda Pi REPL should process prelude.lp without errors") {
-    LambdaPiREPLMain.main(Array("prelude.lp"))
+    CoreREPLMain.main(Array("prelude.lp"))
   }
 
   describe("Nat REPL should process prelude.nat without errors") {
@@ -19,6 +19,6 @@ class ReplSpec extends FunSpec {
   }
 
   describe("All REPL should process prelude.all and lists.pi without errors") {
-    AllREPLMain.main(Array("prelude.all"))
+    REPLMain.main(Array("prelude.all"))
   }
 }
