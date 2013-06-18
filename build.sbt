@@ -1,4 +1,6 @@
-name := "lambdapi"
+organization := "mrsc"
+
+name := "superspec"
 
 scalaVersion := "2.10.2"
 
