@@ -13,10 +13,34 @@ trait Meta extends CoreAST {
   case class VariantsDStep(sel: Free, cases: List[CTerm]) extends DriveStep
   case object StopDStep extends DriveStep
 
-  // for overriding
-  def findSubst(from: CTerm, to: CTerm): Option[Subst]
-  def applySubst(t: CTerm, subst: Subst): CTerm
+  // should be extended in sub-classes
   def driveTerm(c: CTerm): DriveStep
+
+  def findSubst(from: CTerm, to: CTerm): Option[Subst]
+
+  def applySubst(t: CTerm, subst: Subst): CTerm
+
+  def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
+    case Inf(i) =>
+      isFreeSubTerm(i, depth)
+    case Lam(c) =>
+      isFreeSubTerm(c, depth + 1)
+  }
+
+  def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
+    case Ann(c1, c2) =>
+      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
+    case Star =>
+      true
+    case Pi(c1, c2) =>
+      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth + 1)
+    case Bound(i) =>
+      i < depth
+    case Free(_) =>
+      true
+    case (c1 @ c2) =>
+      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
+  }
 }
 
 trait SuperSpec extends CoreREPL with Meta {
@@ -24,14 +48,23 @@ trait SuperSpec extends CoreREPL with Meta {
   type Conf = (CTerm, CTerm)
   // transitions
   trait Label
-
   case object NormLabel extends Label {
     override def toString = "->"
   }
   case class CaseBranchLabel(sel: Free, ptr: CTerm) extends Label {
     override def toString = sel + " = " + ptr
   }
-  def findConfSub(from: Conf, to: Conf): Option[Subst]
+
+  def findConfSub(from: Conf, to: Conf): Option[Subst] = {
+    val (from1, from2) = from
+    val (to1, to2) = to
+    (findSubst(from1, to1), findSubst(from2, to2)) match {
+      case (Some(sub1), Some(sub2)) if sub1 ++ sub2 == sub2 ++ sub1 =>
+        Some(sub1 ++ sub2)
+      case _ =>
+        None
+    }
+  }
 
   //============================================
   // A super-trait for a supercompiler
@@ -63,7 +96,7 @@ trait SuperSpec extends CoreREPL with Meta {
       val (t1, t2) = g.current.conf
       val proofSteps: List[MStep] = (driveTerm(t1), driveTerm(t2)) match {
         case (NormDStep(n1), _) =>
-         List(TransientMStep(n1, t2))
+          List(TransientMStep(n1, t2))
         case (_, NormDStep(n2)) =>
           List(TransientMStep(t1, n2))
         case (StopDStep, StopDStep) =>
