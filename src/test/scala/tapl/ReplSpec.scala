@@ -3,6 +3,7 @@ package tapl
 import org.scalatest.FunSpec
 
 import tapl.lambda._
+import tapl.lambdapi._
 
 class ReplSpec extends FunSpec {
   describe("Lambda REPL should process prelude.st without errors") {

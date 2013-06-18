@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 trait NatAST extends LambdaPiAST {
   case object Zero extends CTerm
@@ -27,6 +27,7 @@ trait NatPrinter extends LambdaPiPrinter with NatAST {
     case Zero =>
       fromNat(0, ii, Zero)
     case Succ(n) =>
+      //iPrint(p, ii, Free(Global("Succ")) @@ n)
       fromNat(0, ii, Succ(n))
     case _ => super.cPrint(p, ii, t)
   }
@@ -37,7 +38,7 @@ trait NatPrinter extends LambdaPiPrinter with NatAST {
     case Succ(k) =>
       fromNat(n + 1, ii, k)
     case _ =>
-      parens(n.toString <> " + " <> cPrint(0, ii, t))
+      parens(n.toString <> " + " <> cPrint(3, ii, t))
   }
 }
 

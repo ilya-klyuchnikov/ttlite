@@ -1,4 +1,6 @@
-package tapl
+package tapl.lambdapi
+
+import tapl._
 
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type

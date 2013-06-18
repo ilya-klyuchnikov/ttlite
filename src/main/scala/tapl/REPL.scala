@@ -6,23 +6,33 @@ import scala.util.parsing.combinator.lexical.StdLexical
 import scala.util.parsing.input.CharArrayReader._
 import scala.util.parsing.combinator.PackratParsers
 
-// generic component for REPL
+class HaskellLikeLexical extends StdLexical {
+  override def whitespace: Parser[Any] = rep(
+    whitespaceChar
+      | '/' ~ '*' ~ comment
+      | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
+      | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
+      | '/' ~ '*' ~ failure("unclosed comment")
+  )
+}
+
+trait Command
+case class TypeOf(in: String) extends Command
+case class Compile(cf: CompileForm) extends Command
+case class Reload(f: String) extends Command
+case object Browse extends Command
+case object Quit extends Command
+case object Help extends Command
+case object Noop extends Command
+
+trait CompileForm
+case class CompileInteractive(s: String) extends CompileForm
+case class CompileFile(f: String) extends CompileForm
+
+case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
+
 trait REPL extends Common {
 
-  trait Command
-  case class TypeOf(in: String) extends Command
-  case class Compile(cf: CompileForm) extends Command
-  case class Reload(f: String) extends Command
-  case object Browse extends Command
-  case object Quit extends Command
-  case object Help extends Command
-  case object Noop extends Command
-
-  trait CompileForm
-  case class CompileInteractive(s: String) extends CompileForm
-  case class CompileFile(f: String) extends CompileForm
-
-  case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
   type Ctx[Inf] = List[(Name, Inf)]
 
   type I // inferable term
@@ -44,22 +54,8 @@ trait REPL extends Common {
     }
   }
 
-  // I - ITerm (inferable term)
-  // C - CTerm (checkable term)
-  // V - Value
-  // T - Type
-  // TInf - type info (type of assumed term) - raw info - from parsing
-  // Inf - information about value
   trait Interpreter extends StandardTokenParsers with PackratParsers {
-    override val lexical = new StdLexical {
-      override def whitespace: Parser[Any] = rep(
-        whitespaceChar
-          | '/' ~ '*' ~ comment
-          | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
-          | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
-          | '/' ~ '*' ~ failure("unclosed comment")
-      )
-    }
+    override val lexical = new HaskellLikeLexical
 
     val iname: String
     val iprompt: String

@@ -1,7 +1,5 @@
-package tapl
+package tapl.lambdapi
 
-// could we rewrite it better with scalaz??
-// this is just terrific strange code
 trait LambdaPiCheck extends LambdaPiAST with LambdaPiQuote with LambdaPiEval with LambdaPiPrinter {
   def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =
     iType(0, g, i)

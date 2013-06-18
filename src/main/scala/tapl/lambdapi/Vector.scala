@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 trait VectorAST extends LambdaPiAST {
   case class VecNil(A: CTerm) extends CTerm

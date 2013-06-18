@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 trait LambdaPiPrinter extends LambdaPiAST {
   def iPrint(p: Int, ii: Int, t: ITerm/*, cont: Doc = empty*/): Doc = t match {

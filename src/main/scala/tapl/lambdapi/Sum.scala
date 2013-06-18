@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 trait SumAST extends LambdaPiAST {
   // left injection

@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 trait ListAST extends LambdaPiAST {
   case class PiNil(A: CTerm) extends CTerm

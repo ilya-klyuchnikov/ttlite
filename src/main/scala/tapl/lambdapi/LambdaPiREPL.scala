@@ -1,4 +1,6 @@
-package tapl
+package tapl.lambdapi
+
+import tapl._
 
 import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
 

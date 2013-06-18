@@ -1,4 +1,4 @@
-package tapl
+package tapl.lambdapi
 
 object NatREPLMain extends NatREPL {
   override def initialState = State(interactive = true, natVE, natTE, Set())
