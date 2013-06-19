@@ -14,7 +14,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   override val int = LambdaPIInterpreter
   object LambdaPIInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import")
-    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">")
+    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
     val iname: String = "lambda-Pi"
     val iprompt: String = "LP> "
 

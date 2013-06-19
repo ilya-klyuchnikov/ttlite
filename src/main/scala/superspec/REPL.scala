@@ -89,7 +89,7 @@ trait REPL extends Common {
   }
   // TODO
   def helpTxt(cs: List[Cmd]): String = ""
-  val commands: List[Cmd] =
+  def commands: List[Cmd] =
     List(
       Cmd(List(":type"),      "<expr>", x => TypeOf(x),               "print type of expression"),
       Cmd(List(":browse"),    "",       x => Browse,                  "browse names in scope"),
@@ -99,7 +99,7 @@ trait REPL extends Common {
       Cmd(List(":help",":?"), "",       x => Help,                    "display this list of commands")
     )
 
-  private def interpretCommand(s: String): Command = {
+  def interpretCommand(s: String): Command = {
     val in = s.trim.replaceAll(" +", " ")
     if (in.startsWith(":")) {
       val (cmd, t) = in.span(!_.isWhitespace)
@@ -118,7 +118,7 @@ trait REPL extends Common {
     }
   }
 
-  private def handleCommand(state: State, cmd: Command): State =
+  def handleCommand(state: State, cmd: Command): State =
     cmd match {
       case Quit =>
         sys.exit()

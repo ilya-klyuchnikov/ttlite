@@ -34,7 +34,10 @@ trait SuperSpec extends Driver {
 
   //============================================
   // A super-trait for a supercompiler
-  trait ProofRules extends MRSCRules[Conf, Label]
+  trait ProofRules extends MRSCRules[Conf, Label] {
+    type Signal = None.type
+    def inspect(g: G): Signal = None
+  }
 
   sealed trait MStep {
     val graphStep: GraphRewriteStep[Conf, Label]
@@ -97,11 +100,65 @@ trait SuperSpec extends Driver {
     }
   }
 
+  trait NoRebuildings extends ProofRules {
+    override def rebuild(signal: Signal, g: G) = List()
+  }
+
+
   // The simplest termination strategy
   trait Termination extends ProofRules {
     val maxDepth: Int
     override def steps(g: G): List[S] =
       if (g.depth > maxDepth) List() else super.steps(g)
   }
+
+}
+
+case class SC(in: String) extends Command
+
+object SuperSpecREPL
+  extends SuperSpec
+  with CoreREPL
+  with CoreSubst
+  with CoreDriver
+  with EqREPL
+  with EqSubst
+  with EqDriver
+  with NatREPL
+  with NatSubst
+  with NatDriver {
+
+  val te = natTE ++ eqTE
+  val ve = natVE ++ eqVE
+  override def initialState = State(interactive = true, ve, te, Set())
+  override def commands: List[Cmd] =
+    Cmd(List(":sc"),      "<expr>, <expr>", x => SC(x), "supercompile") :: super.commands
+
+  override def handleCommand(state: State, cmd: Command): State = cmd match {
+    case SC(in) =>
+      import int._
+      val parsed = int.parseIO(int.iiparse ~ "," ~ int.iiparse ^^ {case t1 ~ _ ~ t2 => (t1, t2)}, in)
+      parsed match {
+        case Some((t1, t2)) =>
+          val l = iquote(ieval(state.ne, t1))
+          val r = iquote(ieval(state.ne, t2))
+          val goal = (l, r)
+          val rules = new SpecSc
+          val gs = GraphGenerator(rules, goal).toList
+          for (g <- gs) {
+            val tGraph = Transformations.transpose(g)
+            println(tGraph)
+          }
+        case None =>
+      }
+      state
+    case _ =>
+      super.handleCommand(state, cmd)
+  }
+
+  class SpecSc extends ProofRules with Driving with Folding with Termination with NoRebuildings {
+    val maxDepth = 10
+  }
+
 
 }
