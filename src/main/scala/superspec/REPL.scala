@@ -82,7 +82,7 @@ trait REPL extends Common {
         case Right(t) =>
           Some(t)
         case Left(msg) =>
-          Console.println(msg);
+          Console.println(msg)
           None
       }
     }
@@ -99,7 +99,7 @@ trait REPL extends Common {
       Cmd(List(":help",":?"), "",       x => Help,                    "display this list of commands")
     )
 
-  def interpretCommand(s: String): Command = {
+  private def interpretCommand(s: String): Command = {
     val in = s.trim.replaceAll(" +", " ")
     if (in.startsWith(":")) {
       val (cmd, t) = in.span(!_.isWhitespace)
@@ -118,7 +118,7 @@ trait REPL extends Common {
     }
   }
 
-  def handleCommand(state: State, cmd: Command): State =
+  private def handleCommand(state: State, cmd: Command): State =
     cmd match {
       case Quit =>
         sys.exit()
@@ -148,11 +148,12 @@ trait REPL extends Common {
           case None => state
         }
       case Compile(CompileFile(f)) =>
-        load(f, state, false)
+        load(f, state, reload = false)
       case Reload(f) =>
-        load(f, state, true)
+        load(f, state, reload = true)
     }
-  def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
+
+  private def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
     def checkEval(s: String, i: I): State = {
       int.iinfer(state.ne, state.ctx, i) match {
         case None =>
@@ -173,15 +174,15 @@ trait REPL extends Common {
       case Let(x, e) => checkEval(x, e)
       case Eval(e) => checkEval("it", e)
       case PutStrLn(x) => Console.println(x); state
-      case Import(f) => load(f, state, false)
+      case Import(f) => load(f, state, reload = false)
     }
   }
 
-  def load(f: String, state: State, reload: Boolean): State = {
-    if (state.modules(f) && ! reload) return state;
+  private def load(f: String, state: State, reload: Boolean): State = {
+    if (state.modules(f) && ! reload) return state
     try {
       val input = scala.io.Source.fromFile(f).mkString("")
-      val parsed = int.parseIO((int.isparse)+, input)
+      val parsed = int.parseIO(int.isparse+, input)
       parsed match {
         case Some(stmts) =>
           val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
@@ -198,21 +199,28 @@ trait REPL extends Common {
     }
   }
 
-  def loop(state: State) {
+  var state: State = _
+  // it seems that the single point for changing state is handle command
+
+  def loop() {
     val in = JLineConsole.readLine(int.iprompt)
     val cmd = interpretCommand(in)
-    val state1 = handleCommand(state, cmd)
-    loop(state1)
+    state = handleCommand(state, cmd)
+    loop()
+  }
+
+  def init() {
+    state = initialState
   }
 
   def main(args: Array[String]) {
+    init()
     args match {
       case Array() =>
-        loop(initialState)
+        loop()
       case _ =>
         batch = true
         val cmds = args.map(f => Compile(CompileFile(f)))
-        var state = initialState
         for (cmd <- cmds) {
           state = handleCommand(state, cmd)
         }
