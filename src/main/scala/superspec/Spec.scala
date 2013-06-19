@@ -1,49 +1,20 @@
 package superspec
 
-import superspec.lambdapi.{CoreAST, CoreREPL}
 import mrsc.core._
+import superspec.lambdapi._
 
-trait Meta extends CoreAST {
-  //============================================
-  // Syntax
-  type Subst = Map[Free, CTerm]
-
+trait Driver extends CoreSubst {
   sealed trait DriveStep
   case class NormDStep(next: CTerm) extends DriveStep
-  case class VariantsDStep(sel: Free, cases: List[CTerm]) extends DriveStep
+  case class VariantsDStep(sel: Name, cases: List[CTerm]) extends DriveStep
   case object StopDStep extends DriveStep
 
-  // should be extended in sub-classes
+  // the only concern is driving neutral terms!!
+  // everything else we get from evaluation!!
   def driveTerm(c: CTerm): DriveStep
-
-  def findSubst(from: CTerm, to: CTerm): Option[Subst]
-
-  def applySubst(t: CTerm, subst: Subst): CTerm
-
-  def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
-    case Inf(i) =>
-      isFreeSubTerm(i, depth)
-    case Lam(c) =>
-      isFreeSubTerm(c, depth + 1)
-  }
-
-  def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
-    case Ann(c1, c2) =>
-      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
-    case Star =>
-      true
-    case Pi(c1, c2) =>
-      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth + 1)
-    case Bound(i) =>
-      i < depth
-    case Free(_) =>
-      true
-    case (c1 @ c2) =>
-      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
-  }
 }
 
-trait SuperSpec extends CoreREPL with Meta {
+trait SuperSpec extends Driver {
   // configuration supercompiler dealing with
   type Conf = (CTerm, CTerm)
   // transitions
@@ -51,19 +22,14 @@ trait SuperSpec extends CoreREPL with Meta {
   case object NormLabel extends Label {
     override def toString = "->"
   }
-  case class CaseBranchLabel(sel: Free, ptr: CTerm) extends Label {
+  case class CaseBranchLabel(sel: Name, ptr: CTerm) extends Label {
     override def toString = sel + " = " + ptr
   }
 
   def findConfSub(from: Conf, to: Conf): Option[Subst] = {
     val (from1, from2) = from
     val (to1, to2) = to
-    (findSubst(from1, to1), findSubst(from2, to2)) match {
-      case (Some(sub1), Some(sub2)) if sub1 ++ sub2 == sub2 ++ sub1 =>
-        Some(sub1 ++ sub2)
-      case _ =>
-        None
-    }
+    mergeOptSubst(findSubst(from1, to1), findSubst(from2, to2))
   }
 
   //============================================
@@ -80,7 +46,7 @@ trait SuperSpec extends CoreREPL with Meta {
   case object StopMStep extends MStep {
     val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
-  case class VariantsMStep(sel: Free, cases: List[(CTerm, Conf)]) extends MStep {
+  case class VariantsMStep(sel: Name, cases: List[(CTerm, Conf)]) extends MStep {
     val graphStep = {
       val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
       AddChildNodesStep[Conf, Label](ns)

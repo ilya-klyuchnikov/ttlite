@@ -1,6 +1,9 @@
 package superspec.lambdapi
 
 trait CoreEval extends CoreAST {
+  def iEval0(c: ITerm): Value = iEval(c, (Nil, Nil))
+  def cEval0(c: CTerm): Value = cEval(c, (Nil, Nil))
+  // TODO: raise arity
   def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
     case Ann(e, _) => cEval(e, d)
     case Star => VStar

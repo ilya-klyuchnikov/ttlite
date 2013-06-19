@@ -14,6 +14,31 @@ trait NatAST extends CoreAST {
   case class NNatElim(v1: Value, v2: Value, v3: Value, n: Neutral) extends Neutral
 }
 
+trait NatSubst extends CoreSubst with NatAST {
+  override def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
+    case (Zero, Zero) =>
+      Some(Map())
+    case (Succ(x1), Succ(x2)) =>
+      findSubst0(x1, x2)
+    case _ =>
+      super.findSubst0(from, to)
+  }
+
+  override def findSubst0(from: ITerm, to: ITerm): Option[Subst] = (from, to) match {
+    case (Nat, Nat) =>
+      Some(Map())
+    case (NatElim(m1, zCase1, sCase1, n1), NatElim(m2, zCase2, sCase2, n2)) =>
+      mergeOptSubst(
+        findSubst0(m1, m2),
+        findSubst0(zCase1, zCase2),
+        findSubst0(sCase1, sCase2),
+        findSubst0(n1, n2)
+      )
+    case _ =>
+      super.findSubst0(from, to)
+  }
+}
+
 trait NatPrinter extends CorePrinter with NatAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Nat =>
@@ -68,6 +93,20 @@ trait NatEval extends CoreEval with NatAST {
       rec(cEval(n, d))
     case _ =>
       super.iEval(i, d)
+  }
+}
+
+trait NatDriver extends CoreDriver with NatAST {
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case natElim: NNatElim =>
+      natElim.n match {
+        case NFree(n) =>
+          VariantsDStep(n, List(Zero, Succ(freshLocal())))
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
   }
 }
 

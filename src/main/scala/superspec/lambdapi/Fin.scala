@@ -1,7 +1,5 @@
 package superspec.lambdapi
 
-import superspec._
-
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type
 // Fin 1 - unit type

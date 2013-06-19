@@ -1,7 +1,5 @@
 package superspec.lambdapi
 
-import superspec._
-
 trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
   case class Refl(A: CTerm, x: CTerm) extends CTerm
@@ -17,6 +15,37 @@ trait EqAST extends CoreAST {
   case class VEq(A: Value, x: Value, y: Value) extends Value
   case class VRefl(A: Value, x: Value) extends Value
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
+}
+
+trait EqSubst extends CoreSubst with EqAST {
+  override def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
+    case (Refl(a1, x1), Refl(a2, x2)) =>
+      val s1 = findSubst0(a1, a2)
+      val s2 = findSubst0(x1, x2)
+      mergeOptSubst(s1, s2)
+    case _ =>
+      super.findSubst0(from, to)
+  }
+
+  override def findSubst0(from: ITerm, to: ITerm): Option[Subst] = (from, to) match {
+    case (Eq(a1, x1, y1), Eq(a2, x2, y2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(x1, x2),
+        findSubst0(y1, y2)
+      )
+    case (EqElim(a1, m1, mr1, x1, y1, eq1), EqElim(a2, m2, mr2, x2, y2, eq2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(m1, m2),
+        findSubst0(mr1, mr2),
+        findSubst0(x1, x2),
+        findSubst0(y1, y2),
+        findSubst0(eq1, eq2)
+      )
+    case _ =>
+      super.findSubst0(from, to)
+  }
 }
 
 trait EqPrinter extends CorePrinter with EqAST {
@@ -53,6 +82,15 @@ trait EqEval extends CoreEval with EqAST {
       }
     case _ =>
       super.iEval(i, d)
+  }
+}
+
+trait EqDriver extends CoreDriver with EqAST {
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case eqElim: NEqElim =>
+      driveNeutral(eqElim.eq)
+    case _ =>
+      super.driveNeutral(n)
   }
 }
 
