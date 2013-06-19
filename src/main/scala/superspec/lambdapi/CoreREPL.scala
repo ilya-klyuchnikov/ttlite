@@ -14,7 +14,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   override val int = LambdaPIInterpreter
   object LambdaPIInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import")
-    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".")
+    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">")
     val iname: String = "lambda-Pi"
     val iprompt: String = "LP> "
 
@@ -67,8 +67,10 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
 
     lazy val parseITErm2: PackratParser[Res[ITerm]] =
       parseITErm3 ~ (parseCTErm3*) ^^ {case t ~ ts => ctx: C => ts.map{_(ctx)}.foldLeft(t(ctx)){_ @@ _} }
+    // TODO: extends parsing here
     lazy val parseITErm3: PackratParser[Res[ITerm]] =
       ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
+        "<" ~> numericLit <~ ">" ^^ {x => ctx: C => Free(Local(x.toInt))} |
         "(" ~> parseITErm0 <~ ")" | numericLit ^^ {x => ctx: C => toNat(x.toInt)} |
         "*" ^^^ {ctx: C => Star}
     lazy val parseForall: PackratParser[Res[CTerm]] = {
