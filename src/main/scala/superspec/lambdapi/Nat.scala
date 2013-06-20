@@ -37,6 +37,25 @@ trait NatSubst extends CoreSubst with NatAST {
     case _ =>
       super.findSubst0(from, to)
   }
+
+  override def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
+    case Zero =>
+      true
+    case Succ(c) =>
+      isFreeSubTerm(c, depth)
+    case _ =>
+      super.isFreeSubTerm(t, depth)
+  }
+
+  override def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
+    case Nat =>
+      true
+    case NatElim(a, b, c, d) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth + 1) &&
+        isFreeSubTerm(c, depth) && isFreeSubTerm(d, depth + 1)
+    case _ =>
+      super.isFreeSubTerm(t, depth)
+  }
 }
 
 trait NatPrinter extends CorePrinter with NatAST {
@@ -108,6 +127,14 @@ trait NatDriver extends CoreDriver with NatAST {
     case _ =>
       super.driveNeutral(n)
   }
+
+  override def driveLeibniz(c: CTerm): DriveStep = c match {
+    case Succ(c1) =>
+      LeibnizDStep(Inf(Free(Global("Succ"))), c1)
+    case _ =>
+      super.driveLeibniz(c)
+  }
+
 }
 
 trait NatCheck extends CoreCheck with NatAST {

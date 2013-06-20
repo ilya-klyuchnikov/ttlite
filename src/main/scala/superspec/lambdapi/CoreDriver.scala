@@ -22,7 +22,7 @@ trait CoreDriver extends CoreSubst with Driver {
       case _ =>
         normedTerm match {
           case `c` =>
-            StopDStep
+            driveLeibniz(c)
           case _ =>
             NormDStep(normedTerm)
 
@@ -36,4 +36,7 @@ trait CoreDriver extends CoreSubst with Driver {
     case NApp(n, _) =>
       driveNeutral(n)
   }
+
+  def driveLeibniz(c: CTerm): DriveStep =
+    StopDStep
 }

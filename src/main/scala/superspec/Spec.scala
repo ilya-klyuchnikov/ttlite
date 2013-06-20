@@ -8,6 +8,7 @@ trait Driver extends CoreSubst {
   case class NormDStep(next: CTerm) extends DriveStep
   case class VariantsDStep(sel: Name, cases: List[CTerm]) extends DriveStep
   case object StopDStep extends DriveStep
+  case class LeibnizDStep(cong: CTerm, rec: CTerm) extends DriveStep
 
   // the only concern is driving neutral terms!!
   // everything else we get from evaluation!!
@@ -25,18 +26,15 @@ trait SuperSpec extends Driver {
   case class CaseBranchLabel(sel: Name, ptr: CTerm) extends Label {
     override def toString = sel + " = " + ptr
   }
+  // congruence
+  case class LeibnizLabel(f: CTerm) extends Label {
+    override def toString = "Leibniz: " + f
+  }
 
   def findConfSub(from: Conf, to: Conf): Option[Subst] = {
     val (from1, from2) = from
     val (to1, to2) = to
     mergeOptSubst(findSubst(from1, to1), findSubst(from2, to2))
-  }
-
-  //============================================
-  // A super-trait for a supercompiler
-  trait ProofRules extends MRSCRules[Conf, Label] {
-    type Signal = None.type
-    def inspect(g: G): Signal = None
   }
 
   sealed trait MStep {
@@ -55,13 +53,30 @@ trait SuperSpec extends Driver {
       AddChildNodesStep[Conf, Label](ns)
     }
   }
+  case class LeibnizMStep(f: CTerm, next1: CTerm, next2: CTerm) extends MStep {
+    val graphStep = AddChildNodesStep[Conf, Label](List(((next1, next2), LeibnizLabel(f))))
+  }
+
+  //============================================
+  // A super-trait for a supercompiler
+  trait ProofRules extends MRSCRules[Conf, Label] {
+    type Signal = Option[N]
+    def inspect(g: G): Signal = {
+      val c = g.current.conf
+      g.current.ancestors.filter(n => findConfSub(c, n.conf).isDefined).headOption
+    }
+  }
 
   // three generic components for building graph:
   // driving, folding, termination
 
   // POINT of multi-resultness
+  // TODO: make it more generic
+  // handling new possibility should be easy
   trait Driving extends ProofRules {
     override def drive(signal: Signal, g: G): List[S] = {
+      if (signal.isDefined)
+        return List()
       val (t1, t2) = g.current.conf
       val proofSteps: List[MStep] = (driveTerm(t1), driveTerm(t2)) match {
         case (NormDStep(n1), _) =>
@@ -83,6 +98,12 @@ trait SuperSpec extends Driver {
           List(
             VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t)), applySubst(t2, Map(sel2 -> t))))})
           )
+        case (LeibnizDStep(f1, t1), LeibnizDStep(f2, t2)) =>
+          if (f1 == f2) List(LeibnizMStep(f1, t1, t2)) else List(StopMStep)
+        case (LeibnizDStep(_, _), StopDStep) =>
+          List(StopMStep)
+        case (StopDStep, LeibnizDStep(_, _)) =>
+          List(StopMStep)
       }
       proofSteps.map(_.graphStep)
     }
@@ -95,8 +116,7 @@ trait SuperSpec extends Driver {
   // POINT of multi-resultness
   trait Folding extends ProofRules {
     override def fold(signal: Signal, g: G): List[S] = {
-      val c = g.current.conf
-      g.current.ancestors.filter(n => findConfSub(c, n.conf).isDefined).map(n => FoldStep(n.sPath): S)
+      signal.map(n => FoldStep(n.sPath): S).toList
     }
   }
 

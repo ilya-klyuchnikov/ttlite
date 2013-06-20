@@ -21,7 +21,6 @@ trait PiGraphPrettyPrinter extends CoreREPL with SuperSpec {
   def toString(node: TNode[Conf, Label], focus: Option[TPath], indent: String = ""): String = {
     val sb = new StringBuilder()
     val (c1, c2) = node.conf
-    println("***")
     sb.append(indent + "|__" + toString(c1) + ", " + toString(c2))
     if (node.base.isDefined) {
       sb.append("*")
