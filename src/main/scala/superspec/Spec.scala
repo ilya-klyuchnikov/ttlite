@@ -136,6 +136,58 @@ trait SuperSpec extends Driver {
 
 case class SC(in: String) extends Command
 
+// currently it is hard-coded for nats
+// for one-variable case -> really it will be like interpreter!!!
+trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
+
+  // TODO
+  def freeLocals(ct: CTerm): List[Name] = List(Local(1))
+
+  def residuateToVal(g: TGraph[Conf, Label], d: (NameEnv[Value], Env)): Value = {
+    val startRed: Map[Conf, Value] = Map()
+    val (c1, c2) = g.root.conf
+    val locals = (freeLocals(c1) ++ freeLocals(c2)).distinct
+    val startFun : ((NameEnv[Value], Env)) => Value = d => fold(g, g.root, d, startRed)
+    val fun = locals.foldLeft(startFun){(f, local) => d => VLam(x => f((local -> x :: d._1, d._2)))}
+
+    fun(d)
+  }
+
+  /// context!!!!!
+  def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], d: (NameEnv[Value], Env), dRed: Map[Conf, Value]): Value =
+    node.base match {
+      // recursive node
+      case Some(tPath) =>
+        dRed(g.get(tPath).conf)
+      case None =>
+        node.outs match {
+          case List() =>
+            VRefl(VNat, cEval0(node.conf._1))
+          case
+            TEdge(nodeZ, CaseBranchLabel(sel1, Zero)) ::
+              TEdge(nodeS, CaseBranchLabel(sel2, Succ(Inf(Free(fresh))))) ::
+              Nil =>
+
+            val (c1, c2) = node.conf
+            val motive =
+              VLam {n => VEq(VNat, cEval(c1, (sel1 -> n :: d._1, d._2)), cEval(c2, (sel1 -> n :: d._1, d._2)))}
+            val zCase =
+              fold(g, nodeZ, d, dRed)
+
+            val sCase =
+              VLam {n => VLam {rec => fold(g, nodeS, (fresh -> n :: d._1, d._2), dRed + (node.conf -> rec))}}
+
+            VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, d._1).get
+          case TEdge(n1, LeibnizLabel(f)) :: Nil =>
+            val (c1, c2) = n1.conf
+            VNeutral(NFree(Global("leibniz"))) @@ VNat @@ VNat @@ cEval(f, d) @@ cEval(c1, d) @@ cEval(c2, d) @@ fold(g, n1, d, dRed)
+        }
+    }
+
+
+
+}
+
 object SuperSpecREPL
   extends SuperSpec
   with CoreREPL
@@ -147,7 +199,8 @@ object SuperSpecREPL
   with NatREPL
   with NatSubst
   with NatDriver
-  with PiGraphPrettyPrinter {
+  with PiGraphPrettyPrinter
+  with Residuator {
 
   val te = natTE ++ eqTE
   val ve = natVE ++ eqVE
@@ -169,6 +222,12 @@ object SuperSpecREPL
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))
+            val resVal = residuateToVal(tGraph, (state.ne, List()))
+            println(resVal)
+            val tRes = iquote(resVal)
+            println(tRes)
+            println(int.icprint(tRes))
+
           }
         case None =>
       }

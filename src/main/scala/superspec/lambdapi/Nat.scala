@@ -11,7 +11,7 @@ trait NatAST extends CoreAST {
   case object VZero extends Value
   case class VSucc(v: Value) extends Value
 
-  case class NNatElim(v1: Value, v2: Value, v3: Value, n: Neutral) extends Neutral
+  case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
 trait NatSubst extends CoreSubst with NatAST {
