@@ -74,3 +74,11 @@ let nat2Elim =
 
 -- increment by one
 let inc = natFold Nat (Succ Zero) Succ;
+
+let nRight = forall n :: Nat . Eq Nat (plus n 0) n;
+// the other direction requires induction on N:
+let pNPlus0isN =
+  natElim ( \ n -> Eq Nat (plus n 0) n )
+          ( Refl Nat 0 )
+          ( \ n1 rec -> leibniz Nat Nat Succ (plus n1 0) n1 rec )
+  :: nRight;

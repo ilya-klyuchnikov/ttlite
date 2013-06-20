@@ -126,16 +126,11 @@ let p0IsNoSucc =
 // proofs that 0 is the neutral element of addition
 
 let nLeft  = forall n :: Nat . Eq Nat (plus 0 n) n;
-let nRight = forall n :: Nat . Eq Nat (plus n 0) n;
+
+
 // one direction is trivial by definition of plus:
 let p0PlusNisN = Refl Nat :: nLeft;
 
-// the other direction requires induction on N:
-let pNPlus0isN =
-  natElim ( \ n -> Eq Nat (plus n 0) n )
-          ( Refl Nat 0 )
-          ( \ n1 rec -> leibniz Nat Nat Succ (plus n1 0) n1 rec )
-  :: nRight;
 
 assume (k1 :: Nat);
 assume (k2 :: Nat);
