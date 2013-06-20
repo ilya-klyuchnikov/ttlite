@@ -16,15 +16,16 @@ trait CoreDriver extends CoreSubst with Driver {
   override def driveTerm(c: CTerm): DriveStep = {
     val normedVal = cEval0(c)
     val normedTerm = quote0(normedVal)
-    normedTerm match {
-      case `c` =>
-        StopDStep
+    normedVal match {
+      case VNeutral(n) =>
+        driveNeutral(n)
       case _ =>
-        normedVal match {
-          case VNeutral(n) =>
-            driveNeutral(n)
+        normedTerm match {
+          case `c` =>
+            StopDStep
           case _ =>
             NormDStep(normedTerm)
+
         }
     }
   }

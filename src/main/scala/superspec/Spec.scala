@@ -109,7 +109,7 @@ trait SuperSpec extends Driver {
   trait Termination extends ProofRules {
     val maxDepth: Int
     override def steps(g: G): List[S] =
-      if (g.depth > maxDepth) List() else super.steps(g)
+      if (g.depth > maxDepth) List(StopMStep.graphStep) else super.steps(g)
   }
 
 }
@@ -126,7 +126,8 @@ object SuperSpecREPL
   with EqDriver
   with NatREPL
   with NatSubst
-  with NatDriver {
+  with NatDriver
+  with PiGraphPrettyPrinter {
 
   val te = natTE ++ eqTE
   val ve = natVE ++ eqVE
@@ -147,7 +148,7 @@ object SuperSpecREPL
           val gs = GraphGenerator(rules, goal).toList
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            println(tGraph)
+            println(tgToString(tGraph))
           }
         case None =>
       }
@@ -159,6 +160,4 @@ object SuperSpecREPL
   class SpecSc extends ProofRules with Driving with Folding with Termination with NoRebuildings {
     val maxDepth = 10
   }
-
-
 }

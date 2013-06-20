@@ -13,6 +13,8 @@ trait CorePrinter extends CoreAST {
       vars(ii - k - 1)
     case Free(Global(s)) =>
       s
+    case Free(Local(i)) =>
+      s"<$i>"
     case i :@: c =>
       parensIf(p > 2, (sep(Seq(iPrint(2, ii, i), nest(cPrint(3, ii, c))))))
     case _ =>
