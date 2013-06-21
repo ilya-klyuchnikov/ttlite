@@ -3,18 +3,8 @@ package superspec
 import mrsc.core._
 import superspec.lambdapi._
 
-trait Driver extends CoreSubst {
-  sealed trait DriveStep
-  case class NormDStep(next: CTerm) extends DriveStep
-  case class VariantsDStep(sel: Name, cases: List[CTerm]) extends DriveStep
-  case object StopDStep extends DriveStep
-  case class LeibnizDStep(cong: CTerm, rec: CTerm) extends DriveStep
-
-  // the only concern is driving neutral terms!!
-  // everything else we get from evaluation!!
-  def driveTerm(c: CTerm): DriveStep
-}
-
+// very simple supercompiler for supercompilation
+// of pair of terms
 trait SuperSpec extends Driver {
   // configuration supercompiler dealing with
   type Conf = (CTerm, CTerm)
@@ -23,7 +13,7 @@ trait SuperSpec extends Driver {
   case object NormLabel extends Label {
     override def toString = "->"
   }
-  case class CaseBranchLabel(sel: Name, ptr: CTerm) extends Label {
+  case class CaseBranchLabel(sel: Name, ptr: ElimCase) extends Label {
     override def toString = sel + " = " + ptr
   }
   // congruence
@@ -47,7 +37,7 @@ trait SuperSpec extends Driver {
   case object StopMStep extends MStep {
     val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
-  case class VariantsMStep(sel: Name, cases: List[(CTerm, Conf)]) extends MStep {
+  case class VariantsMStep(sel: Name, cases: List[(ElimCase, Conf)]) extends MStep {
     val graphStep = {
       val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
       AddChildNodesStep[Conf, Label](ns)
@@ -73,7 +63,7 @@ trait SuperSpec extends Driver {
   // POINT of multi-resultness
   // TODO: make it more generic
   // handling new possibility should be easy
-  trait Driving extends ProofRules {
+  trait ProofDriving extends ProofRules {
     override def drive(signal: Signal, g: G): List[S] = {
       if (signal.isDefined)
         return List()
@@ -87,16 +77,16 @@ trait SuperSpec extends Driver {
           List(StopMStep)
         case (VariantsDStep(sel1, cases1), VariantsDStep(sel2, cases2)) =>
           List(
-            VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t)), applySubst(t2, Map(sel1 -> t))))}),
-            VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t)), applySubst(t2, Map(sel2 -> t))))})
+            VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t.ptr)), applySubst(t2, Map(sel1 -> t.ptr))))}),
+            VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t.ptr)), applySubst(t2, Map(sel2 -> t.ptr))))})
           )
         case (VariantsDStep(sel1, cases1), _) =>
           List(
-            VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t)), applySubst(t2, Map(sel1 -> t))))})
+            VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t.ptr)), applySubst(t2, Map(sel1 -> t.ptr))))})
           )
         case (_, VariantsDStep(sel2, cases2)) =>
           List(
-            VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t)), applySubst(t2, Map(sel2 -> t))))})
+            VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t.ptr)), applySubst(t2, Map(sel2 -> t.ptr))))})
           )
         case (LeibnizDStep(f1, t1), LeibnizDStep(f2, t2)) =>
           if (f1 == f2) List(LeibnizMStep(f1, t1, t2)) else List(StopMStep)
@@ -163,8 +153,8 @@ trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with Core
           case List() =>
             VRefl(VNat, cEval0(node.conf._1))
           case
-            TEdge(nodeZ, CaseBranchLabel(sel1, Zero)) ::
-              TEdge(nodeS, CaseBranchLabel(sel2, Succ(Inf(Free(fresh))))) ::
+            TEdge(nodeZ, CaseBranchLabel(sel1, ElimCase(Zero, _))) ::
+              TEdge(nodeS, CaseBranchLabel(sel2, ElimCase(Succ(Inf(Free(fresh))), _))) ::
               Nil =>
 
             val (c1, c2) = node.conf
@@ -188,9 +178,6 @@ trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with Core
               fold(g, n1, nEnv, bEnv, dRed)
         }
     }
-
-
-
 }
 
 object SuperSpecREPL
@@ -239,7 +226,7 @@ object SuperSpecREPL
       super.handleCommand(state, cmd)
   }
 
-  class SpecSc extends ProofRules with Driving with Folding with Termination with NoRebuildings {
+  class SpecSc extends ProofRules with ProofDriving with Folding with Termination with NoRebuildings {
     val maxDepth = 10
   }
 }

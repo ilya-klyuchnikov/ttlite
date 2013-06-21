@@ -119,7 +119,11 @@ trait NatDriver extends CoreDriver with NatAST {
     case natElim: NNatElim =>
       natElim.n match {
         case NFree(n) =>
-          VariantsDStep(n, List(Zero, Succ(freshLocal())))
+          val caseZ = ElimCase(Zero, Map())
+          val n1 = freshName
+          val v1 = Inf(Free(n1))
+          val caseS = ElimCase(Succ(v1), Map(n1 -> Inf(Free(n))))
+          VariantsDStep(n, List(caseZ, caseS))
         case n =>
           driveNeutral(n)
       }

@@ -1,10 +1,10 @@
 package superspec.lambdapi
 
-// TODO
-// There is an open question with types:
-// evaluation removes all type annotations.
 trait CoreSubst extends CoreEval with CoreQuote {
   type Subst = Map[Name, CTerm]
+
+  def findRenaming(from: CTerm, to: CTerm): Option[Subst] =
+    for (s <- findSubst(from, to) if findSubst(to, from).isDefined) yield  s
 
   def findSubst(from: CTerm, to: CTerm): Option[Subst] =
     for (sub <- findSubst0(from, to))
