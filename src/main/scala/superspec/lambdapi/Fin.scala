@@ -39,20 +39,20 @@ trait FinPrinter extends NatPrinter with FinAST {
 }
 
 trait FinEval extends CoreEval with FinAST {
-  override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
+  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
     case FZero(n) =>
-      VFZero(cEval(n, d))
+      VFZero(cEval(n, nEnv, bEnv))
     case FSucc(n, f) =>
-      VFSucc(cEval(n, d), cEval(n, d))
-    case _ => super.cEval(c, d)
+      VFSucc(cEval(n, nEnv, bEnv), cEval(n, nEnv, bEnv))
+    case _ => super.cEval(c, nEnv, bEnv)
   }
 
-  override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
+  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
     case Fin(n) =>
-      VFin(cEval(n, d))
+      VFin(cEval(n, nEnv, bEnv))
     case FinElim(m, mz, ms, n, f) =>
-      val mzVal = cEval(mz, d)
-      val msVal = cEval(ms, d)
+      val mzVal = cEval(mz, nEnv, bEnv)
+      val msVal = cEval(ms, nEnv, bEnv)
 
       def rec(fVal: Value): Value = fVal match {
         case VFZero(k) =>
@@ -60,12 +60,14 @@ trait FinEval extends CoreEval with FinAST {
         case VFSucc(k, g) =>
           msVal @@ k @@ g @@ rec(g)
         case VNeutral(n1) =>
-          VNeutral(NFinElim(cEval(m, d), cEval(mz, d), cEval(ms, d), cEval(n, d), n1))
+          VNeutral(
+            NFinElim(cEval(m, nEnv, bEnv), cEval(mz, nEnv, bEnv), cEval(ms, nEnv, bEnv), cEval(n, nEnv, bEnv), n1)
+          )
       }
 
-      rec(cEval(f, d))
+      rec(cEval(f, nEnv, bEnv))
     case _ =>
-      super.iEval(i, d)
+      super.iEval(i, nEnv, bEnv)
   }
 }
 
@@ -140,6 +142,10 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
       Global("FSucc") -> VLam(n => VLam(f => VFSucc(n, f))),
       Global("Fin") -> VLam(n => VFin(n)),
       Global("finElim") ->
-        cEval(Lam(Lam(Lam(Lam(Lam(Inf(FinElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) )))))), (List(),List()))
+        cEval(
+          Lam(Lam(Lam(Lam(Lam(
+            Inf(FinElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
+          ))))),
+          List(),List())
     )
 }

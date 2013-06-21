@@ -79,8 +79,8 @@ trait CoreSubst extends CoreEval with CoreQuote {
 
 
   def applySubst(t: CTerm, subst: Subst): CTerm = {
-    val env: NameEnv[Value] = subst.toList.map {case (n, t) => (n, cEval(t, (Nil, Nil)))}
-    quote0(cEval(t, (env, Nil)))
+    val env: NameEnv[Value] = subst.toList.map {case (n, t) => (n, cEval(t, Nil, Nil))}
+    quote0(cEval(t, env, Nil))
   }
 
   def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {

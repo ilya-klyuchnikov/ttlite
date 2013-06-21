@@ -143,18 +143,17 @@ trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with Core
   // TODO
   def freeLocals(ct: CTerm): List[Name] = List(Local(1))
 
-  def residuateToVal(g: TGraph[Conf, Label], d: (NameEnv[Value], Env)): Value = {
+  def residuateToVal(g: TGraph[Conf, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
     val startRed: Map[Conf, Value] = Map()
     val (c1, c2) = g.root.conf
     val locals = (freeLocals(c1) ++ freeLocals(c2)).distinct
-    val startFun : ((NameEnv[Value], Env)) => Value = d => fold(g, g.root, d, startRed)
-    val fun = locals.foldLeft(startFun){(f, local) => d => VLam(x => f((local -> x :: d._1, d._2)))}
-
-    fun(d)
+    val startFun : (NameEnv[Value], Env) => Value = (n, b) => fold(g, g.root, n, b, startRed)
+    val fun = locals.foldLeft(startFun){(f, local) => (n, b) => VLam(x => f(local -> x :: n, b))}
+    fun(nEnv, bEnv)
   }
 
   /// context!!!!!
-  def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], d: (NameEnv[Value], Env), dRed: Map[Conf, Value]): Value =
+  def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[Conf, Value]): Value =
     node.base match {
       // recursive node
       case Some(tPath) =>
@@ -170,17 +169,23 @@ trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with Core
 
             val (c1, c2) = node.conf
             val motive =
-              VLam {n => VEq(VNat, cEval(c1, (sel1 -> n :: d._1, d._2)), cEval(c2, (sel1 -> n :: d._1, d._2)))}
+              VLam {n => VEq(VNat, cEval(c1,(sel1, n) :: nEnv, bEnv), cEval(c2, sel1 -> n :: nEnv, bEnv))}
             val zCase =
-              fold(g, nodeZ, d, dRed)
+              fold(g, nodeZ, nEnv, bEnv, dRed)
 
             val sCase =
-              VLam {n => VLam {rec => fold(g, nodeS, (fresh -> n :: d._1, d._2), dRed + (node.conf -> rec))}}
+              VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
 
-            VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, d._1).get
+            VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
           case TEdge(n1, LeibnizLabel(f)) :: Nil =>
             val (c1, c2) = n1.conf
-            VNeutral(NFree(Global("leibniz"))) @@ VNat @@ VNat @@ cEval(f, d) @@ cEval(c1, d) @@ cEval(c2, d) @@ fold(g, n1, d, dRed)
+            VNeutral(NFree(Global("leibniz"))) @@
+              VNat @@
+              VNat @@
+              cEval(f, nEnv, bEnv) @@
+              cEval(c1, nEnv, bEnv) @@
+              cEval(c2, nEnv, bEnv) @@
+              fold(g, n1, nEnv, bEnv, dRed)
         }
     }
 
@@ -222,10 +227,8 @@ object SuperSpecREPL
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))
-            val resVal = residuateToVal(tGraph, (state.ne, List()))
-            println(resVal)
+            val resVal = residuateToVal(tGraph, state.ne, List())
             val tRes = iquote(resVal)
-            println(tRes)
             println(int.icprint(tRes))
 
           }

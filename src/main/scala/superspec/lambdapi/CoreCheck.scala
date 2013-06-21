@@ -1,35 +1,36 @@
 package superspec.lambdapi
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(g: (NameEnv[Value], Context), i: ITerm): Result[Type] =
-    iType(0, g, i)
+  def iType0(nEnv: NameEnv[Value], ctx: Context, i: ITerm): Result[Type] =
+    iType(0, nEnv, ctx, i)
 
-  def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
+
+  def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
     case Ann(e, tyt) =>
-        cType(i, g, tyt, VStar).right.flatMap { _ =>
-          val ty = cEval(tyt, (g._1, Nil))
-          for { _ <- cType(i, g, e, ty).right} yield ty
+        cType(i, nEnv, ctx, tyt, VStar).right.flatMap { _ =>
+          val ty = cEval(tyt, nEnv, Nil)
+          for { _ <- cType(i, nEnv, ctx, e, ty).right} yield ty
       }
     case Star =>
       Right(VStar)
     case Pi(tyt, tyt1) =>
-      cType(i, g, tyt, VStar).right.flatMap { _ =>
-        val ty = cEval(tyt, (g._1, Nil))
+      cType(i, nEnv, ctx, tyt, VStar).right.flatMap { _ =>
+        val ty = cEval(tyt, nEnv, Nil)
         for {
-          _ <- cType(i + 1, (g._1, (Local(i), ty) :: g._2), cSubst(0, Free(Local(i)), tyt1), VStar).right
+          _ <- cType(i + 1, nEnv, (Local(i), ty) :: ctx, cSubst(0, Free(Local(i)), tyt1), VStar).right
         } yield VStar
       }
     case Free(x) =>
-      lookup(x, g._2) match {
+      lookup(x, ctx) match {
         case Some(ty) => Right(ty)
         case None => Left(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
-      iType(i, g, e1).right.flatMap { _ match {
+      iType(i, nEnv, ctx, e1).right.flatMap { _ match {
         case VPi(ty, ty1) =>
-          cType(i, g, e2, ty) match {
+          cType(i, nEnv, ctx, e2, ty) match {
             case Right(_) =>
-              Right(ty1(cEval(e2, (g._1, Nil))))
+              Right(ty1(cEval(e2, nEnv, Nil)))
             case Left(s) => Left(s)
           }
         case _ => Left(s"illegal application: $t")
@@ -38,16 +39,16 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 
   // checks that ct has type t
-  def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Inf(e), _) =>
-      iType(ii, g, e).right.flatMap(ty1 =>
+      iType(ii, nEnv, ctx, e).right.flatMap(ty1 =>
         if (quote0(ty1) == quote0(t))
           Right()
         else
           Left(s"type mismatch. inferred: ${pretty(cPrint(0, 0, quote0(ty1)))}. expected: ${pretty(cPrint(0, 0, quote0(t)))}. for expression ${pretty(iPrint(0, 0, e))}")
       )
     case (Lam(e), VPi(ty, ty1)) =>
-      cType(ii + 1, (g._1, (Local(ii), ty) :: g._2 ), cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
+      cType(ii + 1, nEnv, (Local(ii), ty) :: ctx , cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
     case _ => Left(s"type mismatch: $ct")
   }
   def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

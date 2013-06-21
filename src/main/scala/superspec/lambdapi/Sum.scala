@@ -38,90 +38,97 @@ trait SumPrinter extends CorePrinter with SumAST {
 }
 
 trait SumEval extends CoreEval with SumAST {
-  override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
+  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
     case InL(lt, rt, l) =>
-      VInL(cEval(lt, d), cEval(rt, d), cEval(l, d))
+      VInL(cEval(lt, nEnv, bEnv), cEval(rt, nEnv, bEnv), cEval(l, nEnv, bEnv))
     case InR(lt, rt, r) =>
-      VInR(cEval(lt, d), cEval(rt, d), cEval(r, d))
+      VInR(cEval(lt, nEnv, bEnv), cEval(rt, nEnv, bEnv), cEval(r, nEnv, bEnv))
     case _ =>
-      super.cEval(c, d)
+      super.cEval(c, nEnv, bEnv)
   }
 
-  override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
+  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
     case Sum(lt, rt) =>
-      VSum(cEval(lt, d), cEval(rt, d))
+      VSum(cEval(lt, nEnv, bEnv), cEval(rt, nEnv, bEnv))
     case SumElim(lt, rt, m, lc, rc, sum) =>
-      val sumVal = cEval(sum, d)
+      val sumVal = cEval(sum, nEnv, bEnv)
       sumVal match {
         case VInL(_, _, lVal) =>
-          val lcVal = cEval(lc, d)
+          val lcVal = cEval(lc, nEnv, bEnv)
           lcVal @@ lVal
         case VInR(_, _, rVal) =>
-          val rcVal = cEval(rc, d)
+          val rcVal = cEval(rc, nEnv, bEnv)
           rcVal @@ rVal
         case VNeutral(n) =>
-          VNeutral(NSumElim(cEval(lt, d), cEval(rt, d), cEval(m, d), cEval(lc, d), cEval(rc, d), n))
+          VNeutral(
+            NSumElim(
+              cEval(lt, nEnv, bEnv),
+              cEval(rt, nEnv, bEnv),
+              cEval(m, nEnv, bEnv),
+              cEval(lc, nEnv, bEnv),
+              cEval(rc, nEnv, bEnv), n)
+          )
       }
     case _ =>
-      super.iEval(i, d)
+      super.iEval(i, nEnv, bEnv)
   }
 }
 
 trait SumCheck extends CoreCheck with SumAST {
   // I have an assumption, that there is not need of this
   // It will be done automatically
-  override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
     case Sum(a, b) =>
-      assert(cType(i, g, a, VStar).isRight)
-      assert(cType(i, g, b, VStar).isRight)
+      assert(cType(i, nEnv, ctx, a, VStar).isRight)
+      assert(cType(i, nEnv, ctx, b, VStar).isRight)
       Right(VStar)
     case SumElim(lt, rt, m, lc, rc, sum) =>
       // checking types
-      assert(cType(i, g, lt, VStar).isRight)
-      assert(cType(i, g, rt, VStar).isRight)
+      assert(cType(i, nEnv, ctx, lt, VStar).isRight)
+      assert(cType(i, nEnv, ctx, rt, VStar).isRight)
 
-      val ltVal = cEval(lt, (g._1, List()))
-      val rtVal = cEval(rt, (g._1, List()))
+      val ltVal = cEval(lt, nEnv, List())
+      val rtVal = cEval(rt, nEnv, List())
 
       // checking motive
-      assert(cType(i, g, m, VPi(VSum(ltVal, rtVal), {_ => VStar})).isRight)
-      val mVal = cEval(m, (g._1, List()))
+      assert(cType(i, nEnv, ctx, m, VPi(VSum(ltVal, rtVal), {_ => VStar})).isRight)
+      val mVal = cEval(m, nEnv, List())
 
       // checking branches
-      assert(cType(i, g, lc, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)})).isRight)
-      assert(cType(i, g, rc, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)})).isRight)
+      assert(cType(i, nEnv, ctx, lc, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)})).isRight)
+      assert(cType(i, nEnv, ctx, rc, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)})).isRight)
 
       // checking sum
-      assert(cType(i, g, sum, VSum(ltVal, rtVal)).isRight)
-      val sumVal = cEval(sum, (g._1, List()))
+      assert(cType(i, nEnv, ctx, sum, VSum(ltVal, rtVal)).isRight)
+      val sumVal = cEval(sum, nEnv, List())
 
       Right(mVal @@ sumVal)
     case _ =>
-      super.iType(i, g, t)
+      super.iType(i, nEnv, ctx, t)
   }
 
 
-  override def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (InL(lt, rt, l), VSum(ltVal, rtVal)) =>
-      assert(cType(ii, g, lt, VStar).isRight)
-      assert(cType(ii, g, rt, VStar).isRight)
-      if (quote0(cEval(lt, (g._1, List()))) != quote0(ltVal))
+      assert(cType(ii, nEnv, ctx, lt, VStar).isRight)
+      assert(cType(ii, nEnv, ctx, rt, VStar).isRight)
+      if (quote0(cEval(lt, nEnv, List())) != quote0(ltVal))
         return Left("type mismatch")
-      if (quote0(cEval(rt, (g._1, List()))) != quote0(rtVal))
+      if (quote0(cEval(rt, nEnv, List())) != quote0(rtVal))
         return Left("type mismatch")
-      assert(cType(ii, g, l, ltVal).isRight)
+      assert(cType(ii, nEnv, ctx, l, ltVal).isRight)
       Right(())
     case (InR(lt, rt, r), VSum(ltVal, rtVal)) =>
-      assert(cType(ii, g, lt, VStar).isRight)
-      assert(cType(ii, g, rt, VStar).isRight)
-      if (quote0(cEval(lt, (g._1, List()))) != quote0(ltVal))
+      assert(cType(ii, nEnv, ctx, lt, VStar).isRight)
+      assert(cType(ii, nEnv, ctx, rt, VStar).isRight)
+      if (quote0(cEval(lt, nEnv, List())) != quote0(ltVal))
         return Left("type mismatch")
-      if (quote0(cEval(rt, (g._1, List()))) != quote0(rtVal))
+      if (quote0(cEval(rt, nEnv, List())) != quote0(rtVal))
         return Left("type mismatch")
-      assert(cType(ii, g, r, rtVal).isRight)
+      assert(cType(ii, nEnv, ctx, r, rtVal).isRight)
       Right(())
     case _ =>
-      super.cType(ii, g, ct, t)
+      super.cType(ii, nEnv, ctx, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -184,7 +191,11 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
       Global("Sum") -> VLam(a => VLam(b => VSum(a, b))),
       Global("InL") -> VLam(a => VLam(b => VLam(x => VInL(a, b, x)))),
       Global("InR") -> VLam(a => VLam(b => VLam(x => VInR(a, b, x)))),
-      Global("cases") -> cEval(Lam(Lam(Lam(Lam(Lam(Lam( Inf(SumElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) ) )))))), (Nil, Nil))
+      Global("cases") ->
+        cEval(
+          Lam(Lam(Lam(Lam(Lam(Lam(
+            Inf(SumElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
+          )))))), Nil, Nil)
     )
 
 }

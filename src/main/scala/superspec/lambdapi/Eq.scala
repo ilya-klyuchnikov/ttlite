@@ -67,21 +67,27 @@ trait EqPrinter extends CorePrinter with EqAST {
 }
 
 trait EqEval extends CoreEval with EqAST {
-  override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
-    case Refl(a, x) => VRefl(cEval(a, d), cEval(x, d))
-    case _ => super.cEval(c, d)
+  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
+    case Refl(a, x) => VRefl(cEval(a, nEnv, bEnv), cEval(x, nEnv, bEnv))
+    case _ => super.cEval(c, nEnv, bEnv)
   }
-  override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
+  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
     case Eq(a, x, y) =>
-      VEq(cEval(a, d), cEval(x, d), cEval(y, d))
+      VEq(cEval(a, nEnv, bEnv), cEval(x, nEnv, bEnv), cEval(y, nEnv, bEnv))
     case EqElim(a, prop, propR, x, y, eq) =>
-      cEval(eq, d) match {
-        case VRefl(_, z) => vapp(cEval(propR, d), z)
+      cEval(eq, nEnv, bEnv) match {
+        case VRefl(_, z) =>
+          vapp(cEval(propR, nEnv, bEnv), z)
         case VNeutral(n) =>
-          VNeutral(NEqElim(cEval(a, d), cEval(prop, d), cEval(propR, d), cEval(x, d), cEval(y, d), n))
+          VNeutral(NEqElim(
+            cEval(a, nEnv, bEnv),
+            cEval(prop, nEnv, bEnv),
+            cEval(propR, nEnv, bEnv),
+            cEval(x, nEnv, bEnv),
+            cEval(y, nEnv, bEnv), n))
       }
     case _ =>
-      super.iEval(i, d)
+      super.iEval(i, nEnv, bEnv)
   }
 }
 
@@ -95,47 +101,47 @@ trait EqDriver extends CoreDriver with EqAST {
 }
 
 trait EqCheck extends CoreCheck with EqAST {
-  override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
     case Eq(a, x, y) =>
-      assert(cType(i, g, a, VStar).isRight)
-      val aVal = cEval(a, (g._1, Nil))
-      assert(cType(i, g, x, aVal).isRight)
-      assert(cType(i, g, x, aVal).isRight)
+      assert(cType(i, nEnv, ctx, a, VStar).isRight)
+      val aVal = cEval(a, nEnv, Nil)
+      assert(cType(i, nEnv, ctx, x, aVal).isRight)
+      assert(cType(i, nEnv, ctx, x, aVal).isRight)
       Right(VStar)
     case EqElim(a, prop, propR, x, y, eq) =>
-      assert(cType(i, g, a, VStar).isRight)
+      assert(cType(i, nEnv, ctx, a, VStar).isRight)
 
-      val aVal = cEval(a, (g._1, Nil))
-      assert(cType(i, g, x, aVal).isRight)
+      val aVal = cEval(a, nEnv, Nil)
+      assert(cType(i, nEnv, ctx, x, aVal).isRight)
 
-      assert(cType(i, g, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
-      val propVal = cEval(prop, (g._1, Nil))
+      assert(cType(i, nEnv, ctx, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
+      val propVal = cEval(prop, nEnv, Nil)
 
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
-      assert(cType(i, g, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)})).isRight)
+      assert(cType(i, nEnv, ctx, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)})).isRight)
 
-      val xVal = cEval(x, (g._1, Nil))
-      assert(cType(i, g, y, aVal).isRight)
-      val yVal = cEval(y, (g._1, Nil))
-      assert(cType(i, g, eq, VEq(aVal, xVal, yVal)).isRight)
+      val xVal = cEval(x, nEnv, Nil)
+      assert(cType(i, nEnv, ctx, y, aVal).isRight)
+      val yVal = cEval(y, nEnv, Nil)
+      assert(cType(i, nEnv, ctx, eq, VEq(aVal, xVal, yVal)).isRight)
 
       Right(vapp(vapp(propVal, xVal), yVal))
     case _ =>
-      super.iType(i, g, t)
+      super.iType(i, nEnv, ctx, t)
   }
 
-  override def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Refl(a, z), VEq(bVal, xVal, yVal)) =>
-      assert(cType(ii, g, a, VStar).isRight)
-      val aVal = cEval(a, (g._1, Nil))
+      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
+      val aVal = cEval(a, nEnv, Nil)
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      assert(cType(ii, g, z, aVal).isRight)
-      val zVal = cEval(z, (g._1, Nil))
+      assert(cType(ii, nEnv, ctx, z, aVal).isRight)
+      val zVal = cEval(z, nEnv, Nil)
       assert(quote0(zVal) == quote0(xVal) && quote0(zVal) == quote0(yVal))
       Right()
     case _ =>
-      super.cType(ii, g, ct, t)
+      super.cType(ii, nEnv, ctx, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -202,6 +208,10 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
       Global("Refl") -> VLam({a => VLam({x => VRefl(a, x)})}),
       Global("Eq") -> VLam(a => VLam(x => VLam(y =>VEq(a, x, y)))),
       Global("eqElim") ->
-        cEval(Lam(Lam(Lam(Lam(Lam(Lam(Inf(EqElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)) ) ))))))), (Nil,Nil))
+        cEval(
+          Lam(Lam(Lam(Lam(Lam(Lam(
+            Inf(EqElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
+          )))))),
+          Nil,Nil)
     )
 }

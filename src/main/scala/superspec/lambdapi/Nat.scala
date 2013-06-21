@@ -71,7 +71,6 @@ trait NatPrinter extends CorePrinter with NatAST {
     case Zero =>
       fromNat(0, ii, Zero)
     case Succ(n) =>
-      //iPrint(p, ii, Free(Global("Succ")) @@ n)
       fromNat(0, ii, Succ(n))
     case _ => super.cPrint(p, ii, t)
   }
@@ -87,31 +86,31 @@ trait NatPrinter extends CorePrinter with NatAST {
 }
 
 trait NatEval extends CoreEval with NatAST {
-  override def cEval(c: CTerm, d: (NameEnv[Value], Env)): Value = c match {
+  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
     case Zero =>
       VZero
     case Succ(n) =>
-      VSucc(cEval(n, d))
-    case _ => super.cEval(c, d)
+      VSucc(cEval(n, nEnv, bEnv))
+    case _ => super.cEval(c, nEnv, bEnv)
   }
 
-  override def iEval(i: ITerm, d: (NameEnv[Value], Env)): Value = i match {
+  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
     case Nat =>
       VNat
     case NatElim(m, mz, ms, n) =>
-      val mzVal = cEval(mz, d)
-      val msVal = cEval(ms, d)
+      val mzVal = cEval(mz, nEnv, bEnv)
+      val msVal = cEval(ms, nEnv, bEnv)
       def rec(nVal: Value): Value = nVal match {
         case VZero =>
           mzVal
         case VSucc(k) =>
           vapp(vapp(msVal, k), rec(k))
         case VNeutral(n) =>
-          VNeutral(NNatElim(cEval(m, d), mzVal, msVal, n))
+          VNeutral(NNatElim(cEval(m, nEnv, bEnv), mzVal, msVal, n))
       }
-      rec(cEval(n, d))
+      rec(cEval(n, nEnv, bEnv))
     case _ =>
-      super.iEval(i, d)
+      super.iEval(i, nEnv, bEnv)
   }
 }
 
@@ -138,17 +137,17 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatCheck extends CoreCheck with NatAST {
-  override def iType(i: Int, g: (NameEnv[Value], Context), t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
     case Nat =>
       Right(VStar)
     case NatElim(m, mz, ms, n) =>
       val z = for {
-        _ <- cType(i, g, m, VPi(VNat, x => VStar)).right.toOption
-        mVal = cEval(m, (g._1, Nil))
-        _ <- cType(i, g, mz, vapp(mVal, VZero)).right.toOption
-        _ <- cType(i, g, ms, VPi(VNat, k => VPi(vapp(mVal, k), x => vapp(mVal, VSucc(k))))).right.toOption
-        _ <- cType(i, g, n, VNat).right.toOption
-        nVal = cEval(n, (g._1, Nil))
+        _ <- cType(i, nEnv, ctx, m, VPi(VNat, x => VStar)).right.toOption
+        mVal = cEval(m, nEnv, Nil)
+        _ <- cType(i, nEnv, ctx, mz, vapp(mVal, VZero)).right.toOption
+        _ <- cType(i, nEnv, ctx, ms, VPi(VNat, k => VPi(vapp(mVal, k), x => vapp(mVal, VSucc(k))))).right.toOption
+        _ <- cType(i, nEnv, ctx, n, VNat).right.toOption
+        nVal = cEval(n, nEnv, Nil)
       } yield
         vapp(mVal, nVal)
       z match {
@@ -156,16 +155,16 @@ trait NatCheck extends CoreCheck with NatAST {
         case None => Left("")
       }
     case _ =>
-      super.iType(i, g, t)
+      super.iType(i, nEnv, ctx, t)
   }
 
-  override def cType(ii: Int, g: (NameEnv[Value], Context), ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Zero, VNat) =>
       Right(())
     case (Succ(k), VNat) =>
-      cType(ii, g, k, VNat)
+      cType(ii, nEnv, ctx, k, VNat)
     case _ =>
-      super.cType(ii, g, ct, t)
+      super.cType(ii, nEnv, ctx, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -225,7 +224,10 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
       Global("Nat") -> VNat,
       Global("natElim") ->
         cEval(
-          Lam(Lam(Lam(Lam(Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))))))), (Nil, Nil))
+          Lam(Lam(Lam(Lam(
+            Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
+          )))),
+          Nil, Nil)
     )
 
   def toNat1(n: Int): CTerm =
