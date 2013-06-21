@@ -13,8 +13,8 @@ trait SuperSpec extends Driver {
   case object NormLabel extends Label {
     override def toString = "->"
   }
-  case class CaseBranchLabel(sel: Name, ptr: ElimCase) extends Label {
-    override def toString = sel + " = " + ptr
+  case class CaseBranchLabel(sel: Name, elim: ElimBranch) extends Label {
+    override def toString = sel + " = " + elim
   }
   // congruence
   case class LeibnizLabel(f: CTerm) extends Label {
@@ -37,7 +37,7 @@ trait SuperSpec extends Driver {
   case object StopMStep extends MStep {
     val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
-  case class VariantsMStep(sel: Name, cases: List[(ElimCase, Conf)]) extends MStep {
+  case class VariantsMStep(sel: Name, cases: List[(ElimBranch, Conf)]) extends MStep {
     val graphStep = {
       val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
       AddChildNodesStep[Conf, Label](ns)
@@ -69,22 +69,18 @@ trait SuperSpec extends Driver {
         return List()
       val (t1, t2) = g.current.conf
       val proofSteps: List[MStep] = (driveTerm(t1), driveTerm(t2)) match {
-        case (NormDStep(n1), _) =>
-          List(TransientMStep(n1, t2))
-        case (_, NormDStep(n2)) =>
-          List(TransientMStep(t1, n2))
         case (StopDStep, StopDStep) =>
           List(StopMStep)
-        case (VariantsDStep(sel1, cases1), VariantsDStep(sel2, cases2)) =>
+        case (ElimDStep(sel1, cases1), ElimDStep(sel2, cases2)) =>
           List(
             VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t.ptr)), applySubst(t2, Map(sel1 -> t.ptr))))}),
             VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t.ptr)), applySubst(t2, Map(sel2 -> t.ptr))))})
           )
-        case (VariantsDStep(sel1, cases1), _) =>
+        case (ElimDStep(sel1, cases1), _) =>
           List(
             VariantsMStep(sel1, cases1.map{t => (t, (applySubst(t1, Map(sel1 -> t.ptr)), applySubst(t2, Map(sel1 -> t.ptr))))})
           )
-        case (_, VariantsDStep(sel2, cases2)) =>
+        case (_, ElimDStep(sel2, cases2)) =>
           List(
             VariantsMStep(sel2, cases2.map{t => (t, (applySubst(t1, Map(sel2 -> t.ptr)), applySubst(t2, Map(sel2 -> t.ptr))))})
           )
@@ -153,8 +149,8 @@ trait Residuator extends SuperSpec with CoreAST with EqAST with NatAST with Core
           case List() =>
             VRefl(VNat, cEval0(node.conf._1))
           case
-            TEdge(nodeZ, CaseBranchLabel(sel1, ElimCase(Zero, _))) ::
-              TEdge(nodeS, CaseBranchLabel(sel2, ElimCase(Succ(Inf(Free(fresh))), _))) ::
+            TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
+              TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
               Nil =>
 
             val (c1, c2) = node.conf
