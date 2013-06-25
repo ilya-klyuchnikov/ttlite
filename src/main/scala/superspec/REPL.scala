@@ -200,7 +200,6 @@ trait REPL extends Common {
   }
 
   var state: State = _
-  // it seems that the single point for changing state is handle command
 
   def loop() {
     val in = JLineConsole.readLine(int.iprompt)

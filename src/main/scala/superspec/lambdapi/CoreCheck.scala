@@ -1,11 +1,11 @@
 package superspec.lambdapi
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(nEnv: NameEnv[Value], ctx: Context, i: ITerm): Result[Type] =
+  def iType0(nEnv: NameEnv[Value], ctx: NameEnv[Value], i: ITerm): Result[Type] =
     iType(0, nEnv, ctx, i)
 
 
-  def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
+  def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Ann(e, tyt) =>
         cType(i, nEnv, ctx, tyt, VStar).right.flatMap { _ =>
           val ty = cEval(tyt, nEnv, Nil)
@@ -39,7 +39,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 
   // checks that ct has type t
-  def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Inf(e), _) =>
       iType(ii, nEnv, ctx, e).right.flatMap(ty1 =>
         if (quote0(ty1) == quote0(t))

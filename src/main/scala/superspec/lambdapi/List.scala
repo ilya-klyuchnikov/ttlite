@@ -65,7 +65,7 @@ trait ListEval extends CoreEval with ListAST {
 }
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case PiList(a) =>
       assert(cType(i, nEnv, ctx, a, VStar).isRight)
       Right(VStar)
@@ -88,7 +88,7 @@ trait ListCheck extends CoreCheck with ListAST with ListEval {
       super.iType(i, nEnv, ctx, t)
   }
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (PiNil(a), VPiList(bVal)) =>
       assert(cType(ii, nEnv, ctx, a, VStar).isRight)
       val aVal = cEval(a, nEnv, List())

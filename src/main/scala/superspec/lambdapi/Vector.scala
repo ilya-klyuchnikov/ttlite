@@ -65,7 +65,7 @@ trait VectorEval extends CoreEval with VectorAST {
 }
 
 trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Vec(a, n) =>
       assert(cType(i, nEnv, ctx, a, VStar).isRight)
       assert(cType(i, nEnv, ctx, n, VNat).isRight)
@@ -98,7 +98,7 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       super.iType(i, nEnv, ctx, t)
   }
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (VecNil(a), VVec(bVal, VZero)) =>
       assert(cType(ii, nEnv, ctx, a, VStar).isRight)
       val aVal = cEval(a, nEnv, List())

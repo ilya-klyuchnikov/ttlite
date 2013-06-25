@@ -30,7 +30,6 @@ trait CoreAST extends Common {
   case class NApp(n: Neutral, v: Value) extends Neutral
 
   type Env = List[Value]
-  type Context = List[(Name, Value)]
   type Type = Value
 
   def vfree(n: Name): Value = VNeutral(NFree(n))

@@ -77,7 +77,7 @@ trait SumEval extends CoreEval with SumAST {
 trait SumCheck extends CoreCheck with SumAST {
   // I have an assumption, that there is not need of this
   // It will be done automatically
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Sum(a, b) =>
       assert(cType(i, nEnv, ctx, a, VStar).isRight)
       assert(cType(i, nEnv, ctx, b, VStar).isRight)
@@ -108,7 +108,7 @@ trait SumCheck extends CoreCheck with SumAST {
   }
 
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (InL(lt, rt, l), VSum(ltVal, rtVal)) =>
       assert(cType(ii, nEnv, ctx, lt, VStar).isRight)
       assert(cType(ii, nEnv, ctx, rt, VStar).isRight)

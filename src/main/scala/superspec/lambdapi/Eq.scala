@@ -101,7 +101,7 @@ trait EqDriver extends CoreDriver with EqAST {
 }
 
 trait EqCheck extends CoreCheck with EqAST {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: Context, t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Eq(a, x, y) =>
       assert(cType(i, nEnv, ctx, a, VStar).isRight)
       val aVal = cEval(a, nEnv, Nil)
@@ -131,7 +131,7 @@ trait EqCheck extends CoreCheck with EqAST {
       super.iType(i, nEnv, ctx, t)
   }
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: Context, ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Refl(a, z), VEq(bVal, xVal, yVal)) =>
       assert(cType(ii, nEnv, ctx, a, VStar).isRight)
       val aVal = cEval(a, nEnv, Nil)
