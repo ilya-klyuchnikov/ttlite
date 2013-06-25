@@ -3,26 +3,34 @@ package superspec
 import mrsc.core._
 import superspec.lambdapi._
 
-// single configuration driver
-// pair-configuration driver can be derived from this one
-trait Driver extends CoreSubst {
-  // ptr - a case that was taken: Zero, Succ(N)
-  // sub - a substitution, using only this substitution we can perform a fold
-  case class ElimBranch(ptr: CTerm, sub: Subst)
-  sealed trait DriveStep
-  case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep
-  case object StopDStep extends DriveStep
-  // todo: generalize or specialize (via specializing to each data type)
-  case class DecompositionDStep(comp: CTerm, next: CTerm) extends DriveStep
-  // the only concern is driving neutral terms!!
-  // everything else we get from evaluation!!
-  def driveTerm(c: CTerm): DriveStep
-}
 // TODO
 trait Rebuilder extends CoreSubst
 
 // base supercompiler for PI
-trait PiSc extends Driver {
+trait PiSc extends CoreSubst {
+
+  // sub - a substitution, using only this substitution we can perform a fold
+  case class ElimBranch(ptr: CTerm, sub: Subst)
+  sealed trait DriveStep {
+    def step(t: CTerm): Step
+  }
+
+  case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep {
+    override def step(t: CTerm) =
+      VariantsStep(sel, cases.map{branch => branch -> applySubst(t, Map(sel -> branch.ptr))})
+  }
+  case object StopDStep extends DriveStep {
+    override def step(t: CTerm) = StopStep
+  }
+  // todo: generalize or specialize (via specializing to each data type)
+  case class DecompositionDStep(comp: CTerm, next: CTerm) extends DriveStep {
+    override def step(t: CTerm) = DecompositionStep(comp, next)
+  }
+  // the only concern is driving neutral terms!!
+  // everything else we get from evaluation!!
+  def driveTerm(c: CTerm): DriveStep
+
+
   trait Label
   case object NormLabel extends Label {
     override def toString = "->"
@@ -81,13 +89,8 @@ trait PiSc extends Driver {
       if (signal.isDefined)
         return List()
       val t = g.current.conf
-      val piSteps: Step = driveTerm(t) match {
-        case StopDStep => StopStep
-        case DecompositionDStep(f1, t1) => DecompositionStep(f1, t1)
-        case ElimDStep(sel, bs) =>
-          VariantsStep(sel, bs.map{branch => branch -> applySubst(t, Map(sel -> branch.ptr))})
-      }
-      List(piSteps.graphStep)
+      val piStep = driveTerm(t).step(t)
+      List(piStep.graphStep)
     }
   }
 
@@ -118,23 +121,30 @@ trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEva
         node.outs match {
           case Nil =>
             cEval0(node.conf)
-          case
-            TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
-              TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
-              Nil =>
-            // todo: infer real motive
-            val motive =
-              VLam {n => VNat}
-            val zCase =
-              fold(g, nodeZ, nEnv, bEnv, dRed)
 
-            val sCase =
-              VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
-
-            VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
           case TEdge(n1, DecompositionLabel(f)) :: Nil =>
             cEval(f, nEnv, bEnv) @@ fold(g, n1, nEnv, bEnv, dRed)
         }
+    }
+}
+
+trait NatResiduator extends PiResiduator {
+  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
+          Nil =>
+        // todo: infer real motive
+        val motive =
+          VLam {n => VNat}
+        val zCase =
+          fold(g, nodeZ, nEnv, bEnv, dRed)
+        val sCase =
+          VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
+      case _ =>
+        super.fold(g, node, nEnv, bEnv, dRed)
     }
 }
 
@@ -152,7 +162,8 @@ object PiScREPL
   with NatSubst
   with NatDriver
   with PiGraphPrettyPrinter
-  with PiResiduator {
+  with PiResiduator
+  with NatResiduator {
 
   val te = natTE ++ eqTE
   val ve = natVE ++ eqVE
