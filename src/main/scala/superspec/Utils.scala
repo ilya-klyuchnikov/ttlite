@@ -10,7 +10,7 @@ trait PiGraphPrettyPrinter extends CoreREPL with PiSc {
     toString(tg.root, focus)
   }
 
-  // kiama pretty printer is not able to produce single string, so here a hack
+  // kiama pretty printer is not able to produce single string, so here is a hack
   def toString(c: CTerm): String = {
     val s = pretty(int.icprint(c), 1000)
     s.replace('\n', ' ').replaceAll("\\s+", " ")

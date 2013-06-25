@@ -117,7 +117,7 @@ trait BaseResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreE
         dRed(g.get(tPath).conf)
       case None =>
         node.outs match {
-          case Nil => cEval(node.conf, nEnv, bEnv)
+          case Nil => eval(node.conf, nEnv, bEnv)
         }
     }
 }

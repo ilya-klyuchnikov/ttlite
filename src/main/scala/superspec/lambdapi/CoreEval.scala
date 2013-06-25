@@ -1,19 +1,18 @@
 package superspec.lambdapi
 
 trait CoreEval extends CoreAST {
-  def iEval0(c: ITerm): Value = iEval(c, Nil, Nil)
-  def cEval0(c: CTerm): Value = cEval(c, Nil, Nil)
-
-  def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
-    case Ann(e, _) => cEval(e, nEnv, bEnv)
+  def eval0(c: ITerm): Value = eval(c, Nil, Nil)
+  def eval0(c: CTerm): Value = eval(c, Nil, Nil)
+  def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
+    case Ann(e, _) => eval(e, named, bound)
     case Star => VStar
-    case Pi(ty, ty1) => VPi(cEval(ty, nEnv, bEnv), x => cEval(ty1, nEnv, x :: bEnv))
-    case Free(x) => lookup(x, nEnv).getOrElse(vfree(x))
-    case Bound(ii) => bEnv(ii)
-    case e1 :@: e2 => vapp(iEval(e1, nEnv, bEnv), cEval(e2, nEnv, bEnv))
+    case Pi(ty, ty1) => VPi(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
+    case Free(x) => lookup(x, named).getOrElse(vfree(x))
+    case Bound(ii) => bound(ii)
+    case e1 :@: e2 => vapp(eval(e1, named, bound), eval(e2, named, bound))
   }
-  def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
-    case Inf(ii) => iEval(ii, nEnv, bEnv)
-    case Lam(e) => VLam(x => cEval(e, nEnv, x :: bEnv))
+  def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
+    case Inf(ii) => eval(ii, named, bound)
+    case Lam(e) => VLam(x => eval(e, named, x :: bound))
   }
 }

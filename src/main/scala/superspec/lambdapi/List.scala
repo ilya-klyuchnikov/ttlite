@@ -35,74 +35,74 @@ trait ListPrinter extends CorePrinter with ListAST {
 }
 
 trait ListEval extends CoreEval with ListAST {
-  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
+  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
     case PiNil(a) =>
-      VPiNil(cEval(a, nEnv, bEnv))
+      VPiNil(eval(a, named, bound))
     case PiCons(a, head, tail) =>
-      VPiCons(cEval(a, nEnv, bEnv), cEval(head, nEnv, bEnv), cEval(tail, nEnv, bEnv))
+      VPiCons(eval(a, named, bound), eval(head, named, bound), eval(tail, named, bound))
     case _ =>
-      super.cEval(c, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 
-  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
+  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
     case PiList(a) =>
-      VPiList(cEval(a, nEnv, bEnv))
+      VPiList(eval(a, named, bound))
     case PiListElim(a, m, nilCase, consCase, ls) =>
-      val nilCaseVal = cEval(nilCase, nEnv, bEnv)
-      val consCaseVal = cEval(consCase, nEnv, bEnv)
+      val nilCaseVal = eval(nilCase, named, bound)
+      val consCaseVal = eval(consCase, named, bound)
       def rec(listVal: Value): Value = listVal match {
         case VPiNil(_) =>
           nilCaseVal
         case VPiCons(_, head, tail) =>
           consCaseVal @@ head @@ tail @@ rec(tail)
         case VNeutral(n) =>
-          VNeutral(NPiListElim(cEval(a, nEnv, bEnv), cEval(m, nEnv, bEnv), nilCaseVal, consCaseVal, n))
+          VNeutral(NPiListElim(eval(a, named, bound), eval(m, named, bound), nilCaseVal, consCaseVal, n))
       }
-      rec(cEval(ls, nEnv, bEnv))
+      rec(eval(ls, named, bound))
     case _ =>
-      super.iEval(i, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 }
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case PiList(a) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
+      assert(cType(i, named, bound, a, VStar).isRight)
       Right(VStar)
     case PiListElim(a, m, nilCase, consCase, xs) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
-      assert(cType(i, nEnv, ctx, m, VPi(VPiList(aVal), {_ => VStar})).isRight)
+      assert(cType(i, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
+      assert(cType(i, named, bound, m, VPi(VPiList(aVal), {_ => VStar})).isRight)
 
-      val mVal = cEval(m, nEnv, List())
-      assert(cType(i, nEnv, ctx, nilCase, mVal @@ VPiNil(aVal)).isRight)
+      val mVal = eval(m, named, List())
+      assert(cType(i, named, bound, nilCase, mVal @@ VPiNil(aVal)).isRight)
 
-      assert(cType(i, nEnv, ctx, consCase,
+      assert(cType(i, named, bound, consCase,
         VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(aVal, y, ys) }) }) })
       ).isRight)
 
-      assert(cType(i, nEnv, ctx, xs, VPiList(aVal)).isRight)
-      val vecVal = cEval(xs, nEnv, List())
+      assert(cType(i, named, bound, xs, VPiList(aVal)).isRight)
+      val vecVal = eval(xs, named, List())
       Right(mVal @@ vecVal)
     case _ =>
-      super.iType(i, nEnv, ctx, t)
+      super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (PiNil(a), VPiList(bVal)) =>
-      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(ii, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
       Right()
     case (PiCons(a, head, tail), VPiList(bVal)) =>
-      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(ii, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      assert(cType(ii, nEnv, ctx, head, aVal).isRight)
-      assert(cType(ii, nEnv, ctx, tail, VPiList(bVal)).isRight)
+      assert(cType(ii, named, bound, head, aVal).isRight)
+      assert(cType(ii, named, bound, tail, VPiList(bVal)).isRight)
       Right()
     case _ =>
-      super.cType(ii, nEnv, ctx, ct, t)
+      super.cType(ii, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -172,7 +172,7 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
     List(
       Global("List") -> VLam(a => VPiList(a)),
       Global("listElim") ->
-        cEval(
+        eval(
           Lam(Lam(Lam(Lam(Lam(
             Inf(PiListElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))
             )))))),

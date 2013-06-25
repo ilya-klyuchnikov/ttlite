@@ -35,50 +35,50 @@ trait VectorPrinter extends NatPrinter with VectorAST {
 }
 
 trait VectorEval extends CoreEval with VectorAST {
-  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
+  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
     case VecNil(a) =>
-      VVecNil(cEval(a, nEnv, bEnv))
+      VVecNil(eval(a, named, bound))
     case VecCons(a, n, head, tail) =>
-      VVecCons(cEval(a, nEnv, bEnv), cEval(n, nEnv, bEnv), cEval(head, nEnv, bEnv), cEval(tail, nEnv, bEnv))
+      VVecCons(eval(a, named, bound), eval(n, named, bound), eval(head, named, bound), eval(tail, named, bound))
     case _ =>
-      super.cEval(c, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 
-  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
+  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
-      VVec(cEval(a, nEnv, bEnv), cEval(n, nEnv, bEnv))
+      VVec(eval(a, named, bound), eval(n, named, bound))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      val nilCaseVal = cEval(nilCase, nEnv, bEnv)
-      val consCaseVal = cEval(consCase, nEnv, bEnv)
+      val nilCaseVal = eval(nilCase, named, bound)
+      val consCaseVal = eval(consCase, named, bound)
       def rec(nVal: Value, vecVal: Value): Value = vecVal match {
         case VVecNil(_) =>
           nilCaseVal
         case VVecCons(_, n, head, tail) =>
           consCaseVal @@ n @@ head @@ tail @@ rec(n, tail)
         case VNeutral(n) =>
-          VNeutral(NVecElim(cEval(a, nEnv, bEnv), cEval(m, nEnv, bEnv), nilCaseVal, consCaseVal, nVal, n))
+          VNeutral(NVecElim(eval(a, named, bound), eval(m, named, bound), nilCaseVal, consCaseVal, nVal, n))
       }
-      rec(cEval(n, nEnv, bEnv), cEval(vec, nEnv, bEnv))
+      rec(eval(n, named, bound), eval(vec, named, bound))
     case _ =>
-      super.iEval(i, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 }
 
 trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Vec(a, n) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      assert(cType(i, nEnv, ctx, n, VNat).isRight)
+      assert(cType(i, named, bound, a, VStar).isRight)
+      assert(cType(i, named, bound, n, VNat).isRight)
       Right(VStar)
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
-      assert(cType(i, nEnv, ctx, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
+      assert(cType(i, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
+      assert(cType(i, named, bound, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
 
-      val mVal = cEval(m, nEnv, List())
-      assert(cType(i, nEnv, ctx, nilCase, mVal @@ VZero @@ VVecNil(aVal)).isRight)
+      val mVal = eval(m, named, List())
+      assert(cType(i, named, bound, nilCase, mVal @@ VZero @@ VVecNil(aVal)).isRight)
 
-      assert(cType(i, nEnv, ctx, consCase, VPi(VNat, {n =>
+      assert(cType(i, named, bound, consCase, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
@@ -89,33 +89,33 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       })
       ).isRight)
 
-      assert(cType(i, nEnv, ctx, n, VNat).isRight)
-      val nVal = cEval(n, nEnv, List())
-      assert(cType(i, nEnv, ctx, vec, VVec(aVal, nVal)).isRight)
-      val vecVal = cEval(vec, nEnv, List())
+      assert(cType(i, named, bound, n, VNat).isRight)
+      val nVal = eval(n, named, List())
+      assert(cType(i, named, bound, vec, VVec(aVal, nVal)).isRight)
+      val vecVal = eval(vec, named, List())
       Right(mVal @@ nVal @@ vecVal)
     case _ =>
-      super.iType(i, nEnv, ctx, t)
+      super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (VecNil(a), VVec(bVal, VZero)) =>
-      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(ii, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
       Right()
     case (VecCons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
-      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(ii, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
       if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      assert(cType(ii, nEnv, ctx, n, VNat).isRight)
-      val nVal = cEval(n, nEnv, List())
+      assert(cType(ii, named, bound, n, VNat).isRight)
+      val nVal = eval(n, named, List())
       if (quote0(nVal) != quote0(k)) return Left("type mismatch")
-      assert(cType(ii, nEnv, ctx, head, aVal).isRight)
-      assert(cType(ii, nEnv, ctx, tail, VVec(bVal, k)).isRight)
+      assert(cType(ii, named, bound, head, aVal).isRight)
+      assert(cType(ii, named, bound, tail, VVec(bVal, k)).isRight)
       Right()
     case _ =>
-      super.cType(ii, nEnv, ctx, ct, t)
+      super.cType(ii, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -187,7 +187,7 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
     List(
       Global("Vec") -> VLam(a => VLam(n =>  VVec (a, n))),
       Global("vecElim") ->
-        cEval(
+        eval(
           Lam(Lam(Lam(Lam(Lam(Lam(
             Inf(VecElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
           )))))), List(),List()),

@@ -23,7 +23,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     def iquote(v: Value): CTerm =
       quote0(v)
     def ieval(ne: NameEnv[Value], i: ITerm): Value =
-      iEval(i, ne, List())
+      eval(i, ne, List())
     def ihastype(t: Type): Type =
       t
     def icprint(c: CTerm): String =

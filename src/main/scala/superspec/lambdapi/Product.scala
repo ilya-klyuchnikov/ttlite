@@ -36,77 +36,77 @@ trait PairPrinter extends CorePrinter with PairAST {
 }
 
 trait PairEval extends CoreEval with PairAST {
-  override def cEval(c: CTerm, nEnv: NameEnv[Value], bEnv: Env): Value = c match {
+  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
     case Pair(a, b, x, y) =>
-      VPair(cEval(a, nEnv, bEnv), cEval(b, nEnv, bEnv), cEval(x, nEnv, bEnv), cEval(y, nEnv, bEnv))
+      VPair(eval(a, named, bound), eval(b, named, bound), eval(x, named, bound), eval(y, named, bound))
     case _ =>
-      super.cEval(c, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 
-  override def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
+  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
     case Product(a, b) =>
-      VProduct(cEval(a, nEnv, bEnv), cEval(b, nEnv, bEnv))
+      VProduct(eval(a, named, bound), eval(b, named, bound))
     case Fst(a, b, p) =>
-      cEval(p, nEnv, bEnv) match {
+      eval(p, named, bound) match {
         case VPair(_, _, x, _) =>
           x
         case VNeutral(n) =>
-          VNeutral(NFst(cEval(a, nEnv, bEnv), cEval(b, nEnv, bEnv), n))
+          VNeutral(NFst(eval(a, named, bound), eval(b, named, bound), n))
       }
     case Snd(a, b, p) =>
-      cEval(p, nEnv, bEnv) match {
+      eval(p, named, bound) match {
         case VPair(_, _, _, y) =>
           y
         case VNeutral(n) =>
-          VNeutral(NSnd(cEval(a, nEnv, bEnv), cEval(b, nEnv, bEnv), n))
+          VNeutral(NSnd(eval(a, named, bound), eval(b, named, bound), n))
       }
     case _ =>
-      super.iEval(i, nEnv, bEnv)
+      super.eval(t, named, bound)
   }
 }
 
 trait PairCheck extends CoreCheck with PairAST {
-  override def iType(i: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
     case Product(a, b) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      assert(cType(i, nEnv, ctx, b, VStar).isRight)
+      assert(cType(i, named, bound, a, VStar).isRight)
+      assert(cType(i, named, bound, b, VStar).isRight)
       Right(VStar)
     case Fst(a, b, p) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(i, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
 
-      assert(cType(i, nEnv, ctx, b, VStar).isRight)
-      val bVal = cEval(b, nEnv, List())
+      assert(cType(i, named, bound, b, VStar).isRight)
+      val bVal = eval(b, named, List())
 
-      assert(cType(i, nEnv, ctx, p, VProduct(aVal, bVal)).isRight)
+      assert(cType(i, named, bound, p, VProduct(aVal, bVal)).isRight)
       Right((aVal))
     case Snd(a, b, p) =>
-      assert(cType(i, nEnv, ctx, a, VStar).isRight)
-      val aVal = cEval(a, nEnv, List())
+      assert(cType(i, named, bound, a, VStar).isRight)
+      val aVal = eval(a, named, List())
 
-      assert(cType(i, nEnv, ctx, b, VStar).isRight)
-      val bVal = cEval(b, nEnv, List())
+      assert(cType(i, named, bound, b, VStar).isRight)
+      val bVal = eval(b, named, List())
 
-      assert(cType(i, nEnv, ctx, p, VProduct(aVal, bVal)).isRight)
+      assert(cType(i, named, bound, p, VProduct(aVal, bVal)).isRight)
       Right((bVal))
     case _ =>
-      super.iType(i, nEnv, ctx, t)
+      super.iType(i, named, bound, t)
   }
 
 
-  override def cType(ii: Int, nEnv: NameEnv[Value], ctx: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
     case (Pair(a, b, x, y), VProduct(aVal, bVal)) =>
-      assert(cType(ii, nEnv, ctx, a, VStar).isRight)
-      if (quote0(cEval(a, nEnv, List())) != quote0(aVal))
+      assert(cType(ii, named, bound, a, VStar).isRight)
+      if (quote0(eval(a, named, List())) != quote0(aVal))
         return Left("type mismatch")
-      assert(cType(ii, nEnv, ctx, b, VStar).isRight)
-      if (quote0(cEval(b, nEnv, List())) != quote0(bVal))
+      assert(cType(ii, named, bound, b, VStar).isRight)
+      if (quote0(eval(b, named, List())) != quote0(bVal))
         return Left("type mismatch")
-      assert(cType(ii, nEnv, ctx, x, aVal).isRight)
-      assert(cType(ii, nEnv, ctx, y, bVal).isRight)
+      assert(cType(ii, named, bound, x, aVal).isRight)
+      assert(cType(ii, named, bound, y, bVal).isRight)
       Right(())
     case _ =>
-      super.cType(ii, nEnv, ctx, ct, t)
+      super.cType(ii, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
@@ -157,7 +157,7 @@ trait PairREPL extends CoreREPL with PairAST with PairPrinter with PairCheck wit
     List(
       Global("Product") -> VLam(a => VLam(b => VProduct(a, b))),
       Global("Pair") -> VLam(a => VLam(b => VLam(x => VLam(y => VPair(a, b, x, y))) )),
-      Global("fst") -> cEval(Lam(Lam(Lam( Inf(Fst(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil),
-      Global("snd") -> cEval(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil)
+      Global("fst") -> eval(Lam(Lam(Lam( Inf(Fst(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil),
+      Global("snd") -> eval(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil)
     )
 }

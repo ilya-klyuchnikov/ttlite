@@ -20,7 +20,7 @@ trait CoreDriver extends PiSc {
   }
 
   // logic
-  override def driveTerm(c: CTerm): DriveStep = cEval0(c) match {
+  override def driveTerm(c: CTerm): DriveStep = eval0(c) match {
     case VNeutral(n) => driveNeutral(n)
     case _ => decompose(c)
   }
@@ -30,7 +30,7 @@ trait CoreDriver extends PiSc {
     case NApp(n, _) => driveNeutral(n)
   }
 
-  def decompose(c: CTerm): DriveStep = cEval0(c) match {
+  def decompose(c: CTerm): DriveStep = eval0(c) match {
     case VLam(f) =>
       val fn = freshName()
       val nextTerm = quote0(f(vfree(fn)))
