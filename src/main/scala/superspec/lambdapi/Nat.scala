@@ -133,7 +133,7 @@ trait NatDriver extends CoreDriver with NatAST {
 
   override def driveLeibniz(c: CTerm): DriveStep = c match {
     case Succ(c1) =>
-      LeibnizDStep(Inf(Free(Global("Succ"))), c1)
+      DecompositionDStep(Inf(Free(Global("Succ"))), c1)
     case _ =>
       super.driveLeibniz(c)
   }

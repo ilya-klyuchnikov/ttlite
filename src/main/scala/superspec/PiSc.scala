@@ -12,7 +12,8 @@ trait Driver extends CoreSubst {
   sealed trait DriveStep
   case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep
   case object StopDStep extends DriveStep
-  case class LeibnizDStep(cong: CTerm, rec: CTerm) extends DriveStep
+  // todo: generalize or specialize (via specializing to each data type)
+  case class DecompositionDStep(comp: CTerm, next: CTerm) extends DriveStep
   // the only concern is driving neutral terms!!
   // everything else we get from evaluation!!
   def driveTerm(c: CTerm): DriveStep
@@ -29,9 +30,8 @@ trait PiSc extends Driver {
   case class CaseBranchLabel(sel: Name, elim: ElimBranch) extends Label {
     override def toString = sel + " = " + elim
   }
-  // todo: move into Eq.scala
-  // todo: generalize into rebuilding
-  case class LeibnizLabel(f: CTerm) extends Label {
+
+  case class DecompositionLabel(f: CTerm) extends Label {
     override def toString = "Cong: " + f
   }
   // higher-level steps performed by supercompiler
@@ -51,8 +51,8 @@ trait PiSc extends Driver {
       AddChildNodesStep[CTerm, Label](ns)
     }
   }
-  case class LeibnizStep(f: CTerm, next: CTerm) extends Step {
-    override val graphStep = AddChildNodesStep[CTerm, Label](List(next -> LeibnizLabel(f)))
+  case class DecompositionStep(f: CTerm, next: CTerm) extends Step {
+    override val graphStep = AddChildNodesStep[CTerm, Label](List(next -> DecompositionLabel(f)))
   }
 
   trait PiRules extends MRSCRules[CTerm, Label] {
@@ -83,7 +83,7 @@ trait PiSc extends Driver {
       val t = g.current.conf
       val piSteps: Step = driveTerm(t) match {
         case StopDStep => StopStep
-        case (LeibnizDStep(f1, t1)) => LeibnizStep(f1, t1)
+        case DecompositionDStep(f1, t1) => DecompositionStep(f1, t1)
         case ElimDStep(sel, bs) =>
           VariantsStep(sel, bs.map{branch => branch -> applySubst(t, Map(sel -> branch.ptr))})
       }
@@ -132,7 +132,7 @@ trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEva
               VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
 
             VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
-          case TEdge(n1, LeibnizLabel(f)) :: Nil =>
+          case TEdge(n1, DecompositionLabel(f)) :: Nil =>
             cEval(f, nEnv, bEnv) @@ fold(g, n1, nEnv, bEnv, dRed)
         }
     }
