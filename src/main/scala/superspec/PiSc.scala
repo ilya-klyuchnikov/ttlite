@@ -138,6 +138,8 @@ trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEva
     }
 }
 
+case class SC(in: String) extends Command
+
 object PiScREPL
   extends PiSc
   with CoreREPL
@@ -149,7 +151,7 @@ object PiScREPL
   with NatREPL
   with NatSubst
   with NatDriver
-  with PiGraphPrettyPrinter1
+  with PiGraphPrettyPrinter
   with PiResiduator {
 
   val te = natTE ++ eqTE
