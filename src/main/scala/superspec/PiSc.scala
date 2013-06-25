@@ -11,7 +11,7 @@ trait PiSc extends CoreSubst {
 
   // sub - a substitution, using only this substitution we can perform a fold
   case class ElimBranch(ptr: CTerm, sub: Subst)
-  sealed trait DriveStep {
+  trait DriveStep {
     def step(t: CTerm): Step
   }
 
@@ -44,7 +44,7 @@ trait PiSc extends CoreSubst {
   }
   // higher-level steps performed by supercompiler
   // this higher-level steps are translated into low-level
-  sealed trait Step {
+  trait Step {
     val graphStep: GraphRewriteStep[CTerm, Label]
   }
   case class NormStep(next: CTerm) extends Step {
@@ -65,7 +65,7 @@ trait PiSc extends CoreSubst {
 
   trait PiRules extends MRSCRules[CTerm, Label] {
     type Signal = Option[N]
-    // todo: really, it should be more sofisticated: we need to check elimBranch for subst
+    // todo: really, it should be more sophisticated: we need to check elimBranch for subst
     // in order to ensure that we respect eliminator recursion
     def inspect(g: G): Signal =
       g.current.ancestors.find(n => findRenaming(g.current.conf, n.conf).isDefined)
@@ -100,15 +100,8 @@ trait PiSc extends CoreSubst {
 // (Eq A ...) - A should be derived from passed environment
 trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
 
-  // TODO
-  def freeLocals(ct: CTerm): List[Name] = List(Local(1))
-
   def residuateToVal(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
-    val startRed: Map[CTerm, Value] = Map()
-    val locals = freeLocals(g.root.conf).distinct
-    val startFun : (NameEnv[Value], Env) => Value = (n, b) => fold(g, g.root, n, b, startRed)
-    val fun = locals.foldLeft(startFun){(f, local) => (n, b) => VLam(x => f(local -> x :: n, b))}
-    fun(nEnv, bEnv)
+    fold(g, g.root, nEnv, bEnv, Map())
   }
 
   /// context!!!!!
@@ -120,8 +113,8 @@ trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEva
       case None =>
         node.outs match {
           case Nil =>
-            cEval0(node.conf)
-
+            cEval(node.conf, nEnv, bEnv)
+          // todo: get rid off this
           case TEdge(n1, DecompositionLabel(f)) :: Nil =>
             cEval(f, nEnv, bEnv) @@ fold(g, n1, nEnv, bEnv, dRed)
         }
@@ -161,15 +154,16 @@ object PiScREPL
   with NatREPL
   with NatSubst
   with NatDriver
-  with PiGraphPrettyPrinter
   with PiResiduator
-  with NatResiduator {
+  with LamResiduator
+  with NatResiduator
+  with PiGraphPrettyPrinter {
 
   val te = natTE ++ eqTE
   val ve = natVE ++ eqVE
   override def initialState = State(interactive = true, ve, te, Set())
   override def commands: List[Cmd] =
-    Cmd(List(":sc"),      "<expr>", x => SC(x), "supercompile") :: super.commands
+    Cmd(List(":sc"), "<expr>", x => SC(x), "supercompile") :: super.commands
 
   override def handleCommand(state: State, cmd: Command): State = cmd match {
     case SC(in) =>
