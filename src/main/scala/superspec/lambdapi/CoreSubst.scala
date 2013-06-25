@@ -8,7 +8,7 @@ trait CoreSubst extends CoreEval with CoreQuote {
 
   def findSubst(from: CTerm, to: CTerm): Option[Subst] =
     for (sub <- findSubst0(from, to))
-    yield sub.filter { case (k, v) => k != v }
+    yield sub.filter { case (k, v) => v != Inf(Free(k)) }
 
   def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
     case (Lam(f), Lam(t)) =>

@@ -57,8 +57,26 @@ trait PiSc extends CoreSubst {
     type Signal = Option[N]
     // todo: really, it should be more sophisticated: we need to check elimBranch for subst
     // in order to ensure that we respect eliminator recursion
-    def inspect(g: G): Signal =
-      g.current.ancestors.find(n => findRenaming(g.current.conf, n.conf).isDefined)
+    def inspect(g: G): Signal = {
+      var current = g.current
+      while (current.in != null) {
+        val parConf = current.in.node.conf
+        val label = current.in.driveInfo
+        findRenaming(g.current.conf, parConf) match {
+          case Some(ren) =>
+            label match {
+              case CaseBranchLabel(_, ElimBranch(_, sub)) if sub == ren =>
+                return Some(current.in.node)
+              case _ =>
+            }
+          case _ =>
+
+        }
+        current = current.in.node
+      }
+      None
+      //g.current.ancestors.find(n => findRenaming(g.current.conf, n.conf).isDefined)
+    }
   }
   trait Folding extends PiRules {
     override def fold(signal: Signal, g: G): List[S] = {
