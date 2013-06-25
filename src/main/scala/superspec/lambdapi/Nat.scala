@@ -69,15 +69,15 @@ trait NatPrinter extends CorePrinter with NatAST {
 
   override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
     case Zero =>
-      fromNat(0, ii, Zero)
+      iPrint(p, ii, Free(Global("Zero")))
     case Succ(n) =>
-      fromNat(0, ii, Succ(n))
+      iPrint(p, ii, Free(Global("Succ")) @@ n)
     case _ => super.cPrint(p, ii, t)
   }
 
   def fromNat(n: Int, ii: Int, t: CTerm): Doc = t match {
     case Zero =>
-      n.toString
+      "Zero"
     case Succ(k) =>
       fromNat(n + 1, ii, k)
     case _ =>
