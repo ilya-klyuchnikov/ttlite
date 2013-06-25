@@ -41,7 +41,7 @@ trait CoreDriver extends PiSc {
 
 }
 
-trait LamResiduator extends PiResiduator with CoreDriver {
+trait LamResiduator extends BaseResiduator with CoreDriver {
   override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>

@@ -22,10 +22,6 @@ trait PiSc extends CoreSubst {
   case object StopDStep extends DriveStep {
     override def step(t: CTerm) = StopStep
   }
-  // todo: generalize or specialize (via specializing to each data type)
-  case class DecompositionDStep(comp: CTerm, next: CTerm) extends DriveStep {
-    override def step(t: CTerm) = DecompositionStep(comp, next)
-  }
   // the only concern is driving neutral terms!!
   // everything else we get from evaluation!!
   def driveTerm(c: CTerm): DriveStep
@@ -39,9 +35,6 @@ trait PiSc extends CoreSubst {
     override def toString = sel + " = " + elim
   }
 
-  case class DecompositionLabel(f: CTerm) extends Label {
-    override def toString = "Cong: " + f
-  }
   // higher-level steps performed by supercompiler
   // this higher-level steps are translated into low-level
   trait Step {
@@ -58,9 +51,6 @@ trait PiSc extends CoreSubst {
       val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
       AddChildNodesStep[CTerm, Label](ns)
     }
-  }
-  case class DecompositionStep(f: CTerm, next: CTerm) extends Step {
-    override val graphStep = AddChildNodesStep[CTerm, Label](List(next -> DecompositionLabel(f)))
   }
 
   trait PiRules extends MRSCRules[CTerm, Label] {
@@ -96,48 +86,21 @@ trait PiSc extends CoreSubst {
 
 }
 
-// TODO: split into components, infer types during residualization
-// (Eq A ...) - A should be derived from passed environment
-trait PiResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
+trait BaseResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
 
-  def residuateToVal(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
+  def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
     fold(g, g.root, nEnv, bEnv, Map())
   }
 
   /// context!!!!!
   def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
     node.base match {
-      // recursive node
       case Some(tPath) =>
         dRed(g.get(tPath).conf)
       case None =>
         node.outs match {
-          case Nil =>
-            cEval(node.conf, nEnv, bEnv)
-          // todo: get rid off this
-          case TEdge(n1, DecompositionLabel(f)) :: Nil =>
-            cEval(f, nEnv, bEnv) @@ fold(g, n1, nEnv, bEnv, dRed)
+          case Nil => cEval(node.conf, nEnv, bEnv)
         }
-    }
-}
-
-trait NatResiduator extends PiResiduator {
-  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
-    node.outs match {
-      case
-        TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
-          Nil =>
-        // todo: infer real motive
-        val motive =
-          VLam {n => VNat}
-        val zCase =
-          fold(g, nodeZ, nEnv, bEnv, dRed)
-        val sCase =
-          VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
-        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
-      case _ =>
-        super.fold(g, node, nEnv, bEnv, dRed)
     }
 }
 
@@ -154,7 +117,7 @@ object PiScREPL
   with NatREPL
   with NatSubst
   with NatDriver
-  with PiResiduator
+  with BaseResiduator
   with LamResiduator
   with NatResiduator
   with PiGraphPrettyPrinter {
@@ -178,7 +141,7 @@ object PiScREPL
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))
-            val resVal = residuateToVal(tGraph, state.ne, List())
+            val resVal = residuate(tGraph, state.ne, List())
             val tRes = iquote(resVal)
             println(int.icprint(tRes))
 

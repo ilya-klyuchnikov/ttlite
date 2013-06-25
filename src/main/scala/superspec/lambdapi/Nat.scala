@@ -1,5 +1,8 @@
 package superspec.lambdapi
 
+import mrsc.core._
+import superspec._
+
 trait NatAST extends CoreAST {
   case object Zero extends CTerm
   case class Succ(e: CTerm) extends CTerm
@@ -115,6 +118,17 @@ trait NatEval extends CoreEval with NatAST {
 }
 
 trait NatDriver extends CoreDriver with NatAST {
+
+  // boilerplate/indirections
+  case object SuccLabel extends Label
+  case class SuccStep(next: CTerm) extends Step {
+    override val graphStep =
+      AddChildNodesStep[CTerm, Label](List(next -> SuccLabel))
+  }
+  case class SuccDStep(next: CTerm) extends DriveStep {
+    override def step(t: CTerm) = SuccStep(next)
+  }
+
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case natElim: NNatElim =>
       natElim.n match {
@@ -133,11 +147,33 @@ trait NatDriver extends CoreDriver with NatAST {
 
   override def decompose(c: CTerm): DriveStep = c match {
     case Succ(c1) =>
-      DecompositionDStep(Inf(Free(Global("Succ"))), c1)
+      SuccDStep(c1)
     case _ =>
       super.decompose(c)
   }
 
+}
+
+trait NatResiduator extends BaseResiduator with NatDriver {
+  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
+          Nil =>
+        // todo: infer real motive
+        val motive =
+          VLam {n => VNat}
+        val zCase =
+          fold(g, nodeZ, nEnv, bEnv, dRed)
+        val sCase =
+          VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
+      case TEdge(n1, SuccLabel) :: Nil =>
+        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, bEnv, dRed)
+      case _ =>
+        super.fold(g, node, nEnv, bEnv, dRed)
+    }
 }
 
 trait NatCheck extends CoreCheck with NatAST {

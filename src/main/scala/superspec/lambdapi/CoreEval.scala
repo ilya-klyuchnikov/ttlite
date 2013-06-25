@@ -4,7 +4,6 @@ trait CoreEval extends CoreAST {
   def iEval0(c: ITerm): Value = iEval(c, Nil, Nil)
   def cEval0(c: CTerm): Value = cEval(c, Nil, Nil)
 
-
   def iEval(i: ITerm, nEnv: NameEnv[Value], bEnv: Env): Value = i match {
     case Ann(e, _) => cEval(e, nEnv, bEnv)
     case Star => VStar
