@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type

@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 import mrsc.core._
 import superspec._
@@ -137,7 +137,8 @@ trait NatDriver extends CoreDriver with NatAST {
           val n1 = freshName
           val v1 = Inf(Free(n1))
           val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(n))))
-          ElimDStep(n, List(caseZ, caseS))
+          val motive = quote0(natElim.m)
+          ElimDStep(n, List(caseZ, caseS), motive)
         case n =>
           driveNeutral(n)
       }
@@ -158,17 +159,16 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel1, ElimBranch(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(sel2, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _), m)) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _), _)) ::
           Nil =>
-        // todo: infer real motive
         val motive =
-          VLam {n => VNat}
+          eval(m, nEnv, bEnv)
         val zCase =
           fold(g, nodeZ, nEnv, bEnv, dRed)
         val sCase =
           VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec))}}
-        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel1, nEnv).get
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel, nEnv).get
       case TEdge(n1, SuccLabel) :: Nil =>
         VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, bEnv, dRed)
       case _ =>
@@ -265,7 +265,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
       Global("natElim") ->
         eval(
           Lam(Lam(Lam(Lam(
-            Inf(NatElim((Inf(Bound(3))), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
+            Inf(NatElim(Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
           )))),
           Nil, Nil)
     )

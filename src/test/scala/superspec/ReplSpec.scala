@@ -2,7 +2,7 @@ package superspec
 
 import org.scalatest.FunSpec
 
-import superspec.lambdapi._
+import superspec.tt._
 
 class ReplSpec extends FunSpec {
 

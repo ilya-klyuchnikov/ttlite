@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 object CoreREPLMain extends CoreREPL {
   override def initialState = State(true, Nil, Nil, Set())

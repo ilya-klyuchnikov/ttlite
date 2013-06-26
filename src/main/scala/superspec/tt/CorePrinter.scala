@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait CorePrinter extends CoreAST {
   def iPrint(p: Int, ii: Int, t: ITerm/*, cont: Doc = empty*/): Doc = t match {

@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait CoreEval extends CoreAST {
   def eval0(c: ITerm): Value = eval(c, Nil, Nil)

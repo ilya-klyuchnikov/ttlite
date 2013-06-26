@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait ListAST extends CoreAST {
   case class PiNil(A: CTerm) extends CTerm

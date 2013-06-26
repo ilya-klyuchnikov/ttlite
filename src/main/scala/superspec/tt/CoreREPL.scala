@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 import superspec._
 

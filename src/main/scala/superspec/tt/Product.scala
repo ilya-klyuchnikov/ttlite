@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait PairAST extends CoreAST {
   // pair data

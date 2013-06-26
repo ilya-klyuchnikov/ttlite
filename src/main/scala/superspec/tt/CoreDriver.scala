@@ -1,9 +1,9 @@
-package superspec.lambdapi
+package superspec.tt
 
 import mrsc.core._
 import superspec._
 
-trait CoreDriver extends PiSc {
+trait CoreDriver extends TTSc {
   var v = 100
   def freshName(): Name = {v += 1; Local(v)}
   def freshLocal(): CTerm = Inf(Free(freshName()))
@@ -41,7 +41,7 @@ trait CoreDriver extends PiSc {
 
 }
 
-trait LamResiduator extends BaseResiduator with CoreDriver {
+trait CoreResiduator extends BaseResiduator with CoreDriver {
   override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>

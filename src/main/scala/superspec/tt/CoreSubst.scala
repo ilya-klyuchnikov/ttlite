@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait CoreSubst extends CoreEval with CoreQuote {
   type Subst = Map[Name, CTerm]

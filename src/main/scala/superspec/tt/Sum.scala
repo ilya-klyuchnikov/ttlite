@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait SumAST extends CoreAST {
   // left injection

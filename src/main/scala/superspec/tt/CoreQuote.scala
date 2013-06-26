@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait CoreQuote extends CoreAST {
   def quote0(v: Value): CTerm =

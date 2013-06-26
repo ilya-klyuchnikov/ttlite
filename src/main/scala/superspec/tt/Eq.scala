@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
@@ -88,15 +88,6 @@ trait EqEval extends CoreEval with EqAST {
       }
     case _ =>
       super.eval(t, named, bound)
-  }
-}
-
-trait EqDriver extends CoreDriver with EqAST {
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case eqElim: NEqElim =>
-      driveNeutral(eqElim.eq)
-    case _ =>
-      super.driveNeutral(n)
   }
 }
 

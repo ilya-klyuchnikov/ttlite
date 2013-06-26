@@ -1,9 +1,9 @@
 package superspec
 
 import mrsc.core._
-import superspec.lambdapi.CoreREPL
+import superspec.tt.CoreREPL
 
-trait PiGraphPrettyPrinter extends CoreREPL with PiSc {
+trait GraphPrettyPrinter extends CoreREPL with TTSc {
 
   def tgToString(tg: TGraph[CTerm, Label]): String = {
     val focus = tg.focus

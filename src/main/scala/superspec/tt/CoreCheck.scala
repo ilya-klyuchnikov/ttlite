@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 // TODO: can we unify type-checking and evaluation -
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {

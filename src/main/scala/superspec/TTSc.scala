@@ -1,13 +1,13 @@
 package superspec
 
 import mrsc.core._
-import superspec.lambdapi._
+import superspec.tt._
 
 // TODO
 trait Rebuilder extends CoreSubst
 
-// base supercompiler for PI
-trait PiSc extends CoreSubst {
+// base supercompiler for type theory
+trait TTSc extends CoreSubst {
 
   // sub - a substitution, using only this substitution we can perform a fold
   case class ElimBranch(ptr: CTerm, sub: Subst)
@@ -15,9 +15,9 @@ trait PiSc extends CoreSubst {
     def step(t: CTerm): Step
   }
 
-  case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep {
+  case class ElimDStep(sel: Name, cases: List[ElimBranch], motive: CTerm) extends DriveStep {
     override def step(t: CTerm) =
-      VariantsStep(sel, cases.map{branch => branch -> applySubst(t, Map(sel -> branch.ptr))})
+      VariantsStep(sel, cases.map{branch => branch -> applySubst(t, Map(sel -> branch.ptr))}, motive)
   }
   case object StopDStep extends DriveStep {
     override def step(t: CTerm) = StopStep
@@ -31,7 +31,7 @@ trait PiSc extends CoreSubst {
   case object NormLabel extends Label {
     override def toString = "->"
   }
-  case class CaseBranchLabel(sel: Name, elim: ElimBranch) extends Label {
+  case class CaseBranchLabel(sel: Name, elim: ElimBranch, motive: CTerm) extends Label {
     override def toString = sel + " = " + elim
   }
 
@@ -46,16 +46,17 @@ trait PiSc extends CoreSubst {
   case object StopStep extends Step {
     override val graphStep = CompleteCurrentNodeStep[CTerm, Label]()
   }
-  case class VariantsStep(sel: Name, cases: List[(ElimBranch, CTerm)]) extends Step {
+  case class VariantsStep(sel: Name, cases: List[(ElimBranch, CTerm)], motive: CTerm) extends Step {
     override val graphStep = {
-      val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
+      val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1, motive)) }
       AddChildNodesStep[CTerm, Label](ns)
     }
   }
 
   trait PiRules extends MRSCRules[CTerm, Label] {
     type Signal = Option[N]
-    // todo: really, it should be more sophisticated: we need to check elimBranch for subst
+
+    // we check elimBranch for subst
     // in order to ensure that we respect eliminator recursion
     def inspect(g: G): Signal = {
       var current = g.current
@@ -65,7 +66,7 @@ trait PiSc extends CoreSubst {
         findRenaming(g.current.conf, parConf) match {
           case Some(ren) =>
             label match {
-              case CaseBranchLabel(_, ElimBranch(_, sub)) if sub == ren =>
+              case CaseBranchLabel(_, ElimBranch(_, sub), _) if sub == ren =>
                 return Some(current.in.node)
               case _ =>
             }
@@ -104,7 +105,7 @@ trait PiSc extends CoreSubst {
 
 }
 
-trait BaseResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
+trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
 
   def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
     fold(g, g.root, nEnv, bEnv, Map())
@@ -117,37 +118,37 @@ trait BaseResiduator extends PiSc with CoreAST with EqAST with NatAST with CoreE
         dRed(g.get(tPath).conf)
       case None =>
         node.outs match {
-          case Nil => eval(node.conf, nEnv, bEnv)
+          case Nil =>
+            eval(node.conf, nEnv, bEnv)
+          case outs =>
+            sys.error(s"Residualization of non-trivial constructions should be implemented in subclasses. Edges: $outs")
         }
     }
 }
 
-case class SC(in: String) extends Command
+case class SCCommand(in: String) extends Command
 
-object PiScREPL
-  extends PiSc
+object TTScREPL
+  extends TTSc
   with CoreREPL
   with CoreSubst
   with CoreDriver
-  with EqREPL
-  with EqSubst
-  with EqDriver
   with NatREPL
   with NatSubst
   with NatDriver
   with BaseResiduator
-  with LamResiduator
+  with CoreResiduator
   with NatResiduator
-  with PiGraphPrettyPrinter {
+  with GraphPrettyPrinter {
 
-  val te = natTE ++ eqTE
-  val ve = natVE ++ eqVE
+  val te = natTE
+  val ve = natVE
   override def initialState = State(interactive = true, ve, te, Set())
   override def commands: List[Cmd] =
-    Cmd(List(":sc"), "<expr>", x => SC(x), "supercompile") :: super.commands
+    Cmd(List(":sc"), "<expr>", x => SCCommand(x), "supercompile") :: super.commands
 
   override def handleCommand(state: State, cmd: Command): State = cmd match {
-    case SC(in) =>
+    case SCCommand(in) =>
       import int._
       val parsed = int.parseIO(int.iiparse, in)
       parsed match {

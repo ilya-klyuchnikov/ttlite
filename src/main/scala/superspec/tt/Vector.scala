@@ -1,4 +1,4 @@
-package superspec.lambdapi
+package superspec.tt
 
 trait VectorAST extends CoreAST {
   case class VecNil(A: CTerm) extends CTerm
