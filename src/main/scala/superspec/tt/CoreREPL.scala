@@ -16,7 +16,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
     val prompt: String = "TT> "
 
-    def itype(ne: NameEnv[Value], ctx: Ctx[Value], i: ITerm): Result[Value] =
+    def itype(ne: NameEnv[Value], ctx: NameEnv[Value], i: ITerm): Result[Value] =
       iType0(ne, ctx, i)
     def iquote(v: Value): CTerm =
       quote0(v)

@@ -166,7 +166,7 @@ trait SumQuote extends CoreQuote with SumAST {
 }
 
 trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with SumEval with SumQuote {
-  lazy val sumTE: Ctx[Value] =
+  lazy val sumTE: NameEnv[Value] =
     List(
       Global("Sum") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),
       Global("InL") -> VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VSum(a, b)))),
@@ -186,7 +186,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
 
   lazy val sumElimType = int.ieval(sumVE, int.parseIO(int.iParse, sumElimTypeIn).get)
 
-  val sumVE: Ctx[Value] =
+  val sumVE: NameEnv[Value] =
     List(
       Global("Sum") -> VLam(a => VLam(b => VSum(a, b))),
       Global("InL") -> VLam(a => VLam(b => VLam(x => VInL(a, b, x)))),

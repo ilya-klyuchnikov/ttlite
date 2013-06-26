@@ -145,7 +145,7 @@ trait PairQuote extends CoreQuote with PairAST {
 }
 
 trait PairREPL extends CoreREPL with PairAST with PairPrinter with PairCheck with PairEval with PairQuote {
-  lazy val productTE: Ctx[Value] =
+  lazy val productTE: NameEnv[Value] =
     List(
       Global("Product") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),
       Global("Pair") -> VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VProduct(a, b))))),
@@ -153,7 +153,7 @@ trait PairREPL extends CoreREPL with PairAST with PairPrinter with PairCheck wit
       Global("snd") -> VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => b)))
     )
 
-  val productVE: Ctx[Value] =
+  val productVE: NameEnv[Value] =
     List(
       Global("Product") -> VLam(a => VLam(b => VProduct(a, b))),
       Global("Pair") -> VLam(a => VLam(b => VLam(x => VLam(y => VPair(a, b, x, y))) )),

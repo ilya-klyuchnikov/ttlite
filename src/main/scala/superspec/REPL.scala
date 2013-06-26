@@ -35,8 +35,6 @@ case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: St
 
 trait REPL extends Common {
 
-  type Ctx[Inf] = List[(Name, Inf)]
-
   type I // inferable term
   type C // checkable term
   type V // value
@@ -46,7 +44,7 @@ trait REPL extends Common {
   def initialState: State
   private var batch: Boolean = false
 
-  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[V], modules: Set[String])
+  case class State(interactive: Boolean, ne: NameEnv[V], ctx: NameEnv[V], modules: Set[String])
 
   def handleError() {
     if (batch) {
@@ -58,10 +56,9 @@ trait REPL extends Common {
     override val lexical = new HaskellLikeLexical
 
     val prompt: String
-    def itype(ne: NameEnv[V], ctx: Ctx[V], i: I): Result[V]
+    def itype(ne: NameEnv[V], ctx: NameEnv[V], i: I): Result[V]
     def iquote(v: V): C
     def ieval(ne: NameEnv[V], i: I): V
-    def typeInfo(t: V): V
     def icprint(c: C): String
     def itprint(t: V): String
     val iParse: Parser[I]
@@ -76,7 +73,7 @@ trait REPL extends Common {
         None
     }
 
-    def iinfer(ne: NameEnv[V], ctx: Ctx[V], i: I): Option[V] = {
+    def iinfer(ne: NameEnv[V], ctx: NameEnv[V], i: I): Option[V] = {
       itype(ne, ctx, i) match {
         case Right(t) =>
           Some(t)
@@ -165,7 +162,7 @@ trait REPL extends Common {
           } else {
             Console.println(s"$s :: ${int.itprint(y)};")
           }
-          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.typeInfo(y)) :: state.ctx, state.modules)
+          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), y) :: state.ctx, state.modules)
       }
     }
     stmt match {

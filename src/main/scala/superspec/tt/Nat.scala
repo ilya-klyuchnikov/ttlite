@@ -241,7 +241,7 @@ trait NatQuote extends CoreQuote with NatAST {
 }
 
 trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with NatEval with NatQuote {
-  lazy val natTE: Ctx[Value] =
+  lazy val natTE: NameEnv[Value] =
     List(
       Global("Zero") -> VNat,
       Global("Succ") -> VPi(VNat, _ => VNat),
@@ -257,7 +257,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
       |m n
     """.stripMargin
   lazy val natElimType = int.ieval(natVE, int.parseIO(int.iParse, natElimTypeIn).get)
-  val natVE: Ctx[Value] =
+  val natVE: NameEnv[Value] =
     List(
       Global("Zero") -> VZero,
       Global("Succ") -> VLam(n => VSucc(n)),

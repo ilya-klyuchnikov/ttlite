@@ -139,7 +139,7 @@ trait ListQuote extends CoreQuote with ListAST {
 }
 
 trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck with ListEval with ListQuote {
-  lazy val listTE: Ctx[Value] =
+  lazy val listTE: NameEnv[Value] =
     List(
       Global("List") -> ListType,
       Global("listElim") -> listElimType,
@@ -168,7 +168,7 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
   lazy val NilType = int.ieval(listVE, int.parseIO(int.iParse, NilTypeIn).get)
   lazy val ConsType = int.ieval(listVE, int.parseIO(int.iParse, ConsTypeIn).get)
 
-  val listVE: Ctx[Value] =
+  val listVE: NameEnv[Value] =
     List(
       Global("List") -> VLam(a => VPiList(a)),
       Global("listElim") ->

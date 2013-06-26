@@ -153,7 +153,7 @@ trait VectorQuote extends CoreQuote with VectorAST {
 }
 
 trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCheck with VectorEval with VectorQuote {
-  lazy val vectorTE: Ctx[Value] =
+  lazy val vectorTE: NameEnv[Value] =
     List(
       Global("Vec") -> VecType,
       Global("vecElim") -> vecElimType,
@@ -183,7 +183,7 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
   lazy val VNilType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, VNilTypeIn).get)
   lazy val VConsType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, VConsTypeIn).get)
 
-  val vectorVE: Ctx[Value] =
+  val vectorVE: NameEnv[Value] =
     List(
       Global("Vec") -> VLam(a => VLam(n =>  VVec (a, n))),
       Global("vecElim") ->
