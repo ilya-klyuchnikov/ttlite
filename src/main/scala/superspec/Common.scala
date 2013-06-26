@@ -20,7 +20,8 @@ trait Common extends PrettyPrinter {
   case class Import(s: String) extends Stmt[Nothing, Nothing]
 
   val ids = "abcdefghijklmnopqrstuvwxyz"
-  val vars: List[String] = (for {j <- 0 to 10; i <- ids} yield (if (j > 0) s"$i$j" else s"$i")).toList
+  val suffs = List("", "1")
+  val vars = for {j <- suffs; i <- ids} yield s"$i$j"
 
   // utility
   def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =
