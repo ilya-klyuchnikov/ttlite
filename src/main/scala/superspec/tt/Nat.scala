@@ -162,8 +162,7 @@ trait NatResiduator extends BaseResiduator with NatDriver {
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _), m)) ::
           TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _), _)) ::
           Nil =>
-        val motive =
-          eval(m, nEnv, bEnv)
+        val motive = VLam{x => VNat}
         val zCase =
           fold(g, nodeZ, nEnv, bEnv, dRed)
         val sCase =

@@ -1,6 +1,0 @@
-
-2. code refactoring
-3. Initial idea: is it possible to generalize both lambda and lambda pi
-   and encode lambda pi as a generalization of lambda??
-
-It will be cool for Nat to be able to extend both simple lambda and lambda pi.

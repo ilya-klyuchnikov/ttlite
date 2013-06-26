@@ -150,19 +150,19 @@ trait REPL extends Common {
     }
 
   private def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
-    def checkEval(s: String, i: I): State = {
-      int.iinfer(state.ne, state.ctx, i) match {
+    def checkEval(s: String, it: I): State = {
+      int.iinfer(state.ne, state.ctx, it) match {
         case None =>
           handleError()
           state
-        case Some(y) =>
-          val v = int.ieval(state.ne, i)
+        case Some(tp) =>
+          val v = int.ieval(state.ne, it)
           if (s == "it"){
-            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(y) + ";")
+            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(tp) + ";")
           } else {
-            Console.println(s"$s :: ${int.itprint(y)};")
+            Console.println(s"$s :: ${int.itprint(tp)};")
           }
-          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), y) :: state.ctx, state.modules)
+          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), tp) :: state.ctx, state.modules)
       }
     }
     stmt match {

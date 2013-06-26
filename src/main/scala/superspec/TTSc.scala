@@ -53,6 +53,8 @@ trait TTSc extends CoreSubst {
     }
   }
 
+  case class Conf(t: CTerm, tpsCtx: )
+
   trait PiRules extends MRSCRules[CTerm, Label] {
     type Signal = Option[N]
 
@@ -153,18 +155,36 @@ object TTScREPL
       val parsed = int.parseIO(int.iParse, in)
       parsed match {
         case Some(it) =>
+          int.iinfer(state.ne, state.ctx, it) match {
+            case None =>
+              handleError()
+              state
+            case Some(tp) =>
+              val goal = iquote(ieval(state.ne, it))
 
-          val l = iquote(ieval(state.ne, it))
-          val goal = l
-          val rules: PiRules = new PiSc1
-          val gs = GraphGenerator(rules, goal).toList
-          for (g <- gs) {
-            val tGraph = Transformations.transpose(g)
-            println(tgToString(tGraph))
-            val resVal = residuate(tGraph, state.ne, List())
-            val tRes = iquote(resVal)
-            println(int.icprint(tRes))
+              val gs = GraphGenerator(new Rules, goal).toList
+              for (g <- gs) {
+                val tGraph = Transformations.transpose(g)
+                println(tgToString(tGraph))
+                val resVal = residuate(tGraph, state.ne, List())
+                val cTerm = iquote(resVal)
+                val cType = iquote(tp)
 
+                val iTerm = Ann(cTerm, cType)
+                val t2 = int.iinfer(state.ne, state.ctx, iTerm)
+                t2 match {
+                  case None =>
+                    println(int.icprint(cTerm) + " :: " + int.icprint(cType))
+                    handleError()
+                    state
+                  case Some(_) =>
+                    // todo: parens
+                    println(int.icprint(cTerm) + " :: " + int.icprint(cType))
+                }
+
+
+
+              }
           }
         case None =>
       }
@@ -173,7 +193,7 @@ object TTScREPL
       super.handleCommand(state, cmd)
   }
 
-  class PiSc1 extends PiRules with Driving with Folding with Termination with NoRebuildings {
+  class Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
     val maxDepth = 10
   }
 }
