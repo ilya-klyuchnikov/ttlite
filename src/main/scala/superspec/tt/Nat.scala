@@ -162,14 +162,32 @@ trait NatResiduator extends BaseResiduator with NatDriver {
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _), m)) ::
           TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _), _)) ::
           Nil =>
-        val motiveType = tp
-        val motive = VLam{x => VNat}
+        //println("===")
+        //println("conf=" + int.icprint(node.conf))
+        //println("raw type=" + tp)
+        //println("type=" + quote0(tp))
+        //println("type=" + int.icprint(quote0(tp)))
+        //println("nEnv=" + nEnv)
+        val motive =
+          VLam(n => eval(quote0(tp), sel -> n :: nEnv, bEnv))
+        val zType =
+          eval(quote0(tp), sel -> VZero :: nEnv, bEnv)
+
         val zCase =
-          fold(g, nodeZ, nEnv, bEnv, dRed, tps, tp)
+          fold(g, nodeZ, nEnv, bEnv, dRed, tps, zType)
+
+        val sType = eval(quote0(tp), sel -> VSucc(vfree(fresh)) :: nEnv, bEnv)
         val sCase =
-          VLam {n => VLam {rec => fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec), tps, tp)}}
+          VLam {n => VLam {rec =>
+            fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec), tps, sType)
+          }}
+
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel, nEnv).get
       case TEdge(n1, SuccLabel) :: Nil =>
+        //println("===")
+        //println("conf=" + int.icprint(node.conf))
+        //println("type=" + quote0(tp))
+        //println("type=" + int.icprint(quote0(tp)))
         VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, bEnv, dRed, tps, tp)
       case _ =>
         super.fold(g, node, nEnv, bEnv, dRed, tps, tp)

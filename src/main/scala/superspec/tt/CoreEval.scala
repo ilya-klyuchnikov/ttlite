@@ -8,7 +8,8 @@ trait CoreEval extends CoreAST {
     case Star => VStar
     case Pi(ty, ty1) => VPi(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
     case Free(x) => lookup(x, named).getOrElse(vfree(x))
-    case Bound(ii) => bound(ii)
+    case Bound(ii) =>
+      if (ii < bound.length) bound(ii) else vfree(Quote(ii)) // hack
     case e1 :@: e2 => vapp(eval(e1, named, bound), eval(e2, named, bound))
   }
   def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {

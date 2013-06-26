@@ -45,8 +45,12 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
   override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
-        val VPi(ty1, ty2) = tp
-        VLam(v => fold(g, n1, (fn, v) :: nEnv, bEnv, dRed, tps, ty2(ty1)))
+        //println("===")
+        //println("conf=" + int.icprint(node.conf))
+        //println("type=" + quote0(tp))
+        //println("type=" + int.icprint(quote0(tp)))
+        val VPi(_, ty2) = tp
+        VLam(v => fold(g, n1, (fn, v) :: nEnv, bEnv, dRed, tps, ty2(vfree(fn))))
       case _ =>
         super.fold(g, node, nEnv, bEnv, dRed, tps, tp)
     }

@@ -105,7 +105,7 @@ trait TTSc extends CoreSubst {
 
 }
 
-trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
+trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst with CoreREPL {
 
   def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, tps: NameEnv[Value], tp: Value): Value = {
     fold(g, g.root, nEnv, bEnv, Map(), tps, tp)
@@ -113,7 +113,12 @@ trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreE
 
   /// context!!!!!
   /// tp - current type of expression
-  def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value = {
+    //println("===")
+    //println("conf=" + int.icprint(node.conf))
+    //println("raw type=" + tp)
+    //println("type=" + quote0(tp))
+    //println("type=" + int.icprint(quote0(tp)))
     node.base match {
       case Some(tPath) =>
         dRed(g.get(tPath).conf)
@@ -125,6 +130,7 @@ trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreE
             sys.error(s"Residualization of non-trivial constructions should be implemented in subclasses. Edges: $outs")
         }
     }
+  }
 }
 
 case class SCCommand(in: String) extends Command

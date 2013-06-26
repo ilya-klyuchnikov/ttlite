@@ -9,7 +9,7 @@ trait CorePrinter extends CoreAST {
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
       parensIf(p > 0, sep(Seq("forall " <> vars(ii) <> " :: " <> cPrint(0, ii, d) <> " .", nest(cPrint(0, ii + 1, r)))))
-    case Bound(k) =>
+    case Bound(k) if ii - k - 1 >= 0 =>
       vars(ii - k - 1)
     case Free(Global(s)) =>
       s
