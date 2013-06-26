@@ -150,10 +150,11 @@ object TTScREPL
   override def handleCommand(state: State, cmd: Command): State = cmd match {
     case SCCommand(in) =>
       import int._
-      val parsed = int.parseIO(int.iiparse, in)
+      val parsed = int.parseIO(int.iParse, in)
       parsed match {
-        case Some(t) =>
-          val l = iquote(ieval(state.ne, t))
+        case Some(it) =>
+
+          val l = iquote(ieval(state.ne, it))
           val goal = l
           val rules: PiRules = new PiSc1
           val gs = GraphGenerator(rules, goal).toList

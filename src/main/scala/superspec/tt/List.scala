@@ -65,7 +65,7 @@ trait ListEval extends CoreEval with ListAST {
 }
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case PiList(a) =>
       assert(cType(i, named, bound, a, VStar).isRight)
       Right(VStar)
@@ -88,7 +88,7 @@ trait ListCheck extends CoreCheck with ListAST with ListEval {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (PiNil(a), VPiList(bVal)) =>
       assert(cType(ii, named, bound, a, VStar).isRight)
       val aVal = eval(a, named, List())
@@ -163,10 +163,10 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
   val ConsTypeIn =
     "forall (A :: *) . forall (x :: A) . forall (xs :: List A) . List A"
 
-  lazy val ListType = int.ieval(listVE, int.parseIO(int.iiparse, ListTypeIn).get)
-  lazy val listElimType = int.ieval(listVE, int.parseIO(int.iiparse, listElimTypeIn).get)
-  lazy val NilType = int.ieval(listVE, int.parseIO(int.iiparse, NilTypeIn).get)
-  lazy val ConsType = int.ieval(listVE, int.parseIO(int.iiparse, ConsTypeIn).get)
+  lazy val ListType = int.ieval(listVE, int.parseIO(int.iParse, ListTypeIn).get)
+  lazy val listElimType = int.ieval(listVE, int.parseIO(int.iParse, listElimTypeIn).get)
+  lazy val NilType = int.ieval(listVE, int.parseIO(int.iParse, NilTypeIn).get)
+  lazy val ConsType = int.ieval(listVE, int.parseIO(int.iParse, ConsTypeIn).get)
 
   val listVE: Ctx[Value] =
     List(

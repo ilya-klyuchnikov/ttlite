@@ -66,7 +66,7 @@ trait PairEval extends CoreEval with PairAST {
 }
 
 trait PairCheck extends CoreCheck with PairAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Product(a, b) =>
       assert(cType(i, named, bound, a, VStar).isRight)
       assert(cType(i, named, bound, b, VStar).isRight)
@@ -94,7 +94,7 @@ trait PairCheck extends CoreCheck with PairAST {
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (Pair(a, b, x, y), VProduct(aVal, bVal)) =>
       assert(cType(ii, named, bound, a, VStar).isRight)
       if (quote0(eval(a, named, List())) != quote0(aVal))

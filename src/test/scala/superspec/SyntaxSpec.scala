@@ -9,7 +9,7 @@ class SyntaxSpec extends FunSpec {
     def initialState: State = State(interactive = false, Nil, Nil, Set())
 
     def parseTerm(s: String) =
-      Inf(int.parseIO(int.iiparse, s).get)
+      Inf(int.parseIO(int.iParse, s).get)
   }
 
   import coreRepl._

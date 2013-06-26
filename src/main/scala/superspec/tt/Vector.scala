@@ -65,7 +65,7 @@ trait VectorEval extends CoreEval with VectorAST {
 }
 
 trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Vec(a, n) =>
       assert(cType(i, named, bound, a, VStar).isRight)
       assert(cType(i, named, bound, n, VNat).isRight)
@@ -98,7 +98,7 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (VecNil(a), VVec(bVal, VZero)) =>
       assert(cType(ii, named, bound, a, VStar).isRight)
       val aVal = eval(a, named, List())
@@ -178,10 +178,10 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
   val VConsTypeIn =
     "forall (x :: *) . forall (y :: Nat) . forall (z :: x) . forall (a :: Vec x y) . Vec x (Succ y)"
 
-  lazy val VecType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VecTypeIn).get)
-  lazy val vecElimType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, vecElimTypeIn).get)
-  lazy val VNilType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VNilTypeIn).get)
-  lazy val VConsType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iiparse, VConsTypeIn).get)
+  lazy val VecType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, VecTypeIn).get)
+  lazy val vecElimType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, vecElimTypeIn).get)
+  lazy val VNilType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, VNilTypeIn).get)
+  lazy val VConsType = int.ieval(vectorVE ++ natVE, int.parseIO(int.iParse, VConsTypeIn).get)
 
   val vectorVE: Ctx[Value] =
     List(

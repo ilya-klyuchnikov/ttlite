@@ -177,7 +177,7 @@ trait NatResiduator extends BaseResiduator with NatDriver {
 }
 
 trait NatCheck extends CoreCheck with NatAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Nat =>
       Right(VStar)
     case NatElim(m, mz, ms, n) =>
@@ -198,7 +198,7 @@ trait NatCheck extends CoreCheck with NatAST {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (Zero, VNat) =>
       Right(())
     case (Succ(k), VNat) =>
@@ -256,7 +256,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
       |forall (n :: Nat) .
       |m n
     """.stripMargin
-  lazy val natElimType = int.ieval(natVE, int.parseIO(int.iiparse, natElimTypeIn).get)
+  lazy val natElimType = int.ieval(natVE, int.parseIO(int.iParse, natElimTypeIn).get)
   val natVE: Ctx[Value] =
     List(
       Global("Zero") -> VZero,

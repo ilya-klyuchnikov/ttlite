@@ -2,10 +2,10 @@ package superspec.tt
 
 // TODO: can we unify type-checking and evaluation -
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: ITerm): Result[Type] =
+  def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: ITerm): Result[Value] =
     iType(0, named, bound, i)
 
-  def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Ann(e, tyt) =>
         cType(i, named, bound, tyt, VStar).right.flatMap { _ =>
           val ty = eval(tyt, named, Nil)
@@ -39,7 +39,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 
   // checks that ct has type t
-  def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (Inf(e), _) =>
       iType(ii, named, bound, e).right.flatMap(ty1 =>
         if (quote0(ty1) == quote0(t))

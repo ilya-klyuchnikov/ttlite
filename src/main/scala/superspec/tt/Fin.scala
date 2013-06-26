@@ -131,10 +131,10 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
       |m a b
     """.stripMargin
 
-  lazy val FZeroType = int.ieval(finVE ++ natVE, int.parseIO(int.iiparse, FZeroTypeIn).get)
-  lazy val FSuccType = int.ieval(finVE ++ natVE, int.parseIO(int.iiparse, FSuccTypeIn).get)
-  lazy val FinType = int.ieval(finVE ++ natVE, int.parseIO(int.iiparse, FinTypeIn).get)
-  lazy val finElimType = int.ieval(finVE ++ natVE, int.parseIO(int.iiparse, finElimTypeIn).get)
+  lazy val FZeroType = int.ieval(finVE ++ natVE, int.parseIO(int.iParse, FZeroTypeIn).get)
+  lazy val FSuccType = int.ieval(finVE ++ natVE, int.parseIO(int.iParse, FSuccTypeIn).get)
+  lazy val FinType = int.ieval(finVE ++ natVE, int.parseIO(int.iParse, FinTypeIn).get)
+  lazy val finElimType = int.ieval(finVE ++ natVE, int.parseIO(int.iParse, finElimTypeIn).get)
 
   val finVE: Ctx[Value] =
     List(

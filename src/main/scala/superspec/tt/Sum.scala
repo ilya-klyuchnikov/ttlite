@@ -77,7 +77,7 @@ trait SumEval extends CoreEval with SumAST {
 trait SumCheck extends CoreCheck with SumAST {
   // I have an assumption, that there is not need of this
   // It will be done automatically
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Sum(a, b) =>
       assert(cType(i, named, bound, a, VStar).isRight)
       assert(cType(i, named, bound, b, VStar).isRight)
@@ -108,7 +108,7 @@ trait SumCheck extends CoreCheck with SumAST {
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (InL(lt, rt, l), VSum(ltVal, rtVal)) =>
       assert(cType(ii, named, bound, lt, VStar).isRight)
       assert(cType(ii, named, bound, rt, VStar).isRight)
@@ -184,7 +184,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
       |  m s
     """.stripMargin
 
-  lazy val sumElimType = int.ieval(sumVE, int.parseIO(int.iiparse, sumElimTypeIn).get)
+  lazy val sumElimType = int.ieval(sumVE, int.parseIO(int.iParse, sumElimTypeIn).get)
 
   val sumVE: Ctx[Value] =
     List(

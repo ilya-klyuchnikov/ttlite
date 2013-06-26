@@ -4,12 +4,6 @@ trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
   case class Refl(A: CTerm, x: CTerm) extends CTerm
   case class Eq(A: CTerm, x: CTerm, y: CTerm) extends ITerm
-  // EqElim(A, prop, propR, x, y, eq)
-  // A - type of x and y (that is, x :: A, y :: A)
-  // prop(x, y, eq) - proposition we would like to infer (which involves both x and y and Eq A x y)
-  // propR(a, refl) - "reflexive" proposition ( prop(x, y, eq)[x -> a, y -> a, eq -> refl]
-  // x, y - elems
-  // eq - proof that x = y
   // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
   case class EqElim(A: CTerm, prop: CTerm, propR: CTerm, x: CTerm, y: CTerm, eq: CTerm) extends ITerm
   case class VEq(A: Value, x: Value, y: Value) extends Value
@@ -92,7 +86,7 @@ trait EqEval extends CoreEval with EqAST {
 }
 
 trait EqCheck extends CoreCheck with EqAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Type] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Eq(a, x, y) =>
       assert(cType(i, named, bound, a, VStar).isRight)
       val aVal = eval(a, named, Nil)
@@ -122,7 +116,7 @@ trait EqCheck extends CoreCheck with EqAST {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Type): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
     case (Refl(a, z), VEq(bVal, xVal, yVal)) =>
       assert(cType(ii, named, bound, a, VStar).isRight)
       val aVal = eval(a, named, Nil)
@@ -190,9 +184,9 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
       |prop x y eq
     """.stripMargin
 
-  lazy val EqType = int.ieval(eqVE, int.parseIO(int.iiparse, EqTypeIn).get)
-  lazy val ReflType = int.ieval(eqVE, int.parseIO(int.iiparse, ReflTypeIn).get)
-  lazy val eqElimType = int.ieval(eqVE, int.parseIO(int.iiparse, eqElimTypeIn).get)
+  lazy val EqType = int.ieval(eqVE, int.parseIO(int.iParse, EqTypeIn).get)
+  lazy val ReflType = int.ieval(eqVE, int.parseIO(int.iParse, ReflTypeIn).get)
+  lazy val eqElimType = int.ieval(eqVE, int.parseIO(int.iParse, eqElimTypeIn).get)
 
   val eqVE: Ctx[Value] =
     List(

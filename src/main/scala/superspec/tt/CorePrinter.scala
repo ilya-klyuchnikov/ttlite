@@ -1,7 +1,7 @@
 package superspec.tt
 
 trait CorePrinter extends CoreAST {
-  def iPrint(p: Int, ii: Int, t: ITerm/*, cont: Doc = empty*/): Doc = t match {
+  def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(cPrint(2, ii, c) <> " :: " , nest(cPrint(0, ii, ty))))))
     case Star => "*"
@@ -21,7 +21,7 @@ trait CorePrinter extends CoreAST {
       t.toString
   }
 
-  def cPrint(p: Int, ii: Int, t: CTerm/*, cont: Doc = empty*/): Doc = t match {
+  def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
     case Inf(i) =>
       iPrint(p, ii, i)
     case Lam(c) =>

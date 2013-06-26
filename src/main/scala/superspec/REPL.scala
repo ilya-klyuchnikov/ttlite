@@ -1,5 +1,7 @@
 package superspec
 
+import scala.language.postfixOps
+
 import scala.util.parsing.combinator.syntactical.StandardTokenParsers
 import org.kiama.util.JLineConsole
 import scala.util.parsing.combinator.lexical.StdLexical
@@ -38,15 +40,13 @@ trait REPL extends Common {
   type I // inferable term
   type C // checkable term
   type V // value
-  type T // type
   type TInf // type info
-  type Inf // definition info
 
   val int: Interpreter
   def initialState: State
   private var batch: Boolean = false
 
-  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[Inf], modules: Set[String])
+  case class State(interactive: Boolean, ne: NameEnv[V], ctx: Ctx[V], modules: Set[String])
 
   def handleError() {
     if (batch) {
@@ -57,17 +57,16 @@ trait REPL extends Common {
   trait Interpreter extends StandardTokenParsers with PackratParsers {
     override val lexical = new HaskellLikeLexical
 
-    val iname: String
-    val iprompt: String
-    def iitype(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Result[T]
+    val prompt: String
+    def itype(ne: NameEnv[V], ctx: Ctx[V], i: I): Result[V]
     def iquote(v: V): C
     def ieval(ne: NameEnv[V], i: I): V
-    def ihastype(t: T): Inf
+    def typeInfo(t: V): V
     def icprint(c: C): String
-    def itprint(t: T): String
-    val iiparse: Parser[I]
-    val isparse: Parser[Stmt[I, TInf]]
-    def iassume(s: State, x: (String, TInf)): State
+    def itprint(t: V): String
+    val iParse: Parser[I]
+    val stmtParse: Parser[Stmt[I, TInf]]
+    def assume(s: State, x: (String, TInf)): State
 
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
       case t if t.successful =>
@@ -77,8 +76,8 @@ trait REPL extends Common {
         None
     }
 
-    def iinfer(ne: NameEnv[V], ctx: Ctx[Inf], i: I): Option[T] = {
-      iitype(ne, ctx, i) match {
+    def iinfer(ne: NameEnv[V], ctx: Ctx[V], i: I): Option[V] = {
+      itype(ne, ctx, i) match {
         case Right(t) =>
           Some(t)
         case Left(msg) =>
@@ -131,7 +130,7 @@ trait REPL extends Common {
         state.ne.map(_._1).distinct.reverse.foreach{case Global(n) => Console.println(n)}
         state
       case TypeOf(x) =>
-        int.parseIO(int.iiparse, x) match {
+        int.parseIO(int.iParse, x) match {
           case Some(e) => int.iinfer(state.ne, state.ctx, e) match {
             case Some(t) =>
               Console.println(s"${int.itprint(t)};")
@@ -143,7 +142,7 @@ trait REPL extends Common {
         }
         state
       case Compile(CompileInteractive(s)) =>
-        int.parseIO(int.isparse, s) match {
+        int.parseIO(int.stmtParse, s) match {
           case Some(stm) => handleStmt(state, stm)
           case None => state
         }
@@ -166,11 +165,11 @@ trait REPL extends Common {
           } else {
             Console.println(s"$s :: ${int.itprint(y)};")
           }
-          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.ihastype(y)) :: state.ctx, state.modules)
+          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), int.typeInfo(y)) :: state.ctx, state.modules)
       }
     }
     stmt match {
-      case Assume(ass) => ass.foldLeft(state)(int.iassume)
+      case Assume(ass) => ass.foldLeft(state)(int.assume)
       case Let(x, e) => checkEval(x, e)
       case Eval(e) => checkEval("it", e)
       case PutStrLn(x) => Console.println(x); state
@@ -182,7 +181,7 @@ trait REPL extends Common {
     if (state.modules(f) && ! reload) return state
     try {
       val input = scala.io.Source.fromFile(f).mkString("")
-      val parsed = int.parseIO(int.isparse+, input)
+      val parsed = int.parseIO(int.stmtParse+, input)
       parsed match {
         case Some(stmts) =>
           val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
@@ -202,7 +201,7 @@ trait REPL extends Common {
   var state: State = _
 
   def loop() {
-    val in = JLineConsole.readLine(int.iprompt)
+    val in = JLineConsole.readLine(int.prompt)
     val cmd = interpretCommand(in)
     state = handleCommand(state, cmd)
     loop()
