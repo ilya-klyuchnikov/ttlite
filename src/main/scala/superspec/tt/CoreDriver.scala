@@ -42,11 +42,11 @@ trait CoreDriver extends TTSc {
 }
 
 trait CoreResiduator extends BaseResiduator with CoreDriver {
-  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
+  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
-        VLam(v => fold(g, n1, (fn, v) :: nEnv, bEnv, dRed))
+        VLam(v => fold(g, n1, (fn, v) :: nEnv, bEnv, dRed, tps))
       case _ =>
-        super.fold(g, node, nEnv, bEnv, dRed)
+        super.fold(g, node, nEnv, bEnv, dRed, tps)
     }
 }

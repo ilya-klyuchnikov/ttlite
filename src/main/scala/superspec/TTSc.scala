@@ -53,8 +53,6 @@ trait TTSc extends CoreSubst {
     }
   }
 
-  case class Conf(t: CTerm, tpsCtx: )
-
   trait PiRules extends MRSCRules[CTerm, Label] {
     type Signal = Option[N]
 
@@ -109,12 +107,12 @@ trait TTSc extends CoreSubst {
 
 trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst {
 
-  def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env): Value = {
-    fold(g, g.root, nEnv, bEnv, Map())
+  def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, tps: NameEnv[Value]): Value = {
+    fold(g, g.root, nEnv, bEnv, Map(), tps)
   }
 
   /// context!!!!!
-  def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value]): Value =
+  def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value]): Value =
     node.base match {
       case Some(tPath) =>
         dRed(g.get(tPath).conf)
@@ -166,7 +164,7 @@ object TTScREPL
               for (g <- gs) {
                 val tGraph = Transformations.transpose(g)
                 println(tgToString(tGraph))
-                val resVal = residuate(tGraph, state.ne, List())
+                val resVal = residuate(tGraph, state.ne, List(), state.ctx)
                 val cTerm = iquote(resVal)
                 val cType = iquote(tp)
 
