@@ -87,3 +87,7 @@ sc natFold;
 sc nat1Elim;
 sc nat2Elim;
 sc inc;
+
+sc (\x y z -> plus x (plus y z)) :: Nat -> Nat -> Nat -> Nat;
+sc (\x y z -> plus (plus x y) z) :: Nat -> Nat -> Nat -> Nat;
+sc (\x -> plus x x) :: Nat -> Nat;
