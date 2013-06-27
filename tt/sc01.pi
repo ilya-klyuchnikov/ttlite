@@ -75,6 +75,14 @@ let nat2Elim =
 -- increment by one
 let inc = natFold Nat (Succ Zero) Succ;
 
+let len =
+  (\a -> listElim a (\ _ -> Nat) 0 (\ v vs w -> Succ w)) ::
+    forall (a :: *) . forall (v :: List a) . Nat;
+
+let append =
+  (\a xs ys -> listElim a (\_ -> List a) ys (\v vs w -> Cons a v w) xs) ::
+    forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+
 -- supercompiling everything
 sc id;
 sc const;
@@ -91,3 +99,6 @@ sc inc;
 sc (\x y z -> plus x (plus y z)) :: Nat -> Nat -> Nat -> Nat;
 sc (\x y z -> plus (plus x y) z) :: Nat -> Nat -> Nat -> Nat;
 sc (\x -> plus x x) :: Nat -> Nat;
+
+sc len;
+sc append;

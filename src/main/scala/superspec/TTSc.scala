@@ -105,7 +105,7 @@ trait TTSc extends CoreSubst {
 
 }
 
-trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreEval with CoreSubst with CoreREPL {
+trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreREPL {
 
   def residuate(g: TGraph[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, tps: NameEnv[Value], tp: Value): Value = {
     fold(g, g.root, nEnv, bEnv, Map(), tps, tp)
@@ -141,13 +141,17 @@ object TTScREPL
   with NatREPL
   with NatSubst
   with NatDriver
+  with ListREPL
+  with ListSubst
+  with ListDriver
   with BaseResiduator
   with CoreResiduator
   with NatResiduator
+  with ListResiduator
   with GraphPrettyPrinter {
 
-  val te = natTE
-  val ve = natVE
+  val te = natTE ++ listTE
+  val ve = natVE ++ listVE
   override def initialState = State(interactive = true, ve, te, Set())
 
   override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {

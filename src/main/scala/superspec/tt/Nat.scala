@@ -54,8 +54,8 @@ trait NatSubst extends CoreSubst with NatAST {
     case Nat =>
       true
     case NatElim(a, b, c, d) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth + 1) &&
-        isFreeSubTerm(c, depth) && isFreeSubTerm(d, depth + 1)
+      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) &&
+        isFreeSubTerm(c, depth) && isFreeSubTerm(d, depth)
     case _ =>
       super.isFreeSubTerm(t, depth)
   }

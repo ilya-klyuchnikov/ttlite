@@ -1,5 +1,8 @@
 package superspec.tt
 
+import mrsc.core._
+import superspec._
+
 trait ListAST extends CoreAST {
   case class PiNil(A: CTerm) extends CTerm
   case class PiCons(A: CTerm, head: CTerm, tail: CTerm) extends CTerm
@@ -12,6 +15,55 @@ trait ListAST extends CoreAST {
   case class VPiCons(A: Value, head: Value, tail: Value) extends Value
 
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
+}
+
+trait ListSubst extends CoreSubst with ListAST {
+  override def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
+    case (PiNil(a1), PiNil(a2)) =>
+      findSubst0(a1, a2)
+    case (PiCons(a1, h1, t1), PiCons(a2, h2, t2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(h1, h2),
+        findSubst0(t1, t2)
+      )
+    case _ =>
+      super.findSubst0(from, to)
+  }
+
+  override def findSubst0(from: ITerm, to: ITerm): Option[Subst] = (from, to) match {
+    case (PiList(a1), PiList(a2)) =>
+      findSubst0(a1, a2)
+    case (PiListElim(a1, m1, nCase1, cCase1, xs1), PiListElim(a2, m2, nCase2, cCase2, xs2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(m1, m2),
+        findSubst0(nCase1, nCase2),
+        findSubst0(cCase1, cCase2),
+        findSubst0(xs1, xs2)
+      )
+    case _ =>
+      super.findSubst0(from, to)
+  }
+
+  override def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
+    case PiNil(a) =>
+      isFreeSubTerm(a, depth)
+    case PiCons(a, h, t) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(h, depth) && isFreeSubTerm(t, depth)
+    case _ =>
+      super.isFreeSubTerm(t, depth)
+  }
+
+  override def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
+    case PiList(a) =>
+      isFreeSubTerm(a, depth)
+    case PiListElim(a, m, nCase, cCase, xs) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(m, depth) &&
+        isFreeSubTerm(nCase, depth) && isFreeSubTerm(cCase, depth) && isFreeSubTerm(xs, depth)
+    case _ =>
+      super.isFreeSubTerm(t, depth)
+  }
 }
 
 trait ListPrinter extends CorePrinter with ListAST {
@@ -62,6 +114,105 @@ trait ListEval extends CoreEval with ListAST {
     case _ =>
       super.eval(t, named, bound)
   }
+}
+
+trait ListDriver extends CoreDriver with ListAST {
+
+  // boilerplate/indirections
+  case object NilLabel extends Label
+  case object ConsLabel extends Label
+
+  case class NilStep(a: CTerm) extends Step {
+    override val graphStep =
+      AddChildNodesStep[CTerm, Label](List(a -> NilLabel))
+  }
+  case class NilDStep(a: CTerm) extends DriveStep {
+    override def step(t: CTerm) = NilStep(a)
+  }
+  case class ConsStep(a: CTerm, h: CTerm, t: CTerm) extends Step {
+    override val graphStep =
+      AddChildNodesStep[CTerm, Label](List(a -> ConsLabel, h -> ConsLabel, t -> ConsLabel))
+  }
+  case class ConsDStep(a: CTerm, head: CTerm, tail: CTerm) extends DriveStep {
+    override def step(t: CTerm) = ConsStep(a, head, tail)
+  }
+
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case NPiListElim(a, m, nilCase, consCase, l) =>
+      l match {
+        case NFree(n) =>
+          val aType = quote0(a)
+          val caseNil = ElimBranch(PiNil(aType), Map())
+
+          val hName = freshName
+          val h1 = Inf(Free(hName))
+
+          val tName = freshName
+          val t1 = Inf(Free(tName))
+
+          val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Inf(Free(n))))
+
+          val motive = quote0(m)
+
+          ElimDStep(n, List(caseNil, caseCons), motive)
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
+  }
+
+  override def decompose(c: CTerm): DriveStep = c match {
+    case PiNil(a) =>
+      NilDStep(a)
+    case PiCons(a, h, t) =>
+      ConsDStep(a, h, t)
+    case _ =>
+      super.decompose(c)
+  }
+
+}
+
+
+trait ListResiduator extends BaseResiduator with ListDriver {
+  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _), m)) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Inf(Free(hN)), Inf(Free(tN))), _), _)) ::
+          Nil =>
+
+        val motive =
+          VLam(n => eval(quote0(tp), sel -> n :: nEnv, bEnv))
+
+
+        val aType = eval(a, nEnv, bEnv)
+        val nilType =
+          eval(quote0(tp), sel -> VPiNil(aType) :: nEnv, bEnv)
+        val nilCase =
+          fold(g, nodeZ, nEnv, bEnv, dRed, tps, nilType)
+
+        val consType = eval(quote0(tp), sel -> VPiCons(aType, vfree(hN), vfree(tN)) :: nEnv, bEnv)
+
+        val consCase =
+          VLam {h => VLam {t => VLam {rec =>
+            fold(g, nodeS, hN -> h :: tN -> t :: nEnv, bEnv, dRed + (node.conf -> rec), tps, consType)
+          }}}
+
+        VNeutral(NFree(Global("listElim"))) @@ aType @@ motive @@ nilCase @@ consCase @@ lookup(sel, nEnv).get
+
+      case TEdge(n1, NilLabel) :: Nil =>
+        VNeutral(NFree(Global("Nil"))) @@ fold(g, n1, nEnv, bEnv, dRed, tps, tp)
+
+      case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
+        val VPiList(aType) = tp
+        VNeutral(NFree(Global("Cons"))) @@
+          fold(g, a, nEnv, bEnv, dRed, tps, VStar) @@
+          fold(g, h, nEnv, bEnv, dRed, tps, aType) @@
+          fold(g, t, nEnv, bEnv, dRed, tps, tp)
+      case _ =>
+        super.fold(g, node, nEnv, bEnv, dRed, tps, tp)
+    }
 }
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
