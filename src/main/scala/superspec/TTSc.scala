@@ -133,8 +133,6 @@ trait BaseResiduator extends TTSc with CoreAST with EqAST with NatAST with CoreE
   }
 }
 
-case class SCCommand(in: String) extends Command
-
 object TTScREPL
   extends TTSc
   with CoreREPL
@@ -151,51 +149,39 @@ object TTScREPL
   val te = natTE
   val ve = natVE
   override def initialState = State(interactive = true, ve, te, Set())
-  override def commands: List[Cmd] =
-    Cmd(List(":sc"), "<expr>", x => SCCommand(x), "supercompile") :: super.commands
 
-  override def handleCommand(state: State, cmd: Command): State = cmd match {
-    case SCCommand(in) =>
+  override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {
+    case Supercompile(it) =>
       import int._
-      val parsed = int.parseIO(int.iParse, in)
-      parsed match {
-        case Some(it) =>
-          int.iinfer(state.ne, state.ctx, it) match {
-            case None =>
-              handleError()
-              state
-            case Some(tp) =>
-              val goal = iquote(ieval(state.ne, it))
-
-              val gs = GraphGenerator(new Rules, goal).toList
-              for (g <- gs) {
-                val tGraph = Transformations.transpose(g)
-                println(tgToString(tGraph))
-                val resVal = residuate(tGraph, state.ne, List(), state.ctx, tp)
-                val cTerm = iquote(resVal)
-                val cType = iquote(tp)
-
-                val iTerm = Ann(cTerm, cType)
-                val t2 = int.iinfer(state.ne, state.ctx, iTerm)
-                t2 match {
-                  case None =>
-                    println(int.icprint(cTerm) + " :: " + int.icprint(cType))
-                    handleError()
-                    state
-                  case Some(_) =>
-                    // todo: parens
-                    println(int.icprint(cTerm) + " :: " + int.icprint(cType))
-                }
-
-
-
-              }
-          }
+      iinfer(state.ne, state.ctx, it) match {
         case None =>
+          handleError()
+          state
+        case Some(tp) =>
+          val goal = iquote(ieval(state.ne, it))
+          val gs = GraphGenerator(new Rules, goal).toList
+          for (g <- gs) {
+            val tGraph = Transformations.transpose(g)
+            println(tgToString(tGraph))
+            val resVal = residuate(tGraph, state.ne, List(), state.ctx, tp)
+            val cTerm = iquote(resVal)
+            val cType = iquote(tp)
+
+            val iTerm = Ann(cTerm, cType)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
+            t2 match {
+              case None =>
+                println("(" + icprint(cTerm) + ") :: " + icprint(cType) + ";")
+                handleError()
+                state
+              case Some(_) =>
+                println("(" + icprint(cTerm) + ") :: " + icprint(cType) + ";")
+            }
+          }
       }
       state
     case _ =>
-      super.handleCommand(state, cmd)
+      super.handleStmt(state, stmt)
   }
 
   class Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {

@@ -12,7 +12,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   type TInf = CTerm
   override val int = CoreInterpreter
   object CoreInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
-    lexical.reserved += ("assume", "let", "forall", "import")
+    lexical.reserved += ("assume", "let", "forall", "import", "sc")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
     val prompt: String = "TT> "
 
@@ -98,6 +98,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
       "let" ~> ident ~ ("=" ~> iterm0 <~ ";") ^^ {case x ~ y => Let(x, y(Nil))} |
         "assume" ~> (binding | bindingPar) <~ ";" ^^ {b => Assume(List(b(Nil)))} |
         "import" ~> stringLit <~ ";" ^^ Import |
+        "sc" ~> iterm0 <~ ";" ^^ {t => Supercompile(t(Nil))} |
         iterm0 <~ ";" ^^ {t => Eval(t(Nil))}
 
     lazy val bindingPar: PackratParser[Res[(String, CTerm)]] =

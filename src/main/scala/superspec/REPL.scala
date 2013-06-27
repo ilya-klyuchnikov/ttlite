@@ -149,7 +149,7 @@ trait REPL extends Common {
         load(f, state, reload = true)
     }
 
-  private def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
+  def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
     def checkEval(s: String, it: I): State = {
       int.iinfer(state.ne, state.ctx, it) match {
         case None =>
@@ -169,7 +169,6 @@ trait REPL extends Common {
       case Assume(ass) => ass.foldLeft(state)(int.assume)
       case Let(x, e) => checkEval(x, e)
       case Eval(e) => checkEval("it", e)
-      case PutStrLn(x) => Console.println(x); state
       case Import(f) => load(f, state, reload = false)
     }
   }

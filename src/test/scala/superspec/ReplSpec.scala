@@ -17,4 +17,8 @@ class ReplSpec extends FunSpec {
   describe("All REPL should process prelude.all and lists.pi without errors") {
     REPLMain.main(Array("prelude.all"))
   }
+
+  describe("ScREPL should supercompile all tasks in tt/sc01.pi") {
+    TTScREPL.main(Array("tt/sc01.pi"))
+  }
 }
