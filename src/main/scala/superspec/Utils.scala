@@ -5,21 +5,21 @@ import superspec.tt.CoreREPL
 
 trait GraphPrettyPrinter extends CoreREPL with TTSc {
 
-  def tgToString(tg: TGraph[CTerm, Label]): String = {
+  def tgToString(tg: TGraph[Conf, Label]): String = {
     val focus = tg.focus
     toString(tg.root, focus)
   }
 
   // kiama pretty printer is not able to produce single string, so here is a hack
-  def toString(c: CTerm): String = {
-    val s = pretty(int.icprint(c), 1000)
+  def toString(c: Conf): String = {
+    val s = pretty(int.icprint(c.ct), 1000)
     s.replace('\n', ' ').replaceAll("\\s+", " ")
   }
 
   def labelToString(l: Label): String =
     l.toString
 
-  def toString(node: TNode[CTerm, Label], focus: Option[TPath], indent: String = ""): String = {
+  def toString(node: TNode[Conf, Label], focus: Option[TPath], indent: String = ""): String = {
     val sb = new StringBuilder()
     sb.append(indent + "|__" + toString(node.conf))
     if (node.base.isDefined) {

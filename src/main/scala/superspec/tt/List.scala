@@ -122,19 +122,19 @@ trait ListDriver extends CoreDriver with ListAST {
   case object NilLabel extends Label
   case object ConsLabel extends Label
 
-  case class NilStep(a: CTerm) extends Step {
+  case class NilStep(a: DConf) extends Step {
     override val graphStep =
-      AddChildNodesStep[CTerm, Label](List(a -> NilLabel))
+      AddChildNodesStep[Conf, Label](List(a -> NilLabel))
   }
-  case class NilDStep(a: CTerm) extends DriveStep {
-    override def step(t: CTerm) = NilStep(a)
+  case class NilDStep(a: DConf) extends DriveStep {
+    override def step(t: Conf) = NilStep(a)
   }
-  case class ConsStep(a: CTerm, h: CTerm, t: CTerm) extends Step {
+  case class ConsStep(a: Conf, h: Conf, t: Conf) extends Step {
     override val graphStep =
-      AddChildNodesStep[CTerm, Label](List(a -> ConsLabel, h -> ConsLabel, t -> ConsLabel))
+      AddChildNodesStep[Conf, Label](List(a -> ConsLabel, h -> ConsLabel, t -> ConsLabel))
   }
-  case class ConsDStep(a: CTerm, head: CTerm, tail: CTerm) extends DriveStep {
-    override def step(t: CTerm) = ConsStep(a, head, tail)
+  case class ConsDStep(a: Conf, head: Conf, tail: Conf) extends DriveStep {
+    override def step(t: Conf) = ConsStep(a, head, tail)
   }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
@@ -144,10 +144,10 @@ trait ListDriver extends CoreDriver with ListAST {
           val aType = quote0(a)
           val caseNil = ElimBranch(PiNil(aType), Map())
 
-          val hName = freshName
+          val hName = freshName(quote0(a))
           val h1 = Inf(Free(hName))
 
-          val tName = freshName
+          val tName = freshName(quote0(VPiList(a)))
           val t1 = Inf(Free(tName))
 
           val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Inf(Free(n))))
@@ -162,11 +162,12 @@ trait ListDriver extends CoreDriver with ListAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: CTerm): DriveStep = c match {
+  override def decompose(c: Conf): DriveStep = c.ct match {
     case PiNil(a) =>
-      NilDStep(a)
+      val Inf(PiList(tp)) = c.tp
+      NilDStep(DConf(a, Inf(Star)))
     case PiCons(a, h, t) =>
-      ConsDStep(a, h, t)
+      ConsDStep(DConf(a, Inf(Star)), DConf(h, a), DConf(t, c.ct))
     case _ =>
       super.decompose(c)
   }
@@ -175,7 +176,7 @@ trait ListDriver extends CoreDriver with ListAST {
 
 
 trait ListResiduator extends BaseResiduator with ListDriver {
-  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _), m)) ::
@@ -196,7 +197,7 @@ trait ListResiduator extends BaseResiduator with ListDriver {
 
         val consCase =
           VLam {h => VLam {t => VLam {rec =>
-            fold(g, nodeS, hN -> h :: tN -> t :: nEnv, bEnv, dRed + (node.conf -> rec), tps, consType)
+            fold(g, nodeS, hN -> h :: tN -> t :: nEnv, bEnv, dRed + (node.conf.ct -> rec), tps, consType)
           }}}
 
         VNeutral(NFree(Global("listElim"))) @@ aType @@ motive @@ nilCase @@ consCase @@ lookup(sel, nEnv).get

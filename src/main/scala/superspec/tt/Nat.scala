@@ -123,10 +123,10 @@ trait NatDriver extends CoreDriver with NatAST {
   case object SuccLabel extends Label
   case class SuccStep(next: CTerm) extends Step {
     override val graphStep =
-      AddChildNodesStep[CTerm, Label](List(next -> SuccLabel))
+      AddChildNodesStep[Conf, Label](List(DConf(next, Inf(Nat)) -> SuccLabel))
   }
   case class SuccDStep(next: CTerm) extends DriveStep {
-    override def step(t: CTerm) = SuccStep(next)
+    override def step(t: Conf) = SuccStep(next)
   }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
@@ -134,7 +134,7 @@ trait NatDriver extends CoreDriver with NatAST {
       natElim.n match {
         case NFree(n) =>
           val caseZ = ElimBranch(Zero, Map())
-          val n1 = freshName
+          val n1 = freshName(Inf(Nat))
           val v1 = Inf(Free(n1))
           val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(n))))
           val motive = quote0(natElim.m)
@@ -146,8 +146,9 @@ trait NatDriver extends CoreDriver with NatAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: CTerm): DriveStep = c match {
+  override def decompose(c: Conf): DriveStep = c.ct match {
     case Succ(c1) =>
+      val Inf(Nat) = c.tp
       SuccDStep(c1)
     case _ =>
       super.decompose(c)
@@ -156,7 +157,7 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatResiduator extends BaseResiduator with NatDriver {
-  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _), m)) ::
@@ -179,7 +180,7 @@ trait NatResiduator extends BaseResiduator with NatDriver {
         val sType = eval(quote0(tp), sel -> VSucc(vfree(fresh)) :: nEnv, bEnv)
         val sCase =
           VLam {n => VLam {rec =>
-            fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf -> rec), tps, sType)
+            fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf.ct -> rec), tps, sType)
           }}
 
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel, nEnv).get

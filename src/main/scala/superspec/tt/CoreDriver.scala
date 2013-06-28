@@ -4,23 +4,37 @@ import mrsc.core._
 import superspec._
 
 trait CoreDriver extends TTSc {
+
   var v = 100
-  def freshName(): Name = {v += 1; Local(v)}
-  def freshLocal(): CTerm = Inf(Free(freshName()))
+
+  def freshName(tp: CTerm): Name = {
+    v += 1;
+    val res = Local(v)
+    typeMap = typeMap + (res -> tp)
+    res
+  }
+
+  def freshLocal(tp: CTerm): CTerm =
+    Inf(Free(freshName(tp)))
+
+  // current ad-hoc solution for mapping variables and types of new free variables
+
+  // knowledge about which variable has which type
+  var typeMap: Map[Name, CTerm] = Map()
 
   // boilerplate/indirections
   case class LamLabel(f: Name) extends Label
-  case class LamStep(f: Name, next: CTerm) extends Step {
+  case class LamStep(f: Name, next: Conf) extends Step {
     override val graphStep =
-      AddChildNodesStep[CTerm, Label](List(next -> LamLabel(f)))
+      AddChildNodesStep[Conf, Label](List(next -> LamLabel(f)))
   }
-  case class LamDStep(f: Name, next: CTerm) extends DriveStep {
-    override def step(t: CTerm) =
+  case class LamDStep(f: Name, next: Conf) extends DriveStep {
+    override def step(t: Conf) =
       LamStep(f, next)
   }
 
   // logic
-  override def driveTerm(c: CTerm): DriveStep = eval0(c) match {
+  override def driveTerm(c: Conf): DriveStep = eval0(c.ct) match {
     case VNeutral(n) => driveNeutral(n)
     case _ => decompose(c)
   }
@@ -30,11 +44,15 @@ trait CoreDriver extends TTSc {
     case NApp(n, _) => driveNeutral(n)
   }
 
-  def decompose(c: CTerm): DriveStep = eval0(c) match {
+  def decompose(c: Conf): DriveStep = eval0(c.ct) match {
     case VLam(f) =>
-      val fn = freshName()
+      val Inf(Pi(t1, _)) = c.tp
+      val fn: Name = freshName(t1)
       val nextTerm = quote0(f(vfree(fn)))
-      LamDStep(fn, nextTerm)
+      val VPi(_, vt2) = eval0(c.tp)
+      val nextType = quote0(vt2(vfree(fn)))
+      LamDStep(fn, DConf(nextTerm, nextType))
+
     case _ =>
       StopDStep
   }
@@ -42,13 +60,9 @@ trait CoreDriver extends TTSc {
 }
 
 trait CoreResiduator extends BaseResiduator with CoreDriver {
-  override def fold(g: TGraph[CTerm, Label], node: TNode[CTerm, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
-        //println("===")
-        //println("conf=" + int.icprint(node.conf))
-        //println("type=" + quote0(tp))
-        //println("type=" + int.icprint(quote0(tp)))
         val VPi(_, ty2) = tp
         VLam(v => fold(g, n1, (fn, v) :: nEnv, bEnv, dRed, tps, ty2(vfree(fn))))
       case _ =>
