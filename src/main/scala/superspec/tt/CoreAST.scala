@@ -36,4 +36,14 @@ trait CoreAST extends Common {
     case VLam(f) => f(v)
     case VNeutral(n) => VNeutral(NApp(n, v))
   }
+
+  def freeLocals(c: Any): Set[Local] = c match {
+    case Free(Local(n)) =>
+      Set(Local(n))
+    case p: scala.Product =>
+      p.productIterator.flatMap(freeLocals).toSet
+    case _ => Set()
+  }
+
+
 }

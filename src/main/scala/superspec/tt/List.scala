@@ -152,9 +152,7 @@ trait ListDriver extends CoreDriver with ListAST {
 
           val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Inf(Free(n))))
 
-          val motive = quote0(m)
-
-          ElimDStep(n, List(caseNil, caseCons), motive)
+          ElimDStep(n, List(caseNil, caseCons))
         case n =>
           driveNeutral(n)
       }
@@ -179,8 +177,8 @@ trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _), m)) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Inf(Free(hN)), Inf(Free(tN))), _), _)) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Inf(Free(hN)), Inf(Free(tN))), _))) ::
           Nil =>
 
         val motive =

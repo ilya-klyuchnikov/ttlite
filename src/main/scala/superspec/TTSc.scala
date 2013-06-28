@@ -19,11 +19,11 @@ trait TTSc extends CoreSubst {
     def step(t: Conf): Step
   }
 
-  case class ElimDStep(sel: Name, cases: List[ElimBranch], motive: CTerm) extends DriveStep {
+  case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep {
     override def step(t: Conf) =
       VariantsStep(sel, cases.map{
         branch => branch -> DConf(applySubst(t.ct, Map(sel -> branch.ptr)), applySubst(t.tp, Map(sel -> branch.ptr)))
-      }, motive)
+      })
   }
   case object StopDStep extends DriveStep {
     override def step(t: Conf) = StopStep
@@ -32,12 +32,13 @@ trait TTSc extends CoreSubst {
   // everything else we get from evaluation!!
   def driveTerm(c: Conf): DriveStep
 
+  def elimFreeVar(c: Conf, fv: Local): List[ElimDStep]
 
   trait Label
   case object NormLabel extends Label {
     override def toString = "->"
   }
-  case class CaseBranchLabel(sel: Name, elim: ElimBranch, motive: CTerm) extends Label {
+  case class CaseBranchLabel(sel: Name, elim: ElimBranch) extends Label {
     override def toString = sel + " = " + elim
   }
 
@@ -52,9 +53,9 @@ trait TTSc extends CoreSubst {
   case object StopStep extends Step {
     override val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
-  case class VariantsStep(sel: Name, cases: List[(ElimBranch, Conf)], motive: CTerm) extends Step {
+  case class VariantsStep(sel: Name, cases: List[(ElimBranch, Conf)]) extends Step {
     override val graphStep = {
-      val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1, motive)) }
+      val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
       AddChildNodesStep[Conf, Label](ns)
     }
   }
@@ -72,7 +73,7 @@ trait TTSc extends CoreSubst {
         findRenaming(g.current.conf.ct, parConf.ct) match {
           case Some(ren) =>
             label match {
-              case CaseBranchLabel(_, ElimBranch(_, sub), _) if sub == ren =>
+              case CaseBranchLabel(_, ElimBranch(_, sub)) if sub == ren =>
                 return Some(current.in.node)
               case _ =>
             }
@@ -82,7 +83,6 @@ trait TTSc extends CoreSubst {
         current = current.in.node
       }
       None
-      //g.current.ancestors.find(n => findRenaming(g.current.conf, n.conf).isDefined)
     }
   }
   trait Folding extends PiRules {
@@ -105,7 +105,12 @@ trait TTSc extends CoreSubst {
         return List()
       val t = g.current.conf
       val piStep = driveTerm(t).step(t)
-      List(piStep.graphStep)
+
+      val fv = freeLocals(g.current.conf.ct).toList
+      val ss = fv.flatMap(x => elimFreeVar(g.current.conf, x).map(_.step(g.current.conf)))
+      // This part generates too much results for now
+      // piStep.graphStep :: ss.map(_.graphStep)
+      piStep.graphStep :: Nil
     }
   }
 

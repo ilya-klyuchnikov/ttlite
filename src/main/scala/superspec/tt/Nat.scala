@@ -137,13 +137,23 @@ trait NatDriver extends CoreDriver with NatAST {
           val n1 = freshName(Inf(Nat))
           val v1 = Inf(Free(n1))
           val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(n))))
-          val motive = quote0(natElim.m)
-          ElimDStep(n, List(caseZ, caseS), motive)
+          ElimDStep(n, List(caseZ, caseS))
         case n =>
           driveNeutral(n)
       }
     case _ =>
       super.driveNeutral(n)
+  }
+
+  override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = typeMap(fv) match {
+    case Inf(Nat) =>
+      val caseZ = ElimBranch(Zero, Map())
+      val n1 = freshName(Inf(Nat))
+      val v1 = Inf(Free(n1))
+      val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(fv))))
+      List(ElimDStep(fv, List(caseZ, caseS)))
+    case _ =>
+      super.elimFreeVar(c, fv)
   }
 
   override def decompose(c: Conf): DriveStep = c.ct match {
@@ -160,8 +170,8 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _), m)) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _), _)) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
           Nil =>
         //println("===")
         //println("conf=" + int.icprint(node.conf))

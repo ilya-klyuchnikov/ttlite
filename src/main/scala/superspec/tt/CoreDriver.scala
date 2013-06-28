@@ -57,6 +57,9 @@ trait CoreDriver extends TTSc {
       StopDStep
   }
 
+  override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] =
+    Nil
+
 }
 
 trait CoreResiduator extends BaseResiduator with CoreDriver {
