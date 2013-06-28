@@ -1,6 +1,6 @@
 package superspec.tt
 
-trait PairAST extends CoreAST {
+trait ProductAST extends CoreAST {
   // pair data
   case class Pair(A: CTerm, B: CTerm, a: CTerm, b: CTerm) extends CTerm
   // type of pair
@@ -15,7 +15,7 @@ trait PairAST extends CoreAST {
   case class NSnd(A: Value, B: Value, p: Neutral) extends Neutral
 }
 
-trait PairPrinter extends CorePrinter with PairAST {
+trait ProductPrinter extends CorePrinter with ProductAST {
   override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
     case Product(a, b) =>
       iPrint(p, ii, Free(Global("Product")) @@ a @@ b)
@@ -35,7 +35,7 @@ trait PairPrinter extends CorePrinter with PairAST {
   }
 }
 
-trait PairEval extends CoreEval with PairAST {
+trait ProductEval extends CoreEval with ProductAST {
   override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
     case Pair(a, b, x, y) =>
       VPair(eval(a, named, bound), eval(b, named, bound), eval(x, named, bound), eval(y, named, bound))
@@ -65,7 +65,7 @@ trait PairEval extends CoreEval with PairAST {
   }
 }
 
-trait PairCheck extends CoreCheck with PairAST {
+trait ProductCheck extends CoreCheck with ProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
     case Product(a, b) =>
       assert(cType(i, named, bound, a, VStar).isRight)
@@ -128,7 +128,7 @@ trait PairCheck extends CoreCheck with PairAST {
 
 }
 
-trait PairQuote extends CoreQuote with PairAST {
+trait ProductQuote extends CoreQuote with ProductAST {
   override def quote(ii: Int, v: Value): CTerm = v match {
     case VProduct(a, b) => Inf(Product(quote(ii, a), quote(ii, b)))
     case VPair(a, b, x, y) => Pair(quote(ii, a), quote(ii, b), quote(ii, x), quote(ii, y))
@@ -144,7 +144,7 @@ trait PairQuote extends CoreQuote with PairAST {
   }
 }
 
-trait PairREPL extends CoreREPL with PairAST with PairPrinter with PairCheck with PairEval with PairQuote {
+trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with ProductCheck with ProductEval with ProductQuote {
   lazy val productTE: NameEnv[Value] =
     List(
       Global("Product") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),

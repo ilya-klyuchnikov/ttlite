@@ -8,7 +8,7 @@ object NatREPLMain extends NatREPL {
   override def initialState = State(interactive = true, natVE, natTE, Set())
 }
 
-object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with PairREPL with SumREPL {
+object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
   val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ productTE ++ sumTE
   val ve = natVE ++ eqVE ++ vectorVE ++ finVE ++ listVE ++ productVE ++ sumVE
   override def initialState = State(interactive = true, ve, te, Set())
