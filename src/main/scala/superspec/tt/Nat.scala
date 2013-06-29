@@ -167,41 +167,28 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatResiduator extends BaseResiduator with NatDriver {
-  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
           TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
           Nil =>
-        //println("===")
-        //println("conf=" + int.icprint(node.conf))
-        //println("raw type=" + tp)
-        //println("type=" + quote0(tp))
-        //println("type=" + int.icprint(quote0(tp)))
-        //println("nEnv=" + nEnv)
         val motive =
-          VLam(n => eval(quote0(tp), sel -> n :: nEnv, bEnv))
+          VLam(n => eval(quote0(tp), sel -> n :: nEnv, Nil))
         val zType =
-          eval(quote0(tp), sel -> VZero :: nEnv, bEnv)
-
+          eval(quote0(tp), sel -> VZero :: nEnv, Nil)
         val zCase =
-          fold(g, nodeZ, nEnv, bEnv, dRed, tps, zType)
-
-        val sType = eval(quote0(tp), sel -> VSucc(vfree(fresh)) :: nEnv, bEnv)
+          fold(g, nodeZ, nEnv, dRed, tps, zType)
+        val sType = eval(quote0(tp), sel -> VSucc(vfree(fresh)) :: nEnv, Nil)
         val sCase =
           VLam {n => VLam {rec =>
-            fold(g, nodeS, fresh -> n :: nEnv, bEnv, dRed + (node.conf.ct -> rec), tps, sType)
+            fold(g, nodeS, fresh -> n :: nEnv, dRed + (node.conf.ct -> rec), tps, sType)
           }}
-
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel, nEnv).get
       case TEdge(n1, SuccLabel) :: Nil =>
-        //println("===")
-        //println("conf=" + int.icprint(node.conf))
-        //println("type=" + quote0(tp))
-        //println("type=" + int.icprint(quote0(tp)))
-        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, bEnv, dRed, tps, tp)
+        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, dRed, tps, tp)
       case _ =>
-        super.fold(g, node, nEnv, bEnv, dRed, tps, tp)
+        super.fold(g, node, nEnv, dRed, tps, tp)
     }
 }
 

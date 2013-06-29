@@ -118,25 +118,18 @@ trait TTSc extends CoreSubst {
 
 trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreREPL {
 
-  def residuate(g: TGraph[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, tps: NameEnv[Value], tp: Value): Value = {
-    fold(g, g.root, nEnv, bEnv, Map(), tps, tp)
+  def residuate(g: TGraph[Conf, Label], nEnv: NameEnv[Value], tps: NameEnv[Value], tp: Value): Value = {
+    fold(g, g.root, nEnv, Map(), tps, tp)
   }
 
-  /// context!!!!!
-  /// tp - current type of expression
-  def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], bEnv: Env, dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value = {
-    //println("===")
-    //println("conf=" + int.icprint(node.conf))
-    //println("raw type=" + tp)
-    //println("type=" + quote0(tp))
-    //println("type=" + int.icprint(quote0(tp)))
+  def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value = {
     node.base match {
       case Some(tPath) =>
         dRed(g.get(tPath).conf.ct)
       case None =>
         node.outs match {
           case Nil =>
-            eval(node.conf.ct, nEnv, bEnv)
+            eval(node.conf.ct, nEnv, Nil)
           case outs =>
             sys.error(s"Residualization of non-trivial constructions should be implemented in subclasses. Edges: $outs")
         }
@@ -179,7 +172,7 @@ object TTScREPL
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))
-            val resVal = residuate(tGraph, state.ne, List(), state.ctx, tp)
+            val resVal = residuate(tGraph, state.ne, state.ctx, tp)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
 
