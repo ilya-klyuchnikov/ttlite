@@ -1,7 +1,7 @@
 package superspec.tt
 
 object CoreREPLMain extends CoreREPL {
-  override def initialState = State(true, Nil, Nil, Set())
+  override def initialState = State(true, emptyNEnv, emptyNEnv, Set())
 }
 
 object NatREPLMain extends NatREPL {

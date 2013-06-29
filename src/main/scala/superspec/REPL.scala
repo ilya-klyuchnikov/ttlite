@@ -124,7 +124,7 @@ trait REPL extends Common {
         Console.println(helpTxt(commands))
         state
       case Browse =>
-        state.ne.map(_._1).distinct.reverse.foreach{case Global(n) => Console.println(n)}
+        state.ne.keys.foreach{case Global(n) => Console.println(n)}
         state
       case TypeOf(x) =>
         int.parseIO(int.iParse, x) match {
@@ -162,7 +162,7 @@ trait REPL extends Common {
           } else {
             Console.println(s"$s :: ${int.itprint(tp)};")
           }
-          State(state.interactive, (Global(s), v) :: state.ne, (Global(s), tp) :: state.ctx, state.modules)
+          State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
       }
     }
     stmt match {

@@ -6,7 +6,7 @@ import superspec.tt._
 class SyntaxSpec extends FunSpec {
 
   val coreRepl = new CoreREPL with CoreSubst {
-    def initialState: State = State(interactive = false, Nil, Nil, Set())
+    def initialState: State = State(interactive = false, emptyNEnv, emptyNEnv, Set())
 
     def parseTerm(s: String) =
       Inf(int.parseIO(int.iParse, s).get)

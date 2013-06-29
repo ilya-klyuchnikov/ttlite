@@ -146,7 +146,7 @@ trait ProductQuote extends CoreQuote with ProductAST {
 
 trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with ProductCheck with ProductEval with ProductQuote {
   lazy val productTE: NameEnv[Value] =
-    List(
+    Map(
       Global("Product") -> VPi(VStar, _ => VPi(VStar, _ => VStar)),
       Global("Pair") -> VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VProduct(a, b))))),
       Global("fst") -> VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => a))),
@@ -154,10 +154,10 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
     )
 
   val productVE: NameEnv[Value] =
-    List(
+    Map(
       Global("Product") -> VLam(a => VLam(b => VProduct(a, b))),
       Global("Pair") -> VLam(a => VLam(b => VLam(x => VLam(y => VPair(a, b, x, y))) )),
-      Global("fst") -> eval(Lam(Lam(Lam( Inf(Fst(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil),
-      Global("snd") -> eval(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))), Nil, Nil)
+      Global("fst") -> eval0(Lam(Lam(Lam( Inf(Fst(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) )))),
+      Global("snd") -> eval0(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))))
     )
 }

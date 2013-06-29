@@ -107,7 +107,7 @@ trait FinQuote extends CoreQuote with FinAST {
 
 trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
   lazy val finTE: NameEnv[Value] =
-    List(
+    Map(
       Global("FZero") -> FZeroType,
       Global("FSucc") -> FSuccType,
       Global("Fin") -> FinType,
@@ -137,7 +137,7 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
   lazy val finElimType = int.ieval(finVE ++ natVE, int.parseIO(int.iParse, finElimTypeIn).get)
 
   val finVE: NameEnv[Value] =
-    List(
+    Map(
       Global("FZero") -> VLam(n => VFZero(n)),
       Global("FSucc") -> VLam(n => VLam(f => VFSucc(n, f))),
       Global("Fin") -> VLam(n => VFin(n)),
@@ -146,6 +146,6 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
           Lam(Lam(Lam(Lam(Lam(
             Inf(FinElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
           ))))),
-          List(),List())
+          emptyNEnv, List())
     )
 }

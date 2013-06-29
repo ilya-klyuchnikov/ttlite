@@ -167,28 +167,28 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatResiduator extends BaseResiduator with NatDriver {
-  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TG, node: N, env: NameEnv[Value], recM: Map[CTerm, Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
           TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
           Nil =>
         val motive =
-          VLam(n => eval(quote0(tp), sel -> n :: nEnv, Nil))
+          VLam(n => eval(quote0(tp), env + (sel -> n), Nil))
         val zType =
-          eval(quote0(tp), sel -> VZero :: nEnv, Nil)
+          eval(quote0(tp), env + (sel -> VZero), Nil)
         val zCase =
-          fold(g, nodeZ, nEnv, dRed, tps, zType)
-        val sType = eval(quote0(tp), sel -> VSucc(vfree(fresh)) :: nEnv, Nil)
+          fold(g, nodeZ, env, recM, zType)
+        val sType = eval(quote0(tp), env + (sel -> VSucc(vfree(fresh))), Nil)
         val sCase =
           VLam {n => VLam {rec =>
-            fold(g, nodeS, fresh -> n :: nEnv, dRed + (node.conf.ct -> rec), tps, sType)
+            fold(g, nodeS, env + (fresh -> n), recM + (node.conf.ct -> rec), sType)
           }}
-        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ lookup(sel, nEnv).get
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
-        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, nEnv, dRed, tps, tp)
+        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, env, recM, tp)
       case _ =>
-        super.fold(g, node, nEnv, dRed, tps, tp)
+        super.fold(g, node, env, recM, tp)
     }
 }
 
@@ -258,7 +258,7 @@ trait NatQuote extends CoreQuote with NatAST {
 
 trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with NatEval with NatQuote {
   lazy val natTE: NameEnv[Value] =
-    List(
+    Map(
       Global("Zero") -> VNat,
       Global("Succ") -> VPi(VNat, _ => VNat),
       Global("Nat") -> VStar,
@@ -274,7 +274,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
     """.stripMargin
   lazy val natElimType = int.ieval(natVE, int.parseIO(int.iParse, natElimTypeIn).get)
   val natVE: NameEnv[Value] =
-    List(
+    Map(
       Global("Zero") -> VZero,
       Global("Succ") -> VLam(n => VSucc(n)),
       Global("Nat") -> VNat,
@@ -283,7 +283,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
           Lam(Lam(Lam(Lam(
             Inf(NatElim(Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
           )))),
-          Nil, Nil)
+          emptyNEnv, Nil)
     )
 
   def toNat1(n: Int): CTerm =

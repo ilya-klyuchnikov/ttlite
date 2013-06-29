@@ -1,13 +1,13 @@
 package superspec.tt
 
 trait CoreEval extends CoreAST {
-  def eval0(c: ITerm): Value = eval(c, Nil, Nil)
-  def eval0(c: CTerm): Value = eval(c, Nil, Nil)
+  def eval0(c: ITerm): Value = eval(c, emptyNEnv, Nil)
+  def eval0(c: CTerm): Value = eval(c, emptyNEnv, Nil)
   def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
     case Ann(e, _) => eval(e, named, bound)
     case Star => VStar
     case Pi(ty, ty1) => VPi(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
-    case Free(x) => lookup(x, named).getOrElse(vfree(x))
+    case Free(x) => named.getOrElse(x, vfree(x))
     case Bound(ii) =>
       if (ii < bound.length) bound(ii) else vfree(Quote(ii)) // hack
     case e1 :@: e2 => vapp(eval(e1, named, bound), eval(e2, named, bound))

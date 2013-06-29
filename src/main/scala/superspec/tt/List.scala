@@ -172,45 +172,41 @@ trait ListDriver extends CoreDriver with ListAST {
 
 }
 
-
 trait ListResiduator extends BaseResiduator with ListDriver {
-  override def fold(g: TGraph[Conf, Label], node: TNode[Conf, Label], nEnv: NameEnv[Value], dRed: Map[CTerm, Value], tps: NameEnv[Value], tp: Value): Value =
+  override def fold(g: TG, node: N, env: NameEnv[Value], recM: Map[CTerm, Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
           TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Inf(Free(hN)), Inf(Free(tN))), _))) ::
           Nil =>
-
         val motive =
-          VLam(n => eval(quote0(tp), sel -> n :: nEnv, Nil))
-
-
-        val aType = eval(a, nEnv, Nil)
+          VLam(n => eval(quote0(tp), env + (sel -> n), Nil))
+        val aType = eval(a, env, Nil)
         val nilType =
-          eval(quote0(tp), sel -> VPiNil(aType) :: nEnv, Nil)
+          eval(quote0(tp), env + (sel -> VPiNil(aType)), Nil)
         val nilCase =
-          fold(g, nodeZ, nEnv, dRed, tps, nilType)
-
-        val consType = eval(quote0(tp), sel -> VPiCons(aType, vfree(hN), vfree(tN)) :: nEnv, Nil)
-
+          fold(g, nodeZ, env, recM, nilType)
+        val consType = eval(quote0(tp), env + (sel -> VPiCons(aType, vfree(hN), vfree(tN))), Nil)
         val consCase =
           VLam {h => VLam {t => VLam {rec =>
-            fold(g, nodeS, hN -> h :: tN -> t :: nEnv, dRed + (node.conf.ct -> rec), tps, consType)
+            fold(g, nodeS, env + (hN -> h) + (tN -> t), recM + (node.conf.ct -> rec), consType)
           }}}
-
-        VNeutral(NFree(Global("listElim"))) @@ aType @@ motive @@ nilCase @@ consCase @@ lookup(sel, nEnv).get
-
+        VNeutral(NFree(Global("listElim"))) @@
+          aType @@
+          motive @@
+          nilCase @@
+          consCase @@
+          env(sel)
       case TEdge(n1, NilLabel) :: Nil =>
-        VNeutral(NFree(Global("Nil"))) @@ fold(g, n1, nEnv, dRed, tps, tp)
-
+        VNeutral(NFree(Global("Nil"))) @@ fold(g, n1, env, recM, tp)
       case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(aType) = tp
         VNeutral(NFree(Global("Cons"))) @@
-          fold(g, a, nEnv, dRed, tps, VStar) @@
-          fold(g, h, nEnv, dRed, tps, aType) @@
-          fold(g, t, nEnv, dRed, tps, tp)
+          fold(g, a, env, recM, VStar) @@
+          fold(g, h, env, recM, aType) @@
+          fold(g, t, env, recM, tp)
       case _ =>
-        super.fold(g, node, nEnv, dRed, tps, tp)
+        super.fold(g, node, env, recM, tp)
     }
 }
 
@@ -290,7 +286,7 @@ trait ListQuote extends CoreQuote with ListAST {
 
 trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck with ListEval with ListQuote {
   lazy val listTE: NameEnv[Value] =
-    List(
+    Map(
       Global("List") -> ListType,
       Global("listElim") -> listElimType,
       Global("Nil") -> NilType,
@@ -319,14 +315,14 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
   lazy val ConsType = int.ieval(listVE, int.parseIO(int.iParse, ConsTypeIn).get)
 
   val listVE: NameEnv[Value] =
-    List(
+    Map(
       Global("List") -> VLam(a => VPiList(a)),
       Global("listElim") ->
         eval(
           Lam(Lam(Lam(Lam(Lam(
             Inf(PiListElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))
             )))))),
-          List(),List()),
+          emptyNEnv, List()),
       Global("Nil") -> VLam(a => VPiNil(a)),
       Global("Cons") -> VLam(a => VLam(x => VLam(y => VPiCons(a, x, y))))
     )

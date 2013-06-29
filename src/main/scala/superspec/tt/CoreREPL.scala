@@ -28,12 +28,13 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
       pretty(cPrint(0, 0, c))
     def itprint(t: Value): String =
       pretty(cPrint(0, 0, quote0(t)))
+    // todo: raise arity
     def assume(state: State, x: (String, CTerm)): State = {
       itype(state.ne, state.ctx, Ann(x._2, Inf(Star))) match {
         case Right(_) =>
           val v = ieval(state.ne, Ann(x._2, Inf(Star)))
           println(v)
-          state.copy(ctx = (Global(x._1), v) :: state.ctx)
+          state.copy(ctx = state.ctx + (Global(x._1) -> v))
         case Left(_) =>
           state
       }

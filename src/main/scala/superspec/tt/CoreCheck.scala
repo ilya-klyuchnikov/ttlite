@@ -17,11 +17,11 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       cType(i, named, bound, tyt, VStar).right.flatMap { _ =>
         val ty = eval(tyt, named, Nil)
         for {
-          _ <- cType(i + 1, named, (Local(i), ty) :: bound, cSubst(0, Free(Local(i)), tyt1), VStar).right
+          _ <- cType(i + 1, named,  bound + (Local(i) -> ty), cSubst(0, Free(Local(i)), tyt1), VStar).right
         } yield VStar
       }
     case Free(x) =>
-      lookup(x, bound) match {
+      bound.get(x) match {
         case Some(ty) => Right(ty)
         case None => Left(s"unknown id: $x")
       }
@@ -48,7 +48,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
           Left(s"type mismatch. inferred: ${pretty(cPrint(0, 0, quote0(ty1)))}. expected: ${pretty(cPrint(0, 0, quote0(t)))}. for expression ${pretty(iPrint(0, 0, e))}")
       )
     case (Lam(e), VPi(ty, ty1)) =>
-      cType(ii + 1, named, (Local(ii), ty) :: bound , cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
+      cType(ii + 1, named,  bound + (Local(ii) -> ty) , cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
     case _ => Left(s"type mismatch: $ct")
   }
   def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

@@ -79,7 +79,7 @@ trait CoreSubst extends CoreEval with CoreQuote {
 
 
   def applySubst(t: CTerm, subst: Subst): CTerm = {
-    val env: NameEnv[Value] = subst.toList.map {case (n, t) => (n, eval(t, Nil, Nil))}
+    val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}
     quote0(eval(t, env, Nil))
   }
 

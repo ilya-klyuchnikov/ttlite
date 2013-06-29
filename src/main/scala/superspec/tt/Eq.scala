@@ -163,7 +163,7 @@ trait EqQuote extends CoreQuote with EqAST {
 
 trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval with EqQuote {
   lazy val eqTE: NameEnv[Value] =
-    List(
+    Map(
       Global("Refl") -> ReflType,
       Global("Eq") -> EqType,
       Global("eqElim") -> eqElimType
@@ -189,7 +189,7 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
   lazy val eqElimType = int.ieval(eqVE, int.parseIO(int.iParse, eqElimTypeIn).get)
 
   val eqVE: NameEnv[Value] =
-    List(
+    Map(
       Global("Refl") -> VLam({a => VLam({x => VRefl(a, x)})}),
       Global("Eq") -> VLam(a => VLam(x => VLam(y =>VEq(a, x, y)))),
       Global("eqElim") ->
@@ -197,6 +197,6 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
           Lam(Lam(Lam(Lam(Lam(Lam(
             Inf(EqElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
           )))))),
-          Nil,Nil)
+          emptyNEnv, Nil)
     )
 }

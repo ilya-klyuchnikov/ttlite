@@ -9,7 +9,7 @@ trait Common extends PrettyPrinter {
   case class Quote(i: Int) extends Name
 
   type Result[A] = Either[String, A]
-  type NameEnv[V] = List[(Name, V)]
+  type NameEnv[V] = Map[Name, V]
 
   trait Stmt[+I, +TInf]
   case class Let[I](n: String, i: I) extends Stmt[I, Nothing]
@@ -21,10 +21,6 @@ trait Common extends PrettyPrinter {
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
   val vars = for {j <- suffs; i <- ids} yield s"$i$j"
-
-  // utility
-  def lookup[A, B](k: A, kvs: List[(A, B)]): Option[B] =
-    kvs.find(_._1 == k).map(_._2)
 
   def parensIf(b: Boolean, d: Doc) =
     if (b) parens(d) else d
