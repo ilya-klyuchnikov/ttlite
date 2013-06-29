@@ -94,22 +94,22 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (VecNil(a), VVec(bVal, VZero)) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
     case (VecCons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      cType(ii, named, bound, n, VNat)
+      cType(i, named, bound, n, VNat)
       val nVal = eval(n, named, List())
       assert(quote0(nVal) == quote0(k), "type mismatch")
-      cType(ii, named, bound, head, aVal)
-      cType(ii, named, bound, tail, VVec(bVal, k))
+      cType(i, named, bound, head, aVal)
+      cType(i, named, bound, tail, VVec(bVal, k))
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

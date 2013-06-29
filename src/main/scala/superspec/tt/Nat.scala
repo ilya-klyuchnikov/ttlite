@@ -167,7 +167,7 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatResiduator extends BaseResiduator with NatDriver {
-  override def fold(g: TG, node: N, env: NameEnv[Value], recM: Map[CTerm, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
@@ -178,17 +178,17 @@ trait NatResiduator extends BaseResiduator with NatDriver {
         val zType =
           eval(quote0(tp), env + (sel -> VZero), Nil)
         val zCase =
-          fold(g, nodeZ, env, recM, zType)
+          fold(nodeZ, env, recM, zType)
         val sType = eval(quote0(tp), env + (sel -> VSucc(vfree(fresh))), Nil)
         val sCase =
           VLam {n => VLam {rec =>
-            fold(g, nodeS, env + (fresh -> n), recM + (node.conf.ct -> rec), sType)
+            fold(nodeS, env + (fresh -> n), recM + (node.tPath -> rec), sType)
           }}
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
-        VNeutral(NFree(Global("Succ"))) @@ fold(g, n1, env, recM, tp)
+        VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, recM, tp)
       case _ =>
-        super.fold(g, node, env, recM, tp)
+        super.fold(node, env, recM, tp)
     }
 }
 
@@ -208,12 +208,12 @@ trait NatCheck extends CoreCheck with NatAST {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Zero, VNat) =>
     case (Succ(k), VNat) =>
-      cType(ii, named, bound, k, VNat)
+      cType(i, named, bound, k, VNat)
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

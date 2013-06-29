@@ -111,16 +111,16 @@ trait EqCheck extends CoreCheck with EqAST {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Refl(a, z), VEq(bVal, xVal, yVal)) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, Nil)
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      cType(ii, named, bound, z, aVal)
+      cType(i, named, bound, z, aVal)
       val zVal = eval(z, named, Nil)
       assert(quote0(zVal) == quote0(xVal) && quote0(zVal) == quote0(yVal))
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

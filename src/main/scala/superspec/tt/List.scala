@@ -173,7 +173,7 @@ trait ListDriver extends CoreDriver with ListAST {
 }
 
 trait ListResiduator extends BaseResiduator with ListDriver {
-  override def fold(g: TG, node: N, env: NameEnv[Value], recM: Map[CTerm, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
@@ -185,11 +185,11 @@ trait ListResiduator extends BaseResiduator with ListDriver {
         val nilType =
           eval(quote0(tp), env + (sel -> VPiNil(aType)), Nil)
         val nilCase =
-          fold(g, nodeZ, env, recM, nilType)
+          fold(nodeZ, env, recM, nilType)
         val consType = eval(quote0(tp), env + (sel -> VPiCons(aType, vfree(hN), vfree(tN))), Nil)
         val consCase =
           VLam {h => VLam {t => VLam {rec =>
-            fold(g, nodeS, env + (hN -> h) + (tN -> t), recM + (node.conf.ct -> rec), consType)
+            fold(nodeS, env + (hN -> h) + (tN -> t), recM + (node.tPath -> rec), consType)
           }}}
         VNeutral(NFree(Global("listElim"))) @@
           aType @@
@@ -198,15 +198,15 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           consCase @@
           env(sel)
       case TEdge(n1, NilLabel) :: Nil =>
-        VNeutral(NFree(Global("Nil"))) @@ fold(g, n1, env, recM, tp)
+        VNeutral(NFree(Global("Nil"))) @@ fold(n1, env, recM, tp)
       case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(aType) = tp
         VNeutral(NFree(Global("Cons"))) @@
-          fold(g, a, env, recM, VStar) @@
-          fold(g, h, env, recM, aType) @@
-          fold(g, t, env, recM, tp)
+          fold(a, env, recM, VStar) @@
+          fold(h, env, recM, aType) @@
+          fold(t, env, recM, tp)
       case _ =>
-        super.fold(g, node, env, recM, tp)
+        super.fold(node, env, recM, tp)
     }
 }
 
@@ -231,19 +231,19 @@ trait ListCheck extends CoreCheck with ListAST with ListEval {
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (PiNil(a), VPiList(bVal)) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
     case (PiCons(a, head, tail), VPiList(bVal)) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      cType(ii, named, bound, head, aVal)
-      cType(ii, named, bound, tail, VPiList(bVal))
+      cType(i, named, bound, head, aVal)
+      cType(i, named, bound, tail, VPiList(bVal))
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

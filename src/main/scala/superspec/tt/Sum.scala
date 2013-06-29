@@ -103,21 +103,21 @@ trait SumCheck extends CoreCheck with SumAST {
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (InL(lt, rt, l), VSum(ltVal, rtVal)) =>
-      cType(ii, named, bound, lt, VStar)
-      cType(ii, named, bound, rt, VStar)
+      cType(i, named, bound, lt, VStar)
+      cType(i, named, bound, rt, VStar)
       assert(quote0(eval(lt, named, List())) == quote0(ltVal), "type mismatch")
       assert (quote0(eval(rt, named, List())) == quote0(rtVal), "type mismatch")
-      cType(ii, named, bound, l, ltVal)
+      cType(i, named, bound, l, ltVal)
     case (InR(lt, rt, r), VSum(ltVal, rtVal)) =>
-      cType(ii, named, bound, lt, VStar)
-      cType(ii, named, bound, rt, VStar)
+      cType(i, named, bound, lt, VStar)
+      cType(i, named, bound, rt, VStar)
       assert(quote0(eval(lt, named, List())) == quote0(ltVal), "type mismatch")
       assert(quote0(eval(rt, named, List())) == quote0(rtVal), "type mismatch")
-      cType(ii, named, bound, r, rtVal)
+      cType(i, named, bound, r, rtVal)
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {

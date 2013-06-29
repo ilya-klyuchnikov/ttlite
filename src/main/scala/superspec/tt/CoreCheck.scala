@@ -35,13 +35,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   // checks that ct has type t
   // if not, it throws exception
-  def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value):Unit = (ct, t) match {
+  def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value):Unit = (ct, t) match {
     case (Inf(e), _) =>
-      val ty1 = iType(ii, named, bound, e)
-      if (quote0(ty1) != quote0(t))
-        sys.error(s"type mismatch. inferred: ${pretty(cPrint(0, 0, quote0(ty1)))}. expected: ${pretty(cPrint(0, 0, quote0(t)))}. for expression ${pretty(iPrint(0, 0, e))}")
+      val ty1 = iType(i, named, bound, e)
+      assert(quote0(ty1) == quote0(t), "type mismatch")
     case (Lam(e), VPi(ty, ty1)) =>
-      cType(ii + 1, named,  bound + (Local(ii) -> ty) , cSubst(0, Free(Local(ii)), e), ty1(vfree(Local(ii))))
+      cType(i + 1, named,  bound + (Local(i) -> ty) , cSubst(0, Free(Local(i)), e), ty1(vfree(Local(i))))
     case _ =>
       sys.error(s"type mismatch: $ct")
   }

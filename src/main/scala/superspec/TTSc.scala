@@ -120,13 +120,13 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
   def residuate(g: TG, nEnv: NameEnv[Value], tp: Value): Value = {
-    fold(g, g.root, nEnv, Map(), tp)
+    fold(g.root, nEnv, Map(), tp)
   }
 
-  def fold(g: TG, node: N, env: NameEnv[Value], recM: Map[CTerm, Value], tp: Value): Value = {
+  def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value = {
     node.base match {
       case Some(tPath) =>
-        recM(g.get(tPath).conf.ct)
+        recM(tPath)
       case None =>
         node.outs match {
           case Nil =>

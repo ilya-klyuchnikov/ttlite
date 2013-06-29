@@ -90,16 +90,16 @@ trait ProductCheck extends CoreCheck with ProductAST {
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
+  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Pair(a, b, x, y), VProduct(aVal, bVal)) =>
-      cType(ii, named, bound, a, VStar)
+      cType(i, named, bound, a, VStar)
       assert(quote0(eval(a, named, List())) == quote0(aVal), "type mismatch")
-      cType(ii, named, bound, b, VStar)
+      cType(i, named, bound, b, VStar)
       assert (quote0(eval(b, named, List())) == quote0(bVal), "type mismatch")
-      cType(ii, named, bound, x, aVal)
-      cType(ii, named, bound, y, bVal)
+      cType(i, named, bound, x, aVal)
+      cType(i, named, bound, y, bVal)
     case _ =>
-      super.cType(ii, named, bound, ct, t)
+      super.cType(i, named, bound, ct, t)
   }
 
   override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
