@@ -66,45 +66,38 @@ trait ProductEval extends CoreEval with ProductAST {
 }
 
 trait ProductCheck extends CoreCheck with ProductAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case Product(a, b) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
-      assert(cType(i, named, bound, b, VStar).isRight)
-      Right(VStar)
+      cType(i, named, bound, a, VStar)
+      cType(i, named, bound, b, VStar)
+      VStar
     case Fst(a, b, p) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-
-      assert(cType(i, named, bound, b, VStar).isRight)
+      cType(i, named, bound, b, VStar)
       val bVal = eval(b, named, List())
-
-      assert(cType(i, named, bound, p, VProduct(aVal, bVal)).isRight)
-      Right((aVal))
+      cType(i, named, bound, p, VProduct(aVal, bVal))
+      aVal
     case Snd(a, b, p) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-
-      assert(cType(i, named, bound, b, VStar).isRight)
+      cType(i, named, bound, b, VStar)
       val bVal = eval(b, named, List())
-
-      assert(cType(i, named, bound, p, VProduct(aVal, bVal)).isRight)
-      Right((bVal))
+      cType(i, named, bound, p, VProduct(aVal, bVal))
+      bVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Pair(a, b, x, y), VProduct(aVal, bVal)) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
-      if (quote0(eval(a, named, List())) != quote0(aVal))
-        return Left("type mismatch")
-      assert(cType(ii, named, bound, b, VStar).isRight)
-      if (quote0(eval(b, named, List())) != quote0(bVal))
-        return Left("type mismatch")
-      assert(cType(ii, named, bound, x, aVal).isRight)
-      assert(cType(ii, named, bound, y, bVal).isRight)
-      Right(())
+      cType(ii, named, bound, a, VStar)
+      assert(quote0(eval(a, named, List())) == quote0(aVal), "type mismatch")
+      cType(ii, named, bound, b, VStar)
+      assert (quote0(eval(b, named, List())) == quote0(bVal), "type mismatch")
+      cType(ii, named, bound, x, aVal)
+      cType(ii, named, bound, y, bVal)
     case _ =>
       super.cType(ii, named, bound, ct, t)
   }

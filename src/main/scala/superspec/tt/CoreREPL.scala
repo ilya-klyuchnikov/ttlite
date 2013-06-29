@@ -17,7 +17,11 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     val prompt: String = "TT> "
 
     def itype(ne: NameEnv[Value], ctx: NameEnv[Value], i: ITerm): Result[Value] =
-      iType0(ne, ctx, i)
+    try {
+      Right(iType0(ne, ctx, i))
+    } catch {
+      case e: Throwable => Left(e.getMessage)
+    }
     def iquote(v: Value): CTerm =
       quote0(v)
     def ieval(ne: NameEnv[Value], i: ITerm): Value =

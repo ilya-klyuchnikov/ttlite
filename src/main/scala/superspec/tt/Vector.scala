@@ -65,55 +65,49 @@ trait VectorEval extends CoreEval with VectorAST {
 }
 
 trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case Vec(a, n) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
-      assert(cType(i, named, bound, n, VNat).isRight)
-      Right(VStar)
+      cType(i, named, bound, a, VStar)
+      cType(i, named, bound, n, VNat)
+      VStar
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      assert(cType(i, named, bound, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})})).isRight)
+      cType(i, named, bound, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
 
       val mVal = eval(m, named, List())
-      assert(cType(i, named, bound, nilCase, mVal @@ VZero @@ VVecNil(aVal)).isRight)
+      cType(i, named, bound, nilCase, mVal @@ VZero @@ VVecNil(aVal))
 
-      assert(cType(i, named, bound, consCase, VPi(VNat, {n =>
+      cType(i, named, bound, consCase, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
               mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)
-            })
-          })
-        })
-      })
-      ).isRight)
+            })})})}))
 
-      assert(cType(i, named, bound, n, VNat).isRight)
+      cType(i, named, bound, n, VNat)
       val nVal = eval(n, named, List())
-      assert(cType(i, named, bound, vec, VVec(aVal, nVal)).isRight)
+      cType(i, named, bound, vec, VVec(aVal, nVal))
       val vecVal = eval(vec, named, List())
-      Right(mVal @@ nVal @@ vecVal)
+      mVal @@ nVal @@ vecVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (VecNil(a), VVec(bVal, VZero)) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
+      cType(ii, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      Right()
+      assert(quote0(aVal) == quote0(bVal), "type mismatch")
     case (VecCons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
+      cType(ii, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      assert(cType(ii, named, bound, n, VNat).isRight)
+      assert(quote0(aVal) == quote0(bVal), "type mismatch")
+      cType(ii, named, bound, n, VNat)
       val nVal = eval(n, named, List())
-      if (quote0(nVal) != quote0(k)) return Left("type mismatch")
-      assert(cType(ii, named, bound, head, aVal).isRight)
-      assert(cType(ii, named, bound, tail, VVec(bVal, k)).isRight)
-      Right()
+      assert(quote0(nVal) == quote0(k), "type mismatch")
+      cType(ii, named, bound, head, aVal)
+      cType(ii, named, bound, tail, VVec(bVal, k))
     case _ =>
       super.cType(ii, named, bound, ct, t)
   }

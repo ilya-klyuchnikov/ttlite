@@ -86,45 +86,39 @@ trait EqEval extends CoreEval with EqAST {
 }
 
 trait EqCheck extends CoreCheck with EqAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case Eq(a, x, y) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, Nil)
-      assert(cType(i, named, bound, x, aVal).isRight)
-      assert(cType(i, named, bound, x, aVal).isRight)
-      Right(VStar)
+      cType(i, named, bound, x, aVal)
+      cType(i, named, bound, x, aVal)
+      VStar
     case EqElim(a, prop, propR, x, y, eq) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
-
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, Nil)
-      assert(cType(i, named, bound, x, aVal).isRight)
-
-      assert(cType(i, named, bound, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})})).isRight)
+      cType(i, named, bound, x, aVal)
+      cType(i, named, bound, prop, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})}))
       val propVal = eval(prop, named, Nil)
-
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
-      assert(cType(i, named, bound, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)})).isRight)
-
+      cType(i, named, bound, propR, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
       val xVal = eval(x, named, Nil)
-      assert(cType(i, named, bound, y, aVal).isRight)
+      cType(i, named, bound, y, aVal)
       val yVal = eval(y, named, Nil)
-      assert(cType(i, named, bound, eq, VEq(aVal, xVal, yVal)).isRight)
-
-      Right(vapp(vapp(propVal, xVal), yVal))
+      cType(i, named, bound, eq, VEq(aVal, xVal, yVal))
+      vapp(vapp(propVal, xVal), yVal)
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Refl(a, z), VEq(bVal, xVal, yVal)) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
+      cType(ii, named, bound, a, VStar)
       val aVal = eval(a, named, Nil)
       assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      assert(cType(ii, named, bound, z, aVal).isRight)
+      cType(ii, named, bound, z, aVal)
       val zVal = eval(z, named, Nil)
       assert(quote0(zVal) == quote0(xVal) && quote0(zVal) == quote0(yVal))
-      Right()
     case _ =>
       super.cType(ii, named, bound, ct, t)
   }

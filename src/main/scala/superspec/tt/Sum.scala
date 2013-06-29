@@ -77,56 +77,45 @@ trait SumEval extends CoreEval with SumAST {
 trait SumCheck extends CoreCheck with SumAST {
   // I have an assumption, that there is not need of this
   // It will be done automatically
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case Sum(a, b) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
-      assert(cType(i, named, bound, b, VStar).isRight)
-      Right(VStar)
+      cType(i, named, bound, a, VStar)
+      cType(i, named, bound, b, VStar)
+      VStar
     case SumElim(lt, rt, m, lc, rc, sum) =>
       // checking types
-      assert(cType(i, named, bound, lt, VStar).isRight)
-      assert(cType(i, named, bound, rt, VStar).isRight)
-
+      cType(i, named, bound, lt, VStar)
+      cType(i, named, bound, rt, VStar)
       val ltVal = eval(lt, named, List())
       val rtVal = eval(rt, named, List())
-
       // checking motive
-      assert(cType(i, named, bound, m, VPi(VSum(ltVal, rtVal), {_ => VStar})).isRight)
+      cType(i, named, bound, m, VPi(VSum(ltVal, rtVal), {_ => VStar}))
       val mVal = eval(m, named, List())
-
       // checking branches
-      assert(cType(i, named, bound, lc, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)})).isRight)
-      assert(cType(i, named, bound, rc, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)})).isRight)
-
+      cType(i, named, bound, lc, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
+      cType(i, named, bound, rc, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)}))
       // checking sum
-      assert(cType(i, named, bound, sum, VSum(ltVal, rtVal)).isRight)
+      cType(i, named, bound, sum, VSum(ltVal, rtVal))
       val sumVal = eval(sum, named, List())
-
-      Right(mVal @@ sumVal)
+      mVal @@ sumVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (InL(lt, rt, l), VSum(ltVal, rtVal)) =>
-      assert(cType(ii, named, bound, lt, VStar).isRight)
-      assert(cType(ii, named, bound, rt, VStar).isRight)
-      if (quote0(eval(lt, named, List())) != quote0(ltVal))
-        return Left("type mismatch")
-      if (quote0(eval(rt, named, List())) != quote0(rtVal))
-        return Left("type mismatch")
-      assert(cType(ii, named, bound, l, ltVal).isRight)
-      Right(())
+      cType(ii, named, bound, lt, VStar)
+      cType(ii, named, bound, rt, VStar)
+      assert(quote0(eval(lt, named, List())) == quote0(ltVal), "type mismatch")
+      assert (quote0(eval(rt, named, List())) == quote0(rtVal), "type mismatch")
+      cType(ii, named, bound, l, ltVal)
     case (InR(lt, rt, r), VSum(ltVal, rtVal)) =>
-      assert(cType(ii, named, bound, lt, VStar).isRight)
-      assert(cType(ii, named, bound, rt, VStar).isRight)
-      if (quote0(eval(lt, named, List())) != quote0(ltVal))
-        return Left("type mismatch")
-      if (quote0(eval(rt, named, List())) != quote0(rtVal))
-        return Left("type mismatch")
-      assert(cType(ii, named, bound, r, rtVal).isRight)
-      Right(())
+      cType(ii, named, bound, lt, VStar)
+      cType(ii, named, bound, rt, VStar)
+      assert(quote0(eval(lt, named, List())) == quote0(ltVal), "type mismatch")
+      assert(quote0(eval(rt, named, List())) == quote0(rtVal), "type mismatch")
+      cType(ii, named, bound, r, rtVal)
     case _ =>
       super.cType(ii, named, bound, ct, t)
   }

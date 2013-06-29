@@ -211,42 +211,37 @@ trait ListResiduator extends BaseResiduator with ListDriver {
 }
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case PiList(a) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
-      Right(VStar)
+      cType(i, named, bound, a, VStar)
+      VStar
     case PiListElim(a, m, nilCase, consCase, xs) =>
-      assert(cType(i, named, bound, a, VStar).isRight)
+      cType(i, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      assert(cType(i, named, bound, m, VPi(VPiList(aVal), {_ => VStar})).isRight)
-
+      cType(i, named, bound, m, VPi(VPiList(aVal), {_ => VStar}))
       val mVal = eval(m, named, List())
-      assert(cType(i, named, bound, nilCase, mVal @@ VPiNil(aVal)).isRight)
-
-      assert(cType(i, named, bound, consCase,
+      cType(i, named, bound, nilCase, mVal @@ VPiNil(aVal))
+      cType(i, named, bound, consCase,
         VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(aVal, y, ys) }) }) })
-      ).isRight)
-
-      assert(cType(i, named, bound, xs, VPiList(aVal)).isRight)
+      )
+      cType(i, named, bound, xs, VPiList(aVal))
       val vecVal = eval(xs, named, List())
-      Right(mVal @@ vecVal)
+      mVal @@ vecVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (PiNil(a), VPiList(bVal)) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
+      cType(ii, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      Right()
+      assert(quote0(aVal) == quote0(bVal), "type mismatch")
     case (PiCons(a, head, tail), VPiList(bVal)) =>
-      assert(cType(ii, named, bound, a, VStar).isRight)
+      cType(ii, named, bound, a, VStar)
       val aVal = eval(a, named, List())
-      if (quote0(aVal) != quote0(bVal)) return Left("type mismatch")
-      assert(cType(ii, named, bound, head, aVal).isRight)
-      assert(cType(ii, named, bound, tail, VPiList(bVal)).isRight)
-      Right()
+      assert(quote0(aVal) == quote0(bVal), "type mismatch")
+      cType(ii, named, bound, head, aVal)
+      cType(ii, named, bound, tail, VPiList(bVal))
     case _ =>
       super.cType(ii, named, bound, ct, t)
   }

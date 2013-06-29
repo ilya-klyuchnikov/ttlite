@@ -193,30 +193,23 @@ trait NatResiduator extends BaseResiduator with NatDriver {
 }
 
 trait NatCheck extends CoreCheck with NatAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Result[Value] = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
     case Nat =>
-      Right(VStar)
+      VStar
     case NatElim(m, mz, ms, n) =>
-      val z = for {
-        _ <- cType(i, named, bound, m, VPi(VNat, x => VStar)).right.toOption
-        mVal = eval(m, named, Nil)
-        _ <- cType(i, named, bound, mz, vapp(mVal, VZero)).right.toOption
-        _ <- cType(i, named, bound, ms, VPi(VNat, k => VPi(vapp(mVal, k), x => vapp(mVal, VSucc(k))))).right.toOption
-        _ <- cType(i, named, bound, n, VNat).right.toOption
-        nVal = eval(n, named, Nil)
-      } yield
-        vapp(mVal, nVal)
-      z match {
-        case Some(e) => Right(e)
-        case None => Left("")
-      }
+      cType(i, named, bound, m, VPi(VNat, x => VStar))
+      val mVal = eval(m, named, Nil)
+      cType(i, named, bound, mz, vapp(mVal, VZero))
+      cType(i, named, bound, ms, VPi(VNat, k => VPi(vapp(mVal, k), x => vapp(mVal, VSucc(k)))))
+      cType(i, named, bound, n, VNat)
+      val nVal = eval(n, named, Nil)
+      vapp(mVal, nVal)
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Result[Unit] = (ct, t) match {
+  override def cType(ii: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
     case (Zero, VNat) =>
-      Right(())
     case (Succ(k), VNat) =>
       cType(ii, named, bound, k, VNat)
     case _ =>
