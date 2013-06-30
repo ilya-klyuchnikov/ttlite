@@ -30,6 +30,7 @@ trait CoreAST extends Common {
   val emptyNEnv = Map[Name, Value]()
 
   def vfree(n: Name): Value = VNeutral(NFree(n))
+  @deprecated
   def vapp(x: Value, v: Value): Value = x match {
     case VLam(_, f) => f(v)
     case VNeutral(n) => VNeutral(NApp(n, v))

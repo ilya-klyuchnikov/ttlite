@@ -18,9 +18,9 @@ let boolId = id Bool;
 let False1 = boolId False;
 
 assume (n :: *);
-//-- zero element
+-- zero element
 assume (z :: n);
-//-- successor element
+-- successor element
 assume (s :: n -> n);
 let numeral = forall (A :: *) . (A -> A) -> (A -> A);
 let zero = (\ (f :: n -> n) (x :: n) -> x) :: (n -> n) -> (n -> n);
@@ -28,6 +28,6 @@ let zero1 = (\ (A :: *) (f :: A -> A) (x :: A) -> x) :: forall (A :: *). (A -> A
 let zero2 = (\ (A :: *) (f :: A -> A) (x :: A) -> x) :: numeral;
 zero1 Bool;
 
-let plus = (\ (m :: numeral) (n :: numeral) (A :: *) (f :: A -> A) (x :: A) -> m A f (n A f x)) :: numeral -> numeral -> numeral;
-
-
+let plus =
+    (\ (m :: numeral) (n :: numeral) (A :: *) (f :: A -> A) (x :: A) -> m A f (n A f x))
+        :: numeral -> numeral -> numeral;

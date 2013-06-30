@@ -24,4 +24,6 @@ trait Common extends PrettyPrinter {
 
   def parensIf(b: Boolean, d: Doc) =
     if (b) parens(d) else d
+
+  case class TypeError(msg: String) extends Exception(msg)
 }

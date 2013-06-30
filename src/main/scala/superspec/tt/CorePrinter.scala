@@ -1,6 +1,10 @@
 package superspec.tt
 
 trait CorePrinter extends CoreAST {
+
+  def pprint(c: Term): String =
+    pretty(print(0, 0, c))
+
   def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " :: " , nest(print(0, ii, ty))))))

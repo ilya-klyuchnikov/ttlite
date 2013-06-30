@@ -94,6 +94,81 @@ trait NatEval extends CoreEval with NatAST {
       super.eval(t, named, bound)
   }
 }
+/*
+trait NatDriver extends CoreDriver with NatAST {
+
+  // boilerplate/indirections
+  case object SuccLabel extends Label
+  case class SuccStep(next: CTerm) extends Step {
+    override val graphStep =
+      AddChildNodesStep[Conf, Label](List(DConf(next, Inf(Nat)) -> SuccLabel))
+  }
+  case class SuccDStep(next: CTerm) extends DriveStep {
+    override def step(t: Conf) = SuccStep(next)
+  }
+
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case natElim: NNatElim =>
+      natElim.n match {
+        case NFree(n) =>
+          val caseZ = ElimBranch(Zero, Map())
+          val n1 = freshName(Inf(Nat))
+          val v1 = Inf(Free(n1))
+          val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(n))))
+          ElimDStep(n, List(caseZ, caseS))
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
+  }
+
+  override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = typeMap(fv) match {
+    case Inf(Nat) =>
+      val caseZ = ElimBranch(Zero, Map())
+      val n1 = freshName(Inf(Nat))
+      val v1 = Inf(Free(n1))
+      val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(fv))))
+      List(ElimDStep(fv, List(caseZ, caseS)))
+    case _ =>
+      super.elimFreeVar(c, fv)
+  }
+
+  override def decompose(c: Conf): DriveStep = c.ct match {
+    case Succ(c1) =>
+      val Inf(Nat) = c.tp
+      SuccDStep(c1)
+    case _ =>
+      super.decompose(c)
+  }
+
+}
+
+trait NatResiduator extends BaseResiduator with NatDriver {
+  override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
+          Nil =>
+        val motive =
+          VLam(n => eval(quote0(tp), env + (sel -> n), Nil))
+        val zType =
+          eval(quote0(tp), env + (sel -> VZero), Nil)
+        val zCase =
+          fold(nodeZ, env, recM, zType)
+        val sType = eval(quote0(tp), env + (sel -> VSucc(vfree(fresh))), Nil)
+        val sCase =
+          VLam {n => VLam {rec =>
+            fold(nodeS, env + (fresh -> n), recM + (node.tPath -> rec), sType)
+          }}
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
+      case TEdge(n1, SuccLabel) :: Nil =>
+        VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, recM, tp)
+      case _ =>
+        super.fold(node, env, recM, tp)
+    }
+}*/
 
 trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
@@ -101,21 +176,21 @@ trait NatCheck extends CoreCheck with NatAST {
       VStar
     case NatElim(m, mz, ms, n) =>
       val mType = iType(i, named, bound, m)
-      assert(quote0(mType) == Pi(Nat, Star), "wrong types")
+      checkEqual(mType, Pi(Nat, Star))
       val mVal = eval(m, named, Nil)
       val mzType = iType(i, named, bound, mz)
-      assert(quote0(mzType) == quote0(vapp(mVal, VZero)), "wrong types")
+      checkEqual(mzType, mVal @@ VZero)
       val msType = iType(i, named, bound, ms)
-      assert(quote0(msType) == quote0(VPi(VNat, k => VPi(vapp(mVal, k), x => vapp(mVal, VSucc(k))))), "wrong types")
+      checkEqual(msType, VPi(VNat, k => VPi(mVal @@ k, x => mVal @@ VSucc(k))))
       val nType = iType(i, named, bound, n)
-      assert(quote0(nType) == Nat, "wrong types")
+      checkEqual(nType, Nat)
       val nVal = eval(n, named, Nil)
-      vapp(mVal, nVal)
+      mVal @@ nVal
     case Zero =>
       VNat
     case Succ(k) =>
       val kType = iType(i, named, bound, k)
-      assert(quote0(kType) == Nat, "wrong types")
+      checkEqual(kType, Nat)
       VNat
     case _ =>
       super.iType(i, named, bound, t)
