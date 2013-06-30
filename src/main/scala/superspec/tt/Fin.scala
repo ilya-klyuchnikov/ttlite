@@ -1,5 +1,5 @@
 package superspec.tt
-
+/*
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type
 // Fin 1 - unit type
@@ -149,3 +149,4 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
           emptyNEnv, List())
     )
 }
+*/

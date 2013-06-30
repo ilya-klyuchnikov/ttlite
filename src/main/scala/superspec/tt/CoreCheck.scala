@@ -1,22 +1,25 @@
 package superspec.tt
 
-// TODO: can we unify type-checking and evaluation -
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: ITerm): Value =
+  def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: Term): Value =
     iType(0, named, bound, i)
 
-  def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
+  def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Ann(e, tyt) =>
-      cType(i, named, bound, tyt, VStar)
+      val tytType = iType(i, named, bound, tyt)
+      assert(quote0(tytType) == Star, "wrong types")
       val ty = eval(tyt, named, Nil)
-      cType(i, named, bound, e, ty)
+      val eType = iType(i, named, bound, e)
+      assert(quote0(eType) == quote0(ty), "wrong types")
       ty
     case Star =>
       VStar
     case Pi(tyt, tyt1) =>
-      cType(i, named, bound, tyt, VStar)
+      val tytType = iType(i, named, bound, tyt)
+      assert(quote0(tytType) == Star, "wrong types")
       val ty = eval(tyt, named, Nil)
-      cType(i + 1, named,  bound + (Local(i) -> ty), cSubst(0, Free(Local(i)), tyt1), VStar)
+      val tyt1Type = iType(i + 1, named,  bound + (Local(i) -> ty), iSubst(0, Free(Local(i)), tyt1))
+      assert(quote0(tyt1Type) == Star, "wrong types")
       VStar
     case Free(x) =>
       bound.get(x) match {
@@ -26,34 +29,34 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     case (e1 :@: e2) =>
       iType(i, named, bound, e1) match {
         case VPi(ty, ty1) =>
-          cType(i, named, bound, e2, ty)
+          val e2Type = iType(i, named, bound, e2)
+          assert(quote0(ty) == quote0(e2Type), "wrong types")
           ty1(eval(e2, named, Nil))
         case _ =>
           sys.error(s"illegal application: $t")
       }
+    case Lam(t, e) =>
+      val tType = iType(i, named, bound, t)
+      val tt = quote0(tType)
+      assert(tt == Star, "wrong types")
+      val ty = eval(t, named, Nil)
+      VPi(ty, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> ty) , iSubst(0, Free(Local(i)), e)))
   }
 
-  // checks that ct has type t
-  // if not, it throws exception
-  def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value):Unit = (ct, t) match {
-    case (Inf(e), _) =>
-      val ty1 = iType(i, named, bound, e)
-      assert(quote0(ty1) == quote0(t), "type mismatch")
-    case (Lam(e), VPi(ty, ty1)) =>
-      cType(i + 1, named,  bound + (Local(i) -> ty) , cSubst(0, Free(Local(i)), e), ty1(vfree(Local(i))))
-    case _ =>
-      sys.error(s"type mismatch: $ct")
-  }
-  def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
-    case Ann(c, c1) => Ann(cSubst(i, r, c), cSubst(i, r, c1))
-    case Star => Star
-    case Pi(ty, ty1) => Pi(cSubst(i, r, ty), cSubst(i + 1, r, ty1))
-    case Bound(j) => if (i == j) r else Bound(j)
-    case Free(y) => Free(y)
-    case (e1 :@: e2) => iSubst(i, r, e1) @@ cSubst(i, r, e2)
-  }
-  def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
-    case Inf(e) => Inf(iSubst(ii, r, e))
-    case Lam(e) => Lam(cSubst(ii + 1, r, e))
+  def iSubst(i: Int, r: Term, it: Term): Term = it match {
+    case Ann(c, c1) =>
+      Ann(iSubst(i, r, c), iSubst(i, r, c1))
+    case Star =>
+      Star
+    case Lam(t, e) =>
+      Lam(iSubst(i, r, t), iSubst(i + 1, r, e))
+    case Pi(ty, ty1) =>
+      Pi(iSubst(i, r, ty), iSubst(i + 1, r, ty1))
+    case Bound(j) =>
+      if (i == j) r else Bound(j)
+    case Free(y) =>
+      Free(y)
+    case (e1 :@: e2) =>
+      iSubst(i, r, e1) @@ iSubst(i, r, e2)
   }
 }

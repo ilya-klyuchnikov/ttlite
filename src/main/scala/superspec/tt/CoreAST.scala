@@ -3,24 +3,21 @@ package superspec.tt
 import superspec._
 
 trait CoreAST extends Common {
-  trait CTerm
-  case class Inf(inf: ITerm) extends CTerm
-  case class Lam(t: CTerm) extends CTerm
-  // ITerm
-  trait ITerm {
-    def @@(t1: CTerm) = :@:(this, t1)
+  trait Term {
+    def @@(t1: Term) = :@:(this, t1)
   }
-  case class Ann(c1: CTerm, ct2: CTerm) extends ITerm
-  case object Star extends ITerm
-  case class Pi(c1: CTerm, c2: CTerm) extends ITerm
-  case class Bound(i: Int) extends ITerm
-  case class Free(n: Name) extends ITerm
-  case class :@:(it: ITerm, ct: CTerm) extends ITerm
+  case class Lam(t: Term, e: Term) extends Term
+  case class Ann(c1: Term, ct2: Term) extends Term
+  case object Star extends Term
+  case class Pi(c1: Term, c2: Term) extends Term
+  case class Bound(i: Int) extends Term
+  case class Free(n: Name) extends Term
+  case class :@:(h: Term, t: Term) extends Term
   // Value
   trait Value {
     def @@(x: Value): Value = vapp(this, x)
   }
-  case class VLam(l: Value => Value) extends Value
+  case class VLam(t: Value, e: Value => Value) extends Value
   case object VStar extends Value
   case class VPi(t: Value, e: Value => Value) extends Value
   case class VNeutral(n: Neutral) extends Value
@@ -34,7 +31,7 @@ trait CoreAST extends Common {
 
   def vfree(n: Name): Value = VNeutral(NFree(n))
   def vapp(x: Value, v: Value): Value = x match {
-    case VLam(f) => f(v)
+    case VLam(_, f) => f(v)
     case VNeutral(n) => VNeutral(NApp(n, v))
   }
 
@@ -45,6 +42,5 @@ trait CoreAST extends Common {
       p.productIterator.flatMap(freeLocals).toSet
     case _ => Set()
   }
-
 
 }

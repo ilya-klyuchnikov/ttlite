@@ -2,7 +2,7 @@ package superspec.tt
 
 import mrsc.core._
 import superspec._
-
+/*
 trait CoreDriver extends TTSc {
 
   var v = 100
@@ -72,3 +72,4 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
         super.fold(node, env, recM, tp)
     }
 }
+*/

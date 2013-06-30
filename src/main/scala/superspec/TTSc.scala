@@ -2,7 +2,7 @@ package superspec
 
 import mrsc.core._
 import superspec.tt._
-
+/*
 // TODO
 trait Rebuilder extends CoreSubst
 
@@ -198,3 +198,4 @@ object TTScREPL
     val maxDepth = 10
   }
 }
+*/

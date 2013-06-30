@@ -1,5 +1,5 @@
 package superspec.tt
-
+/*
 trait VectorAST extends CoreAST {
   case class VecNil(A: CTerm) extends CTerm
   case class VecCons(A: CTerm, n: CTerm, head: CTerm, tail: CTerm) extends CTerm
@@ -188,4 +188,4 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
       Global("VNil") -> VLam(a => VVecNil(a)),
       Global("VCons") -> VLam(a => VLam(n => VLam(x => VLam(y => VVecCons(a, n, x, y)))))
     )
-}
+}*/

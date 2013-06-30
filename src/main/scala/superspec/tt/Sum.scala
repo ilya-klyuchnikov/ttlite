@@ -1,5 +1,5 @@
 package superspec.tt
-
+/*
 trait SumAST extends CoreAST {
   // left injection
   case class InL(L: CTerm, R: CTerm, l: CTerm) extends CTerm
@@ -188,3 +188,4 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
     )
 
 }
+*/

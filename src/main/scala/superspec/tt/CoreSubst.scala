@@ -1,27 +1,23 @@
 package superspec.tt
 
 trait CoreSubst extends CoreEval with CoreQuote {
-  type Subst = Map[Name, CTerm]
+  type Subst = Map[Name, Term]
 
-  def findRenaming(from: CTerm, to: CTerm): Option[Subst] =
+  def findRenaming(from: Term, to: Term): Option[Subst] =
     for (s <- findSubst(from, to) if findSubst(to, from).isDefined) yield  s
 
-  def findSubst(from: CTerm, to: CTerm): Option[Subst] =
+  def findSubst(from: Term, to: Term): Option[Subst] =
     for (sub <- findSubst0(from, to))
-    yield sub.filter { case (k, v) => v != Inf(Free(k)) }
+    yield sub.filter { case (k, v) => v != Free(k) }
 
-  def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
-    case (Lam(f), Lam(t)) =>
-      findSubst0(f, t)
-    case (Inf(Free(n@Local(_))), _) =>
+  def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
+    case (Lam(t1, e1), Lam(t2, e2)) =>
+      mergeOptSubst(
+        findSubst0(t1, t2),
+        findSubst0(e1, e2)
+      )
+    case (Free(n@Local(_)), _) =>
       if (isFreeSubTerm(to, 0)) Some(Map(n -> to)) else None
-    case (Inf(from1), Inf(to1)) =>
-      findSubst0(from1, to1)
-    case _ =>
-      None
-  }
-
-  def findSubst0(from: ITerm, to: ITerm): Option[Subst] = (from, to) match {
     case (Free(Global(n)), Free(Global(m))) =>
       if (n == m) Some(Map()) else None
     case (Free(Global(n)), _) =>
@@ -31,7 +27,7 @@ trait CoreSubst extends CoreEval with CoreQuote {
     case (f@Free(Quote(_)), _) =>
       sys.error("Hey, I do note expect quoted variables here!")
     case (Free(n@Local(_)), _) =>
-      if (isFreeSubTerm(to, 0)) Some(Map(n -> Inf(to))) else None
+      if (isFreeSubTerm(to, 0)) Some(Map(n -> to)) else None
     case (Ann(e1, t1), Ann(e2, t2)) =>
       val s1 = findSubst0(e1, e2)
       val s2 = findSubst0(t1, t2)
@@ -78,19 +74,14 @@ trait CoreSubst extends CoreEval with CoreQuote {
   }
 
 
-  def applySubst(t: CTerm, subst: Subst): CTerm = {
+  def applySubst(t: Term, subst: Subst): Term = {
     val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}
     quote0(eval(t, env, Nil))
   }
 
-  def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
-    case Inf(i) =>
-      isFreeSubTerm(i, depth)
-    case Lam(c) =>
-      isFreeSubTerm(c, depth + 1)
-  }
-
-  def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
+  def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
+    case Lam(t, e) =>
+      isFreeSubTerm(t, depth) && isFreeSubTerm(e, depth + 1)
     case Ann(c1, c2) =>
       isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
     case Star =>
@@ -104,4 +95,5 @@ trait CoreSubst extends CoreEval with CoreQuote {
     case (c1 :@: c2) =>
       isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
   }
+
 }

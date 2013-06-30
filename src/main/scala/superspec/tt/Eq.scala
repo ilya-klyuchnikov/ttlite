@@ -1,5 +1,6 @@
 package superspec.tt
 
+/*
 trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
   case class Refl(A: CTerm, x: CTerm) extends CTerm
@@ -194,3 +195,4 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
           emptyNEnv, Nil)
     )
 }
+*/

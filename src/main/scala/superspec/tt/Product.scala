@@ -1,5 +1,5 @@
 package superspec.tt
-
+/*
 trait ProductAST extends CoreAST {
   // pair data
   case class Pair(A: CTerm, B: CTerm, a: CTerm, b: CTerm) extends CTerm
@@ -154,3 +154,4 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
       Global("snd") -> eval0(Lam(Lam(Lam( Inf(Snd(Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))) ))))
     )
 }
+*/

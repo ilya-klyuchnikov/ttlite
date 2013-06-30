@@ -2,7 +2,7 @@ package superspec
 
 import mrsc.core._
 import superspec.tt.CoreREPL
-
+/*
 trait GraphPrettyPrinter extends CoreREPL with TTSc {
 
   def tgToString(tg: TGraph[Conf, Label]): String = {
@@ -36,4 +36,5 @@ trait GraphPrettyPrinter extends CoreREPL with TTSc {
   }
 
 }
+*/
 

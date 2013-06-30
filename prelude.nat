@@ -1,41 +1,42 @@
-let id    = (\ a x -> x) :: forall (a :: *) . a -> a;
-let const = (\ a b x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+let id  = (\ (a :: *) (x :: a) -> x )
+    :: forall (a :: *) . a -> a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
 
 // addition of natural numbers
 let plus =
   natElim
-    ( \ _ -> Nat -> Nat )           // motive
-    ( \ n -> n )                    // case for Zero
-    ( \ p rec n -> Succ (rec n) );   // case for Succ
+    ( \ (_ :: Nat) -> Nat -> Nat )           // motive
+    ( \ (n :: Nat) -> n )                    // case for Zero
+    ( \ (p :: Nat) (rec :: Nat -> Nat) (n :: Nat) -> Succ (rec n) );   // case for Succ
 
 // predecessor, mapping 0 to 0
 let pred =
   natElim
-    ( \ _ -> Nat )
+    ( \ (_ :: Nat) -> Nat )
     Zero
-    ( \ n1 _rec -> n1 );
+    ( \ (n1 :: Nat) (rec :: Nat) -> n1 );
 
 // a simpler elimination scheme for natural numbers
 let natFold =
-  ( \ m mz ms -> natElim
-                   ( \ _ -> m )
+  ( \ (m :: *) (mz :: m) (ms :: m -> m) ->
+            natElim
+                   ( \ (_ :: Nat) -> m )
                    mz
-                   ( \ n1 rec -> ms rec ) )
+                   ( \ (n1 :: Nat) (rec :: m) -> ms rec ) )
   :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
 
+-- special case for 1
 let nat1Elim =
-  ( \ m m0 m1 ms -> natElim m m0
-                            (\ p rec -> natElim (\ n -> m (Succ n)) m1 ms p) )
+  ( \ (m :: Nat -> *)
+      (m0 :: m 0)
+      (m1 :: m 1)
+      (ms :: forall (a :: Nat) . (m (Succ a)) -> m (Succ (Succ a))) ->
+        natElim
+            m
+            m0
+            (\ (p :: Nat) (rec :: m p) -> natElim (\ (n :: Nat) -> m (Succ n)) m1 ms p) )
   :: forall (m :: Nat -> *) . m 0 -> m 1 ->
      (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
      forall (n :: Nat) . m n;
-
-let nat2Elim =
-  ( \ m m0 m1 m2 ms -> nat1Elim m m0 m1
-                                (\ p rec -> natElim (\ n -> m (Succ (Succ n))) m2 ms p) )
-  :: forall (m :: Nat -> *) . m 0 -> m 1 -> m 2 ->
-     (forall n :: Nat . m (Succ (Succ n)) -> m (Succ (Succ (Succ n)))) ->
-     forall (n :: Nat) . m n;
-// increment by one
-let inc = natFold Nat (Succ Zero) Succ;
-

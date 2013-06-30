@@ -2,7 +2,7 @@ package superspec.tt
 
 import mrsc.core._
 import superspec._
-
+/*
 trait ListAST extends CoreAST {
   case class PiNil(A: CTerm) extends CTerm
   case class PiCons(A: CTerm, head: CTerm, tail: CTerm) extends CTerm
@@ -322,3 +322,4 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
       Global("Cons") -> VLam(a => VLam(x => VLam(y => VPiCons(a, x, y))))
     )
 }
+*/
