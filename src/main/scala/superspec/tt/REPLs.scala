@@ -25,6 +25,11 @@ object ListREPLMain extends ListREPL {
     State(interactive = true, listVE, listTE, Set())
 }
 
+object EqREPLMain extends EqREPL {
+  override def initialState =
+    State(interactive = true, eqVE, eqTE, Set())
+}
+
 /*
 object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
   val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ productTE ++ sumTE
