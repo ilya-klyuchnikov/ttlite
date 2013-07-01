@@ -1,0 +1,21 @@
+let th1 = forall (A :: *) (B :: *) . Product A B -> Product B A;
+let pr1 = (\ (A :: *) (B :: *) (p :: Product A B) -> Pair B A (snd A B p) (fst A B p)) :: th1;
+
+-- Exercise 4.1
+-- (A /\ B) /\ C => A /\ (B /\ C)
+let th2 =
+    forall (A :: *) (B :: *) (C :: *) .
+        Product (Product A B) C -> Product A (Product B C);
+
+-- p1 = fst (Product A B) C p
+-- a = fst A B p1 = fst A B (fst (Product A B) C p)
+-- b = snd A B p1 = snd A B (fst (Product A B) C p)
+-- c = snd (Product A B) C p
+-- (b, c) = Pair B C b c = Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p)
+-- (a, (b, c)) = Pair A (Product B C) a (b, c) =
+--   =  Pair A (Product B C) (fst A B (fst (Product A B) C p)) (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))
+let pr2 =
+    (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C)->
+        Pair A (Product B C)
+            (fst A B (fst (Product A B) C p))
+            (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;

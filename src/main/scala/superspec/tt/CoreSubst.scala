@@ -26,8 +26,6 @@ trait CoreSubst extends CoreEval with CoreQuote {
       if (i == j) Some(Map()) else None
     case (f@Free(Quote(_)), _) =>
       sys.error("Hey, I do note expect quoted variables here!")
-    case (Free(n@Local(_)), _) =>
-      if (isFreeSubTerm(to, 0)) Some(Map(n -> to)) else None
     case (Ann(e1, t1), Ann(e2, t2)) =>
       val s1 = findSubst0(e1, e2)
       val s2 = findSubst0(t1, t2)

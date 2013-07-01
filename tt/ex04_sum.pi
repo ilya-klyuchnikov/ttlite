@@ -1,0 +1,5 @@
+let thSum01 =
+    forall (A :: *) (B :: *). Sum A B -> Sum B A;
+let proofSum01 =
+    (\ (A :: *) (B :: *) (s :: Sum A B) -> cases A B (\ (_ :: Sum A B) -> Sum B A) (InR B A) (InL B A) s)
+        :: thSum01;

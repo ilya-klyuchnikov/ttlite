@@ -21,7 +21,7 @@ trait CorePrinter extends CoreAST {
     case Free(Local(i)) =>
       s"<$i>"
     case i :@: c =>
-      parensIf(p > 2, (sep(Seq(print(2, ii, i), nest(print(3, ii, c))))))
+      parensIf(p > 2, sep(Seq(print(2, ii, i), nest(print(3, ii, c)))))
     case Lam(t, c) =>
       parensIf(p > 0,  "\\ " <> parens(vars(ii) <> " :: " <> print(0, ii, t)) <> " -> " <> nest(print(0, ii + 1, c)))
     case _ =>
