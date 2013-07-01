@@ -13,18 +13,21 @@ let leibniz =
 
 -- symmetry of (general) equality
 let symm =
-  ( \ a -> eqElim a
-             (\ x y eq_x_y -> Eq a y x)
-             (\ x -> Refl a x) )
+  ( \ (a :: *) -> eqElim a
+             (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq a y x)
+             (\ (x :: a) -> Refl a x) )
   :: forall (a :: *) (x :: a) (y :: a) .
      Eq a x y -> Eq a y x;
 
 -- transitivity of (general) equality
 let tran =
-  ( \ a x y z eq_x_y -> eqElim a
-                          (\ x y eq_x_y -> forall (z :: a) . Eq a y z -> Eq a x z)
-                          (\ x z eq_x_z -> eq_x_z)
-                          x y eq_x_y z )
+  ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) . Eq a y z -> Eq a x z)
+            (\ (x :: a) (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
+             x
+             y
+             eq_x_y z )
   :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
 
@@ -32,5 +35,5 @@ let tran =
 -- input: proof that two types A and P are equal
 -- output is a function from A to B (it is constructed in a trivial way (as id))
 let apply =
-  eqElim * (\ a b eq_a_b -> a -> b) id
+  eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
   :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
