@@ -2,23 +2,23 @@ package superspec.tt
 
 import mrsc.core._
 import superspec._
-/*
-trait ListAST extends CoreAST {
-  case class PiNil(A: CTerm) extends CTerm
-  case class PiCons(A: CTerm, head: CTerm, tail: CTerm) extends CTerm
 
-  case class PiList(A: CTerm) extends ITerm
-  case class PiListElim(A: CTerm, motive: CTerm, nilCase: CTerm, consCase: CTerm, l: CTerm) extends ITerm
+trait ListAST extends CoreAST {
+  case class PiList(A: Term) extends Term
+  case class PiNil(A: Term) extends Term
+  case class PiCons(A: Term, head: Term, tail: Term) extends Term
+  case class PiListElim(A: Term, motive: Term, nilCase: Term, consCase: Term, l: Term) extends Term
 
   case class VPiList(A: Value) extends Value
   case class VPiNil(A: Value) extends Value
   case class VPiCons(A: Value, head: Value, tail: Value) extends Value
-
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
 trait ListSubst extends CoreSubst with ListAST {
-  override def findSubst0(from: CTerm, to: CTerm): Option[Subst] = (from, to) match {
+  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
+    case (PiList(a1), PiList(a2)) =>
+      findSubst0(a1, a2)
     case (PiNil(a1), PiNil(a2)) =>
       findSubst0(a1, a2)
     case (PiCons(a1, h1, t1), PiCons(a2, h2, t2)) =>
@@ -27,13 +27,6 @@ trait ListSubst extends CoreSubst with ListAST {
         findSubst0(h1, h2),
         findSubst0(t1, t2)
       )
-    case _ =>
-      super.findSubst0(from, to)
-  }
-
-  override def findSubst0(from: ITerm, to: ITerm): Option[Subst] = (from, to) match {
-    case (PiList(a1), PiList(a2)) =>
-      findSubst0(a1, a2)
     case (PiListElim(a1, m1, nCase1, cCase1, xs1), PiListElim(a2, m2, nCase2, cCase2, xs2)) =>
       mergeOptSubst(
         findSubst0(a1, a2),
@@ -46,18 +39,13 @@ trait ListSubst extends CoreSubst with ListAST {
       super.findSubst0(from, to)
   }
 
-  override def isFreeSubTerm(t: CTerm, depth: Int): Boolean = t match {
+  override def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
+    case PiList(a) =>
+      isFreeSubTerm(a, depth)
     case PiNil(a) =>
       isFreeSubTerm(a, depth)
     case PiCons(a, h, t) =>
       isFreeSubTerm(a, depth) && isFreeSubTerm(h, depth) && isFreeSubTerm(t, depth)
-    case _ =>
-      super.isFreeSubTerm(t, depth)
-  }
-
-  override def isFreeSubTerm(t: ITerm, depth: Int): Boolean = t match {
-    case PiList(a) =>
-      isFreeSubTerm(a, depth)
     case PiListElim(a, m, nCase, cCase, xs) =>
       isFreeSubTerm(a, depth) && isFreeSubTerm(m, depth) &&
         isFreeSubTerm(nCase, depth) && isFreeSubTerm(cCase, depth) && isFreeSubTerm(xs, depth)
@@ -67,38 +55,28 @@ trait ListSubst extends CoreSubst with ListAST {
 }
 
 trait ListPrinter extends CorePrinter with ListAST {
-  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+  override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      iPrint(p, ii, Free(Global("List")) @@ a)
-    case PiListElim(a, m, mn, mc, xs) =>
-      iPrint(p, ii, Free(Global("listElim")) @@ a @@ m @@ mn @@ mc @@ xs)
-    case _ =>
-      super.iPrint(p, ii, t)
-  }
-
-  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+      print(p, ii, Free(Global("List")) @@ a)
     case PiNil(a) =>
-      iPrint(p, ii, Free(Global("Nil")) @@ a)
+      print(p, ii, Free(Global("Nil")) @@ a)
     case PiCons(a, x, xs) =>
-      iPrint(p, ii, Free(Global("VCons")) @@ a @@ x @@ xs)
+      print(p, ii, Free(Global("VCons")) @@ a @@ x @@ xs)
+    case PiListElim(a, m, mn, mc, xs) =>
+      print(p, ii, Free(Global("listElim")) @@ a @@ m @@ mn @@ mc @@ xs)
     case _ =>
-      super.cPrint(p, ii, t)
+      super.print(p, ii, t)
   }
 }
 
 trait ListEval extends CoreEval with ListAST {
-  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+    case PiList(a) =>
+      VPiList(eval(a, named, bound))
     case PiNil(a) =>
       VPiNil(eval(a, named, bound))
     case PiCons(a, head, tail) =>
       VPiCons(eval(a, named, bound), eval(head, named, bound), eval(tail, named, bound))
-    case _ =>
-      super.eval(t, named, bound)
-  }
-
-  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
-    case PiList(a) =>
-      VPiList(eval(a, named, bound))
     case PiListElim(a, m, nilCase, consCase, ls) =>
       val nilCaseVal = eval(nilCase, named, bound)
       val consCaseVal = eval(consCase, named, bound)
@@ -116,6 +94,7 @@ trait ListEval extends CoreEval with ListAST {
   }
 }
 
+/*
 trait ListDriver extends CoreDriver with ListAST {
 
   // boilerplate/indirections
@@ -209,72 +188,88 @@ trait ListResiduator extends BaseResiduator with ListDriver {
         super.fold(node, env, recM, tp)
     }
 }
+*/
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case PiList(a) =>
-      cType(i, named, bound, a, VStar)
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
       VStar
-    case PiListElim(a, m, nilCase, consCase, xs) =>
-      cType(i, named, bound, a, VStar)
+    case PiNil(a) =>
       val aVal = eval(a, named, List())
-      cType(i, named, bound, m, VPi(VPiList(aVal), {_ => VStar}))
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      VPiList(aVal)
+    case PiCons(a, head, tail) =>
+      val aVal = eval(a, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val hType = iType(i, named, bound, head)
+      checkEqual(hType, aVal)
+
+      val tType = iType(i, named, bound, tail)
+      checkEqual(tType, VPiList(aVal))
+
+      VPiList(aVal)
+    case PiListElim(a, m, nilCase, consCase, xs) =>
+      val aVal = eval(a, named, List())
       val mVal = eval(m, named, List())
-      cType(i, named, bound, nilCase, mVal @@ VPiNil(aVal))
-      cType(i, named, bound, consCase,
+      val xsVal = eval(xs, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val mType = iType(i, named, bound, m)
+      checkEqual(mType, VPi(VPiList(aVal), {_ => VStar}))
+
+      val nilCaseType = iType(i, named, bound, nilCase)
+      checkEqual(nilCaseType, mVal @@ VPiNil(aVal))
+
+      val consCaseType = iType(i, named, bound, consCase)
+      checkEqual(consCaseType,
         VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(aVal, y, ys) }) }) })
       )
-      cType(i, named, bound, xs, VPiList(aVal))
-      val vecVal = eval(xs, named, List())
-      mVal @@ vecVal
+
+      val xsType = iType(i, named, bound, xs)
+      checkEqual(xsType, VPiNil(aVal))
+
+      mVal @@ xsVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
-    case (PiNil(a), VPiList(bVal)) =>
-      cType(i, named, bound, a, VStar)
-      val aVal = eval(a, named, List())
-      assert(quote0(aVal) == quote0(bVal), "type mismatch")
-    case (PiCons(a, head, tail), VPiList(bVal)) =>
-      cType(i, named, bound, a, VStar)
-      val aVal = eval(a, named, List())
-      assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      cType(i, named, bound, head, aVal)
-      cType(i, named, bound, tail, VPiList(bVal))
-    case _ =>
-      super.cType(i, named, bound, ct, t)
-  }
-
-  override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
+  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case PiList(a) =>
-      PiList(cSubst(i, r, a))
-    case PiListElim(a, m, nilCase, consCase, xs) =>
-      PiListElim(cSubst(i, r, a), cSubst(i, r, m), cSubst(i, r, nilCase), cSubst(i, r, consCase), cSubst(i, r, xs))
-    case _ => super.iSubst(i, r, it)
-  }
-
-  override def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
+      PiList(iSubst(i, r, a))
     case PiNil(a) =>
-      PiNil(cSubst(ii, r, a))
+      PiNil(iSubst(i, r, a))
     case PiCons(a, head, tail) =>
-      PiCons(cSubst(ii, r, a), cSubst(ii, r, head), cSubst(ii, r, tail))
-    case _ =>
-      super.cSubst(ii, r, ct)
+      PiCons(iSubst(i, r, a), iSubst(i, r, head), iSubst(i, r, tail))
+    case PiListElim(a, m, nilCase, consCase, xs) =>
+      PiListElim(iSubst(i, r, a), iSubst(i, r, m), iSubst(i, r, nilCase), iSubst(i, r, consCase), iSubst(i, r, xs))
+    case _ => super.iSubst(i, r, it)
   }
 }
 
 trait ListQuote extends CoreQuote with ListAST {
-  override def quote(ii: Int, v: Value): CTerm = v match {
-    case VPiList(a) => Inf(PiList(quote(ii, a)))
-    case VPiNil(a) => PiNil(quote(ii, a))
-    case VPiCons(a, head, tail) => PiCons(quote(ii, a), quote(ii, head), quote(ii, tail))
+  override def quote(ii: Int, v: Value): Term = v match {
+    case VPiList(a) =>
+      PiList(quote(ii, a))
+    case VPiNil(a) =>
+      PiNil(quote(ii, a))
+    case VPiCons(a, head, tail) =>
+      PiCons(quote(ii, a), quote(ii, head), quote(ii, tail))
     case _ => super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
+  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NPiListElim(a, m, nilCase, consCase, vec) =>
-      PiListElim(quote(ii, a), quote(ii, m), quote(ii, nilCase), quote(ii, consCase), Inf(neutralQuote(ii, vec)))
+      PiListElim(quote(ii, a), quote(ii, m), quote(ii, nilCase), quote(ii, consCase), neutralQuote(ii, vec))
     case _ => super.neutralQuote(ii, n)
   }
 }
@@ -311,15 +306,17 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
 
   val listVE: NameEnv[Value] =
     Map(
-      Global("List") -> VLam(a => VPiList(a)),
+      Global("List") -> VLam(VStar, a => VPiList(a)),
+      Global("Nil") -> VLam(VStar, a => VPiNil(a)),
+      Global("Cons") -> VLam(VStar, a => VLam(a, x => VLam(VPiList(a), y => VPiCons(a, x, y)))),
       Global("listElim") ->
-        eval(
-          Lam(Lam(Lam(Lam(Lam(
-            Inf(PiListElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0)))
-            )))))),
-          emptyNEnv, List()),
-      Global("Nil") -> VLam(a => VPiNil(a)),
-      Global("Cons") -> VLam(a => VLam(x => VLam(y => VPiCons(a, x, y))))
+        VLam(VStar, a =>
+          VLam(VPi(VPiList(a), _ => VStar), m =>
+            VLam(m @@ VPiNil(a), nilCase =>
+              VLam(VPi(a, x => VPi(VPiList(a), xs => VPi(m @@ xs, _ => m @@ VPiCons(a, x, xs)))), consCase =>
+                VLam(VPiList(a), {n =>
+                  val VNeutral(xs) = n
+                  VNeutral(NPiListElim(a, m, nilCase, consCase, xs))
+                })))))
     )
 }
-*/

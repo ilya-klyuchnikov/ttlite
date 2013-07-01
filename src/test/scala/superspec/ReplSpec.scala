@@ -19,6 +19,11 @@ class ReplSpec extends org.scalatest.FunSpec {
   describe("Sum REPL should process `tt/ex04_sum.pi` without errors") {
     SumREPLMain.main(Array("tt/ex04_sum.pi"))
   }
+
+  describe("List REPL should process `tt/ex05_list.pi` without errors") {
+    ListREPLMain.main(Array("tt/ex05_list.pi"))
+  }
+
   /*
   describe("All REPL should process prelude.all and lists.pi without errors") {
     REPLMain.main(Array("prelude.all"))
