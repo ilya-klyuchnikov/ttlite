@@ -175,16 +175,21 @@ trait NatCheck extends CoreCheck with NatAST {
     case Nat =>
       VStar
     case NatElim(m, mz, ms, n) =>
+      val mVal = eval(m, named, Nil)
+      val nVal = eval(n, named, Nil)
+
       val mType = iType(i, named, bound, m)
       checkEqual(mType, Pi(Nat, Star))
-      val mVal = eval(m, named, Nil)
+
       val mzType = iType(i, named, bound, mz)
       checkEqual(mzType, mVal @@ VZero)
+
       val msType = iType(i, named, bound, ms)
       checkEqual(msType, VPi(VNat, k => VPi(mVal @@ k, x => mVal @@ VSucc(k))))
+
       val nType = iType(i, named, bound, n)
       checkEqual(nType, Nat)
-      val nVal = eval(n, named, Nil)
+
       mVal @@ nVal
     case Zero =>
       VNat

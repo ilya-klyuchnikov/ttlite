@@ -30,6 +30,12 @@ object EqREPLMain extends EqREPL {
     State(interactive = true, eqVE, eqTE, Set())
 }
 
+object VectorREPLMain extends VectorREPL {
+  override def initialState =
+    State(interactive = true, natVE ++ vectorVE, natTE ++ vectorTE, Set())
+}
+
+
 /*
 object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
   val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ productTE ++ sumTE

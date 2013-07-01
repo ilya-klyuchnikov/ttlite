@@ -1,52 +1,40 @@
 package superspec.tt
-/*
-trait VectorAST extends CoreAST {
-  case class VecNil(A: CTerm) extends CTerm
-  case class VecCons(A: CTerm, n: CTerm, head: CTerm, tail: CTerm) extends CTerm
 
-  case class Vec(A: CTerm, n: CTerm) extends ITerm
-  case class VecElim(A: CTerm, motive: CTerm, nilCase: CTerm, consCase: CTerm, n: CTerm, vec: CTerm) extends ITerm
+trait VectorAST extends CoreAST {
+  case class Vec(A: Term, n: Term) extends Term
+  case class VecNil(A: Term) extends Term
+  case class VecCons(A: Term, n: Term, head: Term, tail: Term) extends Term
+  case class VecElim(A: Term, motive: Term, nilCase: Term, consCase: Term, n: Term, vec: Term) extends Term
 
   case class VVec(A: Value, n: Value) extends Value
   case class VVecNil(A: Value) extends Value
   case class VVecCons(A: Value, n: Value, head: Value, tail: Value) extends Value
-
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
 trait VectorPrinter extends NatPrinter with VectorAST {
-  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+  override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      iPrint(p, ii, Free(Global("Vec")) @@ a @@ n)
-    case VecElim(a, m, mn, mc, n, xs) =>
-      iPrint(p, ii, Free(Global("veqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
-    case _ =>
-      super.iPrint(p, ii, t)
-  }
-
-  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+      print(p, ii, Free(Global("Vec")) @@ a @@ n)
     case VecNil(a) =>
-      iPrint(p, ii, Free(Global("VNil")) @@ a)
+      print(p, ii, Free(Global("VNil")) @@ a)
     case VecCons(a, n, x, xs) =>
-      iPrint(p, ii, Free(Global("VCons")) @@ a @@ n @@ x @@ xs)
+      print(p, ii, Free(Global("VCons")) @@ a @@ n @@ x @@ xs)
+    case VecElim(a, m, mn, mc, n, xs) =>
+      print(p, ii, Free(Global("veqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
     case _ =>
-      super.cPrint(p, ii, t)
+      super.print(p, ii, t)
   }
 }
 
 trait VectorEval extends CoreEval with VectorAST {
-  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+    case Vec(a, n) =>
+      VVec(eval(a, named, bound), eval(n, named, bound))
     case VecNil(a) =>
       VVecNil(eval(a, named, bound))
     case VecCons(a, n, head, tail) =>
       VVecCons(eval(a, named, bound), eval(n, named, bound), eval(head, named, bound), eval(tail, named, bound))
-    case _ =>
-      super.eval(t, named, bound)
-  }
-
-  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
-    case Vec(a, n) =>
-      VVec(eval(a, named, bound), eval(n, named, bound))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
       val nilCaseVal = eval(nilCase, named, bound)
       val consCaseVal = eval(consCase, named, bound)
@@ -65,83 +53,114 @@ trait VectorEval extends CoreEval with VectorAST {
 }
 
 trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: ITerm): Value = t match {
+  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Vec(a, n) =>
-      cType(i, named, bound, a, VStar)
-      cType(i, named, bound, n, VNat)
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, VStar)
+
+      val nType = iType(i, named, bound, n)
+      checkEqual(nType, VNat)
+
       VStar
-    case VecElim(a, m, nilCase, consCase, n, vec) =>
-      cType(i, named, bound, a, VStar)
+    case VecNil(a) =>
       val aVal = eval(a, named, List())
-      cType(i, named, bound, m, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
 
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, VStar)
+
+      VVec(aVal, VZero)
+    case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
+      val aVal = eval(a, named, List())
+      val nVal = eval(n, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, VStar)
+
+      val nType = iType(i, named, bound, n)
+      checkEqual(nType, VNat)
+
+      val hType = iType(i, named, bound, head)
+      checkEqual(hType, aVal)
+
+      val tType = iType(i, named, bound, tail)
+      checkEqual(tType, VVec(aVal, nVal))
+
+      VVec(aVal, VSucc(nVal))
+    case VecElim(a, m, nilCase, consCase, n, vec) =>
+      val aVal = eval(a, named, List())
       val mVal = eval(m, named, List())
-      cType(i, named, bound, nilCase, mVal @@ VZero @@ VVecNil(aVal))
+      val nVal = eval(n, named, List())
+      val vecVal = eval(vec, named, List())
 
-      cType(i, named, bound, consCase, VPi(VNat, {n =>
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, VStar)
+
+      val mType = iType(i, named, bound, m)
+      checkEqual(mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
+
+      val nilCaseType = iType(i, named, bound, nilCase)
+      checkEqual(nilCaseType, mVal @@ VZero @@ VVecNil(aVal))
+
+      val consCaseType = iType(i, named, bound, consCase)
+      checkEqual(consCaseType, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
               mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)
             })})})}))
 
-      cType(i, named, bound, n, VNat)
-      val nVal = eval(n, named, List())
-      cType(i, named, bound, vec, VVec(aVal, nVal))
-      val vecVal = eval(vec, named, List())
+      val nType = iType(i, named, bound, n)
+      checkEqual(nType, VNat)
+
+      val vecType = iType(i, named, bound, vec)
+      checkEqual(vecType, VVec(aVal, nVal))
+
       mVal @@ nVal @@ vecVal
     case _ =>
       super.iType(i, named, bound, t)
   }
 
-  override def cType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], ct: CTerm, t: Value): Unit = (ct, t) match {
-    case (VecNil(a), VVec(bVal, VZero)) =>
-      cType(i, named, bound, a, VStar)
-      val aVal = eval(a, named, List())
-      assert(quote0(aVal) == quote0(bVal), "type mismatch")
-    case (VecCons(a, n, head, tail), VVec(bVal, VSucc(k))) =>
-      cType(i, named, bound, a, VStar)
-      val aVal = eval(a, named, List())
-      assert(quote0(aVal) == quote0(bVal), "type mismatch")
-      cType(i, named, bound, n, VNat)
-      val nVal = eval(n, named, List())
-      assert(quote0(nVal) == quote0(k), "type mismatch")
-      cType(i, named, bound, head, aVal)
-      cType(i, named, bound, tail, VVec(bVal, k))
-    case _ =>
-      super.cType(i, named, bound, ct, t)
-  }
-
-  override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
+  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Vec(a, n) =>
-      Vec(cSubst(i, r, a), cSubst(i, r, n))
-    case VecElim(a, m, nilCase, consCase, n, vec) =>
-      VecElim(cSubst(i, r, a), cSubst(i, r, m), cSubst(i, r, nilCase), cSubst(i, r, consCase), cSubst(i, r, n), cSubst(i, r, vec))
-    case _ => super.iSubst(i, r, it)
-  }
-
-  override def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
+      Vec(iSubst(i, r, a), iSubst(i, r, n))
     case VecNil(a) =>
-      VecNil(cSubst(ii, r, a))
+      VecNil(iSubst(i, r, a))
     case VecCons(a, n, head, tail) =>
-      VecCons(cSubst(ii, r, a), cSubst(ii, r, n), cSubst(ii, r, head), cSubst(ii, r, tail))
+      VecCons(iSubst(i, r, a), iSubst(i, r, n), iSubst(i, r, head), iSubst(i, r, tail))
+    case VecElim(a, m, nc, cc, n, vec) =>
+      VecElim(
+        iSubst(i, r, a),
+        iSubst(i, r, m),
+        iSubst(i, r, nc),
+        iSubst(i, r, cc),
+        iSubst(i, r, n),
+        iSubst(i, r, vec)
+      )
     case _ =>
-      super.cSubst(ii, r, ct)
+      super.iSubst(i, r, it)
   }
-
 }
 
 trait VectorQuote extends CoreQuote with VectorAST {
-  override def quote(ii: Int, v: Value): CTerm = v match {
-    case VVec(a, n) => Inf(Vec(quote(ii, a), quote(ii, n)))
-    case VVecNil(a) => VecNil(quote(ii, a))
-    case VVecCons(a, n, head, tail) => VecCons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
+  override def quote(ii: Int, v: Value): Term = v match {
+    case VVec(a, n) =>
+      Vec(quote(ii, a), quote(ii, n))
+    case VVecNil(a) =>
+      VecNil(quote(ii, a))
+    case VVecCons(a, n, head, tail) =>
+      VecCons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
     case _ => super.quote(ii, v)
   }
-  override def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
+  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NVecElim(a, m, nilCase, consCase, n, vec) =>
-      VecElim(quote(ii, a), quote(ii, m), quote(ii, nilCase), quote(ii, consCase),
-        quote(ii, n), Inf(neutralQuote(ii, vec)))
+      VecElim(
+        quote(ii, a),
+        quote(ii, m),
+        quote(ii, nilCase),
+        quote(ii, consCase),
+        quote(ii, n),
+        neutralQuote(ii, vec)
+      )
     case _ => super.neutralQuote(ii, n)
   }
 }
@@ -179,13 +198,21 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
 
   val vectorVE: NameEnv[Value] =
     Map(
-      Global("Vec") -> VLam(a => VLam(n =>  VVec (a, n))),
+      Global("Vec") ->
+        VLam(VStar, a => VLam(VNat, n =>  VVec (a, n))),
+      Global("VNil") ->
+        VLam(VStar, a => VVecNil(a)),
+      Global("VCons") ->
+        VLam(VStar, a => VLam(VNat, n => VLam(a, x => VLam(VVec(a, n), y => VVecCons(a, n, x, y))))),
       Global("vecElim") ->
-        eval0(
-          Lam(Lam(Lam(Lam(Lam(Lam(
-            Inf(VecElim(Inf(Bound(5)), Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
-          ))))))),
-      Global("VNil") -> VLam(a => VVecNil(a)),
-      Global("VCons") -> VLam(a => VLam(n => VLam(x => VLam(y => VVecCons(a, n, x, y)))))
+        VLam(VStar, a =>
+          VLam(VPi(VNat, n => VPi(VVec(a, n), _ => VStar)), m =>
+            VLam(m @@ VZero @@ VVecNil(a), nilCase =>
+              VLam(null, consCase =>
+                VLam(VPi(VNat, a1 => VPi(a, b => VPi(VVec(a, a1), c => VPi(m @@ a1 @@ c, d => m @@ VSucc(a1) @@ VVecCons(a, a1, b, c))))), n =>
+                  VLam(VNat, n =>
+                    VLam(VVec(a, n), {case VNeutral(vec) =>
+                      VNeutral(NVecElim(a, m, nilCase, consCase, n, vec))
+                    })))))))
     )
-}*/
+}
