@@ -19,3 +19,12 @@ let pr2 =
         Pair A (Product B C)
             (fst A B (fst (Product A B) C p))
             (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
+
+assume (X :: *);
+assume (Y :: *);
+
+assume (x :: X);
+assume (y :: Y);
+
+let p = Pair X Y x y;
+let f = fst X Y p;

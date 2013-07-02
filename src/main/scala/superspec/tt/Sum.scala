@@ -64,46 +64,63 @@ trait SumCheck extends CoreCheck with SumAST {
     case Sum(a, b) =>
       val aType = iType(i, named, bound, a)
       checkEqual(aType, Star)
+
       val bType = iType(i, named, bound, b)
       checkEqual(bType, Star)
+
       VStar
     case InL(a, b, l) =>
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val bType = iType(i, named, bound, b)
+      checkEqual(bType, Star)
+
       val lType = iType(i, named, bound, l)
       checkEqual(lType, aVal)
+
       VSum(aVal, bVal)
     case InR(a, b, r) =>
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
-      val rType = iType(i, named, bound, r)
-      checkEqual(rType, bVal)
-      VSum(aVal, bVal)
-    case SumElim(a, b, m, lc, rc, sum) =>
+
       val aType = iType(i, named, bound, a)
       checkEqual(aType, Star)
+
       val bType = iType(i, named, bound, b)
       checkEqual(bType, Star)
+
+      val rType = iType(i, named, bound, r)
+      checkEqual(rType, bVal)
+
+      VSum(aVal, bVal)
+    case SumElim(a, b, m, lc, rc, sum) =>
+      val mVal = eval(m, named, List())
       val ltVal = eval(a, named, List())
       val rtVal = eval(b, named, List())
+      val sumVal = eval(sum, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val bType = iType(i, named, bound, b)
+      checkEqual(bType, Star)
+
       val mType = iType(i, named, bound, m)
       checkEqual(mType, VPi(VSum(ltVal, rtVal), {_ => VStar}))
-      val mVal = eval(m, named, List())
+
       val lcType = iType(i, named, bound, lc)
-      val rcType = iType(i, named, bound, lc)
-      val sumType = iType(i, named, bound, sum)
       checkEqual(lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
+
+      val rcType = iType(i, named, bound, lc)
       checkEqual(rcType, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)}))
+
+      val sumType = iType(i, named, bound, sum)
       checkEqual(sumType, VSum(ltVal, rtVal))
-      val sumVal = eval(sum, named, List())
+
       mVal @@ sumVal
     case _ =>
       super.iType(i, named, bound, t)
@@ -181,8 +198,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
               VLam(VPi(a, l => m @@ VInL(a, b, l)) , lc =>
                 VLam(VPi(b, r => m @@ VInR(a, b, r)), rc =>
                   VLam(VSum(a, b), {n =>
-                    val VNeutral(s) = n
-                    VNeutral(NSumElim(a, b, m, lc, rc, s))
+                    eval(quote0(VNeutral(NSumElim(a, b, m, lc, rc, NFree(tmp)))), sumVE + (tmp -> n), Nil)
                   }))))))
     )
 

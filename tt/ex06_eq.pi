@@ -37,3 +37,13 @@ let tran =
 let apply =
   eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
   :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
+
+assume (X :: *);
+assume (x :: X);
+assume (y :: X);
+
+assume (eqxy :: Eq X x y);
+
+eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> X ) (\(x :: X) -> y) x x (Refl X x);
+
+let t = eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> Eq X x y ) (\(x :: X) -> Refl X x) x x (Refl X x);

@@ -1,3 +1,0 @@
-let v0 = VNil Nat :: Vec Nat 0;
-let v1 = VCons Nat 0 1 v0 :: Vec Nat 1;
-let v2 = VCons Nat 1 2 v1 :: Vec Nat 2;

@@ -53,40 +53,55 @@ trait ProductCheck extends CoreCheck with ProductAST {
     case Product(a, b) =>
       val aType = iType(i, named, bound, a)
       checkEqual(aType, Star)
+
       val bType = iType(i, named, bound, b)
       checkEqual(bType, Star)
+
       VStar
     case Pair(a, b, x, y) =>
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val bType = iType(i, named, bound, b)
+      checkEqual(bType, Star)
+
       val xType = iType(i, named, bound, x)
       checkEqual(xType, aVal)
+
       val yType = iType(i, named, bound, y)
       checkEqual(yType, bVal)
+
       VProduct(aVal, bVal)
     case Fst(a, b, p) =>
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val bType = iType(i, named, bound, b)
+      checkEqual(bType, Star)
+
       val pType = iType(i, named, bound, p)
       checkEqual(pType, VProduct(aVal, bVal))
+
       aVal
     case Snd(a, b, p) =>
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
+
+      val aType = iType(i, named, bound, a)
+      checkEqual(aType, Star)
+
+      val bType = iType(i, named, bound, b)
+      checkEqual(bType, Star)
+
       val pType = iType(i, named, bound, p)
       checkEqual(pType, VProduct(aVal, bVal))
+
       bVal
     case _ =>
       super.iType(i, named, bound, t)
@@ -143,8 +158,12 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
       Global("Pair") ->
         VLam(VStar, a => VLam(VStar, b => VLam(a, x => VLam(b, y => VPair(a, b, x, y))))),
       Global("fst") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n => val VNeutral(p) = n; VNeutral(NFst(a, b, p))}))),
+        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
+          eval(quote0(VNeutral(NFst(a, b, NFree(tmp)))), productVE + (tmp -> n), Nil)
+        }))),
       Global("snd") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n => val VNeutral(p) = n; VNeutral(NSnd(a, b, p))})))
+        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
+          eval(quote0(VNeutral(NSnd(a, b, NFree(tmp)))), productVE + (tmp -> n), Nil)
+        })))
     )
 }

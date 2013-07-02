@@ -85,7 +85,7 @@ trait NatEval extends CoreEval with NatAST {
         case VZero =>
           mzVal
         case VSucc(k) =>
-          vapp(vapp(msVal, k), rec(k))
+          msVal @@ k @@ rec(k)
         case VNeutral(n) =>
           VNeutral(NNatElim(eval(m, named, bound), mzVal, msVal, n))
       }
@@ -196,6 +196,7 @@ trait NatCheck extends CoreCheck with NatAST {
     case Succ(k) =>
       val kType = iType(i, named, bound, k)
       checkEqual(kType, Nat)
+
       VNat
     case _ =>
       super.iType(i, named, bound, t)
@@ -256,12 +257,8 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
           VLam( m @@ VZero, zCase =>
             VLam(VPi(VNat, n => VPi(m @@ n, a => m @@ VSucc(n))), sCase =>
               VLam(VNat, {n =>
-                val VNeutral(n1) = n
-                VNeutral( NNatElim(m, zCase, sCase, n1))}
-              )
-            )
-          )
-        )
+                eval(quote0(VNeutral(NNatElim(m, zCase, sCase, NFree(tmp)))), natVE + (tmp -> n), Nil)
+              }))))
     )
 
   def toNat1(n: Int): Term =

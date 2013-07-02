@@ -14,7 +14,7 @@ trait CoreEval extends CoreAST {
     case Bound(ii) =>
       if (ii < bound.length) bound(ii) else vfree(Quote(ii))
     case e1 :@: e2 =>
-      vapp(eval(e1, named, bound), eval(e2, named, bound))
+      eval(e1, named, bound) @@ eval(e2, named, bound)
     case Lam(t, e) =>
       VLam(eval(t, named, bound), x => eval(e, named, x :: bound))
   }

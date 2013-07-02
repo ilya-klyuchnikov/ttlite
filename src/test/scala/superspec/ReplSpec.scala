@@ -28,9 +28,9 @@ class ReplSpec extends org.scalatest.FunSpec {
     EqREPLMain.main(Array("tt/ex06_eq.pi"))
   }
 
-  //describe("Vector REPL should process `tt/ex07_vec.pi` without errors") {
-  //  VectorREPLMain.main(Array("tt/ex07_vec.pi"))
-  //}
+  describe("Vector REPL should process `tt/ex07_vec.pi` without errors") {
+    VectorREPLMain.main(Array("tt/ex07_vec.pi"))
+  }
 
   /*
   describe("All REPL should process prelude.all and lists.pi without errors") {

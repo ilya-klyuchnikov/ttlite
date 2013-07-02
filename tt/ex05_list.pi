@@ -4,3 +4,10 @@ let append =
     listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
         appendType;
 
+assume (X :: *);
+assume (x :: X);
+
+let l1 = Cons X x (Nil X);
+
+append X l1 l1;
+

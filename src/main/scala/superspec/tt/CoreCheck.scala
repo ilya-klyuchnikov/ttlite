@@ -27,20 +27,26 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Ann(e, tp) =>
+      val tpVal = eval(tp, named, Nil)
+
       val tpType = iType(i, named, bound, tp)
       checkEqual(tpType, Star)
-      val tpNorm = eval(tp, named, Nil)
+
       val eType = iType(i, named, bound, e)
-      checkEqual(eType, tpNorm)
-      tpNorm
+      checkEqual(eType, tpVal)
+
+      tpVal
     case Star =>
       VStar
     case Pi(x, tp) =>
+      val xVal = eval(x, named, Nil)
+
       val xType = iType(i, named, bound, x)
       checkEqual(xType, Star)
-      val xNorm = eval(x, named, Nil)
-      val tpType = iType(i + 1, named,  bound + (Local(i) -> xNorm), iSubst(0, Free(Local(i)), tp))
+
+      val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
       checkEqual(tpType, Star)
+
       VStar
     case Free(x) =>
       bound.get(x) match {
@@ -49,18 +55,21 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       }
     case (e1 :@: e2) =>
       iType(i, named, bound, e1) match {
-        case VPi(argType, bodyType) =>
+        case VPi(x, f) =>
           val e2Type = iType(i, named, bound, e2)
-          checkEqual(e2Type, argType)
-          bodyType(eval(e2, named, Nil))
+          checkEqual(e2Type, x)
+
+          f(eval(e2, named, Nil))
         case _ =>
           sys.error(s"illegal application: $t")
       }
     case Lam(t, e) =>
+      val tVal = eval(t, named, Nil)
+
       val tType = iType(i, named, bound, t)
       checkEqual(tType, Star)
-      val tNorm = eval(t, named, Nil)
-      VPi(tNorm, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> tNorm) , iSubst(0, Free(Local(i)), e)))
+
+      VPi(tVal, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> tVal) , iSubst(0, Free(Local(i)), e)))
   }
 
   def iSubst(i: Int, r: Term, it: Term): Term = it match {

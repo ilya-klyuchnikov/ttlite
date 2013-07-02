@@ -3,3 +3,15 @@ let thSum01 =
 let proofSum01 =
     (\ (A :: *) (B :: *) (s :: Sum A B) -> cases A B (\ (_ :: Sum A B) -> Sum B A) (InR B A) (InL B A) s)
         :: thSum01;
+
+assume (X :: *);
+assume (Y :: *);
+
+assume (x :: X);
+assume (y :: Y);
+
+let lx = InL X Y x;
+let ry = InR X Y y;
+
+cases X Y (\ (_ :: Sum X Y) -> *) (\(_ :: X) -> *) (\(_ :: Y) -> *) lx;
+cases X Y (\ (_ :: Sum X Y) -> *) (\(_ :: X) -> *) (\(_ :: Y) -> *) ry;

@@ -315,8 +315,7 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
             VLam(m @@ VPiNil(a), nilCase =>
               VLam(VPi(a, x => VPi(VPiList(a), xs => VPi(m @@ xs, _ => m @@ VPiCons(a, x, xs)))), consCase =>
                 VLam(VPiList(a), {n =>
-                  val VNeutral(xs) = n
-                  VNeutral(NPiListElim(a, m, nilCase, consCase, xs))
+                  eval(quote0(VNeutral(NPiListElim(a, m, nilCase, consCase, NFree(tmp)))), listVE + (tmp -> n), Nil)
                 })))))
     )
 }
