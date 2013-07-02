@@ -1,5 +1,8 @@
 package superspec.tt
 
+import mrsc.core._
+import superspec._
+
 trait NatAST extends CoreAST {
   case object Nat extends Term
   case object Zero extends Term
@@ -94,16 +97,16 @@ trait NatEval extends CoreEval with NatAST {
       super.eval(t, named, bound)
   }
 }
-/*
+
 trait NatDriver extends CoreDriver with NatAST {
 
   // boilerplate/indirections
   case object SuccLabel extends Label
-  case class SuccStep(next: CTerm) extends Step {
+  case class SuccStep(next: Term) extends Step {
     override val graphStep =
-      AddChildNodesStep[Conf, Label](List(DConf(next, Inf(Nat)) -> SuccLabel))
+      AddChildNodesStep[Conf, Label](List(DConf(next, Nat) -> SuccLabel))
   }
-  case class SuccDStep(next: CTerm) extends DriveStep {
+  case class SuccDStep(next: Term) extends DriveStep {
     override def step(t: Conf) = SuccStep(next)
   }
 
@@ -112,9 +115,9 @@ trait NatDriver extends CoreDriver with NatAST {
       natElim.n match {
         case NFree(n) =>
           val caseZ = ElimBranch(Zero, Map())
-          val n1 = freshName(Inf(Nat))
-          val v1 = Inf(Free(n1))
-          val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(n))))
+          val n1 = freshName(Nat)
+          val v1 = Free(n1)
+          val caseS = ElimBranch(Succ(v1), Map(n1 -> Free(n)))
           ElimDStep(n, List(caseZ, caseS))
         case n =>
           driveNeutral(n)
@@ -124,11 +127,11 @@ trait NatDriver extends CoreDriver with NatAST {
   }
 
   override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = typeMap(fv) match {
-    case Inf(Nat) =>
+    case Nat =>
       val caseZ = ElimBranch(Zero, Map())
-      val n1 = freshName(Inf(Nat))
-      val v1 = Inf(Free(n1))
-      val caseS = ElimBranch(Succ(v1), Map(n1 -> Inf(Free(fv))))
+      val n1 = freshName(Nat)
+      val v1 = Free(n1)
+      val caseS = ElimBranch(Succ(v1), Map(n1 -> Free(fv)))
       List(ElimDStep(fv, List(caseZ, caseS)))
     case _ =>
       super.elimFreeVar(c, fv)
@@ -136,7 +139,7 @@ trait NatDriver extends CoreDriver with NatAST {
 
   override def decompose(c: Conf): DriveStep = c.ct match {
     case Succ(c1) =>
-      val Inf(Nat) = c.tp
+      val Nat = c.tp
       SuccDStep(c1)
     case _ =>
       super.decompose(c)
@@ -149,26 +152,26 @@ trait NatResiduator extends BaseResiduator with NatDriver {
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Inf(Free(fresh))), _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _))) ::
           Nil =>
         val motive =
-          VLam(n => eval(quote0(tp), env + (sel -> n), Nil))
+          VLam(VNat, n => eval(quote0(tp), env + (sel -> n), Nil))
         val zType =
           eval(quote0(tp), env + (sel -> VZero), Nil)
         val zCase =
           fold(nodeZ, env, recM, zType)
         val sType = eval(quote0(tp), env + (sel -> VSucc(vfree(fresh))), Nil)
         val sCase =
-          VLam {n => VLam {rec =>
+          VLam(VNat, n => VLam(motive @@ n, rec =>
             fold(nodeS, env + (fresh -> n), recM + (node.tPath -> rec), sType)
-          }}
+          ))
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
         VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, recM, tp)
       case _ =>
         super.fold(node, env, recM, tp)
     }
-}*/
+}
 
 trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
@@ -257,7 +260,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
           VLam( m @@ VZero, zCase =>
             VLam(VPi(VNat, n => VPi(m @@ n, a => m @@ VSucc(n))), sCase =>
               VLam(VNat, {n =>
-                eval(quote0(VNeutral(NNatElim(m, zCase, sCase, NFree(tmp)))), natVE + (tmp -> n), Nil)
+                eval(NatElim(Bound(3), Bound(2), Bound(1), Bound(0)), natVE, List(n, sCase, zCase, m))
               }))))
     )
 

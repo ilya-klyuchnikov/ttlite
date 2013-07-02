@@ -198,7 +198,8 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
               VLam(a, x =>
                 VLam(a, y =>
                   VLam(VEq(a, x, y), {n =>
-                    eval(quote0(VNeutral(NEqElim(a, prop, propR, x, y, NFree(tmp)))), eqVE + (tmp -> n), Nil)
+                    eval(EqElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), eqVE,
+                      List(n, y, x, propR, prop, a))
                   }))))))
     )
 }

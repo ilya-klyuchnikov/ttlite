@@ -6,7 +6,6 @@ import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
 import superspec._
 
 trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
-  val tmp = Local(0)
 
   type I = Term
   type C = Term

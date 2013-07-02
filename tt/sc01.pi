@@ -1,87 +1,39 @@
-let id    = (\ _ x -> x) :: forall (A :: *) . A -> A;
-let const = (\ _ _ x y -> x) :: forall (a :: *). forall (b :: *) . a -> b -> a;
+let id  = (\ (a :: *) (x :: a) -> x )
+    :: forall (a :: *) . a -> a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
 
 -- addition of natural numbers
 let plus =
   natElim
-    ( \ _ -> Nat -> Nat )              -- motive
-    ( \ n -> n )                       -- case for Zero
-    ( \ _ rec -> \n -> Succ (rec n));  -- case for Succ
+    ( \ (_ :: Nat) -> Nat -> Nat )           -- motive
+    ( \ (n :: Nat) -> n )                    -- case for Zero
+    ( \ (p :: Nat) (rec :: Nat -> Nat) (n :: Nat) -> Succ (rec n) );   -- case for Succ
 
 -- alternative (more readable??) variation of plus
 let plus1 =
-  (\x y ->
+  (\(x :: Nat) (y :: Nat) ->
     natElim
-    ( \ _ -> Nat )                -- motive
+    ( \ (_ :: Nat) -> Nat )                -- motive
     y                             -- case for Zero
-    (\ n rec -> Succ rec) x) ::   -- case for Succ
+    (\ (n :: Nat) (rec :: Nat) -> Succ rec) x) ::   -- case for Succ
     forall (a :: Nat) (b :: Nat) . Nat;
 
 -- predecessor, mapping 0 to 0
 let pred =
   natElim
-    ( \ _ -> Nat )
+    ( \ (_ :: Nat) -> Nat )
     Zero
-    ( \ n1 _ -> n1 );
+    ( \ (n1 :: Nat) (_ :: Nat) -> n1 );
 
 -- fZSucc0 Z        = a1 :: A
 -- fZSucc0 (Succ _) = a2 :: A
 -- this function allows to eliminate nats
 -- in simple (homo) way
 let fZSucc0 =
-    (\A a1 a2 -> natElim (\n -> A) a1 (\n pred -> a2))
+    (\(A :: *) (a1 :: A) (a2 :: A) -> natElim (\(_ :: Nat) -> A) a1 (\(_ :: Nat) (pred :: A) -> a2))
     :: forall (A :: *) (a1 :: A) (a2 :: A) . Nat -> A;
-
--- fZSucc0 Z        = a :: A
--- fZSucc0 (Succ _) = b :: b
--- note that the type of result depends on n
-let fZSucc =
-    (\A B a b -> natElim (\n -> fZSucc0 * A B n) a (\n pred -> b) )
-    :: forall (A :: *) (B :: *) (_ :: A) (_ :: B) (n :: Nat) . fZSucc0 * A B n;
-
--- a simpler elimination scheme for natural numbers
--- type of result doesn't depend on n
-let natFold =
-  ( \ m mz ms -> natElim
-                   (const * Nat m)
-                   mz
-                   (\ n1 rec -> ms rec ) )
-  :: forall (a :: *) . a -> (a -> a) -> Nat -> a;
-
--- an eliminator for natural numbers that has special
--- cases for 0 and 1
-let nat1Elim =
-  ( \ m m0 m1 ms -> natElim
-                      (m :: Nat -> *)
-                      (m0 :: m 0)
-                      ( (\ n1 -> ((\ _ -> ((natElim
-                                    (\ n -> m (Succ n))
-                                    m1
-                                    ms :: forall (a :: Nat) . m (Succ a))
-                                    n1) ) )) :: forall (nn :: Nat) (_ :: m nn) . m (Succ nn) ))
-  :: forall (m :: Nat -> *) . m 0 -> m 1 ->
-     (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
-     forall (n :: Nat) . m n;
-
--- an eliminator for natural numbers that has special
--- cases for 0, 1 and 2
-let nat2Elim =
-  ( \ m m0 m1 m2 ms -> nat1Elim m m0 m1
-                                (\ p rec -> natElim (\ n -> m (Succ (Succ n))) m2 ms p) )
-  :: forall (m :: Nat -> *) . m 0 -> m 1 -> m 2 ->
-     (forall n :: Nat . m (Succ (Succ n)) -> m (Succ (Succ (Succ n)))) ->
-     forall (n :: Nat) . m n;
-
--- increment by one
-let inc = natFold Nat (Succ Zero) Succ;
-
-let len =
-  (\a -> listElim a (\ _ -> Nat) 0 (\ v vs w -> Succ w)) ::
-    forall (a :: *) . forall (v :: List a) . Nat;
-
-let append =
-  (\a xs ys -> listElim a (\_ -> List a) ys (\v vs w -> Cons a v w) xs) ::
-    forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
 
 -- supercompiling everything
 sc id;
@@ -90,15 +42,4 @@ sc plus;
 sc plus1;
 sc pred;
 sc fZSucc0;
-sc fZSucc;
-sc natFold;
-sc nat1Elim;
-sc nat2Elim;
-sc inc;
 
-sc (\x y z -> plus x (plus y z)) :: Nat -> Nat -> Nat -> Nat;
-sc (\x y z -> plus (plus x y) z) :: Nat -> Nat -> Nat -> Nat;
-sc (\x -> plus x x) :: Nat -> Nat;
-
-sc len;
-sc append;

@@ -198,7 +198,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
               VLam(VPi(a, l => m @@ VInL(a, b, l)) , lc =>
                 VLam(VPi(b, r => m @@ VInR(a, b, r)), rc =>
                   VLam(VSum(a, b), {n =>
-                    eval(quote0(VNeutral(NSumElim(a, b, m, lc, rc, NFree(tmp)))), sumVE + (tmp -> n), Nil)
+                    eval(SumElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), sumVE, List(n, rc, lc, m, b, a))
                   }))))))
     )
 

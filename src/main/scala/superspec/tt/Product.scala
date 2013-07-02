@@ -159,11 +159,11 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
         VLam(VStar, a => VLam(VStar, b => VLam(a, x => VLam(b, y => VPair(a, b, x, y))))),
       Global("fst") ->
         VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
-          eval(quote0(VNeutral(NFst(a, b, NFree(tmp)))), productVE + (tmp -> n), Nil)
+          eval(Fst(Bound(2), Bound(1), Bound(0)), productVE, List(n, b, a))
         }))),
       Global("snd") ->
         VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
-          eval(quote0(VNeutral(NSnd(a, b, NFree(tmp)))), productVE + (tmp -> n), Nil)
+          eval(Snd(Bound(2), Bound(1), Bound(0)), productVE, List(n, b, a))
         })))
     )
 }

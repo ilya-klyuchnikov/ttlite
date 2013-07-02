@@ -94,7 +94,7 @@ trait ListEval extends CoreEval with ListAST {
   }
 }
 
-/*
+
 trait ListDriver extends CoreDriver with ListAST {
 
   // boilerplate/indirections
@@ -124,12 +124,12 @@ trait ListDriver extends CoreDriver with ListAST {
           val caseNil = ElimBranch(PiNil(aType), Map())
 
           val hName = freshName(quote0(a))
-          val h1 = Inf(Free(hName))
+          val h1 = Free(hName)
 
           val tName = freshName(quote0(VPiList(a)))
-          val t1 = Inf(Free(tName))
+          val t1 = Free(tName)
 
-          val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Inf(Free(n))))
+          val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Free(n)))
 
           ElimDStep(n, List(caseNil, caseCons))
         case n =>
@@ -141,16 +141,17 @@ trait ListDriver extends CoreDriver with ListAST {
 
   override def decompose(c: Conf): DriveStep = c.ct match {
     case PiNil(a) =>
-      val Inf(PiList(tp)) = c.tp
-      NilDStep(DConf(a, Inf(Star)))
+      val PiList(tp) = c.tp
+      NilDStep(DConf(a, Star))
     case PiCons(a, h, t) =>
-      ConsDStep(DConf(a, Inf(Star)), DConf(h, a), DConf(t, c.ct))
+      ConsDStep(DConf(a, Star), DConf(h, a), DConf(t, c.ct))
     case _ =>
       super.decompose(c)
   }
 
 }
 
+/*
 trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
     node.outs match {
@@ -315,7 +316,8 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
             VLam(m @@ VPiNil(a), nilCase =>
               VLam(VPi(a, x => VPi(VPiList(a), xs => VPi(m @@ xs, _ => m @@ VPiCons(a, x, xs)))), consCase =>
                 VLam(VPiList(a), {n =>
-                  eval(quote0(VNeutral(NPiListElim(a, m, nilCase, consCase, NFree(tmp)))), listVE + (tmp -> n), Nil)
+                  eval(PiListElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), listVE,
+                    List(n, consCase, nilCase, m))
                 })))))
     )
 }

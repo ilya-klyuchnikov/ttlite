@@ -128,7 +128,7 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
           VLam(VPi(VNat, y => m @@ VSucc(y) @@ VFZero(y)), zCase =>
           VLam(VPi(VNat, z => VPi(VFin(z), a => VPi(m @@ z @@ a, _ => m @@ VSucc(z) @@ VFSucc(z, a)))), sCase =>
             VLam(VNat, n => VLam(VFin(n), f =>
-              eval(quote0(VNeutral(NFinElim(m, zCase, sCase, n, NFree(tmp)))), finVE + (tmp -> f), Nil)
+              eval(FinElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), finVE, List(f, n, sCase, zCase, m))
             )))))
     )
 }

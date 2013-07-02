@@ -2,7 +2,7 @@ package superspec
 
 import mrsc.core._
 import superspec.tt._
-/*
+
 // TODO
 trait Rebuilder extends CoreSubst
 
@@ -11,10 +11,10 @@ trait TTSc extends CoreSubst {
 
   type Conf = DConf
 
-  case class DConf(ct: CTerm, tp: CTerm)
+  case class DConf(ct: Term, tp: Term)
 
   // sub - a substitution, using only this substitution we can perform a fold
-  case class ElimBranch(ptr: CTerm, sub: Subst)
+  case class ElimBranch(ptr: Term, sub: Subst)
   trait DriveStep {
     def step(t: Conf): Step
   }
@@ -152,7 +152,7 @@ object TTScREPL
   with BaseResiduator
   with CoreResiduator
   with NatResiduator
-  with ListResiduator
+  //with ListResiduator
   with GraphPrettyPrinter {
 
   val te = natTE ++ listTE
@@ -198,4 +198,3 @@ object TTScREPL
     val maxDepth = 10
   }
 }
-*/
