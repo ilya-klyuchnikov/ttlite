@@ -1,55 +1,44 @@
 package superspec.tt
-/*
+
 // (Fin n) is the type that contains exactly n elements.
 // Fin 0 - empty type
 // Fin 1 - unit type
 // Fin 2 - booleans
-trait FinAST extends CoreAST {
-  case class FZero(A: CTerm) extends CTerm
-  case class FSucc(A: CTerm, n: CTerm) extends CTerm
-
-  case class Fin(n: CTerm) extends ITerm
-  case class FinElim(A: CTerm, c1: CTerm, c2: CTerm, c3: CTerm, c4: CTerm) extends ITerm
+trait FinAST extends CoreAST {  
+  case class Fin(n: Term) extends Term
+  case class FZero(A: Term) extends Term
+  case class FSucc(A: Term, n: Term) extends Term
+  case class FinElim(A: Term, c1: Term, c2: Term, c3: Term, c4: Term) extends Term
 
   case class VFZero(A: Value) extends Value
   case class VFSucc(A: Value, n: Value) extends Value
   case class VFin(n: Value) extends Value
-
   case class NFinElim(A: Value, c1: Value, c2: Value, c3: Value, c4: Neutral) extends Neutral
 }
 
 trait FinPrinter extends NatPrinter with FinAST {
-  override def iPrint(p: Int, ii: Int, t: ITerm): Doc = t match {
+  override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Fin(n) =>
-      iPrint(p, ii, Free(Global("Fin")) @@ n)
-    case FinElim(m, mz, ms, n, f) =>
-      iPrint(p, ii, Free(Global("finElim")) @@ m @@ mz @@ ms @@ n @@ f)
-    case _ =>
-      super.iPrint(p, ii, t)
-  }
-
-  override def cPrint(p: Int, ii: Int, t: CTerm): Doc = t match {
+      print(p, ii, Free(Global("Fin")) @@ n)
     case FZero(n) =>
-      iPrint(p, ii, Free(Global("Fin")) @@ n)
+      print(p, ii, Free(Global("Fin")) @@ n)
     case FSucc(n, f) =>
-      iPrint(p, ii, Free(Global("FSucc")) @@ n @@ f)
+      print(p, ii, Free(Global("FSucc")) @@ n @@ f)
+    case FinElim(m, mz, ms, n, f) =>
+      print(p, ii, Free(Global("finElim")) @@ m @@ mz @@ ms @@ n @@ f)
     case _ =>
-      super.cPrint(p, ii, t)
+      super.print(p, ii, t)
   }
 }
 
 trait FinEval extends CoreEval with FinAST {
-  override def eval(t: CTerm, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+    case Fin(n) =>
+      VFin(eval(n, named, bound))
     case FZero(n) =>
       VFZero(eval(n, named, bound))
     case FSucc(n, f) =>
       VFSucc(eval(n, named, bound), eval(n, named, bound))
-    case _ => super.eval(t, named, bound)
-  }
-
-  override def eval(t: ITerm, named: NameEnv[Value], bound: Env): Value = t match {
-    case Fin(n) =>
-      VFin(eval(n, named, bound))
     case FinElim(m, mz, ms, n, f) =>
       val mzVal = eval(mz, named, bound)
       val msVal = eval(ms, named, bound)
@@ -66,41 +55,34 @@ trait FinEval extends CoreEval with FinAST {
       }
 
       rec(eval(f, named, bound))
-    case _ =>
-      super.eval(t, named, bound)
+    case _ => super.eval(t, named, bound)
   }
 }
 
 trait FinCheck extends CoreCheck with FinAST {
-  override def iSubst(i: Int, r: ITerm, it: ITerm): ITerm = it match {
+  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Fin(n) =>
-      Fin(cSubst(i, r, n))
+      Fin(iSubst(i, r, n))
+    case FZero(n) =>
+      FZero(iSubst(i, r, n))
+    case FSucc(n, k) =>
+      FSucc(iSubst(i, r, n), iSubst(i, r, k))
     case FinElim(m, mz, ms, n, f) =>
-      FinElim(cSubst(i, r, m), cSubst(i, r, mz), cSubst(i, r, ms), cSubst(i, r, n), cSubst(i, r, f))
+      FinElim(iSubst(i, r, m), iSubst(i, r, mz), iSubst(i, r, ms), iSubst(i, r, n), iSubst(i, r, f))
     case _ => super.iSubst(i, r, it)
   }
-
-  override def cSubst(ii: Int, r: ITerm, ct: CTerm): CTerm = ct match {
-    case FZero(n) =>
-      FZero(cSubst(ii, r, n))
-    case FSucc(n, k) =>
-      FSucc(cSubst(ii, r, n), cSubst(ii, r, k))
-    case _ =>
-      super.cSubst(ii, r, ct)
-  }
-
 }
 
 trait FinQuote extends CoreQuote with FinAST {
-  override def quote(ii: Int, v: Value): CTerm = v match {
-    case VFin(n) => Inf(Fin(quote(ii, n)))
+  override def quote(ii: Int, v: Value): Term = v match {
+    case VFin(n) => Fin(quote(ii, n))
     case VFZero(n) => FZero(quote(ii, n))
     case VFSucc(n, k) => FSucc(quote(ii, n), quote(ii, k))
     case _ => super.quote(ii, v)
   }
-  override def neutralQuote(ii: Int, n: Neutral): ITerm = n match {
+  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NFinElim(m, mz, ms, n, f) =>
-      FinElim(quote(ii, m), quote(ii, mz), quote(ii, ms), quote(ii, n), Inf(neutralQuote(ii, f)))
+      FinElim(quote(ii, m), quote(ii, mz), quote(ii, ms), quote(ii, n), neutralQuote(ii, f))
     case _ => super.neutralQuote(ii, n)
   }
 }
@@ -108,23 +90,23 @@ trait FinQuote extends CoreQuote with FinAST {
 trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
   lazy val finTE: NameEnv[Value] =
     Map(
+      Global("Fin") -> FinType,
       Global("FZero") -> FZeroType,
       Global("FSucc") -> FSuccType,
-      Global("Fin") -> FinType,
       Global("finElim") -> finElimType
     )
 
+  val FinTypeIn =
+    "forall x :: Nat . *"
   val FZeroTypeIn =
     "forall x :: Nat . Fin (Succ x)"
   val FSuccTypeIn =
     "forall (x :: Nat) . forall (y :: Fin x) . Fin (Succ x)"
-  val FinTypeIn =
-    "forall x :: Nat . *"
   val finElimTypeIn =
     """
       |forall (m :: forall (x :: Nat) . forall (y :: Fin x) . *) .
       |forall (_ :: forall y :: Nat . m (Succ y) (FZero y)) .
-      |forall (z :: forall (z :: Nat) . forall (a :: Fin z) . forall (b :: m z a) .
+      |forall (_ :: forall (z :: Nat) . forall (a :: Fin z) . forall (b :: m z a) .
       |             m (Succ z) (FSucc z a)) .
       |forall (a :: Nat) .
       |forall (b :: Fin a) .
@@ -138,15 +120,15 @@ trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with Fin
 
   val finVE: NameEnv[Value] =
     Map(
-      Global("FZero") -> VLam(n => VFZero(n)),
-      Global("FSucc") -> VLam(n => VLam(f => VFSucc(n, f))),
-      Global("Fin") -> VLam(n => VFin(n)),
+      Global("Fin") -> VLam(VNat, n => VFin(n)),
+      Global("FZero") -> VLam(VNat, n => VFZero(n)),
+      Global("FSucc") -> VLam(VNat, n => VLam(VFin(n), f => VFSucc(n, f))),
       Global("finElim") ->
-        eval(
-          Lam(Lam(Lam(Lam(Lam(
-            Inf(FinElim(Inf(Bound(4)), Inf(Bound(3)), Inf(Bound(2)), Inf(Bound(1)), Inf(Bound(0))))
-          ))))),
-          emptyNEnv, List())
+        VLam(VPi(VNat, x => VPi(VFin(x), _ => VStar)), m =>
+          VLam(VPi(VNat, y => m @@ VSucc(y) @@ VFZero(y)), zCase =>
+          VLam(VPi(VNat, z => VPi(VFin(z), a => VPi(m @@ z @@ a, _ => m @@ VSucc(z) @@ VFSucc(z, a)))), sCase =>
+            VLam(VNat, n => VLam(VFin(n), f =>
+              eval(quote0(VNeutral(NFinElim(m, zCase, sCase, n, NFree(tmp)))), finVE + (tmp -> f), Nil)
+            )))))
     )
 }
-*/

@@ -1,0 +1,47 @@
+let Void = Fin Zero;
+-- no constructor of empty type
+
+-- unit type
+let Unit = Fin 1;
+-- constructor
+let U = FZero 0;
+
+-- booleans
+let Bool = Fin 2;
+-- constructors
+let False = FZero 1;
+let True  = FSucc 1 U;
+
+-- False -> 1 :: Nat, False -> True :: Bool
+
+-- embed Fin into Nat
+-- calculate "number" of an element of Fin n
+-- explicitly writing types for easier understanding
+let finNat = finElim ((\ (n :: Nat) (finN :: Fin n) -> Nat) :: forall (n :: Nat) (x :: Fin n) . *)
+                     ((\ (n :: Nat) -> Zero) :: forall (n :: Nat) . Nat )-- zero case
+                     ((\ (n :: Nat) (finN :: Fin n) (rec :: Nat) -> Succ rec) :: forall (n:: Nat) (x:: Fin n) (y :: Nat) . Nat);
+
+-- 0
+finNat 2 False;
+-- 1
+finNat 2 True;
+
+
+let z12 = \(m :: Void -> *) -> (natElim (\ (n :: Nat) -> Fin n -> *) m);
+
+-- z2 A 0 = Void -> A;
+-- z2 _ n = Fin n -> Unit
+let z2 = (\ (m :: *) -> (natElim (\ (n :: Nat) -> Fin n -> *)
+                        (\ (_ :: Fin 0) -> m)
+                        (\ (a :: Nat) (b :: forall b :: Fin a . *) (c :: Fin (Succ a)) -> Unit))) ::
+                 forall (m :: *) . forall (a :: Nat) (b :: Fin a) . *;
+
+let z1 = (\ (m :: Void -> *) -> (natElim (\ (n :: Nat) -> Fin n -> *)
+                        m
+                        (\ (a :: Nat) (b :: forall b :: Fin a . *) (c :: Fin (Succ a)) -> Unit))) ::
+                 forall (m :: Void -> *) . forall (a :: Nat) (b :: Fin a) . *;
+
+
+
+
+

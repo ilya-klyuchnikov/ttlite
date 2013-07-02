@@ -35,6 +35,10 @@ object VectorREPLMain extends VectorREPL {
     State(interactive = true, natVE ++ vectorVE, natTE ++ vectorTE, Set())
 }
 
+object FinREPLMain extends FinREPL {
+  override def initialState =
+    State(interactive = true, natVE ++ finVE, natTE ++ finTE, Set())
+}
 
 /*
 object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
