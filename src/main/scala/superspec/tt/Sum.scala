@@ -19,7 +19,7 @@ trait SumPrinter extends CorePrinter with SumAST {
     case InL(lt, rt, l) =>
       print(p, ii, Free(Global("InL")) @@ lt @@ rt @@ l)
     case InR(lt, rt, r) =>
-      print(p, ii, Free(Global("InL")) @@ lt @@ rt @@ r)
+      print(p, ii, Free(Global("InR")) @@ lt @@ rt @@ r)
     case SumElim(lt, rt, m, lc, rc, sum) =>
       print(p, ii, Free(Global("cases")) @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
     case _ =>
