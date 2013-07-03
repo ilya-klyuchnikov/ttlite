@@ -61,7 +61,7 @@ trait ListPrinter extends CorePrinter with ListAST {
     case PiNil(a) =>
       print(p, ii, Free(Global("Nil")) @@ a)
     case PiCons(a, x, xs) =>
-      print(p, ii, Free(Global("VCons")) @@ a @@ x @@ xs)
+      print(p, ii, Free(Global("Cons")) @@ a @@ x @@ xs)
     case PiListElim(a, m, mn, mc, xs) =>
       print(p, ii, Free(Global("listElim")) @@ a @@ m @@ mn @@ mc @@ xs)
     case _ =>
@@ -151,28 +151,29 @@ trait ListDriver extends CoreDriver with ListAST {
 
 }
 
-/*
 trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Inf(Free(hN)), Inf(Free(tN))), _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Free(hN), Free(tN)), _))) ::
           Nil =>
+
+        val aVal = eval(a, env, Nil)
         val motive =
-          VLam(n => eval(quote0(tp), env + (sel -> n), Nil))
-        val aType = eval(a, env, Nil)
+          VLam(VPiList(aVal), n => eval(quote0(tp), env + (sel -> n), Nil))
+
         val nilType =
-          eval(quote0(tp), env + (sel -> VPiNil(aType)), Nil)
+          eval(quote0(tp), env + (sel -> VPiNil(aVal)), Nil)
         val nilCase =
           fold(nodeZ, env, recM, nilType)
-        val consType = eval(quote0(tp), env + (sel -> VPiCons(aType, vfree(hN), vfree(tN))), Nil)
+        val consType = eval(quote0(tp), env + (sel -> VPiCons(aVal, vfree(hN), vfree(tN))), Nil)
         val consCase =
-          VLam {h => VLam {t => VLam {rec =>
+          VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
             fold(nodeS, env + (hN -> h) + (tN -> t), recM + (node.tPath -> rec), consType)
-          }}}
+          )))
         VNeutral(NFree(Global("listElim"))) @@
-          aType @@
+          aVal @@
           motive @@
           nilCase @@
           consCase @@
@@ -189,7 +190,6 @@ trait ListResiduator extends BaseResiduator with ListDriver {
         super.fold(node, env, recM, tp)
     }
 }
-*/
 
 trait ListCheck extends CoreCheck with ListAST with ListEval {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
@@ -315,9 +315,9 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
           VLam(VPi(VPiList(a), _ => VStar), m =>
             VLam(m @@ VPiNil(a), nilCase =>
               VLam(VPi(a, x => VPi(VPiList(a), xs => VPi(m @@ xs, _ => m @@ VPiCons(a, x, xs)))), consCase =>
-                VLam(VPiList(a), {n =>
+                VLam(VPiList(a), {xs =>
                   eval(PiListElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), listVE,
-                    List(n, consCase, nilCase, m))
+                    List(xs, consCase, nilCase, m, a))
                 })))))
     )
 }

@@ -152,7 +152,7 @@ object TTScREPL
   with BaseResiduator
   with CoreResiduator
   with NatResiduator
-  //with ListResiduator
+  with ListResiduator
   with GraphPrettyPrinter {
 
   val te = natTE ++ listTE
@@ -167,9 +167,9 @@ object TTScREPL
           handleError()
           state
         case Some(tp) =>
-          val goal: DConf = DConf(iquote(ieval(state.ne, it)), iquote(tp))
-          val rules: MRSCRules[Conf, Label] = new Rules
-          val gs = GraphGenerator(rules, goal).toList
+          val goal = DConf(iquote(ieval(state.ne, it)), iquote(tp))
+          val rules = new Rules
+          val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))

@@ -35,6 +35,44 @@ let fZSucc0 =
     (\(A :: *) (a1 :: A) (a2 :: A) -> natElim (\(_ :: Nat) -> A) a1 (\(_ :: Nat) (pred :: A) -> a2))
     :: forall (A :: *) (a1 :: A) (a2 :: A) . Nat -> A;
 
+-- a simpler elimination scheme for natural numbers
+-- type of result doesn't depend on n
+-- a simpler elimination scheme for natural numbers
+let natFold =
+  ( \ (m :: *) (mz :: m) (ms :: m -> m) ->
+            natElim
+                   ( \ (_ :: Nat) -> m )
+                   mz
+                   ( \ (n1 :: Nat) (rec :: m) -> ms rec ) )
+  :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
+
+-- special case for 1
+let nat1Elim =
+  ( \ (m :: Nat -> *)
+      (m0 :: m 0)
+      (m1 :: m 1)
+      (ms :: forall (a :: Nat) . (m (Succ a)) -> m (Succ (Succ a))) ->
+        natElim
+            m
+            m0
+            (\ (p :: Nat) (rec :: m p) -> natElim (\ (n :: Nat) -> m (Succ n)) m1 ms p) )
+  :: forall (m :: Nat -> *) . m 0 -> m 1 ->
+     (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
+     forall (n :: Nat) . m n;
+
+-- increment by one
+let inc = natFold Nat (Succ Zero) Succ;
+
+let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+let append =
+  (\(a :: *) (xs :: List a) (ys :: List a) ->
+    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
+        appendType;
+
+let len =
+  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
+    forall (a :: *) . forall (v :: List a) . Nat;
+
 -- supercompiling everything
 sc id;
 sc const;
@@ -42,4 +80,13 @@ sc plus;
 sc plus1;
 sc pred;
 sc fZSucc0;
+sc natFold;
+sc nat1Elim;
+sc inc;
+sc append;
+sc len;
 
+assume (A :: *);
+let LA = List A;
+
+sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
