@@ -90,3 +90,5 @@ assume (A :: *);
 let LA = List A;
 
 sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
+
+sc (\ (x :: List A) (y :: List A) (z :: List A) -> append A x (append A y z));
