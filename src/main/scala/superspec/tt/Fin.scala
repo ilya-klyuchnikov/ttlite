@@ -95,20 +95,20 @@ trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with Fi
   lazy val finsTE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VStar).toMap
   lazy val finElemsTE: NameEnv[Value] =
-    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${i}") -> VFin(n))).toMap
+    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFin(n))).toMap
   lazy val finElimsTE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElimType(n)).toMap
 
   lazy val finsVE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VFin(n)).toMap
   lazy val finElemsVE: NameEnv[Value] =
-    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${i}") -> VFinElem(i, n))).toMap
+    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFinElem(i, n))).toMap
   lazy val finElimsVE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElim(n)).toMap
 
   def finElimType(n: Int): Value =
     VPi(VPi(VFin(n), _ => VStar), m =>
-      (1 to n).foldRight(VPi(VFin(n), elem => m @@ elem))((i, pi) => VPi(VFinElem(i, n), e => m @@ e)))
+      (1 to n).foldRight(VPi(VFin(n), elem => m @@ elem))((i, pi) => VPi(m @@ VFinElem(i, n), e => pi)))
 
   def finElim(n: Int) =
     VLam(VPi(VFin(n), _ => VStar), m => {
@@ -117,7 +117,7 @@ trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with Fi
       lazy val body =
         eval(FinElim(n, Bound(n + 1), (1 to n).toList.reverse.map(Bound), Bound(0)), Map(), elem :: args)
       val lam0: Value = VLam(VFin(n), e => {elem = e; body})
-      val tt: Value = (1 to n).foldRight(lam0)((_, lam) => VLam(VFin(n), arg => {args = arg :: args; lam}))
+      val tt: Value = (1 to n).foldRight(lam0)((i, lam) => VLam(m @@ VFinElem(i, n), arg => {args = arg :: args; lam}))
       tt
     }
     )
