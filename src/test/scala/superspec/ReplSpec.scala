@@ -33,7 +33,7 @@ class ReplSpec extends org.scalatest.FunSpec {
   }
 
   describe("Fin REPL should process `tt/ex08_finn.pi` without errors") {
-    FinREPLMain.main(Array("tt/ex08_finn.pi"))
+    FinNatREPLMain.main(Array("tt/ex08_finn.pi"))
   }
 
   /*

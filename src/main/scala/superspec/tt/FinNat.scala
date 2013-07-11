@@ -4,7 +4,7 @@ package superspec.tt
 // Fin 0 - empty type
 // Fin 1 - unit type
 // Fin 2 - booleans
-trait FinAST extends CoreAST {  
+trait FinNat extends CoreAST {
   case class Fin(n: Term) extends Term
   case class FZero(A: Term) extends Term
   case class FSucc(A: Term, n: Term) extends Term
@@ -16,7 +16,7 @@ trait FinAST extends CoreAST {
   case class NFinElim(A: Value, c1: Value, c2: Value, c3: Value, c4: Neutral) extends Neutral
 }
 
-trait FinPrinter extends NatPrinter with FinAST {
+trait FinNatPrinter extends NatPrinter with FinNat {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Fin(n) =>
       print(p, ii, Free(Global("Fin")) @@ n)
@@ -31,7 +31,7 @@ trait FinPrinter extends NatPrinter with FinAST {
   }
 }
 
-trait FinEval extends CoreEval with FinAST {
+trait FinNatEval extends CoreEval with FinNat {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Fin(n) =>
       VFin(eval(n, named, bound))
@@ -59,7 +59,7 @@ trait FinEval extends CoreEval with FinAST {
   }
 }
 
-trait FinCheck extends CoreCheck with FinAST {
+trait FinNatCheck extends CoreCheck with FinNat {
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Fin(n) =>
       Fin(iSubst(i, r, n))
@@ -73,7 +73,7 @@ trait FinCheck extends CoreCheck with FinAST {
   }
 }
 
-trait FinQuote extends CoreQuote with FinAST {
+trait FinNatQuote extends CoreQuote with FinNat {
   override def quote(ii: Int, v: Value): Term = v match {
     case VFin(n) => Fin(quote(ii, n))
     case VFZero(n) => FZero(quote(ii, n))
@@ -87,7 +87,7 @@ trait FinQuote extends CoreQuote with FinAST {
   }
 }
 
-trait FinREPL extends NatREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
+trait FinNatREPL extends NatREPL with FinNat with FinNatPrinter with FinNatCheck with FinNatEval with FinNatQuote {
   lazy val finTE: NameEnv[Value] =
     Map(
       Global("Fin") -> FinType,
