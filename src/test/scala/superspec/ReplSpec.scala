@@ -40,10 +40,9 @@ class ReplSpec extends org.scalatest.FunSpec {
     FinREPLMain.main(Array("tt/ex09_fin.pi"))
   }
 
-  /*
-  describe("All REPL should process prelude.all and lists.pi without errors") {
-    REPLMain.main(Array("prelude.all"))
-  }*/
+  describe("All REPL should process `tt/ex10_tt.pi` without errors") {
+    TTREPLMain.main(Array("tt/ex10_tt.pi"))
+  }
 
   describe("ScREPL should supercompile all tasks in tt/sc01.pi") {
     TTScREPL.main(Array("tt/sc01.pi"))

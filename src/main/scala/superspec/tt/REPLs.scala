@@ -45,10 +45,9 @@ object FinREPLMain extends FinREPL {
     State(interactive = true, finVE, finTE, Set())
 }
 
-/*
-object REPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
+object TTREPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with FinREPL with ListREPL with ProductREPL with SumREPL {
   val te = natTE ++ eqTE ++ vectorTE ++ finTE ++ listTE ++ productTE ++ sumTE
   val ve = natVE ++ eqVE ++ vectorVE ++ finVE ++ listVE ++ productVE ++ sumVE
   override def initialState = State(interactive = true, ve, te, Set())
 }
-*/
+

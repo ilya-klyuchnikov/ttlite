@@ -1,0 +1,44 @@
+let id  = (\ (a :: *) (x :: a) -> x )
+    :: forall (a :: *) . a -> a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
+let Void = Fin_0;
+-- unit type
+let Unit = Fin_1;
+-- constructor
+let U = finElem_1_1;
+
+-- booleans
+let Bool = Fin_2;
+-- constructors
+let False = finElem_1_2;
+let True  = finElem_2_2;
+
+let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+
+let boolElim = finElim_2 ::
+    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+
+let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
+
+let not = boolElim (\ (_ :: Bool) -> Bool) True False;
+let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
+
+let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
+let xor = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) not;
+let if  = boolElim (\ (_ :: Bool) -> Bool -> Bool) not (id Bool);
+
+-- a simpler elimination scheme for natural numbers
+let natFold =
+  ( \ (m :: *) (mz :: m) (ms :: m -> m) ->
+            natElim
+                   ( \ (_ :: Nat) -> m )
+                   mz
+                   ( \ (n1 :: Nat) (rec :: m) -> ms rec ) )
+  :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
+
+let even    = natFold Bool True not;
+let odd     = natFold Bool False not;
+let isZero  = natFold Bool True (\  (_ :: Bool) -> False);
+let isSucc  = natFold Bool False (\ (_ :: Bool) -> True);
