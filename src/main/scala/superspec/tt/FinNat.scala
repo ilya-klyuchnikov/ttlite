@@ -5,7 +5,7 @@ package superspec.tt
 // Fin 1 - unit type
 // Fin 2 - booleans
 trait FinNatAst extends CoreAST {
-  case class Fin(n: Term) extends Term
+  case class FinNat(n: Term) extends Term
   case class FZero(A: Term) extends Term
   case class FSucc(A: Term, n: Term) extends Term
   case class FinElim(A: Term, c1: Term, c2: Term, c3: Term, c4: Term) extends Term
@@ -18,7 +18,7 @@ trait FinNatAst extends CoreAST {
 
 trait FinNatPrinter extends NatPrinter with FinNatAst {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
-    case Fin(n) =>
+    case FinNat(n) =>
       print(p, ii, Free(Global("Fin")) @@ n)
     case FZero(n) =>
       print(p, ii, Free(Global("Fin")) @@ n)
@@ -33,7 +33,7 @@ trait FinNatPrinter extends NatPrinter with FinNatAst {
 
 trait FinNatEval extends CoreEval with FinNatAst {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
-    case Fin(n) =>
+    case FinNat(n) =>
       VFin(eval(n, named, bound))
     case FZero(n) =>
       VFZero(eval(n, named, bound))
@@ -61,8 +61,8 @@ trait FinNatEval extends CoreEval with FinNatAst {
 
 trait FinNatCheck extends CoreCheck with FinNatAst {
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
-    case Fin(n) =>
-      Fin(iSubst(i, r, n))
+    case FinNat(n) =>
+      FinNat(iSubst(i, r, n))
     case FZero(n) =>
       FZero(iSubst(i, r, n))
     case FSucc(n, k) =>
@@ -75,7 +75,7 @@ trait FinNatCheck extends CoreCheck with FinNatAst {
 
 trait FinNatQuote extends CoreQuote with FinNatAst {
   override def quote(ii: Int, v: Value): Term = v match {
-    case VFin(n) => Fin(quote(ii, n))
+    case VFin(n) => FinNat(quote(ii, n))
     case VFZero(n) => FZero(quote(ii, n))
     case VFSucc(n, k) => FSucc(quote(ii, n), quote(ii, k))
     case _ => super.quote(ii, v)
