@@ -1,39 +1,27 @@
 package superspec
 
-import scala.language.postfixOps
-
-import scala.util.parsing.combinator.syntactical.StandardTokenParsers
-import org.kiama.util.JLineConsole
-import scala.util.parsing.combinator.lexical.StdLexical
-import scala.util.parsing.input.CharArrayReader._
-import scala.util.parsing.combinator.PackratParsers
-
-class HaskellLikeLexical extends StdLexical {
-  override def whitespace: Parser[Any] = rep(
-    whitespaceChar
-      | '/' ~ '*' ~ comment
-      | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
-      | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
-      | '/' ~ '*' ~ failure("unclosed comment")
-  )
-}
-
-trait Command
-case class TypeOf(in: String) extends Command
-case class Compile(cf: CompileForm) extends Command
-case class Reload(f: String) extends Command
-case object Browse extends Command
-case object Quit extends Command
-case object Help extends Command
-case object Noop extends Command
-
-trait CompileForm
-case class CompileInteractive(s: String) extends CompileForm
-case class CompileFile(f: String) extends CompileForm
-
-case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
-
 trait REPL extends Common {
+  import scala.language.postfixOps
+  import scala.util.parsing.combinator.PackratParsers
+  import scala.util.parsing.combinator.syntactical.StandardTokenParsers
+  import scala.util.parsing.combinator.lexical.StdLexical
+  import org.kiama.util.JLineConsole
+
+  trait Command
+  case class TypeOf(in: String) extends Command
+  case class Compile(cf: CompileForm) extends Command
+  case class Reload(f: String) extends Command
+  case object Browse extends Command
+  case object Quit extends Command
+  case object Help extends Command
+  case object Noop extends Command
+
+  trait CompileForm
+  case class CompileInteractive(s: String) extends CompileForm
+  case class CompileFile(f: String) extends CompileForm
+
+  case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
+
 
   type I // inferable term
   type C // checkable term
@@ -50,6 +38,17 @@ trait REPL extends Common {
     if (batch) {
       throw new Exception
     }
+  }
+
+  class HaskellLikeLexical extends StdLexical {
+    import scala.util.parsing.input.CharArrayReader._
+    override def whitespace: Parser[Any] = rep(
+      whitespaceChar
+        | '/' ~ '*' ~ comment
+        | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
+        | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
+        | '/' ~ '*' ~ failure("unclosed comment")
+    )
   }
 
   trait Interpreter extends StandardTokenParsers with PackratParsers {

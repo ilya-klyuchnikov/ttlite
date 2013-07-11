@@ -1,4 +1,6 @@
-package superspec.tt
+package superspec
+
+import superspec.tt._
 
 object CoreREPLMain extends CoreREPL {
   override def initialState =
