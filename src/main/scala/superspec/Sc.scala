@@ -104,16 +104,17 @@ trait TTSc extends CoreSubst {
       if (signal.isDefined)
         return List()
       val t = g.current.conf
+      debug(t)
       val piStep = driveTerm(t).step(t)
 
-      val fv = freeLocals(g.current.conf.ct).toList
-      val ss = fv.flatMap(x => elimFreeVar(g.current.conf, x).map(_.step(g.current.conf)))
+      //val fv = freeLocals(g.current.conf.ct).toList
+      //val ss = fv.flatMap(x => elimFreeVar(g.current.conf, x).map(_.step(g.current.conf)))
       // This part generates too much results for now
       // piStep.graphStep :: ss.map(_.graphStep)
       piStep.graphStep :: Nil
     }
   }
-
+  def debug(t: Conf)
 }
 
 trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreREPL {
@@ -140,24 +141,34 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
 
 object TTScREPL
   extends TTSc
+  with BaseResiduator
+  with GraphPrettyPrinter
   with CoreREPL
   with CoreSubst
   with CoreDriver
+  with CoreResiduator
   with NatREPL
   with NatSubst
   with NatDriver
+  with NatResiduator
   with ListREPL
   with ListSubst
   with ListDriver
-  with BaseResiduator
-  with CoreResiduator
-  with NatResiduator
   with ListResiduator
-  with GraphPrettyPrinter {
+  with ProductREPL
+  with ProductSubst
+  with ProductDriver
+  with ProductResiduator
+   {
 
-  val te = natTE ++ listTE
-  val ve = natVE ++ listVE
+  val te = natTE ++ listTE ++ productTE
+  val ve = natVE ++ listVE ++ productVE
+
   override def initialState = State(interactive = true, ve, te, Set())
+
+  def debug(t: Conf) {
+    //println(toString(t))
+  }
 
   override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {
     case Supercompile(it) =>
@@ -177,15 +188,18 @@ object TTScREPL
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
 
-            val iTerm = Ann(cTerm, cType)
-            val t2 = iinfer(state.ne, state.ctx, iTerm)
+            //val iTerm = Ann(cTerm, cType)
+            //val t2 = iinfer(state.ne, state.ctx, iTerm)
+            val t2 = iinfer(state.ne, state.ctx, cTerm)
+            println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>
-                println("(" + icprint(cTerm) + ") :: " + icprint(cType) + ";")
+                println("(" + icprint(cTerm) + ") ???? " + icprint(cType) + ";")
+                println("handling error")
                 handleError()
                 state
-              case Some(_) =>
-                println("(" + icprint(cTerm) + ") :: " + icprint(cType) + ";")
+              case Some(t3) =>
+                println("(" + icprint(cTerm) + ") :: " + icprint(iquote(t3)) + ";")
             }
           }
       }

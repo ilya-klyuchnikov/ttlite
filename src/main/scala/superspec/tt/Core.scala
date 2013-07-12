@@ -106,6 +106,7 @@ trait CoreQuote extends CoreAST {
       neutralQuote(ii, n) @@ quote(ii, v)
   }
 
+  // the problem is here!!!
   def boundFree(ii: Int, n: Name): Term = n match {
     case Quote(k) =>
       Bound(math.max(ii - k - 1, 0))

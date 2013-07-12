@@ -92,3 +92,45 @@ let LA = List A;
 sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
 
 sc (\ (x :: List A) (y :: List A) (z :: List A) -> append A x (append A y z));
+
+let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
+let snd = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
+
+
+sc productElim;
+sc fst;
+sc snd;
+
+let xxx = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) -> (fst A B (fst (Product A B) C p)));
+sc xxx;
+
+let yyy = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) ->
+    (snd A B (fst (Product A B) C p)));
+sc yyy;
+
+
+let th2 =
+    forall (A :: *) (B :: *) (C :: *) .
+        Product (Product A B) C -> Product A (Product B C);
+
+-- p1 = fst (Product A B) C p
+-- a = fst A B p1 = fst A B (fst (Product A B) C p)
+-- b = snd A B p1 = snd A B (fst (Product A B) C p)
+-- c = snd (Product A B) C p
+-- (b, c) = Pair B C b c = Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p)
+-- (a, (b, c)) = Pair A (Product B C) a (b, c) =
+--   =  Pair A (Product B C) (fst A B (fst (Product A B) C p)) (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))
+let pr2 =
+    (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C)->
+        Pair A (Product B C)
+            (fst A B (fst (Product A B) C p))
+            (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
+
+--sc pr2;
+
+
+
+
+

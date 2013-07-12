@@ -1,5 +1,8 @@
 package superspec.tt
 
+import mrsc.core._
+import superspec._
+
 trait ProductAST extends CoreAST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(A: Term, B: Term, a: Term, b: Term) extends Term
@@ -10,6 +13,44 @@ trait ProductAST extends CoreAST {
   case class NProductElim(A: Value, B: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
+trait ProductSubst extends CoreSubst with ProductAST {
+  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
+    case (Product(a1, b1), Product(a2, b2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(b1, b2)
+      )
+    case (Pair(a1, b1, x1, y1), Pair(a2, b2, x2, y2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(b1, b2),
+        findSubst0(x1, x2),
+        findSubst0(y1, y2)
+      )
+    case (ProductElim(a1, b1, m1, f1, p1), ProductElim(a2, b2, m2, f2, p2)) =>
+      mergeOptSubst(
+        findSubst0(a1, a2),
+        findSubst0(b1, b2),
+        findSubst0(f1, f2),
+        findSubst0(p1, p2)
+      )
+    case _ =>
+      super.findSubst0(from, to)
+  }
+
+  override def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
+    case Product(a, b) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth)
+    case Pair(a, b, x, y) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) && isFreeSubTerm(x, depth) && isFreeSubTerm(y, depth)
+    case ProductElim(a, b, m, f, p) =>
+      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) &&
+        isFreeSubTerm(m, depth) && isFreeSubTerm(f, depth) && isFreeSubTerm(p, depth)
+    case _ =>
+      super.isFreeSubTerm(t, depth)
+  }
+}
+
 trait ProductPrinter extends CorePrinter with ProductAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
@@ -17,7 +58,7 @@ trait ProductPrinter extends CorePrinter with ProductAST {
     case Pair(a, b, x, y) =>
       print(p, ii, Free(Global("Pair")) @@ a @@ b @@ x @@ y)
     case ProductElim(a, b, m, f, pair) =>
-      print(p, ii, Free(Global("productElim")) @@ a @@ b @@ a @@ f @@ pair)
+      print(p, ii, Free(Global("productElim")) @@ a @@ b @@ m @@ f @@ pair)
     case _ =>
       super.print(p, ii, t)
   }
@@ -43,6 +84,94 @@ trait ProductEval extends CoreEval with ProductAST {
     case _ =>
       super.eval(t, named, bound)
   }
+}
+
+trait ProductDriver extends CoreDriver with ProductAST {
+
+  // boilerplate/indirections
+  case object PairLabel extends Label
+
+  case class PairStep(a: Conf, b: Conf, x: Conf, y: Conf) extends Step {
+    override val graphStep =
+      AddChildNodesStep[Conf, Label](List(a -> PairLabel, b -> PairLabel, x -> PairLabel, y -> PairLabel))
+  }
+  case class PairDStep(a: Conf, b: Conf, x: Conf, y: Conf) extends DriveStep {
+    override def step(t: Conf) = PairStep(a, b, x, y)
+  }
+
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case NProductElim(a, b, m, f, p) =>
+      p match {
+        case NFree(n) =>
+          val aType = quote0(a)
+          val bType = quote0(b)
+
+          val xName = freshName(aType)
+          val x = Free(xName)
+
+          val yName = freshName(bType)
+          val y = Free(yName)
+
+          val pairCase = ElimBranch(Pair(aType, bType, x, y), Map())
+
+          ElimDStep(n, List(pairCase))
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
+  }
+
+  override def decompose(c: Conf): DriveStep = c.ct match {
+    case Pair(a, b, x, y) =>
+      val Product(a1, b1) = c.tp
+      PairDStep(DConf(a, Star), DConf(b, Star), DConf(x, a), DConf(y, b))
+    case _ =>
+      super.decompose(c)
+  }
+
+}
+
+trait ProductResiduator extends BaseResiduator with ProductDriver {
+  override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
+    node.outs match {
+      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
+        val aVal = eval(a, env, Nil)
+        val bVal = eval(b, env, Nil)
+        val motive =
+          VLam(VProduct(aVal, bVal), p => eval(quote0(tp), env + (sel -> p), Nil))
+
+        val resType = eval(quote0(tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil)
+
+
+        println("conf::==>" + node.conf)
+        println("a::==>" + aVal)
+        println("b::==>" + bVal)
+
+        println("===>" + tp)
+        println(eval(quote0(tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
+        println(eval(quote0(aVal), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
+        println(eval(quote0(bVal), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
+
+        val pairCase = VLam(aVal, x => VLam(bVal, y =>
+          fold(nodeS, env + (xN -> x) + (yN -> y), recM, resType)))
+
+        VNeutral(NFree(Global("productElim"))) @@
+          aVal @@
+          bVal @@
+          motive @@
+          pairCase @@
+          env(sel)
+      case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
+        val VProduct(aType, bType) = tp
+        VNeutral(NFree(Global("Pair"))) @@
+          fold(a, env, recM, VStar) @@
+          fold(b, env, recM, VStar) @@
+          fold(x, env, recM, aType) @@
+          fold(y, env, recM, bType)
+      case _ =>
+        super.fold(node, env, recM, tp)
+    }
 }
 
 trait ProductCheck extends CoreCheck with ProductAST {
@@ -157,10 +286,10 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
       Global("productElim") ->
         VLam(VStar, a => VLam(VStar, b =>
           VLam(VPi(VProduct(a, b), _ => VStar), m =>
-            VLam(a, x => VLam(b, y =>
-              VLam(VProduct(a, b), p =>
-                eval(ProductElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), productVE, List(p, y, x, m, b, a))
-              ))))))
+            VLam(VPi(a, x => VPi(b, y => m @@ VPair(a, b, x, y))), f =>
+                VLam(VProduct(a, b), p =>
+                  eval(ProductElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), productVE, List(p, f, m, b, a))
+                )))))
 
     )
 }
