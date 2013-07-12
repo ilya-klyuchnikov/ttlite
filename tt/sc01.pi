@@ -86,6 +86,11 @@ sc inc;
 sc append;
 sc len;
 
+let nat2Elim =
+  ( \ (m :: Nat -> *) -> natElim (\ (n :: Nat) -> m (Succ n))) ;
+
+sc nat2Elim;
+
 assume (A :: *);
 let LA = List A;
 
@@ -107,7 +112,7 @@ let xxx = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) -> (fst A 
 sc xxx;
 
 let yyy = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) ->
-    (snd A B (fst (Product A B) C p)));
+    (fst (Product A B) C p));
 sc yyy;
 
 
@@ -122,13 +127,14 @@ let th2 =
 -- (b, c) = Pair B C b c = Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p)
 -- (a, (b, c)) = Pair A (Product B C) a (b, c) =
 --   =  Pair A (Product B C) (fst A B (fst (Product A B) C p)) (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))
+
 let pr2 =
     (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C)->
         Pair A (Product B C)
             (fst A B (fst (Product A B) C p))
             (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
 
---sc pr2;
+sc pr2;
 
 
 

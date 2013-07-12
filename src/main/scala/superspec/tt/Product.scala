@@ -133,28 +133,18 @@ trait ProductDriver extends CoreDriver with ProductAST {
 }
 
 trait ProductResiduator extends BaseResiduator with ProductDriver {
-  override def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value =
     node.outs match {
       case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
-        val aVal = eval(a, env, Nil)
-        val bVal = eval(b, env, Nil)
+        val aVal = eval(a, env, bound)
+        val bVal = eval(b, env, bound)
         val motive =
-          VLam(VProduct(aVal, bVal), p => eval(quote0(tp), env + (sel -> p), Nil))
-
-        val resType = eval(quote0(tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil)
-
-
-        println("conf::==>" + node.conf)
-        println("a::==>" + aVal)
-        println("b::==>" + bVal)
-
-        println("===>" + tp)
-        println(eval(quote0(tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
-        println(eval(quote0(aVal), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
-        println(eval(quote0(bVal), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), Nil))
+          VLam(VProduct(aVal, bVal), p => eval(quote(bound.size + 1, tp), env + (sel -> p), p :: bound))
 
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
-          fold(nodeS, env + (xN -> x) + (yN -> y), recM, resType)))
+          fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
+            eval(quote(bound.size + 2, tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), y :: x :: bound)
+          )))
 
         VNeutral(NFree(Global("productElim"))) @@
           aVal @@
@@ -165,12 +155,12 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
       case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(aType, bType) = tp
         VNeutral(NFree(Global("Pair"))) @@
-          fold(a, env, recM, VStar) @@
-          fold(b, env, recM, VStar) @@
-          fold(x, env, recM, aType) @@
-          fold(y, env, recM, bType)
+          fold(a, env, bound, recM, VStar) @@
+          fold(b, env, bound, recM, VStar) @@
+          fold(x, env, bound, recM, aType) @@
+          fold(y, env, bound, recM, bType)
       case _ =>
-        super.fold(node, env, recM, tp)
+        super.fold(node, env, bound, recM, tp)
     }
 }
 

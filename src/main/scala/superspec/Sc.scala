@@ -121,17 +121,17 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
   def residuate(g: TG, nEnv: NameEnv[Value], tp: Value): Value = {
-    fold(g.root, nEnv, Map(), tp)
+    fold(g.root, nEnv, Nil, Map(), tp)
   }
 
-  def fold(node: N, env: NameEnv[Value], recM: Map[TPath, Value], tp: Value): Value = {
+  def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value = {
     node.base match {
       case Some(tPath) =>
         recM(tPath)
       case None =>
         node.outs match {
           case Nil =>
-            eval(node.conf.ct, env, Nil)
+            eval(node.conf.ct, env, bound)
           case outs =>
             sys.error(s"Residualization of non-trivial constructions should be implemented in subclasses. Edges: $outs")
         }
