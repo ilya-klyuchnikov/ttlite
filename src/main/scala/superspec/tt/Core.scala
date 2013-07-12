@@ -513,7 +513,7 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
         val VPi(_, ty2) = tp
-        VLam(eval(typeMap(fn), env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM, ty2(vfree(fn))))
+        VLam(eval(typeMap(fn), env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM, ty2(v)))
       case _ =>
         super.fold(node, env, bound, recM, tp)
     }

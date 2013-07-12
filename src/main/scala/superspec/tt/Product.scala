@@ -139,11 +139,11 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =
-          VLam(VProduct(aVal, bVal), p => eval(quote(bound.size + 1, tp), env + (sel -> p), p :: bound))
+          VLam(VProduct(aVal, bVal), p => eval(node.conf.tp, env + (sel -> p), p :: bound))
 
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
           fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
-            eval(quote(bound.size + 2, tp), env + (sel -> VPair(aVal, bVal, vfree(xN), vfree(yN))), y :: x :: bound)
+            eval(node.conf.tp, env + (sel -> VPair(aVal, bVal, x, y)), y :: x :: bound)
           )))
 
         VNeutral(NFree(Global("productElim"))) @@
@@ -153,7 +153,7 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
           pairCase @@
           env(sel)
       case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
-        val VProduct(aType, bType) = tp
+        val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
         VNeutral(NFree(Global("Pair"))) @@
           fold(a, env, bound, recM, VStar) @@
           fold(b, env, bound, recM, VStar) @@

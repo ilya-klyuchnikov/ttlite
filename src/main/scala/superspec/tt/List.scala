@@ -161,16 +161,17 @@ trait ListResiduator extends BaseResiduator with ListDriver {
 
         val aVal = eval(a, env, bound)
         val motive =
-          VLam(VPiList(aVal), n => eval(quote(bound.size + 1, tp), env + (sel -> n), n :: bound))
+          VLam(VPiList(aVal), n => eval(node.conf.tp, env + (sel -> n), n :: bound))
+          //Lam(VPi)
 
         val nilType =
-          eval(quote(bound.size, tp), env + (sel -> VPiNil(aVal)), bound)
+          eval(node.conf.tp, env + (sel -> VPiNil(aVal)), bound)
         val nilCase =
           fold(nodeZ, env, bound, recM, nilType)
         val consCase =
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
             fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec),
-              eval(quote(bound.size + 3, tp), env + (sel -> VPiCons(aVal, vfree(hN), vfree(tN))), rec :: t :: h :: bound))
+              eval(node.conf.tp, env + (sel -> VPiCons(aVal, h, t)), rec :: t :: h :: bound))
           )))
         VNeutral(NFree(Global("listElim"))) @@
           aVal @@
@@ -179,9 +180,9 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           consCase @@
           env(sel)
       case TEdge(n1, NilLabel) :: Nil =>
-        VNeutral(NFree(Global("Nil"))) @@ fold(n1, env, bound, recM, tp)
+        VNeutral(NFree(Global("Nil"))) @@ fold(n1, env, bound, recM, eval(node.conf.tp, env, bound))
       case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
-        val VPiList(aType) = tp
+        val VPiList(aType) = eval(node.conf.tp, env, bound)
         VNeutral(NFree(Global("Cons"))) @@
           fold(a, env, bound, recM, VStar) @@
           fold(h, env, bound, recM, aType) @@
