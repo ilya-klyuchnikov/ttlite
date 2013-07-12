@@ -1,3 +1,9 @@
+let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
+let snd = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
+
+
 let th1 = forall (A :: *) (B :: *) . Product A B -> Product B A;
 let pr1 = (\ (A :: *) (B :: *) (p :: Product A B) -> Pair B A (snd A B p) (fst A B p)) :: th1;
 

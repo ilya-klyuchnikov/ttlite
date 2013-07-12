@@ -3,13 +3,11 @@ package superspec.tt
 trait ProductAST extends CoreAST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(A: Term, B: Term, a: Term, b: Term) extends Term
-  case class Fst(A: Term, B: Term, p: Term) extends Term
-  case class Snd(A: Term, B: Term, p: Term) extends Term
+  case class ProductElim(A: Term, B: Term, m: Term, f: Term, pair: Term) extends Term
 
   case class VProduct(A: Value, B: Value) extends Value
   case class VPair(A: Value, B: Value, a: Value, b: Value) extends Value
-  case class NFst(A: Value, B: Value, p: Neutral) extends Neutral
-  case class NSnd(A: Value, B: Value, p: Neutral) extends Neutral
+  case class NProductElim(A: Value, B: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
 trait ProductPrinter extends CorePrinter with ProductAST {
@@ -18,10 +16,8 @@ trait ProductPrinter extends CorePrinter with ProductAST {
       print(p, ii, Free(Global("Product")) @@ a @@ b)
     case Pair(a, b, x, y) =>
       print(p, ii, Free(Global("Pair")) @@ a @@ b @@ x @@ y)
-    case Fst(a, b, pr) =>
-      print(p, ii, Free(Global("fst")) @@ a @@ b @@ pr)
-    case Snd(a, b, pr) =>
-      print(p, ii, Free(Global("snd")) @@ a @@ b @@ pr)
+    case ProductElim(a, b, m, f, pair) =>
+      print(p, ii, Free(Global("productElim")) @@ a @@ b @@ a @@ f @@ pair)
     case _ =>
       super.print(p, ii, t)
   }
@@ -33,15 +29,16 @@ trait ProductEval extends CoreEval with ProductAST {
       VProduct(eval(a, named, bound), eval(b, named, bound))
     case Pair(a, b, x, y) =>
       VPair(eval(a, named, bound), eval(b, named, bound), eval(x, named, bound), eval(y, named, bound))
-    case Fst(a, b, p) =>
-      eval(p, named, bound) match {
-        case VPair(_, _, x, _) => x
-        case VNeutral(n) => VNeutral(NFst(eval(a, named, bound), eval(b, named, bound), n))
-      }
-    case Snd(a, b, p) =>
-      eval(p, named, bound) match {
-        case VPair(_, _, _, y) => y
-        case VNeutral(n) => VNeutral(NSnd(eval(a, named, bound), eval(b, named, bound), n))
+    case ProductElim(a, b, m, f, pair) =>
+      val aVal = eval(a, named, bound)
+      val bVal = eval(b, named, bound)
+      val mVal = eval(m, named, bound)
+      val fVal = eval(f, named, bound)
+      eval(pair, named, bound) match {
+        case VPair(_, _, x, y) =>
+          fVal @@ x @@ y
+        case VNeutral(n) =>
+          VNeutral(NProductElim(aVal, bVal, mVal, fVal, n))
       }
     case _ =>
       super.eval(t, named, bound)
@@ -75,9 +72,11 @@ trait ProductCheck extends CoreCheck with ProductAST {
       checkEqual(yType, bVal)
 
       VProduct(aVal, bVal)
-    case Fst(a, b, p) =>
+    case ProductElim(a, b, m, f, p) =>
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
+      val mVal = eval(m, named, List())
+      val pVal = eval(f, named, List())
 
       val aType = iType(i, named, bound, a)
       checkEqual(aType, Star)
@@ -88,21 +87,13 @@ trait ProductCheck extends CoreCheck with ProductAST {
       val pType = iType(i, named, bound, p)
       checkEqual(pType, VProduct(aVal, bVal))
 
-      aVal
-    case Snd(a, b, p) =>
-      val aVal = eval(a, named, List())
-      val bVal = eval(b, named, List())
+      val mType = iType(i, named, bound, m)
+      checkEqual(mType, VPi(VProduct(aVal, bVal), {_ => VStar}))
 
-      val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      val fType = iType(i, named, bound, f)
+      checkEqual(fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(aVal, bVal, a, b))))
 
-      val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
-
-      val pType = iType(i, named, bound, p)
-      checkEqual(pType, VProduct(aVal, bVal))
-
-      bVal
+      mVal @@ pVal
     case _ =>
       super.iType(i, named, bound, t)
   }
@@ -112,10 +103,8 @@ trait ProductCheck extends CoreCheck with ProductAST {
       Product(iSubst(i, r, a), iSubst(i, r, b))
     case Pair(a, b, x, y) =>
       Pair(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, x), iSubst(i, r, y))
-    case Fst(a, b, p) =>
-      Fst(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, p))
-    case Snd(a, b, p) =>
-      Snd(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, p))
+    case ProductElim(a, b, m, f, p) =>
+      ProductElim(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, m), iSubst(i, r, f), iSubst(i, r, p))
     case _ => super.iSubst(i, r, it)
   }
 }
@@ -130,10 +119,8 @@ trait ProductQuote extends CoreQuote with ProductAST {
   }
 
   override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NFst(a, b, p) =>
-      Fst(quote(ii, a), quote(ii, b), neutralQuote(ii, p))
-    case NSnd(a, b, p) =>
-      Snd(quote(ii, a), quote(ii, b), neutralQuote(ii, p))
+    case NProductElim(a, b, m, f, p) =>
+      ProductElim(quote(ii, a), quote(ii, b), quote(ii, m), quote(ii, f), neutralQuote(ii, p))
     case _ => super.neutralQuote(ii, n)
   }
 }
@@ -145,11 +132,21 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
         VPi(VStar, _ => VPi(VStar, _ => VStar)),
       Global("Pair") ->
         VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VProduct(a, b))))),
-      Global("fst") ->
-        VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => a))),
-      Global("snd") ->
-        VPi(VStar, a => VPi(VStar, b => VPi(VProduct(a, b), _ => b)))
+      Global("productElim") ->
+        productElimType
     )
+
+  val productElimTypeIn =
+    """
+      |forall (A :: *) .
+      |forall (B :: *) .
+      |forall (m :: forall (_ :: Product A B) . *) .
+      |forall (f :: forall (a :: A) (b :: B) . m (Pair A B a b)) .
+      |forall (p :: Product A B) .
+      |  m p
+    """.stripMargin
+
+  lazy val productElimType = int.ieval(productVE, int.parseIO(int.iParse, productElimTypeIn).get)
 
   val productVE: NameEnv[Value] =
     Map(
@@ -157,13 +154,13 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
         VLam(VStar, a => VLam(VStar, b => VProduct(a, b))),
       Global("Pair") ->
         VLam(VStar, a => VLam(VStar, b => VLam(a, x => VLam(b, y => VPair(a, b, x, y))))),
-      Global("fst") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
-          eval(Fst(Bound(2), Bound(1), Bound(0)), productVE, List(n, b, a))
-        }))),
-      Global("snd") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(VProduct(a, b), {n =>
-          eval(Snd(Bound(2), Bound(1), Bound(0)), productVE, List(n, b, a))
-        })))
+      Global("productElim") ->
+        VLam(VStar, a => VLam(VStar, b =>
+          VLam(VPi(VProduct(a, b), _ => VStar), m =>
+            VLam(a, x => VLam(b, y =>
+              VLam(VProduct(a, b), p =>
+                eval(ProductElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), productVE, List(p, y, x, m, b, a))
+              ))))))
+
     )
 }
