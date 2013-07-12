@@ -148,7 +148,7 @@ trait NatDriver extends CoreDriver with NatAST {
 }
 
 trait NatResiduator extends BaseResiduator with NatDriver {
-  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
@@ -156,20 +156,17 @@ trait NatResiduator extends BaseResiduator with NatDriver {
           Nil =>
         val motive =
           VLam(VNat, n => eval(node.conf.tp, env + (sel -> n), n :: bound))
-        val zType =
-          eval(node.conf.tp, env + (sel -> VZero), bound)
         val zCase =
-          fold(nodeZ, env, bound, recM, zType)
+          fold(nodeZ, env, bound, recM)
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, rec =>
-            fold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec),
-              eval(node.conf.tp, env + (sel -> VSucc(n)), rec :: n :: bound))
+            fold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))
           ))
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
-        VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, bound, recM, tp)
+        VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, bound, recM)
       case _ =>
-        super.fold(node, env, bound, recM, tp)
+        super.fold(node, env, bound, recM)
     }
 }
 

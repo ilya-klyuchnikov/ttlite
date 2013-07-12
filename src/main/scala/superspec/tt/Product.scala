@@ -133,7 +133,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
 }
 
 trait ProductResiduator extends BaseResiduator with ProductDriver {
-  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
         val aVal = eval(a, env, bound)
@@ -142,9 +142,7 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
           VLam(VProduct(aVal, bVal), p => eval(node.conf.tp, env + (sel -> p), p :: bound))
 
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
-          fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
-            eval(node.conf.tp, env + (sel -> VPair(aVal, bVal, x, y)), y :: x :: bound)
-          )))
+          fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM)))
 
         VNeutral(NFree(Global("productElim"))) @@
           aVal @@
@@ -155,12 +153,12 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
       case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
         VNeutral(NFree(Global("Pair"))) @@
-          fold(a, env, bound, recM, VStar) @@
-          fold(b, env, bound, recM, VStar) @@
-          fold(x, env, bound, recM, aType) @@
-          fold(y, env, bound, recM, bType)
+          fold(a, env, bound, recM) @@
+          fold(b, env, bound, recM) @@
+          fold(x, env, bound, recM) @@
+          fold(y, env, bound, recM)
       case _ =>
-        super.fold(node, env, bound, recM, tp)
+        super.fold(node, env, bound, recM)
     }
 }
 

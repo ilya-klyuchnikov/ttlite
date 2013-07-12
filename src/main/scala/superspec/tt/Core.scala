@@ -509,12 +509,11 @@ trait CoreDriver extends TTSc {
 trait CoreResiduator extends BaseResiduator with CoreDriver {
   import mrsc.core._
 
-  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
-        val VPi(_, ty2) = tp
-        VLam(eval(typeMap(fn), env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM, ty2(v)))
+        VLam(eval(typeMap(fn), env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM))
       case _ =>
-        super.fold(node, env, bound, recM, tp)
+        super.fold(node, env, bound, recM)
     }
 }

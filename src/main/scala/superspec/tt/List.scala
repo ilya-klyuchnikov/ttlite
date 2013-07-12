@@ -152,7 +152,7 @@ trait ListDriver extends CoreDriver with ListAST {
 }
 
 trait ListResiduator extends BaseResiduator with ListDriver {
-  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value =
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
@@ -167,12 +167,10 @@ trait ListResiduator extends BaseResiduator with ListDriver {
         val nilType =
           eval(node.conf.tp, env + (sel -> VPiNil(aVal)), bound)
         val nilCase =
-          fold(nodeZ, env, bound, recM, nilType)
+          fold(nodeZ, env, bound, recM)
         val consCase =
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
-            fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec),
-              eval(node.conf.tp, env + (sel -> VPiCons(aVal, h, t)), rec :: t :: h :: bound))
-          )))
+            fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))
         VNeutral(NFree(Global("listElim"))) @@
           aVal @@
           motive @@
@@ -180,15 +178,15 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           consCase @@
           env(sel)
       case TEdge(n1, NilLabel) :: Nil =>
-        VNeutral(NFree(Global("Nil"))) @@ fold(n1, env, bound, recM, eval(node.conf.tp, env, bound))
+        VNeutral(NFree(Global("Nil"))) @@ fold(n1, env, bound, recM)
       case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(aType) = eval(node.conf.tp, env, bound)
         VNeutral(NFree(Global("Cons"))) @@
-          fold(a, env, bound, recM, VStar) @@
-          fold(h, env, bound, recM, aType) @@
-          fold(t, env, bound, recM, tp)
+          fold(a, env, bound, recM) @@
+          fold(h, env, bound, recM) @@
+          fold(t, env, bound, recM)
       case _ =>
-        super.fold(node, env, bound, recM, tp)
+        super.fold(node, env, bound, recM)
     }
 }
 

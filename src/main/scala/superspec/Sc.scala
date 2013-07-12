@@ -120,11 +120,11 @@ trait TTSc extends CoreSubst {
 trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreREPL {
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
-  def residuate(g: TG, nEnv: NameEnv[Value], tp: Value): Value = {
-    fold(g.root, nEnv, Nil, Map(), tp)
+  def residuate(g: TG, nEnv: NameEnv[Value]): Value = {
+    fold(g.root, nEnv, Nil, Map())
   }
 
-  def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value], tp: Value): Value = {
+  def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value = {
     node.base match {
       case Some(tPath) =>
         recM(tPath)
@@ -184,7 +184,7 @@ object TTScREPL
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
             println(tgToString(tGraph))
-            val resVal = residuate(tGraph, state.ne, tp)
+            val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
 
