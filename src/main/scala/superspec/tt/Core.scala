@@ -1,6 +1,7 @@
 package superspec.tt
 
 import superspec._
+import mrsc.core._
 
 trait CoreAST extends Common {
   trait Term {
@@ -434,11 +435,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
 }
 
 trait CoreDriver extends TTSc {
-  import mrsc.core._
-  import superspec._
-
   var v = 100
-
   def freshName(tp: Term): Name = {
     v += 1;
     val res = Local(v)
@@ -472,8 +469,8 @@ trait CoreDriver extends TTSc {
   }
 
   def driveNeutral(n: Neutral): DriveStep = n match {
-    case NFree(n) => StopDStep
     case NApp(n, _) => driveNeutral(n)
+    case _ => StopDStep
   }
 
   def decompose(c: Conf): DriveStep = eval0(c.ct) match {

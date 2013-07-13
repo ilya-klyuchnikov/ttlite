@@ -1,5 +1,7 @@
 package superspec.tt
 
+import mrsc.core._
+import superspec._
 
 trait EqAST extends CoreAST {
   // Refl A x :: Eq A x x
@@ -45,6 +47,79 @@ trait EqEval extends CoreEval with EqAST {
       }
     case _ => super.eval(t, named, bound)
   }
+}
+
+trait EqDriver extends CoreDriver with EqAST {
+
+  // boilerplate/indirections
+  case object ReflLabel extends Label
+
+  case class ReflStep(A: Conf, x: Conf) extends Step {
+    override val graphStep =
+      AddChildNodesStep[Conf, Label](List(A -> ReflLabel, x -> ReflLabel))
+  }
+  case class ReflDStep(A: Conf, x: Conf) extends DriveStep {
+    override def step(t: Conf) = ReflStep(A, x)
+  }
+
+  // it seems that we need to put here also mr info -
+  // we cannot just restore it from current graphs
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case NEqElim(a, m, mr, x, y, neq) =>
+      neq match {
+        case NFree(n) =>
+          val aType = quote0(a)
+          val m1 = quote0(m)
+          val mr1 = quote0(mr)
+          val reflCase = ElimBranch(Refl(aType, freshLocal(aType)), Map(), (m1, mr1))
+          ElimDStep(n, List(reflCase))
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
+  }
+
+  override def decompose(c: Conf): DriveStep = c.ct match {
+    case Refl(a, x) =>
+      val Eq(_, _, _) = c.tp
+      ReflDStep(DConf(a, Star), DConf(x, a))
+    case _ =>
+      super.decompose(c)
+  }
+
+}
+
+trait EqResiduator extends BaseResiduator with EqDriver {
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, x), _, (m: Term, mr: Term)))) :: Nil =>
+        // "argument reconstruction"
+        val Eq(_, x, y) = typeMap(sel)
+
+        val aVal = eval(a, env, bound)
+        val prop = eval(m, env, bound)
+          //VLam(aVal, x => VLam(aVal, y => VLam(VEq(aVal, x, y), eq =>
+          //  eval(node.conf.tp, env + (sel -> eq), eq :: y :: x :: bound) )))
+
+        val propR = eval(mr, env, bound)
+
+        VNeutral(NFree(Global("eqElim"))) @@
+          aVal @@
+          prop @@
+          propR @@
+          eval(x, env, bound) @@
+          eval(y, env, bound) @@
+          env(sel)
+      case TEdge(a, ReflLabel) :: TEdge(x, ReflLabel) :: Nil =>
+        val VEq(_, _, _) = eval(node.conf.tp, env, bound)
+        VNeutral(NFree(Global("Refl"))) @@
+          fold(a, env, bound, recM) @@
+          fold(x, env, bound, recM)
+      case _ =>
+        super.fold(node, env, bound, recM)
+    }
 }
 
 trait EqCheck extends CoreCheck with EqAST {

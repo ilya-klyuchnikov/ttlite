@@ -116,17 +116,14 @@ trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Free(hN), Free(tN)), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Free(hN), Free(tN)), _, _))) ::
           Nil =>
 
         val aVal = eval(a, env, bound)
         val motive =
           VLam(VPiList(aVal), n => eval(node.conf.tp, env + (sel -> n), n :: bound))
-          //Lam(VPi)
 
-        val nilType =
-          eval(node.conf.tp, env + (sel -> VPiNil(aVal)), bound)
         val nilCase =
           fold(nodeZ, env, bound, recM)
         val consCase =

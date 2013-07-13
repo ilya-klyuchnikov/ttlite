@@ -14,7 +14,7 @@ trait TTSc extends CoreSubst {
   case class DConf(ct: Term, tp: Term)
 
   // sub - a substitution, using only this substitution we can perform a fold
-  case class ElimBranch(ptr: Term, sub: Subst)
+  case class ElimBranch(ptr: Term, sub: Subst, meta: Any = null)
   trait DriveStep {
     def step(t: Conf): Step
   }
@@ -73,7 +73,7 @@ trait TTSc extends CoreSubst {
         findRenaming(g.current.conf.ct, parConf.ct) match {
           case Some(ren) =>
             label match {
-              case CaseBranchLabel(_, ElimBranch(_, sub)) if sub == ren =>
+              case CaseBranchLabel(_, ElimBranch(_, sub, _)) if sub == ren =>
                 return Some(current.in.node)
               case _ =>
             }
@@ -156,10 +156,13 @@ object TTScREPL
   with ProductREPL
   with ProductDriver
   with ProductResiduator
+  with EqREPL
+  with EqDriver
+  with EqResiduator
    {
 
-  val te = natTE ++ listTE ++ productTE
-  val ve = natVE ++ listVE ++ productVE
+  val te = natTE ++ listTE ++ productTE ++ eqTE
+  val ve = natVE ++ listVE ++ productVE ++ eqVE
 
   override def initialState = State(interactive = true, ve, te, Set())
 
@@ -186,8 +189,8 @@ object TTScREPL
             val cType = iquote(tp)
 
             val iTerm = Ann(cTerm, cType)
-            val t2 = iinfer(state.ne, state.ctx, iTerm)
-            //val t2 = iinfer(state.ne, state.ctx, cTerm)
+            //val t2 = iinfer(state.ne, state.ctx, iTerm)
+            val t2 = iinfer(state.ne, state.ctx, cTerm)
             println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>
