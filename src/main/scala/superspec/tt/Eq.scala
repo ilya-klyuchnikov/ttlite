@@ -79,6 +79,7 @@ trait EqCheck extends CoreCheck with EqAST {
       val propVal = eval(prop, named, Nil)
       val xVal = eval(x, named, Nil)
       val yVal = eval(y, named, Nil)
+      val eqVal = eval(y, named, Nil)
 
       val aType = iType(i, named, bound, a)
       checkEqual(aType, Star)
@@ -100,7 +101,7 @@ trait EqCheck extends CoreCheck with EqAST {
       val eqType = iType(i, named, bound, eq)
       checkEqual(eqType, VEq(aVal, xVal, yVal))
 
-      propVal @@ xVal @@ yVal
+      propVal @@ xVal @@ yVal @@ eqVal
     case _ =>
       super.iType(i, named, bound, t)
   }
