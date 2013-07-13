@@ -15,40 +15,6 @@ trait NatAST extends CoreAST {
   case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
-trait NatSubst extends CoreSubst with NatAST {
-  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
-    case (Zero, Zero) =>
-      Some(Map())
-    case (Succ(x1), Succ(x2)) =>
-      findSubst0(x1, x2)
-    case (Nat, Nat) =>
-      Some(Map())
-    case (NatElim(m1, zCase1, sCase1, n1), NatElim(m2, zCase2, sCase2, n2)) =>
-      mergeOptSubst(
-        findSubst0(m1, m2),
-        findSubst0(zCase1, zCase2),
-        findSubst0(sCase1, sCase2),
-        findSubst0(n1, n2)
-      )
-    case _ =>
-      super.findSubst0(from, to)
-  }
-
-  override def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
-    case Zero =>
-      true
-    case Succ(c) =>
-      isFreeSubTerm(c, depth)
-    case Nat =>
-      true
-    case NatElim(a, b, c, d) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) &&
-        isFreeSubTerm(c, depth) && isFreeSubTerm(d, depth)
-    case _ =>
-      super.isFreeSubTerm(t, depth)
-  }
-}
-
 trait NatPrinter extends CorePrinter with NatAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>

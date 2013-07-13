@@ -145,14 +145,9 @@ trait CoreSubst extends CoreEval with CoreQuote {
     for (sub <- findSubst0(from, to))
     yield sub.filter { case (k, v) => v != Free(k) }
 
-  def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
-    case (Lam(t1, e1), Lam(t2, e2)) =>
-      mergeOptSubst(
-        findSubst0(t1, t2),
-        findSubst0(e1, e2)
-      )
-    case (Free(n@Local(_)), _) =>
-      if (isFreeSubTerm(to, 0)) Some(Map(n -> to)) else None
+  def findSubst0(from: Any, to: Any): Option[Subst] = (from, to) match {
+    case (Free(n@Local(_)), t: Term) =>
+      if (isFreeSubTerm(t, 0)) Some(Map(n -> t)) else None
     case (Free(Global(n)), Free(Global(m))) =>
       if (n == m) Some(Map()) else None
     case (Free(Global(n)), _) =>
@@ -161,20 +156,17 @@ trait CoreSubst extends CoreEval with CoreQuote {
       if (i == j) Some(Map()) else None
     case (f@Free(Quote(_)), _) =>
       sys.error("Hey, I do note expect quoted variables here!")
-    case (Ann(e1, t1), Ann(e2, t2)) =>
-      val s1 = findSubst0(e1, e2)
-      val s2 = findSubst0(t1, t2)
-      mergeOptSubst(s1, s2)
-    case (Star, Star) =>
-      Some(Map())
-    case (Pi(t1, e1), Pi(t2, e2)) =>
-      val s1 = findSubst0(e1, e2)
-      val s2 = findSubst0(t1, t2)
-      mergeOptSubst(s1, s2)
-    case (e1 :@: t1, e2 :@: t2 ) =>
-      val s1 = findSubst0(e1, e2)
-      val s2 = findSubst0(t1, t2)
-      mergeOptSubst(s1, s2)
+    case (Lam(t1, e1), Lam(t2, e2)) =>
+      mergeOptSubst(
+        findSubst0(t1, t2),
+        findSubst0(e1, e2)
+      )
+    case (from: scala.Product, to: scala.Product)
+      if from.getClass == to.getClass =>
+      val subs = (from.productIterator.toList zip to.productIterator.toList).map {
+        case (f1, t1) => findSubst0(f1, t1)
+      }
+      mergeOptSubst(subs: _*)
     case _ =>
       None
   }
@@ -212,21 +204,17 @@ trait CoreSubst extends CoreEval with CoreQuote {
     quote0(eval(t, env, Nil))
   }
 
-  def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
-    case Lam(t, e) =>
-      isFreeSubTerm(t, depth) && isFreeSubTerm(e, depth + 1)
-    case Ann(c1, c2) =>
-      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
-    case Star =>
-      true
+  def isFreeSubTerm(t: Any, depth: Int): Boolean = t match {
     case Pi(c1, c2) =>
       isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth + 1)
+    case Lam(t, e) =>
+      isFreeSubTerm(t, depth) && isFreeSubTerm(e, depth + 1)
     case Bound(i) =>
       i < depth
     case Free(_) =>
       true
-    case (c1 :@: c2) =>
-      isFreeSubTerm(c1, depth) && isFreeSubTerm(c2, depth)
+    case t1: scala.Product =>
+      t1.productIterator.forall(isFreeSubTerm(_, depth))
   }
 
 }

@@ -148,15 +148,12 @@ object TTScREPL
   with CoreDriver
   with CoreResiduator
   with NatREPL
-  with NatSubst
   with NatDriver
   with NatResiduator
   with ListREPL
-  with ListSubst
   with ListDriver
   with ListResiduator
   with ProductREPL
-  with ProductSubst
   with ProductDriver
   with ProductResiduator
    {
@@ -188,14 +185,12 @@ object TTScREPL
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
 
-            //val iTerm = Ann(cTerm, cType)
-            //val t2 = iinfer(state.ne, state.ctx, iTerm)
-            val t2 = iinfer(state.ne, state.ctx, cTerm)
+            val iTerm = Ann(cTerm, cType)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
+            //val t2 = iinfer(state.ne, state.ctx, cTerm)
             println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>
-                println("(" + icprint(cTerm) + ") ???? " + icprint(cType) + ";")
-                println("handling error")
                 handleError()
                 state
               case Some(t3) =>

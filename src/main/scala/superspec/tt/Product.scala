@@ -13,44 +13,6 @@ trait ProductAST extends CoreAST {
   case class NProductElim(A: Value, B: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait ProductSubst extends CoreSubst with ProductAST {
-  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
-    case (Product(a1, b1), Product(a2, b2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(b1, b2)
-      )
-    case (Pair(a1, b1, x1, y1), Pair(a2, b2, x2, y2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(b1, b2),
-        findSubst0(x1, x2),
-        findSubst0(y1, y2)
-      )
-    case (ProductElim(a1, b1, m1, f1, p1), ProductElim(a2, b2, m2, f2, p2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(b1, b2),
-        findSubst0(f1, f2),
-        findSubst0(p1, p2)
-      )
-    case _ =>
-      super.findSubst0(from, to)
-  }
-
-  override def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
-    case Product(a, b) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth)
-    case Pair(a, b, x, y) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) && isFreeSubTerm(x, depth) && isFreeSubTerm(y, depth)
-    case ProductElim(a, b, m, f, p) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(b, depth) &&
-        isFreeSubTerm(m, depth) && isFreeSubTerm(f, depth) && isFreeSubTerm(p, depth)
-    case _ =>
-      super.isFreeSubTerm(t, depth)
-  }
-}
-
 trait ProductPrinter extends CorePrinter with ProductAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>

@@ -12,32 +12,6 @@ trait EqAST extends CoreAST {
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
 }
 
-trait EqSubst extends CoreSubst with EqAST {
-  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
-    case (Eq(a1, x1, y1), Eq(a2, x2, y2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(x1, x2),
-        findSubst0(y1, y2)
-      )
-    case (Refl(a1, x1), Refl(a2, x2)) =>
-      val s1 = findSubst0(a1, a2)
-      val s2 = findSubst0(x1, x2)
-      mergeOptSubst(s1, s2)
-    case (EqElim(a1, m1, mr1, x1, y1, eq1), EqElim(a2, m2, mr2, x2, y2, eq2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(m1, m2),
-        findSubst0(mr1, mr2),
-        findSubst0(x1, x2),
-        findSubst0(y1, y2),
-        findSubst0(eq1, eq2)
-      )
-    case _ =>
-      super.findSubst0(from, to)
-  }
-}
-
 trait EqPrinter extends CorePrinter with EqAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Eq(a, x, y) =>

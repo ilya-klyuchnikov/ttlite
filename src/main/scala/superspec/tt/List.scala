@@ -15,45 +15,6 @@ trait ListAST extends CoreAST {
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
-trait ListSubst extends CoreSubst with ListAST {
-  override def findSubst0(from: Term, to: Term): Option[Subst] = (from, to) match {
-    case (PiList(a1), PiList(a2)) =>
-      findSubst0(a1, a2)
-    case (PiNil(a1), PiNil(a2)) =>
-      findSubst0(a1, a2)
-    case (PiCons(a1, h1, t1), PiCons(a2, h2, t2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(h1, h2),
-        findSubst0(t1, t2)
-      )
-    case (PiListElim(a1, m1, nCase1, cCase1, xs1), PiListElim(a2, m2, nCase2, cCase2, xs2)) =>
-      mergeOptSubst(
-        findSubst0(a1, a2),
-        findSubst0(m1, m2),
-        findSubst0(nCase1, nCase2),
-        findSubst0(cCase1, cCase2),
-        findSubst0(xs1, xs2)
-      )
-    case _ =>
-      super.findSubst0(from, to)
-  }
-
-  override def isFreeSubTerm(t: Term, depth: Int): Boolean = t match {
-    case PiList(a) =>
-      isFreeSubTerm(a, depth)
-    case PiNil(a) =>
-      isFreeSubTerm(a, depth)
-    case PiCons(a, h, t) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(h, depth) && isFreeSubTerm(t, depth)
-    case PiListElim(a, m, nCase, cCase, xs) =>
-      isFreeSubTerm(a, depth) && isFreeSubTerm(m, depth) &&
-        isFreeSubTerm(nCase, depth) && isFreeSubTerm(cCase, depth) && isFreeSubTerm(xs, depth)
-    case _ =>
-      super.isFreeSubTerm(t, depth)
-  }
-}
-
 trait ListPrinter extends CorePrinter with ListAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
