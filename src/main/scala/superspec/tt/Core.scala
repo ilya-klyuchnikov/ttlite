@@ -434,7 +434,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   def toNat(i: Int): Term = sys.error("not implemented")
 }
 
-trait CoreDriver extends TTSc {
+trait CoreDriver extends TTSc with CoreCheck {
   var v = 100
   def freshName(tp: Term): Name = {
     v += 1;
@@ -473,15 +473,21 @@ trait CoreDriver extends TTSc {
     case _ => StopDStep
   }
 
-  def decompose(c: Conf): DriveStep = eval0(c.ct) match {
+  def decompose(c: Conf): DriveStep = c.ct match {
+    /*
     case VLam(_, f) =>
       val Pi(t1, _) = c.tp
       val fn: Name = freshName(t1)
       val nextTerm = quote0(f(vfree(fn)))
       val VPi(_, vt2) = eval0(c.tp)
       val nextType = quote0(vt2(vfree(fn)))
+      LamDStep(fn, DConf(nextTerm, nextType))*/
+    case Lam(t, f) =>
+      val Pi(t1, t2) = c.tp
+      val fn = freshName(t1)
+      val nextTerm = iSubst(0, Free(fn), f)
+      val nextType = iSubst(0, Free(fn), t2)
       LamDStep(fn, DConf(nextTerm, nextType))
-
     case _ =>
       StopDStep
   }

@@ -97,7 +97,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
 trait ProductResiduator extends BaseResiduator with ProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _, _))) :: Nil =>
+      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =

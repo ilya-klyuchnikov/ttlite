@@ -117,8 +117,8 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _, _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _))) ::
           Nil =>
         val motive =
           VLam(VNat, n => eval(node.conf.tp, env + (sel -> n), n :: bound))

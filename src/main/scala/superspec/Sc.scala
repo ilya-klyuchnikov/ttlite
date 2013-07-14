@@ -14,7 +14,7 @@ trait TTSc extends CoreSubst {
   case class DConf(ct: Term, tp: Term)
 
   // sub - a substitution, using only this substitution we can perform a fold
-  case class ElimBranch(ptr: Term, sub: Subst, meta: Any = null)
+  case class ElimBranch(ptr: Term, sub: Subst)
   trait DriveStep {
     def step(t: Conf): Step
   }
@@ -73,7 +73,7 @@ trait TTSc extends CoreSubst {
         findRenaming(g.current.conf.ct, parConf.ct) match {
           case Some(ren) =>
             label match {
-              case CaseBranchLabel(_, ElimBranch(_, sub, _)) if sub == ren =>
+              case CaseBranchLabel(_, ElimBranch(_, sub)) if sub == ren =>
                 return Some(current.in.node)
               case _ =>
             }
@@ -197,7 +197,12 @@ object TTScREPL
                 handleError()
                 state
               case Some(t3) =>
+                if (iquote(t3) != iquote(tp)) {
+                  println(icprint(iquote(tp)) + "!== " + icprint(iquote(t3)))
+                  sys.error("1");
+                }
                 println("(" + icprint(cTerm) + ") :: " + icprint(iquote(t3)) + ";")
+                state
             }
           }
       }

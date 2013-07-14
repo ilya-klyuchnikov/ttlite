@@ -27,7 +27,7 @@ trait EqPrinter extends CorePrinter with EqAST {
   }
 }
 
-trait EqEval extends CoreEval with EqAST {
+trait EqEval extends CoreEval with EqAST with CoreQuote {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Eq(a, x, y) =>
       VEq(eval(a, named, bound), eval(x, named, bound), eval(y, named, bound))
@@ -35,7 +35,7 @@ trait EqEval extends CoreEval with EqAST {
       VRefl(eval(a, named, bound), eval(x, named, bound))
     case EqElim(a, prop, propR, x, y, eq) =>
       eval(eq, named, bound) match {
-        case VRefl(_, z) =>
+        case r@VRefl(a, z) =>
           eval(propR, named, bound) @@ z
         case VNeutral(n) =>
           VNeutral(NEqElim(
@@ -43,7 +43,8 @@ trait EqEval extends CoreEval with EqAST {
             eval(prop, named, bound),
             eval(propR, named, bound),
             eval(x, named, bound),
-            eval(y, named, bound), n))
+            eval(y, named, bound),
+            n))
       }
     case _ => super.eval(t, named, bound)
   }
@@ -69,9 +70,7 @@ trait EqDriver extends CoreDriver with EqAST {
       neq match {
         case NFree(n) =>
           val aType = quote0(a)
-          val m1 = quote0(m)
-          val mr1 = quote0(mr)
-          val reflCase = ElimBranch(Refl(aType, freshLocal(aType)), Map(), (m1, mr1))
+          val reflCase = ElimBranch(Refl(aType, freshLocal(aType)), Map())
           ElimDStep(n, List(reflCase))
         case n =>
           driveNeutral(n)
@@ -94,17 +93,17 @@ trait EqResiduator extends BaseResiduator with EqDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, x), _, (m: Term, mr: Term)))) :: Nil =>
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, Free(hh)), _))) :: Nil =>
         // "argument reconstruction"
         val Eq(_, x, y) = typeMap(sel)
-
         val aVal = eval(a, env, bound)
-        val prop = eval(m, env, bound)
-          //VLam(aVal, x => VLam(aVal, y => VLam(VEq(aVal, x, y), eq =>
-          //  eval(node.conf.tp, env + (sel -> eq), eq :: y :: x :: bound) )))
-
-        val propR = eval(mr, env, bound)
-
+        // types should be abstracted as well
+        // we should propagate x1, y1 somehow
+        val prop =
+          VLam(aVal, x1 => VLam(aVal, y1 => VLam(VEq(aVal, x1, y1), eq =>
+            eval(node.conf.tp, env + (sel -> eq), eq :: y1 :: x1 :: bound) )))
+        val propR =
+          VLam(aVal, tt => fold(nodeZ, env + (hh -> tt), tt :: bound, recM))
         VNeutral(NFree(Global("eqElim"))) @@
           aVal @@
           prop @@
@@ -150,6 +149,7 @@ trait EqCheck extends CoreCheck with EqAST {
       VEq(aVal, zVal, zVal)
 
     case EqElim(a, prop, propR, x, y, eq) =>
+      println("checking elim")
       val aVal = eval(a, named, Nil)
       val propVal = eval(prop, named, Nil)
       val xVal = eval(x, named, Nil)
@@ -171,7 +171,9 @@ trait EqCheck extends CoreCheck with EqAST {
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
       val propRType = iType(i, named, bound, propR)
+      println("checking propr")
       checkEqual(propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
+      println("checked propr")
 
       val eqType = iType(i, named, bound, eq)
       checkEqual(eqType, VEq(aVal, xVal, yVal))
@@ -247,9 +249,9 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
             VLam(VPi(a, x => prop @@ x @@ x @@ VRefl(a, x)), propR =>
               VLam(a, x =>
                 VLam(a, y =>
-                  VLam(VEq(a, x, y), {n =>
+                  VLam(VEq(a, x, y), {eq =>
                     eval(EqElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), eqVE,
-                      List(n, y, x, propR, prop, a))
+                      List(eq, y, x, propR, prop, a))
                   }))))))
     )
 }

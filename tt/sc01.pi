@@ -1,3 +1,5 @@
+-- :l tt/sc01.pi
+
 let id  = (\ (a :: *) (x :: a) -> x )
     :: forall (a :: *) . a -> a;
 let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
@@ -160,12 +162,14 @@ let tran =
   ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
         eqElim a
             (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) . Eq a y z -> Eq a x z)
-            (\ (x :: a) (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
+            (\ (x :: a) -> \ (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
              x
              y
-             eq_x_y z )
+             eq_x_y
+             z )
   :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
+
 
 sc tran;
 
@@ -180,7 +184,40 @@ let tran0 =
   :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
 
---sc tran0;
+sc tran0;
+
+let apply =
+  eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
+  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
+
+--sc apply;
+
+let apply1 =
+    (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
+        eqElim *
+                (\ (d :: *) -> \ (e :: *) -> \ (f :: Eq * d e) -> forall g :: d . e)
+                (\ (d :: *) -> \ (e :: d) -> e)
+                a
+                b
+                c) :: forall (a :: *) (b :: *) (c :: Eq * a b) (d :: a) . b;
+
+assume (a1 :: *);
+assume (b1 :: *);
+assume (eq1 :: Eq * a1 b1);
+
+apply1 a1 b1 eq1;
+
+--sc apply1;
+
+--let apply2 =
+--  (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
+--              eqElim
+--              *
+--              (\ (d :: *) -> \ (e :: *) -> \ (f :: Eq * d e) -> forall g :: a . b)
+--              (\ (d :: *) -> \ (e :: a) -> e)
+--              a
+--              b
+--              c);
 
 
 
