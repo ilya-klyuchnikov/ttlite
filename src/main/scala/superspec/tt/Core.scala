@@ -464,7 +464,7 @@ trait CoreDriver extends TTSc with CoreCheck {
   }
 
   // logic
-  override def driveTerm(c: Conf): DriveStep = eval0(c.ct) match {
+  override def driveTerm(c: Conf): DriveStep = eval0(c.term) match {
     case VNeutral(n) => driveNeutral(n)
     case _ => decompose(c)
   }
@@ -475,21 +475,13 @@ trait CoreDriver extends TTSc with CoreCheck {
     case _ => StopDStep
   }
 
-  def decompose(c: Conf): DriveStep = c.ct match {
-    /*
-    case VLam(_, f) =>
-      val Pi(t1, _) = c.tp
-      val fn: Name = freshName(t1)
-      val nextTerm = quote0(f(vfree(fn)))
-      val VPi(_, vt2) = eval0(c.tp)
-      val nextType = quote0(vt2(vfree(fn)))
-      LamDStep(fn, DConf(nextTerm, nextType))*/
+  def decompose(c: Conf): DriveStep = c.term match {
     case Lam(t, f) =>
       val Pi(t1, t2) = c.tp
       val fn = freshName(t1)
       val nextTerm = iSubst(0, Free(fn), f)
       val nextType = iSubst(0, Free(fn), t2)
-      LamDStep(fn, DConf(nextTerm, nextType))
+      LamDStep(fn, Conf(nextTerm, nextType))
     case _ =>
       StopDStep
   }
@@ -505,7 +497,8 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
-        VLam(eval(typeMap(fn), env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM))
+        val Pi(t1, _) = node.conf.tp
+        VLam(eval(t1, env, bound), v => fold(n1, env + (fn -> v), v :: bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }

@@ -70,7 +70,7 @@ trait NatDriver extends CoreDriver with NatAST {
   case object SuccLabel extends Label
   case class SuccStep(next: Term) extends Step {
     override val graphStep =
-      AddChildNodesStep[Conf, Label](List(DConf(next, Nat) -> SuccLabel))
+      AddChildNodesStep[Conf, Label](List(Conf(next, Nat) -> SuccLabel))
   }
   case class SuccDStep(next: Term) extends DriveStep {
     override def step(t: Conf) = SuccStep(next)
@@ -103,7 +103,7 @@ trait NatDriver extends CoreDriver with NatAST {
       super.elimFreeVar(c, fv)
   }
 
-  override def decompose(c: Conf): DriveStep = c.ct match {
+  override def decompose(c: Conf): DriveStep = c.term match {
     case Succ(c1) =>
       val Nat = c.tp
       SuccDStep(c1)

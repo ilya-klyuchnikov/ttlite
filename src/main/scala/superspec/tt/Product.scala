@@ -84,10 +84,10 @@ trait ProductDriver extends CoreDriver with ProductAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: Conf): DriveStep = c.ct match {
+  override def decompose(c: Conf): DriveStep = c.term match {
     case Pair(a, b, x, y) =>
       val Product(a1, b1) = c.tp
-      PairDStep(DConf(a, Star), DConf(b, Star), DConf(x, a), DConf(y, b))
+      PairDStep(Conf(a, Star), Conf(b, Star), Conf(x, a), Conf(y, b))
     case _ =>
       super.decompose(c)
   }

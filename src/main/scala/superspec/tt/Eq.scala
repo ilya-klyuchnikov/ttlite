@@ -79,10 +79,10 @@ trait EqDriver extends CoreDriver with EqAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: Conf): DriveStep = c.ct match {
+  override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
       val Eq(_, _, _) = c.tp
-      ReflDStep(DConf(a, Star), DConf(x, a))
+      ReflDStep(Conf(a, Star), Conf(x, a))
     case _ =>
       super.decompose(c)
   }

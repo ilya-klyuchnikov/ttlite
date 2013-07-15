@@ -62,11 +62,11 @@ trait ListDriver extends CoreDriver with ListAST {
   case object NilLabel extends Label
   case object ConsLabel extends Label
 
-  case class NilStep(a: DConf) extends Step {
+  case class NilStep(a: Conf) extends Step {
     override val graphStep =
       AddChildNodesStep[Conf, Label](List(a -> NilLabel))
   }
-  case class NilDStep(a: DConf) extends DriveStep {
+  case class NilDStep(a: Conf) extends DriveStep {
     override def step(t: Conf) = NilStep(a)
   }
   case class ConsStep(a: Conf, h: Conf, t: Conf) extends Step {
@@ -100,12 +100,12 @@ trait ListDriver extends CoreDriver with ListAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: Conf): DriveStep = c.ct match {
+  override def decompose(c: Conf): DriveStep = c.term match {
     case PiNil(a) =>
       val PiList(tp) = c.tp
-      NilDStep(DConf(a, Star))
+      NilDStep(Conf(a, Star))
     case PiCons(a, h, t) =>
-      ConsDStep(DConf(a, Star), DConf(h, a), DConf(t, c.ct))
+      ConsDStep(Conf(a, Star), Conf(h, a), Conf(t, c.term))
     case _ =>
       super.decompose(c)
   }

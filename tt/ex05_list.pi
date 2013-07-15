@@ -10,4 +10,3 @@ assume (x :: X);
 let l1 = Cons X x (Nil X);
 
 append X l1 l1;
-

@@ -24,7 +24,7 @@ trait SumPrinter extends CorePrinter with SumAST {
     case InR(lt, rt, r) =>
       print(p, ii, Free(Global("InR")) @@ lt @@ rt @@ r)
     case SumElim(lt, rt, m, lc, rc, sum) =>
-      print(p, ii, Free(Global("cases")) @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
+      print(p, ii, Free(Global("sumElim")) @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
     case _ =>
       super.print(p, ii, t)
   }
@@ -101,13 +101,13 @@ trait SumDriver extends CoreDriver with SumAST {
       super.driveNeutral(n)
   }
 
-  override def decompose(c: Conf): DriveStep = c.ct match {
+  override def decompose(c: Conf): DriveStep = c.term match {
     case InL(lType, rType, l) =>
       val Sum(_, _) = c.tp
-      InLDStep(DConf(lType, Star), DConf(rType, Star), DConf(l, lType))
+      InLDStep(Conf(lType, Star), Conf(rType, Star), Conf(l, lType))
     case InR(lType, rType, r) =>
       val Sum(_, _) = c.tp
-      InLDStep(DConf(lType, Star), DConf(rType, Star), DConf(r, rType))
+      InLDStep(Conf(lType, Star), Conf(rType, Star), Conf(r, rType))
     case _ =>
       super.decompose(c)
   }
@@ -129,7 +129,7 @@ trait SumResiduator extends BaseResiduator with SumDriver {
         val lCase = VLam(aVal, l => fold(nodeL, env + (lN -> l), l :: bound, recM))
         val rCase = VLam(bVal, r => fold(nodeR, env + (rN -> r), r :: bound, recM))
 
-        VNeutral(NFree(Global("cases"))) @@
+        VNeutral(NFree(Global("sumElim"))) @@
           aVal @@
           bVal @@
           motive @@
@@ -262,7 +262,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
         VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VSum(a, b)))),
       Global("InR") ->
         VPi(VStar, a => VPi(VStar, b => VPi(b, _ => VSum(a, b)))),
-      Global("cases") -> sumElimType
+      Global("sumElim") -> sumElimType
     )
   val sumElimTypeIn =
     """
@@ -285,7 +285,7 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
         VLam(VStar, a => VLam(VStar, b => VLam(a, x => VInL(a, b, x)))),
       Global("InR") ->
         VLam(VStar, a => VLam(VStar, b => VLam(b, y => VInR(a, b, y)))),
-      Global("cases") ->
+      Global("sumElim") ->
         VLam(VStar, a =>
           VLam(VStar, b =>
             VLam(VPi(VSum(a, b), _ => VStar), m =>
