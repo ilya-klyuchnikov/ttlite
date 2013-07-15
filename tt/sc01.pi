@@ -195,11 +195,11 @@ let apply =
 let apply1 =
     (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
         eqElim *
-                (\ (d :: *) -> \ (e :: *) -> \ (f :: Eq * d e) -> forall g :: d . e)
-                (\ (d :: *) -> \ (e :: d) -> e)
+                (\ (d :: *) -> \ (e :: *) -> \ (_ :: Eq * d e) -> (d -> e))
+                id
                 a
                 b
-                c) :: forall (a :: *) (b :: *) (c :: Eq * a b) (d :: a) . b;
+                c) :: forall (a :: *) (b :: *) . (Eq * a b) -> a -> b;
 
 assume (a1 :: *);
 assume (b1 :: *);
@@ -207,6 +207,7 @@ assume (eq1 :: Eq * a1 b1);
 
 apply1 a1 b1 eq1;
 
+-- equality types supercompilation - see wiki
 --sc apply1;
 
 --let apply2 =
@@ -219,6 +220,17 @@ apply1 a1 b1 eq1;
 --              b
 --              c);
 
+let apply2 =
+    (\ (a :: Product * *) -> \ (b :: Product * *) -> \ (c :: Eq (Product * *) a b) ->
+        eqElim (Product * *)
+                (\ (d :: Product * *) -> \ (e :: Product * *) -> \ (_ :: Eq (Product * *) d e) -> (fst * * d) -> (fst * * e))
+                (\ (d :: Product * *)  (x :: fst * * d) -> x)
+                a
+                b
+                c);
+-- equality types supercompilation - see wiki
+-- sc apply2;
 
+let apply3 = ( \ (a :: *) (b :: *) -> apply2 (Pair * * a b) (Pair * * a b));
 
-
+sc apply3;
