@@ -136,11 +136,54 @@ trait NatResiduator extends BaseResiduator with NatDriver {
     }
 }
 
+trait NatProofResiduator extends NatResiduator with ProofResiduator {
+  override def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value = {
+    println("++++++++")
+    node.outs match {
+      case
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _))) ::
+          Nil =>
+
+        val motive =
+          VLam(VNat, n =>
+            VEq(
+              eval(node.conf.tp, env + (sel -> n), n :: bound),
+              eval(node.conf.term, env + (sel -> n), n :: bound),
+              fold(node, env + (sel -> n), n :: bound, recM))
+          )
+
+        val zCase =
+          proofFold(nodeZ, env, bound, recM)
+
+        val sCase =
+          VLam(VNat, n => VLam(motive @@ n, rec =>
+            proofFold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))
+          ))
+
+        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
+      case TEdge(n1, SuccLabel) :: Nil =>
+        VNeutral(NFree(Global("cong1"))) @@
+          VNat @@
+          VNat @@
+          VNeutral(NFree(Global("Succ"))) @@
+          eval(n1.conf.term, env, bound) @@
+          fold(n1, env, bound, recM) @@
+          proofFold(n1, env, bound, recM)
+      case _ =>
+        super.proofFold(node, env, bound, recM)
+    }
+  }
+}
+
+
 trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Nat =>
+      println("checking " + pprint(t))
       VStar
     case NatElim(m, mz, ms, n) =>
+      println("checking " + pprint(t))
       val mVal = eval(m, named, Nil)
       val nVal = eval(n, named, Nil)
 
@@ -158,8 +201,10 @@ trait NatCheck extends CoreCheck with NatAST {
 
       mVal @@ nVal
     case Zero =>
+      println("checking " + pprint(t))
       VNat
     case Succ(k) =>
+      println("checking " + pprint(t))
       val kType = iType(i, named, bound, k)
       checkEqual(kType, Nat)
 

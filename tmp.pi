@@ -1,0 +1,67 @@
+let z = \ (a :: Nat) ->
+    natElim
+    (\ (b :: Nat) -> Eq Nat
+            (natElim (\ (c :: Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: Nat) -> c)
+                (natElim (\ (c :: Nat) -> forall d :: Nat . Nat)
+                    (\ (c :: Nat) -> c)
+                    (\ (c :: Nat) -> \ (d :: forall d :: Nat . Nat) -> \ (e :: Nat) -> Succ
+                                    (d e))
+                    b
+                    Zero))
+            (natElim (\ (c :: Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: Nat) -> natElim
+                            (\ (e :: Nat) -> Nat)
+                            Zero
+                            (\ (e :: Nat) -> \ (f :: Nat) -> Succ f)
+                            c)
+                b))
+    (Refl Nat Zero)
+    (\ (b :: Nat) -> \ (c :: Eq Nat
+            (natElim (\ (c :: Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: Nat) -> c)
+                (natElim (\ (c :: Nat) -> forall d :: Nat . Nat)
+                    (\ (c :: Nat) -> c)
+                    (\ (c :: Nat) -> \ (d :: forall d :: Nat . Nat) -> \ (e :: Nat) -> Succ
+                                    (d e))
+                    b
+                    Zero))
+            (natElim (\ (c :: Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: Nat) -> natElim
+                            (\ (e :: Nat) -> Nat)
+                            Zero
+                            (\ (e :: Nat) -> \ (f :: Nat) -> Succ f)
+                            c)
+                b)) -> natElim
+                (\ (d :: Nat) -> Eq Nat
+                        (natElim (\ (e :: Nat) -> forall f :: Nat . Nat)
+                            (\ (e :: Nat) -> e)
+                            (\ (e :: Nat) -> \ (f :: forall f :: Nat . Nat) -> \ (g :: Nat) -> Succ
+                                            (f g))
+                            d
+                            Zero)
+                        (natElim (\ (e :: Nat) -> Nat) Zero
+                            (\ (e :: Nat) -> \ (f :: Nat) -> Succ f)
+                            d))
+                (Refl Nat Zero)
+                (\ (d :: Nat) -> \ (e :: Eq Nat
+                        (natElim (\ (e :: Nat) -> forall f :: Nat . Nat)
+                            (\ (e :: Nat) -> e)
+                            (\ (e :: Nat) -> \ (f :: forall f :: Nat . Nat) -> \ (g :: Nat) -> Succ
+                                            (f g))
+                            d
+                            Zero)
+                        (natElim (\ (e :: Nat) -> Nat) Zero
+                            (\ (e :: Nat) -> \ (f :: Nat) -> Succ f)
+                            d)) -> cong1 Nat Nat Succ
+                            (natElim
+                                (\ (f :: Nat) -> forall g :: Nat . Nat)
+                                (\ (f :: Nat) -> f)
+                                (\ (f :: Nat) -> \ (g :: forall g :: Nat .
+                                        Nat) -> \ (h :: Nat) -> Succ (g h))
+                                d
+                                Zero)
+                            e
+                            e)
+                b)
+    a

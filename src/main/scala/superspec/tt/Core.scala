@@ -248,6 +248,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Ann(e, tp) =>
+      println("checking " + pprint(t))
       val tpVal = eval(tp, named, Nil)
 
       val tpType = iType(i, named, bound, tp)
@@ -260,6 +261,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     case Star =>
       VStar
     case Pi(x, tp) =>
+      println("checking " + pprint(t))
       val xVal = eval(x, named, Nil)
 
       val xType = iType(i, named, bound, x)
@@ -270,14 +272,19 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
       VStar
     case Free(x) =>
+      println("checking " + pprint(t))
       bound.get(x) match {
         case Some(ty) => ty
         case None => sys.error(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
+      println("checking " + pprint(t))
       iType(i, named, bound, e1) match {
         case VPi(x, f) =>
           val e2Type = iType(i, named, bound, e2)
+
+          println("checking " + pprint(t))
+          println("last")
           checkEqual(e2Type, x)
 
           f(eval(e2, named, Nil))
@@ -285,6 +292,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
           sys.error(s"illegal application: $t")
       }
     case Lam(t, e) =>
+      println("checking " + pprint(t))
       val tVal = eval(t, named, Nil)
 
       val tType = iType(i, named, bound, t)
@@ -320,7 +328,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   type TInf = Term
   override val int = CoreInterpreter
   object CoreInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
-    lexical.reserved += ("assume", "let", "forall", "import", "sc")
+    lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
     val prompt: String = "TT> "
 
@@ -424,6 +432,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         "assume" ~> (binding | bindingPar) <~ ";" ^^ {b => Assume(List(b(Nil)))} |
         "import" ~> stringLit <~ ";" ^^ Import |
         "sc" ~> iterm0 <~ ";" ^^ {t => Supercompile(t(Nil))} |
+        "sc2" ~> iterm0 <~ ";" ^^ {t => Supercompile2(t(Nil))} |
         iterm0 <~ ";" ^^ {t => Eval(t(Nil))}
 
     lazy val bindingPar: PackratParser[Res[(String, Term)]] =
@@ -503,3 +512,19 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
         super.fold(node, env, bound, recM)
     }
 }
+
+trait CoreProofResiduator extends ProofResiduator with CoreResiduator {
+  import mrsc.core._
+
+  override def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(n1, LamLabel(fn)) :: Nil =>
+        val Pi(t1, _) = node.conf.tp
+        //val term1 = node.conf.term
+        //val term2 = fold(node, env, bound, recM)
+        VLam(eval(t1, env, bound), v => proofFold(n1, env + (fn -> v), v :: bound, recM))
+      case _ =>
+        super.proofFold(node, env, bound, recM)
+    }
+}
+

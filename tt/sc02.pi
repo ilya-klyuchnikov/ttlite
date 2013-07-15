@@ -1,21 +1,56 @@
-let leibniz =
+-- :r tt/sc02.pi
+let id  = (\ (a :: *) (x :: a) -> x )
+    :: forall (a :: *) . a -> a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
+-- equality congruence
+let cong1 =
   ( \ (a :: *) (b :: *) (f :: a -> b) ->
         eqElim a
-            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y)) -- prop = x y eq_x_y, when substituting, we have Eq b (f x) (f x)
-            (\ (x :: a) -> Refl b (f x)) );
-  --:: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x)) )
+  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
-let scLeibniz =
-(\ (a :: *) -> \ (b :: *) -> \ (c :: forall c :: a . b) -> \ (d :: a) -> \ (e :: a) -> \ (f :: Eq
-                    a
-                    d
-                    e) -> eqElim a
-                        (\ (g :: a) -> \ (h :: a) -> \ (i :: Eq a g h) -> Eq
-                                        b
-                                        (c g)
-                                        (c h))
-                        (\ (g :: a) -> Refl b (c g))
-                        d
-                        e
-                        f);
+let plus =
+  natElim
+    ( \ (_ :: Nat) -> Nat -> Nat )           -- motive
+    ( \ (n :: Nat) -> n )                    -- case for Zero
+    ( \ (p :: Nat) (rec :: Nat -> Nat) (n :: Nat) -> Succ (rec n) );   -- case for Succ
 
+let plus2 =
+    \(x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
+
+let plus0 = \(x :: Nat) -> plus x 0;
+
+let pred =
+  natElim
+    ( \ (_ :: Nat) -> Nat )
+    Zero
+    ( \ (n1 :: Nat) (rec :: Nat) -> n1 );
+
+let pred0 =
+  natElim
+    ( \ (_ :: Nat) -> Nat )
+    0
+    ( \ (n1 :: Nat) (rec :: Nat) -> rec );
+
+let id1 =
+  natElim
+    ( \ (_ :: Nat) -> Nat )
+    0
+    ( \ (n1 :: Nat) (rec :: Nat) -> pred0 n1 );
+
+
+let xxx = \ (x :: Nat) -> pred0 (plus x 1);
+sc2 xxx;
+
+let xxx1 = \ (x :: Nat) (y :: Nat) -> pred0 (plus x y);
+sc2 xxx1;
+
+
+let yyy = \ (x :: Nat) -> pred (plus x 0);
+-- doesn't work yet
+--sc2 yyy;
+
+let zzz = \ (x :: Nat) -> Succ x;

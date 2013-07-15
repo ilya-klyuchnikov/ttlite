@@ -7,6 +7,7 @@ import superspec.tt._
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
+  case class ProofConf(term1: Term, term2: Term, tp: Term)
   // sub - a substitution, using only this substitution we can perform a fold
   case class ElimBranch(ptr: Term, sub: Subst)
   trait DriveStep {
@@ -116,6 +117,20 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
     }
 }
 
+trait ProofResiduator extends BaseResiduator with EqAST {
+  def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
+    proofFold(g.root, nEnv, Nil, Map())
+  }
+
+  def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+    node.base match {
+      case Some(tPath) =>
+        recM(tPath)
+      case None =>
+        node.outs match { case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound) }
+    }
+}
+
 object TTScREPL
   extends TTSc
   with BaseResiduator
@@ -142,6 +157,9 @@ object TTScREPL
   with FinREPL
   with FinDriver
   with FinResiduator
+  with ProofResiduator
+  with CoreProofResiduator
+  with NatProofResiduator
 {
 
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
@@ -168,20 +186,49 @@ object TTScREPL
             val cType = iquote(tp)
 
             val iTerm = Ann(cTerm, cType)
-            //val t2 = iinfer(state.ne, state.ctx, iTerm)
             val t2 = iinfer(state.ne, state.ctx, iTerm)
-            println("(" + icprint(cTerm) + ") ????)")
+
+            //println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>
                 handleError()
-                state
               case Some(t3) =>
-                if (iquote(t3) != iquote(tp)) {
-                  println(icprint(iquote(tp)) + "!== " + icprint(iquote(t3)))
-                  sys.error("1");
-                }
-                println("(" + icprint(cTerm) + ") :: " + icprint(iquote(t3)) + ";")
-                state
+                println(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+            }
+          }
+      }
+      state
+    case Supercompile2(it) =>
+      import int._
+      iinfer(state.ne, state.ctx, it) match {
+        case None =>
+          handleError()
+          state
+        case Some(tp) =>
+          val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+          val rules = new Rules
+          val gs = GraphGenerator(rules, goal)
+          for (g <- gs) {
+            val tGraph = Transformations.transpose(g)
+            println(tgToString(tGraph))
+            val resVal = residuate(tGraph, state.ne)
+            val cTerm = iquote(resVal)
+            val cType = iquote(tp)
+
+            val iTerm = Ann(cTerm, cType)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
+            t2 match {
+              case None =>
+                handleError()
+              case Some(t3) =>
+                println(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+                val proof = proofResiduate(tGraph, state.ne)
+                val proofTerm = iquote(proof)
+                val t4 = iinfer(state.ne, state.ctx, proofTerm)
+                println("proof:")
+                println(icprint(proofTerm))
+                println("::")
+                println(icprint(iquote(t4.get)))
             }
           }
       }

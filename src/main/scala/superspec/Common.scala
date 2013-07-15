@@ -17,6 +17,7 @@ trait Common extends PrettyPrinter {
   case class Eval[I](e: I) extends Stmt[I, Nothing]
   case class Import(s: String) extends Stmt[Nothing, Nothing]
   case class Supercompile[I](e: I) extends Stmt[I, Nothing]
+  case class Supercompile2[I](e: I) extends Stmt[I, Nothing]
 
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
