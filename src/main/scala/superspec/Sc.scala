@@ -159,10 +159,13 @@ object TTScREPL
   with EqREPL
   with EqDriver
   with EqResiduator
+  with SumREPL
+  with SumDriver
+  with SumResiduator
    {
 
-  val te = natTE ++ listTE ++ productTE ++ eqTE
-  val ve = natVE ++ listVE ++ productVE ++ eqVE
+  val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE
+  val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE
 
   override def initialState = State(interactive = true, ve, te, Set())
 
@@ -190,7 +193,7 @@ object TTScREPL
 
             val iTerm = Ann(cTerm, cType)
             //val t2 = iinfer(state.ne, state.ctx, iTerm)
-            val t2 = iinfer(state.ne, state.ctx, cTerm)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
             println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>

@@ -62,7 +62,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
   }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NProductElim(a, b, m, f, p) =>
+    case NProductElim(a, b, _, _, p) =>
       p match {
         case NFree(n) =>
           val aType = quote0(a)
