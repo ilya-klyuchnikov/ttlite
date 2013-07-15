@@ -243,3 +243,37 @@ let proofSum01 =
 
 sc thSum01;
 sc proofSum01;
+
+let Void = Fin_0;
+-- unit type
+let Unit = Fin_1;
+-- constructor
+let U = finElem_1_1;
+
+-- booleans
+let Bool = Fin_2;
+-- constructors
+let False = finElem_1_2;
+let True  = finElem_2_2;
+
+let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+
+let boolElim = finElim_2 ::
+    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+
+let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
+
+let not = boolElim (\ (_ :: Bool) -> Bool) True False;
+let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
+
+let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
+let xor = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) not;
+let if  = boolElim (\ (_ :: Bool) -> Bool -> Bool) not (id Bool);
+
+sc abort;
+sc boolElim;
+sc not;
+sc and;
+sc or;
+sc xor;
+sc if;

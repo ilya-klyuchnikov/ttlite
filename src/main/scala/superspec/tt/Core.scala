@@ -216,6 +216,7 @@ trait CoreSubst extends CoreEval with CoreQuote {
       true
     case t1: scala.Product =>
       t1.productIterator.forall(isFreeSubTerm(_, depth))
+    case _ => true
   }
 
 }
@@ -468,6 +469,7 @@ trait CoreDriver extends TTSc with CoreCheck {
     case _ => decompose(c)
   }
 
+  // TODO: if override returns stop, then we can decompose
   def driveNeutral(n: Neutral): DriveStep = n match {
     case NApp(n, _) => driveNeutral(n)
     case _ => StopDStep

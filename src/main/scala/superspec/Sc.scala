@@ -162,10 +162,13 @@ object TTScREPL
   with SumREPL
   with SumDriver
   with SumResiduator
+  with FinREPL
+  with FinDriver
+  with FinResiduator
    {
 
-  val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE
-  val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE
+  val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
+  val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE ++ finVE
 
   override def initialState = State(interactive = true, ve, te, Set())
 

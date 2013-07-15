@@ -1,5 +1,8 @@
 package superspec.tt
 
+import mrsc.core._
+import superspec._
+
 trait FinAST extends CoreAST {
   case class Fin(n: Int) extends Term
   case class FinElem(i: Int, n: Int) extends Term
@@ -43,6 +46,36 @@ trait FinEval extends CoreEval with FinAST {
     case _ =>
       super.eval(t, named, bound)
   }
+}
+
+trait FinDriver extends CoreDriver with FinAST {
+
+  override def driveNeutral(n: Neutral): DriveStep = n match {
+    case NFinElim(n, m, cases, sel) =>
+      sel match {
+        case NFree(v) =>
+          val cases1 = (1 to n).toList.map(i => ElimBranch(FinElem(i, n), Map()))
+          ElimDStep(v, cases1)
+        case n =>
+          driveNeutral(n)
+      }
+    case _ =>
+      super.driveNeutral(n)
+  }
+
+}
+
+trait FinResiduator extends BaseResiduator with FinDriver {
+  override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(FinElem(_, n), _))) :: _ =>
+        val motive =
+          VLam(VFin(n), s => eval(node.conf.tp, env + (sel -> s), s :: bound))
+        val cases = node.outs.map(_.node).map(fold(_, env, bound, recM))
+        cases.foldLeft(VNeutral(NFree(Global(s"finElim_${n}"))) @@ motive)(_ @@ _) @@ env(sel)
+      case _ =>
+        super.fold(node, env, bound, recM)
+    }
 }
 
 trait FinCheck extends CoreCheck with FinAST {
@@ -92,18 +125,18 @@ trait FinQuote extends CoreQuote with FinAST {
 }
 
 trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
-  lazy val finsTE: NameEnv[Value] =
+  private lazy val finsTE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VStar).toMap
-  lazy val finElemsTE: NameEnv[Value] =
+  private lazy val finElemsTE: NameEnv[Value] =
     (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFin(n))).toMap
-  lazy val finElimsTE: NameEnv[Value] =
+  private lazy val finElimsTE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElimType(n)).toMap
 
   lazy val finsVE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VFin(n)).toMap
-  lazy val finElemsVE: NameEnv[Value] =
+  private lazy val finElemsVE: NameEnv[Value] =
     (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFinElem(i, n))).toMap
-  lazy val finElimsVE: NameEnv[Value] =
+  private lazy val finElimsVE: NameEnv[Value] =
     (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElim(n)).toMap
 
   def finElimType(n: Int): Value =
