@@ -43,15 +43,14 @@ let id1 =
 
 
 let xxx = \ (x :: Nat) -> pred0 (plus x 1);
---sc2 xxx;
+sc2 xxx;
 
 let xxx1 = \ (x :: Nat) (y :: Nat) -> pred0 (plus x y);
---sc2 xxx1;
+sc2 xxx1;
 
 
 let yyy = \ (x :: Nat) -> pred (plus x 0);
--- doesn't work yet
---sc2 yyy;
+sc2 yyy;
 
 let zzz = \ (x :: Nat) -> Succ x;
 

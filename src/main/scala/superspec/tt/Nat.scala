@@ -138,7 +138,9 @@ trait NatResiduator extends BaseResiduator with NatDriver {
 
 // we need 2 maps here! - one for proof and one for ordinary!!!!
 trait NatProofResiduator extends NatResiduator with ProofResiduator {
-  override def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value = {
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value = {
     println("++++++++")
     node.outs match {
       case
@@ -155,13 +157,19 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
           )
 
         val zCase =
-          proofFold(nodeZ, env, bound, recM)
+          proofFold(nodeZ,
+            env, bound, recM,
+            env2, bound2, recM2)
 
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, rec =>
-            proofFold(nodeS, env + (fresh -> n),
+            proofFold(nodeS,
+              env + (fresh -> n),
               rec :: n :: bound,
-              recM + (node.tPath -> rec))
+              recM + (node.tPath -> rec),
+              env2 + (fresh -> n),
+              rec :: n :: bound2,
+              recM2 + (node.tPath -> fold(node, env + (sel -> n), n :: bound, recM)))
           ))
 
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
@@ -171,10 +179,14 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
           VNat @@
           VNeutral(NFree(Global("Succ"))) @@
           eval(n1.conf.term, env, bound) @@
-          fold(n1, env, bound, recM) @@
-          proofFold(n1, env, bound, recM)
+          fold(n1, env2, bound2, recM2) @@
+          proofFold(n1,
+            env, bound, recM,
+            env2, bound2, recM2)
       case _ =>
-        super.proofFold(node, env, bound, recM)
+        super.proofFold(node,
+          env, bound, recM,
+          env2, bound2, recM2)
     }
   }
 }

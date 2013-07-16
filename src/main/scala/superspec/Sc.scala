@@ -119,13 +119,17 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
 
 trait ProofResiduator extends BaseResiduator with EqAST {
   def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
-    proofFold(g.root, nEnv, Nil, Map())
+    proofFold(g.root,
+      nEnv, Nil, Map(),
+      nEnv, Nil, Map())
   }
 
-  def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+  def proofFold(node: N,
+                env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.base match {
       case Some(tPath) =>
-        recM(tPath)
+        recM2(tPath)
       case None =>
         node.outs match { case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound) }
     }

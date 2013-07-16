@@ -516,15 +516,20 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
 trait CoreProofResiduator extends ProofResiduator with CoreResiduator {
   import mrsc.core._
 
-  override def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n1, LamLabel(fn)) :: Nil =>
         val Pi(t1, _) = node.conf.tp
-        //val term1 = node.conf.term
-        //val term2 = fold(node, env, bound, recM)
-        VLam(eval(t1, env, bound), v => proofFold(n1, env + (fn -> v), v :: bound, recM))
+        VLam(eval(t1, env, bound), v =>
+          proofFold(n1,
+            env + (fn -> v), v :: bound, recM,
+            env2 + (fn -> v), v :: bound2, recM2))
       case _ =>
-        super.proofFold(node, env, bound, recM)
+        super.proofFold(node,
+          env, bound, recM,
+          env2, bound2, recM)
     }
 }
 
