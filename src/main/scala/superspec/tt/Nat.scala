@@ -169,6 +169,8 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
               recM + (node.tPath -> rec),
               env2 + (fresh -> n),
               rec :: n :: bound2,
+              // or in this way?? - it is an open question
+              // fold(node, env + (sel -> n), n :: bound, recM)
               recM2 + (node.tPath -> fold(node, env + (sel -> n), n :: bound, recM)))
           ))
 

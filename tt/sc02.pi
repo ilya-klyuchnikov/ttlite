@@ -130,3 +130,11 @@ assume (xx :: Nat);
 assume (c :: Nat);
 
 sc2 natId;
+
+let plus3_1 = \ (x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
+
+sc2 plus3_1;
+
+let plus3_2 = \ (x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
+
+sc2 plus3_2;
