@@ -248,7 +248,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Ann(e, tp) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       val tpVal = eval(tp, named, Nil)
 
       val tpType = iType(i, named, bound, tp)
@@ -261,7 +261,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     case Star =>
       VStar
     case Pi(x, tp) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       val xVal = eval(x, named, Nil)
 
       val xType = iType(i, named, bound, x)
@@ -272,19 +272,19 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
       VStar
     case Free(x) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       bound.get(x) match {
         case Some(ty) => ty
         case None => sys.error(s"unknown id: $x")
       }
     case (e1 :@: e2) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       iType(i, named, bound, e1) match {
         case VPi(x, f) =>
           val e2Type = iType(i, named, bound, e2)
 
-          println("checking " + pprint(t))
-          println("last")
+          //println("checking " + pprint(t))
+          //println("last")
           checkEqual(e2Type, x)
 
           f(eval(e2, named, Nil))
@@ -292,7 +292,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
           sys.error(s"illegal application: $t")
       }
     case Lam(t, e) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       val tVal = eval(t, named, Nil)
 
       val tType = iType(i, named, bound, t)

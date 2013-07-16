@@ -49,3 +49,9 @@ class ReplSpec extends org.scalatest.FunSpec {
   }
 
 }
+
+class ReplSpec1 extends org.scalatest.FunSpec {
+  describe("ScREPL should supercompile all tasks in tt/sc02.pi") {
+    TTScREPL.main(Array("tt/sc02.pi"))
+  }
+}

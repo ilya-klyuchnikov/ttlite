@@ -157,9 +157,9 @@ trait REPL extends Common {
         case Some(tp) =>
           val v = int.ieval(state.ne, it)
           if (s == "it"){
-            Console.println(int.icprint(int.iquote(v)) + " :: " + int.itprint(tp) + ";")
+            Console.println(int.icprint(int.iquote(v)) + " :!!: " + int.itprint(tp) + ";")
           } else {
-            Console.println(s"$s :: ${int.itprint(tp)};")
+            Console.println(s"$s :!!: ${int.itprint(tp)};")
           }
           State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
       }

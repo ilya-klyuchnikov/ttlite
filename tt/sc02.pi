@@ -43,10 +43,10 @@ let id1 =
 
 
 let xxx = \ (x :: Nat) -> pred0 (plus x 1);
-sc2 xxx;
+--sc2 xxx;
 
 let xxx1 = \ (x :: Nat) (y :: Nat) -> pred0 (plus x y);
-sc2 xxx1;
+--sc2 xxx1;
 
 
 let yyy = \ (x :: Nat) -> pred (plus x 0);
@@ -54,3 +54,80 @@ let yyy = \ (x :: Nat) -> pred (plus x 0);
 --sc2 yyy;
 
 let zzz = \ (x :: Nat) -> Succ x;
+
+let yyyNorm =
+    (\ (a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Nat)
+            Zero
+            (\ (b :: Nat) -> \ (c :: Nat) -> b)
+            (natElim
+                (\ (b :: Nat) -> forall c :: Nat . Nat)
+                (\ (b :: Nat) -> b)
+                (\ (b :: Nat) -> \ (c :: forall c :: Nat . Nat) -> \ (d :: Nat) -> Succ (c d))
+                a
+                Zero)) :: forall a :: Nat . Nat;
+
+let yyySc =
+    (\ (a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Nat)
+            Zero
+            (\ (b :: Nat) -> \ (c :: Nat) ->
+                natElim
+                (\ (d :: Nat) -> Nat)
+                Zero
+                (\ (d :: Nat) -> \ (e :: Nat) -> Succ e)
+                b) a) :: forall a :: Nat . Nat;
+
+let proof =
+    \(a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Eq Nat (yyyNorm b) (yyySc b))
+            (Refl Nat Zero);
+
+let yyy1 = \(x :: Nat) -> yyy (Succ x);
+
+let yyy1Norm = \ (a :: Nat) -> natElim (\ (b :: Nat) -> forall c :: Nat . Nat)
+    (\ (b :: Nat) -> b)
+    (\ (b :: Nat) -> \ (c :: forall c :: Nat . Nat) -> \ (d :: Nat) -> Succ
+                    (c d))
+    a
+    Zero;
+
+
+let yyy1Sc =
+\ (a :: Nat) -> natElim (\ (b :: Nat) -> Nat) Zero
+    (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+    a;
+
+let natId =
+    \(a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Nat)
+            Zero
+            (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+            a;
+
+let natId1 =
+    \(a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Nat)
+            Zero
+            (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+            a;
+
+
+let proof =
+    (\ (a :: Nat) ->
+        natElim
+            (\ (b :: Nat) -> Eq Nat (natId b) (natId b))
+            (Refl Nat 0)
+            ( \ (b :: Nat) (c :: Eq Nat (natId b) (natId b)) ->
+                cong1 Nat Nat Succ (natId b) (natId b) c) a) ::
+                forall b :: Nat . Eq Nat (natId b) (natId b);
+
+assume (xx :: Nat);
+assume (c :: Nat);
+
+sc2 natId;

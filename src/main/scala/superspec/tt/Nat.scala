@@ -136,6 +136,7 @@ trait NatResiduator extends BaseResiduator with NatDriver {
     }
 }
 
+// we need 2 maps here! - one for proof and one for ordinary!!!!
 trait NatProofResiduator extends NatResiduator with ProofResiduator {
   override def proofFold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value = {
     println("++++++++")
@@ -158,7 +159,9 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
 
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, rec =>
-            proofFold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))
+            proofFold(nodeS, env + (fresh -> n),
+              rec :: n :: bound,
+              recM + (node.tPath -> rec))
           ))
 
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
@@ -180,10 +183,10 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
 trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Nat =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       VStar
     case NatElim(m, mz, ms, n) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       val mVal = eval(m, named, Nil)
       val nVal = eval(n, named, Nil)
 
@@ -201,10 +204,10 @@ trait NatCheck extends CoreCheck with NatAST {
 
       mVal @@ nVal
     case Zero =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       VNat
     case Succ(k) =>
-      println("checking " + pprint(t))
+      //println("checking " + pprint(t))
       val kType = iType(i, named, bound, k)
       checkEqual(kType, Nat)
 

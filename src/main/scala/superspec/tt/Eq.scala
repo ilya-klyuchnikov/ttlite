@@ -149,7 +149,7 @@ trait EqCheck extends CoreCheck with EqAST {
       VEq(aVal, zVal, zVal)
 
     case EqElim(a, prop, propR, x, y, eq) =>
-      println("checking elim")
+      //println("checking elim")
       val aVal = eval(a, named, Nil)
       val propVal = eval(prop, named, Nil)
       val xVal = eval(x, named, Nil)
@@ -171,9 +171,9 @@ trait EqCheck extends CoreCheck with EqAST {
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
       val propRType = iType(i, named, bound, propR)
-      println("checking propr")
+      //println("checking propr")
       checkEqual(propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
-      println("checked propr")
+      //println("checked propr")
 
       val eqType = iType(i, named, bound, eq)
       checkEqual(eqType, VEq(aVal, xVal, yVal))
