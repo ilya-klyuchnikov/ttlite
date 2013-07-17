@@ -141,7 +141,6 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
   override def proofFold(node: N,
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value = {
-    println("++++++++")
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::

@@ -184,7 +184,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            println(tgToString(tGraph))
+            output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
@@ -192,12 +192,12 @@ object TTScREPL
             val iTerm = Ann(cTerm, cType)
             val t2 = iinfer(state.ne, state.ctx, iTerm)
 
-            //println("(" + icprint(cTerm) + ") ????)")
             t2 match {
               case None =>
+                println("error for term: \n" + icprint(cTerm))
                 handleError()
               case Some(t3) =>
-                println(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+                output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
             }
           }
       }
@@ -214,7 +214,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            println(tgToString(tGraph))
+            output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
@@ -225,14 +225,14 @@ object TTScREPL
               case None =>
                 handleError()
               case Some(t3) =>
-                println(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+                output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
                 val proof = proofResiduate(tGraph, state.ne)
                 val proofTerm = iquote(proof)
                 val t4 = iinfer(state.ne, state.ctx, proofTerm)
-                println("proof:")
-                println(icprint(proofTerm))
-                println("::")
-                println(icprint(iquote(t4.get)))
+                output("proof:")
+                output(icprint(proofTerm))
+                output("::")
+                output(icprint(iquote(t4.get)))
             }
           }
       }

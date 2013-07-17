@@ -10,4 +10,6 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 
 libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1"
 
+parallelExecution in Test := false
+
 scalacOptions += "-feature"

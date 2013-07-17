@@ -277,3 +277,71 @@ sc and;
 sc or;
 sc xor;
 sc if;
+
+let Not = (\ (a :: *) -> a -> Void) :: * -> *;
+
+-- maps zero to Void and (Succ _) to Unit
+let natVoidUnit = natElim (\ (n :: Nat) -> *) Void (\ (_ :: Nat) (_ :: *) -> Unit);
+
+sc natVoidUnit;
+
+-- equality congruence
+let cong1 =
+  ( \ (a :: *) (b :: *) (f :: a -> b) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x)) )
+  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+sc cong1;
+
+-- contr. Input: proof that 1 is 0. Output is proof that Unit = Void.
+let contr = cong1 Nat * natVoidUnit 1 0
+            :: forall(a :: Eq Nat 1 0). Eq * Unit Void;
+
+-- TODO: this is the case which requires higher-order unification
+--sc contr;
+
+-- proof that 1 is not 0
+let p1IsNot0 =
+  (\ (p1eq0 :: Eq Nat 1 0) -> apply Unit Void (contr p1eq0) U) :: Not (Eq Nat 1 0);
+
+-- thompson 4.3 (b)
+let doubleNeg = forall (A :: *) . A -> Not (Not A); -- = A -> Not A -> Void
+let doubleNegProof = (\(A :: *) (a :: A) (notA :: Not A) -> notA a) :: doubleNeg;
+
+
+let len =
+  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
+    forall (a :: *) . forall (v :: List a) . Nat;
+
+sc len;
+
+let thSum02 =
+    forall (A :: *) (B :: *). Sum (Not A) B -> (A -> B);
+
+let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+sc abort;
+
+let proofSum02 =
+    (\(A :: *) (B :: *) (s :: Sum (Not A) B) (a :: A) ->
+        sumElim (Not A) B
+            (\(s :: Sum (Not A) B) -> B)
+            (\(notA :: Not A) -> abort B (notA a))
+            (\(b :: B) -> b) s) :: thSum02;
+
+sc proofSum02;
+
+let nRight = forall n :: Nat . Eq Nat (plus n 0) n;
+// the other direction requires induction on N:
+let pNPlus0isN =
+  natElim ( \ (n :: Nat) -> Eq Nat (plus n 0) n )
+          ( Refl Nat 0 )
+          ( \ (n1 :: Nat) -> cong1 Nat Nat Succ (plus n1 0) n1 )
+  :: nRight;
+
+pNPlus0isN;
+
+
+
+

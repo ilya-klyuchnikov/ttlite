@@ -40,6 +40,12 @@ trait REPL extends Common {
     }
   }
 
+  def output(x: Any) {
+    if (!batch) {
+      Console.println(x)
+    }
+  }
+
   class HaskellLikeLexical extends StdLexical {
     import scala.util.parsing.input.CharArrayReader._
     override def whitespace: Parser[Any] = rep(
@@ -129,7 +135,7 @@ trait REPL extends Common {
         int.parseIO(int.iParse, x) match {
           case Some(e) => int.iinfer(state.ne, state.ctx, e) match {
             case Some(t) =>
-              Console.println(s"${int.itprint(t)};")
+              output(s"${int.itprint(t)};")
             case None =>
               handleError()
           }
@@ -157,9 +163,9 @@ trait REPL extends Common {
         case Some(tp) =>
           val v = int.ieval(state.ne, it)
           if (s == "it"){
-            Console.println(int.icprint(int.iquote(v)) + " :!!: " + int.itprint(tp) + ";")
+            output(int.icprint(int.iquote(v)) + " :!!: " + int.itprint(tp) + ";")
           } else {
-            Console.println(s"$s :!!: ${int.itprint(tp)};")
+            output(s"$s :!!: ${int.itprint(tp)};")
           }
           State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
       }
