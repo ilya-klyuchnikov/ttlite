@@ -1,3 +1,5 @@
+-- here we have proofs of correctness of transformations!!!
+
 -- :r tt/sc02.pi
 let id  = (\ (a :: *) (x :: a) -> x )
     :: forall (a :: *) . a -> a;
@@ -43,14 +45,14 @@ let id1 =
 
 
 let xxx = \ (x :: Nat) -> pred0 (plus x 1);
-sc2 xxx;
+--sc2 xxx;
 
 let xxx1 = \ (x :: Nat) (y :: Nat) -> pred0 (plus x y);
-sc2 xxx1;
+--sc2 xxx1;
 
 
 let yyy = \ (x :: Nat) -> pred (plus x 0);
-sc2 yyy;
+--sc2 yyy;
 
 let zzz = \ (x :: Nat) -> Succ x;
 
@@ -129,12 +131,18 @@ let proof =
 assume (xx :: Nat);
 assume (c :: Nat);
 
-sc2 natId;
+--sc2 natId;
 
 let plus3_1 = \ (x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
 
-sc2 plus3_1;
+--sc2 plus3_1;
 
 let plus3_2 = \ (x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
 
-sc2 plus3_2;
+--sc2 plus3_2;
+
+let plus1 = \ (x :: Nat) (y :: Nat) -> (plus x y);
+
+--sc2 plus;
+
+sc2 id;
