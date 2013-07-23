@@ -220,6 +220,7 @@ object TTScREPL
             val cType = iquote(tp)
 
             val iTerm = Ann(cTerm, cType)
+
             val t2 = iinfer(state.ne, state.ctx, iTerm)
             t2 match {
               case None =>
@@ -228,7 +229,8 @@ object TTScREPL
                 output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
                 val proof = proofResiduate(tGraph, state.ne)
                 val proofTerm = iquote(proof)
-                val t4 = iinfer(state.ne, state.ctx, proofTerm)
+                val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
+                val t4 = iinfer(state.ne, state.ctx, annProofTerm)
                 output("proof:")
                 output(icprint(proofTerm))
                 output("::")
