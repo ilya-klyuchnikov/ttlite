@@ -75,48 +75,20 @@ let len =
   (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
 
--- supercompiling everything
-sc id;
-sc const;
-sc plus;
-sc plus1;
-sc pred;
-sc fZSucc0;
-sc natFold;
-sc nat1Elim;
-sc inc;
-sc append;
-sc len;
-
 let nat2Elim =
   ( \ (m :: Nat -> *) -> natElim (\ (n :: Nat) -> m (Succ n))) ;
 
-sc nat2Elim;
-
 assume (A :: *);
 let LA = List A;
-
-sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
-
-sc (\ (x :: List A) (y :: List A) (z :: List A) -> append A x (append A y z));
 
 let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
                     productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
 let snd = (\ (a :: *) (b :: *) (p :: Product a b) ->
                     productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
 
-
-sc productElim;
-sc fst;
-sc snd;
-
 let xxx = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) -> (fst A B (fst (Product A B) C p)));
-sc xxx;
-
 let yyy = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) ->
     (fst (Product A B) C p));
-sc yyy;
-
 
 let th2 =
     forall (A :: *) (B :: *) (C :: *) .
@@ -136,16 +108,16 @@ let pr2 =
             (fst A B (fst (Product A B) C p))
             (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
 
-sc pr2;
-
-sc eqElim;
-
 let leibniz =
   ( \ (a :: *) (b :: *) (f :: a -> b) ->
         eqElim a
             (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y)) -- prop = x y eq_x_y, when substituting, we have Eq b (f x) (f x)
             (\ (x :: a) -> Refl b (f x)) )
   :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+
+
+
 
 sc leibniz;
 
@@ -156,7 +128,6 @@ let symm =
   :: forall (a :: *) (x :: a) (y :: a) .
      Eq a x y -> Eq a y x;
 
-sc symm;
 
 let tran =
   ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
@@ -171,7 +142,6 @@ let tran =
      Eq a x y -> Eq a y z -> Eq a x z;
 
 
-sc tran;
 
 let tran0 =
   ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) (eq2 :: Eq a y z)->
@@ -184,13 +154,12 @@ let tran0 =
   :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
      Eq a x y -> Eq a y z -> Eq a x z;
 
-sc tran0;
+
 
 let apply =
   eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
   :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
 
---sc apply;
 
 let apply1 =
     (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
@@ -228,12 +197,9 @@ let apply2 =
                 a
                 b
                 c);
--- equality types supercompilation - see wiki
--- sc apply2;
 
 let apply3 = ( \ (a :: *) (b :: *) -> apply2 (Pair * * a b) (Pair * * a b));
 
-sc apply3;
 
 let thSum01 =
     forall (A :: *) (B :: *). Sum A B -> Sum B A;
@@ -241,8 +207,7 @@ let proofSum01 =
     (\ (A :: *) (B :: *) (s :: Sum A B) -> sumElim A B (\ (_ :: Sum A B) -> Sum B A) (InR B A) (InL B A) s)
         :: thSum01;
 
-sc thSum01;
-sc proofSum01;
+
 
 let Void = Fin_0;
 -- unit type
@@ -270,13 +235,6 @@ let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> T
 let xor = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) not;
 let if  = boolElim (\ (_ :: Bool) -> Bool -> Bool) not (id Bool);
 
-sc abort;
-sc boolElim;
-sc not;
-sc and;
-sc or;
-sc xor;
-sc if;
 
 let Not = (\ (a :: *) -> a -> Void) :: * -> *;
 
@@ -315,13 +273,10 @@ let len =
   (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
 
-sc len;
-
 let thSum02 =
     forall (A :: *) (B :: *). Sum (Not A) B -> (A -> B);
 
 let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
-sc abort;
 
 let proofSum02 =
     (\(A :: *) (B :: *) (s :: Sum (Not A) B) (a :: A) ->
@@ -330,7 +285,6 @@ let proofSum02 =
             (\(notA :: Not A) -> abort B (notA a))
             (\(b :: B) -> b) s) :: thSum02;
 
-sc proofSum02;
 
 let nRight = forall n :: Nat . Eq Nat (plus n 0) n;
 // the other direction requires induction on N:
@@ -342,6 +296,47 @@ let pNPlus0isN =
 
 pNPlus0isN;
 
+-- supercompiling everything
+sc id;
+sc const;
+sc plus;
 
+sc plus1;
+sc pred;
+sc fZSucc0;
+sc natFold;
+sc nat1Elim;
+sc inc;
+sc append;
+sc len;
+sc nat2Elim;
+sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
+sc (\ (x :: List A) (y :: List A) (z :: List A) -> append A x (append A y z));
+sc productElim;
+sc fst;
+sc snd;
+sc xxx;
+sc yyy;
+sc pr2;
+sc eqElim;
+sc symm;
+sc tran;
+sc tran0;
+--sc apply;
+-- equality types supercompilation - see wiki
+-- sc apply2;
+sc apply3;
+sc thSum01;
+sc proofSum01;
+sc abort;
+sc boolElim;
+sc not;
+sc and;
+sc or;
+sc xor;
+sc if;
+sc len;
+sc abort;
+sc proofSum02;
 
-
+sc pNPlus0isN;
