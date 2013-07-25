@@ -14,6 +14,28 @@ let cong1 =
             (\ (x :: a) -> Refl b (f x)) )
   :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
+let fcong1 =
+  ( \ (a :: *) (b :: *) (x :: a) ->
+        eqElim (a -> b)
+            (\ (f :: a -> b) (g :: a -> b) (eq_f_g :: Eq (a -> b) f g) -> Eq b (f x) (g x))
+            (\ (f :: a -> b) -> Refl b (f x)) )
+  :: forall (a :: *) (b :: *) (x :: a) (f :: a -> b) (g :: a -> b) . Eq (a -> b) f g -> Eq b (f x) (g x);
+
+let fargCong =
+  ( \ (a :: *) (b :: *) (x :: a) (y :: a) (f :: a -> b) (g :: a -> b) (eq_x_y :: Eq a x y) ->
+        eqElim (a -> b)
+            (\ (f :: a -> b) (g :: a -> b) (eq_f_g :: Eq (a -> b) f g) ->  Eq b (f x) (g y))
+            (\ (f :: a -> b) -> cong1 a b f x y eq_x_y)
+            f
+            g) ::
+  forall (a :: *)
+           (b :: *)
+           (x :: a)
+           (y :: a)
+           (f :: a -> b)
+           (g :: a -> b) .
+           Eq a x y -> Eq (a -> b) f g -> Eq b (f x) (g y);
+
 let plus =
   natElim
     ( \ (_ :: Nat) -> Nat -> Nat )           -- motive
