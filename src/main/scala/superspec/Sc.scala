@@ -107,7 +107,7 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
   def residuate(g: TG, nEnv: NameEnv[Value]): Value = {
-    fold(g.root, nEnv, Nil, Map())
+    fold(g.root, nEnv.withDefault(vfree), Nil, Map())
   }
 
   def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
@@ -120,8 +120,8 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
 trait ProofResiduator extends BaseResiduator with EqAST {
   def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
     proofFold(g.root,
-      nEnv, Nil, Map(),
-      nEnv, Nil, Map())
+      nEnv.withDefault(vfree), Nil, Map(),
+      nEnv.withDefault(vfree), Nil, Map())
   }
 
   def proofFold(node: N,
