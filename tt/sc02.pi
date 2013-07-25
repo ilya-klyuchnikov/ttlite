@@ -145,4 +145,12 @@ let plus1 = \ (x :: Nat) (y :: Nat) -> (plus x y);
 
 --sc2 plus;
 
-sc2 id;
+--sc2 (id Nat);
+
+assume (x :: Nat);
+assume (y :: Nat);
+
+sc plus x y;
+sc2 plus x y;
+
+sc2 natId x;

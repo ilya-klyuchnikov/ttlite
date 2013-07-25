@@ -340,3 +340,8 @@ sc abort;
 sc proofSum02;
 
 sc pNPlus0isN;
+
+assume (x :: Nat);
+assume (y :: Nat);
+
+sc plus x y;
