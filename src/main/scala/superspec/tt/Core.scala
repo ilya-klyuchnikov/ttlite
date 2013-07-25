@@ -318,8 +318,8 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   type C = Term
   type V = Value
   type TInf = Term
-  override val int = CoreInterpreter
-  object CoreInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
+  override lazy val int = new CoreInterpreter
+  class CoreInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
     val prompt: String = "TT> "
@@ -419,13 +419,20 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     }
 
 
-    lazy val stmt: PackratParser[Stmt[Term, Term]] =
-      "let" ~> ident ~ ("=" ~> iterm0 <~ ";") ^^ {case x ~ y => Let(x, y(Nil))} |
-        "assume" ~> (binding | bindingPar) <~ ";" ^^ {b => Assume(List(b(Nil)))} |
-        "import" ~> stringLit <~ ";" ^^ Import |
-        "sc" ~> iterm0 <~ ";" ^^ {t => Supercompile(t(Nil))} |
-        "sc2" ~> iterm0 <~ ";" ^^ {t => Supercompile2(t(Nil))} |
-        iterm0 <~ ";" ^^ {t => Eval(t(Nil))}
+    lazy val stmt: PackratParser[Stmt[Term, Term]] = stmts.reduce( _ | _)
+
+    lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt)
+
+    lazy val letStmt: PackratParser[Stmt[Term, Term]] =
+      "let" ~> ident ~ ("=" ~> iterm0 <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
+    lazy val assumeStmt: PackratParser[Stmt[Term, Term]] =
+      "assume" ~> (binding | bindingPar) <~ ";" ^^ {b => Assume(List(b(Nil)))}
+    lazy val importStmt: PackratParser[Stmt[Term, Term]] =
+      "import" ~> stringLit <~ ";" ^^ Import
+
+    lazy val evalStmt: PackratParser[Stmt[Term, Term]] =
+      iterm0 <~ ";" ^^ {t => Eval(t(Nil))}
+
 
     lazy val bindingPar: PackratParser[Res[(String, Term)]] =
       "(" ~> binding <~ ")"

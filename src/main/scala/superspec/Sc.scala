@@ -169,6 +169,18 @@ object TTScREPL
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
   val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE ++ finVE
 
+  override lazy val int = new ScInterpreter
+  class ScInterpreter extends CoreInterpreter {
+
+    lazy val scStmt: PackratParser[Stmt[Term, Term]] =
+      "sc" ~> iterm0 <~ ";" ^^ {t => Supercompile(t(Nil))}
+    lazy val sc2Stmt: PackratParser[Stmt[Term, Term]] =
+      "sc2" ~> iterm0 <~ ";" ^^ {t => Supercompile2(t(Nil))}
+
+    lazy val scStmts = scStmt :: sc2Stmt :: stmts
+    override lazy val stmt: PackratParser[Stmt[Term, Term]] = scStmts.reduce( _ | _)
+  }
+
   override def initialState = State(interactive = true, ve, te, Set())
 
   override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {
