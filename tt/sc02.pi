@@ -176,3 +176,35 @@ sc plus x y;
 sc2 plus x y;
 
 sc2 natId x;
+
+let list2zero =
+    listElim Nat (\ (_ :: List Nat) -> Nat) 0 (\ (h :: Nat) (t :: List Nat) (rec :: Nat) -> 0);
+
+assume (l :: List Nat);
+
+
+
+let i9 = listElim Nat
+(\ (a :: List Nat) -> Eq Nat
+        (listElim Nat (\ (b :: List Nat) -> Nat) Zero
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: Nat) -> Zero)
+            a)
+        (listElim Nat (\ (b :: List Nat) -> Nat) Zero
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: Nat) -> Zero)
+            a))
+(Refl Nat Zero)
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq Nat
+            (listElim Nat (\ (c :: List Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: Nat) -> Zero)
+                b)
+            (listElim Nat (\ (c :: List Nat) -> Nat) Zero
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: Nat) -> Zero)
+                b)) -> Refl Nat Zero)
+l;
+
+sc2 list2zero l;
+
+let list2Nil =
+    listElim Nat (\ (_ :: List Nat) -> List Nat) (Nil Nat) (\ (h :: Nat) (t :: List Nat) (rec :: List Nat) -> Nil Nat);
+
+sc2 list2Nil l;

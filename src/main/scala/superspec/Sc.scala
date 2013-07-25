@@ -164,6 +164,7 @@ object TTScREPL
   with ProofResiduator
   with CoreProofResiduator
   with NatProofResiduator
+  with ListProofResiduator
 {
 
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
@@ -243,8 +244,10 @@ object TTScREPL
                 val proofTerm = iquote(proof)
                 val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
                 val t4 = iinfer(state.ne, state.ctx, annProofTerm)
-                output("proof:")
-                output(icprint(proofTerm))
+                println("proof:")
+                println(icprint(proofTerm))
+                println("expected type:")
+                println(icprint(Eq(cType, it, cTerm)))
                 output("::")
                 output(icprint(iquote(t4.get)))
             }
