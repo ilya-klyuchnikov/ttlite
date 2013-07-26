@@ -89,21 +89,31 @@ trait EqDriver extends CoreDriver with EqAST {
 
 }
 
-trait EqResiduator extends BaseResiduator with EqDriver {
+trait EqResiduator extends BaseResiduator with EqDriver { self =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, Free(hh)), _))) :: Nil =>
+        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, Free(eq)), _))) :: Nil =>
         // "argument reconstruction"
+        //
         val Eq(_, x, y) = typeMap(sel)
+        val tp = node.conf.tp
+
         val aVal = eval(a, env, bound)
         // types should be abstracted as well
         // we should propagate x1, y1 somehow
         val prop =
-          VLam(aVal, x1 => VLam(aVal, y1 => VLam(VEq(aVal, x1, y1), eq =>
-            eval(node.conf.tp, env + (sel -> eq), eq :: y1 :: x1 :: bound) )))
+          // Replacements x -> x1, y -> y1
+          VLam(aVal, x1 => VLam(aVal, y1 => VLam(VEq(aVal, x1, y1), eq1 =>
+            eval(node.conf.tp, env + (sel -> eq1), eq1 :: bound) )))
+
         val propR =
-          VLam(aVal, tt => fold(nodeZ, env + (hh -> tt), tt :: bound, recM))
+          VLam(aVal, eq1 => fold(nodeZ, env + (eq -> eq1), eq1 :: bound, recM))
+
+        // now we have an equation
+        // forall (z: A). prop z z (Refl a) = (tp propR)
+        // prop x y eq = tp
+
         VNeutral(NFree(Global("eqElim"))) @@
           aVal @@
           prop @@
@@ -125,7 +135,6 @@ trait EqCheck extends CoreCheck with EqAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Eq(a, x, y) =>
       val aVal = eval(a, named, Nil)
-      println("aval = " + aVal)
 
       val aType = iType(i, named, bound, a)
       checkEqual(i, aType, Star)
@@ -252,7 +261,6 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
                 VLam(a, y =>
                   VLam(VEq(a, x, y), {eq =>
                     eval(EqElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), eqVE,
-                      List(eq, y, x, propR, prop, a))
-                  }))))))
+                      List(eq, y, x, propR, prop, a))}))))))
     )
 }

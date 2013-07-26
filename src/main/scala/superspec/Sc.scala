@@ -198,7 +198,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            output(tgToString(tGraph))
+            //println(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
@@ -213,7 +213,8 @@ object TTScREPL
                 println("error for term: \n" + icprint(cTerm))
                 handleError()
               case Some(t3) =>
-                output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+                output(icprint(cTerm))// + " :: " + icprint(iquote(t3)) + ";")
+                output(icprint(iquote(t3)))
             }
           }
       }

@@ -461,6 +461,7 @@ trait CoreDriver extends TTSc with CoreCheck {
   // current ad-hoc solution for mapping variables and types of new free variables
 
   // knowledge about which variable has which type
+  // todo ; put bound here
   var typeMap: Map[Name, Term] = Map()
 
   // boilerplate/indirections
