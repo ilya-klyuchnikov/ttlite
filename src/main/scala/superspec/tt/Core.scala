@@ -488,14 +488,16 @@ trait CoreDriver extends TTSc with CoreCheck {
   }
 
   def decompose(c: Conf): DriveStep = c.term match {
+    // TODO: into separate trait "WithLambda"
+    /*
     case Lam(t, f) =>
       val Pi(t1, t2) = c.tp
       val fn = freshName(t1)
       val nextTerm = iSubst(0, Free(fn), f)
       val nextType = iSubst(0, Free(fn), t2)
       LamDStep(fn, Conf(nextTerm, nextType))
-    case _ =>
-      StopDStep
+    */
+    case _ => StopDStep
   }
 
   override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] =
@@ -523,16 +525,8 @@ trait CoreProofResiduator extends ProofResiduator with CoreResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(n1, LamLabel(fn)) :: Nil =>
-        val Pi(t1, _) = node.conf.tp
-        VLam(eval(t1, env, bound), v =>
-          proofFold(n1,
-            env + (fn -> v), v :: bound, recM,
-            env2 + (fn -> v), v :: bound2, recM2))
       case _ =>
-        super.proofFold(node,
-          env, bound, recM,
-          env2, bound2, recM)
+        super.proofFold(node, env, bound, recM, env2, bound2, recM)
     }
 }
 

@@ -63,22 +63,6 @@ trait EqDriver extends CoreDriver with EqAST {
     override def step(t: Conf) = ReflStep(A, x)
   }
 
-  // it seems that we need to put here also mr info -
-  // we cannot just restore it from current graphs
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NEqElim(a, m, mr, x, y, neq) =>
-      neq match {
-        case NFree(n) =>
-          val aType = quote0(a)
-          val reflCase = ElimBranch(Refl(aType, freshLocal(aType)), Map())
-          ElimDStep(n, List(reflCase))
-        case n =>
-          driveNeutral(n)
-      }
-    case _ =>
-      super.driveNeutral(n)
-  }
-
   override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
       val Eq(_, _, _) = c.tp
@@ -92,35 +76,6 @@ trait EqDriver extends CoreDriver with EqAST {
 trait EqResiduator extends BaseResiduator with EqDriver { self =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Refl(a, Free(eq)), _))) :: Nil =>
-        // "argument reconstruction"
-        //
-        val Eq(_, x, y) = typeMap(sel)
-        val tp = node.conf.tp
-
-        val aVal = eval(a, env, bound)
-        // types should be abstracted as well
-        // we should propagate x1, y1 somehow
-        val prop =
-          // Replacements x -> x1, y -> y1
-          VLam(aVal, x1 => VLam(aVal, y1 => VLam(VEq(aVal, x1, y1), eq1 =>
-            eval(node.conf.tp, env + (sel -> eq1), eq1 :: bound) )))
-
-        val propR =
-          VLam(aVal, eq1 => fold(nodeZ, env + (eq -> eq1), eq1 :: bound, recM))
-
-        // now we have an equation
-        // forall (z: A). prop z z (Refl a) = (tp propR)
-        // prop x y eq = tp
-
-        VNeutral(NFree(Global("eqElim"))) @@
-          aVal @@
-          prop @@
-          propR @@
-          eval(x, env, bound) @@
-          eval(y, env, bound) @@
-          env(sel)
       case TEdge(a, ReflLabel) :: TEdge(x, ReflLabel) :: Nil =>
         val VEq(_, _, _) = eval(node.conf.tp, env, bound)
         VNeutral(NFree(Global("Refl"))) @@
@@ -159,7 +114,6 @@ trait EqCheck extends CoreCheck with EqAST {
       VEq(aVal, zVal, zVal)
 
     case EqElim(a, prop, propR, x, y, eq) =>
-      //println("checking elim")
       val aVal = eval(a, named, Nil)
       val propVal = eval(prop, named, Nil)
       val xVal = eval(x, named, Nil)
@@ -181,9 +135,7 @@ trait EqCheck extends CoreCheck with EqAST {
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
       val propRType = iType(i, named, bound, propR)
-      //println("checking propr")
       checkEqual(i, propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
-      //println("checked propr")
 
       val eqType = iType(i, named, bound, eq)
       checkEqual(i, eqType, VEq(aVal, xVal, yVal))
