@@ -6,7 +6,7 @@ let id  = (\ (a :: *) (x :: a) -> x )
 let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
     :: forall (a :: *). forall (b :: *) . a -> b -> a;
 
--- equality congruence
+-- equality congruence for arguments
 let cong1 =
   ( \ (a :: *) (b :: *) (f :: a -> b) ->
         eqElim a
@@ -29,12 +29,26 @@ let fargCong =
             f
             g) ::
   forall (a :: *)
-           (b :: *)
-           (x :: a)
-           (y :: a)
-           (f :: a -> b)
-           (g :: a -> b) .
-           Eq a x y -> Eq (a -> b) f g -> Eq b (f x) (g y);
+         (b :: *)
+         (x :: a)
+         (y :: a)
+         (f :: a -> b)
+         (g :: a -> b) .
+         Eq a x y -> Eq (a -> b) f g -> Eq b (f x) (g y);
+
+let fargCong2 =
+   (\ (a :: *)
+      (b :: *)
+      (c :: *)
+      (f :: a -> b -> c)
+      (x1 :: a)
+      (x2 :: a)
+      (y1 :: b)
+      (y2 :: b)
+      (eq_x :: Eq a x1 x2)
+      (eq_y :: Eq b y1 y2)
+        ->
+        Nat);
 
 let plus =
   natElim

@@ -128,10 +128,10 @@ trait ProductCheck extends CoreCheck with ProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       VStar
     case Pair(a, b, x, y) =>
@@ -139,16 +139,16 @@ trait ProductCheck extends CoreCheck with ProductAST {
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(xType, aVal)
+      checkEqual(i, xType, aVal)
 
       val yType = iType(i, named, bound, y)
-      checkEqual(yType, bVal)
+      checkEqual(i, yType, bVal)
 
       VProduct(aVal, bVal)
     case ProductElim(a, b, m, f, p) =>
@@ -158,19 +158,19 @@ trait ProductCheck extends CoreCheck with ProductAST {
       val pVal = eval(f, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       val pType = iType(i, named, bound, p)
-      checkEqual(pType, VProduct(aVal, bVal))
+      checkEqual(i, pType, VProduct(aVal, bVal))
 
       val mType = iType(i, named, bound, m)
-      checkEqual(mType, VPi(VProduct(aVal, bVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VStar}))
 
       val fType = iType(i, named, bound, f)
-      checkEqual(fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(aVal, bVal, a, b))))
+      checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(aVal, bVal, a, b))))
 
       mVal @@ pVal
     case _ =>

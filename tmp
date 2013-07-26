@@ -1,0 +1,30 @@
+--sc xxx;
+--sc yyy;
+--sc pr2;
+sc eqElim;
+sc symm;
+sc tran;
+sc tran0;
+--sc apply;
+-- equality types supercompilation - see wiki
+-- sc apply2;
+sc apply3;
+sc thSum01;
+sc proofSum01;
+sc abort;
+sc boolElim;
+sc not;
+sc and;
+sc or;
+sc xor;
+sc if;
+sc len;
+sc abort;
+sc proofSum02;
+
+sc pNPlus0isN;
+
+assume (x :: Nat);
+assume (y :: Nat);
+
+sc plus x y;

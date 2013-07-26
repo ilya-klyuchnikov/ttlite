@@ -107,7 +107,7 @@ trait SumDriver extends CoreDriver with SumAST {
       InLDStep(Conf(lType, Star), Conf(rType, Star), Conf(l, lType))
     case InR(lType, rType, r) =>
       val Sum(_, _) = c.tp
-      InLDStep(Conf(lType, Star), Conf(rType, Star), Conf(r, rType))
+      InRDStep(Conf(lType, Star), Conf(rType, Star), Conf(r, rType))
     case _ =>
       super.decompose(c)
   }
@@ -157,10 +157,10 @@ trait SumCheck extends CoreCheck with SumAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Sum(a, b) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       VStar
     case InL(a, b, l) =>
@@ -168,13 +168,13 @@ trait SumCheck extends CoreCheck with SumAST {
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       val lType = iType(i, named, bound, l)
-      checkEqual(lType, aVal)
+      checkEqual(i, lType, aVal)
 
       VSum(aVal, bVal)
     case InR(a, b, r) =>
@@ -182,13 +182,13 @@ trait SumCheck extends CoreCheck with SumAST {
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       val rType = iType(i, named, bound, r)
-      checkEqual(rType, bVal)
+      checkEqual(i, rType, bVal)
 
       VSum(aVal, bVal)
     case SumElim(a, b, m, lc, rc, sum) =>
@@ -198,22 +198,22 @@ trait SumCheck extends CoreCheck with SumAST {
       val sumVal = eval(sum, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(bType, Star)
+      checkEqual(i, bType, Star)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(mType, VPi(VSum(ltVal, rtVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VStar}))
 
       val lcType = iType(i, named, bound, lc)
-      checkEqual(lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
+      checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
 
       val rcType = iType(i, named, bound, lc)
-      checkEqual(rcType, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)}))
+      checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)}))
 
       val sumType = iType(i, named, bound, sum)
-      checkEqual(sumType, VSum(ltVal, rtVal))
+      checkEqual(i, sumType, VSum(ltVal, rtVal))
 
       mVal @@ sumVal
     case _ =>

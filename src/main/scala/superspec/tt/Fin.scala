@@ -88,10 +88,10 @@ trait FinCheck extends CoreCheck with FinAST {
       val mVal = eval(m, named, List())
       val elemVal = eval(elem, named, List())
       val mType = iType(i, named, bound, m)
-      checkEqual(mType, VPi(VFin(n), {_ => VStar}))
+      checkEqual(i, mType, VPi(VFin(n), {_ => VStar}))
       val casesTypes = cases.map(iType(i, named, bound, _))
       casesTypes.zipWithIndex.foreach { case (tp, i) =>
-        checkEqual(tp, VPi(VFinElem(i + 1, n), {_ => VStar}))
+        checkEqual(i, tp, VPi(VFinElem(i + 1, n), {_ => VStar}))
       }
       mVal @@ elemVal
     case _ =>

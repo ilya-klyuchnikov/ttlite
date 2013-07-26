@@ -56,17 +56,17 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, VStar)
+      checkEqual(i, aType, VStar)
 
       val nType = iType(i, named, bound, n)
-      checkEqual(nType, VNat)
+      checkEqual(i, nType, VNat)
 
       VStar
     case VecNil(a) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, VStar)
+      checkEqual(i, aType, VStar)
 
       VVec(aVal, VZero)
     case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
@@ -74,16 +74,16 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       val nVal = eval(n, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, VStar)
+      checkEqual(i, aType, VStar)
 
       val nType = iType(i, named, bound, n)
-      checkEqual(nType, VNat)
+      checkEqual(i, nType, VNat)
 
       val hType = iType(i, named, bound, head)
-      checkEqual(hType, aVal)
+      checkEqual(i, hType, aVal)
 
       val tType = iType(i, named, bound, tail)
-      checkEqual(tType, VVec(aVal, nVal))
+      checkEqual(i, tType, VVec(aVal, nVal))
 
       VVec(aVal, VSucc(nVal))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
@@ -93,27 +93,26 @@ trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
       val vecVal = eval(vec, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, VStar)
+      checkEqual(i, aType, VStar)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
+      checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
 
       val nilCaseType = iType(i, named, bound, nilCase)
-      checkEqual(nilCaseType, mVal @@ VZero @@ VVecNil(aVal))
+      checkEqual(i, nilCaseType, mVal @@ VZero @@ VVecNil(aVal))
 
       val consCaseType = iType(i, named, bound, consCase)
-      checkEqual(consCaseType, VPi(VNat, {n =>
+      checkEqual(i, consCaseType, VPi(VNat, {n =>
         VPi(aVal, {y =>
           VPi(VVec(aVal, n), {ys =>
             VPi(mVal @@ n @@ ys, {_ =>
-              mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)
-            })})})}))
+              mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)})})})}))
 
       val nType = iType(i, named, bound, n)
-      checkEqual(nType, VNat)
+      checkEqual(i, nType, VNat)
 
       val vecType = iType(i, named, bound, vec)
-      checkEqual(vecType, VVec(aVal, nVal))
+      checkEqual(i, vecType, VVec(aVal, nVal))
 
       mVal @@ nVal @@ vecVal
     case _ =>

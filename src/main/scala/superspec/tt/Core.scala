@@ -225,36 +225,37 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: Term): Value =
     iType(0, named, bound, i)
 
-  def checkEqual(inferred: Term, expected: Term) {
+  def checkEqual(i: Int, inferred: Term, expected: Term) {
     if (inferred != expected) {
       throw new TypeError(s"inferred: ${pprint(inferred)}, expected: ${pprint(expected)}")
     }
   }
 
-  def checkEqual(inferred: Value, expected: Term) {
-    val infTerm = quote0(inferred)
+  def checkEqual(i: Int, inferred: Value, expected: Term) {
+    val infTerm = quote(i, inferred)
     if (infTerm != expected) {
       throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: ${pprint(expected)}")
     }
   }
 
-  def checkEqual(inferred: Value, expected: Value) {
-    val infTerm = quote0(inferred)
-    val expTerm = quote0(expected)
+  def checkEqual(i: Int, inferred: Value, expected: Value) {
+    val infTerm = quote(i, inferred)
+    val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
       throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: ${pprint(expTerm)}")
     }
   }
 
+  // todo: eval with bound!!!
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Ann(e, tp) =>
       val tpVal = eval(tp, named, Nil)
 
       val tpType = iType(i, named, bound, tp)
-      checkEqual(tpType, Star)
+      checkEqual(i, tpType, Star)
 
       val eType = iType(i, named, bound, e)
-      checkEqual(eType, tpVal)
+      checkEqual(i, eType, tpVal)
 
       tpVal
     case Star =>
@@ -263,10 +264,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       val xVal = eval(x, named, Nil)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(xType, Star)
+      checkEqual(i, xType, Star)
 
       val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
-      checkEqual(tpType, Star)
+      checkEqual(i, tpType, Star)
 
       VStar
     case Free(x) =>
@@ -278,7 +279,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       iType(i, named, bound, e1) match {
         case VPi(x, f) =>
           val e2Type = iType(i, named, bound, e2)
-          checkEqual(e2Type, x)
+          checkEqual(i, e2Type, x)
 
           f(eval(e2, named, Nil))
         case _ =>
@@ -286,9 +287,9 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       }
     case Lam(t, e) =>
       val tVal = eval(t, named, Nil)
-
       val tType = iType(i, named, bound, t)
-      checkEqual(tType, Star)
+
+      checkEqual(i, tType, Star)
 
       VPi(tVal, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> tVal) , iSubst(0, Free(Local(i)), e)))
   }
@@ -328,7 +329,9 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
       try {
         Right(iType0(ne, ctx, i))
       } catch {
-        case e: Throwable => Left(e.getMessage)
+        case e: Throwable =>
+          e.printStackTrace()
+          Left(e.getMessage)
       }
     def iquote(v: Value): Term =
       quote0(v)

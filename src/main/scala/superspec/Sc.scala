@@ -193,6 +193,7 @@ object TTScREPL
           state
         case Some(tp) =>
           val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+          println("sc: " + icprint(iquote(ieval(state.ne, it))))
           val rules = new Rules
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
@@ -201,9 +202,11 @@ object TTScREPL
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
+            println("result: " + icprint(cTerm))
 
             val iTerm = Ann(cTerm, cType)
-            val t2 = iinfer(state.ne, state.ctx, iTerm)
+
+            val t2 = iinfer(state.ne, state.ctx, cTerm)
 
             t2 match {
               case None =>

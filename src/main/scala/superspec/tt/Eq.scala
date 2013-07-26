@@ -125,15 +125,16 @@ trait EqCheck extends CoreCheck with EqAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Eq(a, x, y) =>
       val aVal = eval(a, named, Nil)
+      println("aval = " + aVal)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(xType, aVal)
+      checkEqual(i, xType, aVal)
 
       val yType = iType(i, named, bound, y)
-      checkEqual(yType, aVal)
+      checkEqual(i, yType, aVal)
 
       VStar
     case Refl(a, z) =>
@@ -141,10 +142,10 @@ trait EqCheck extends CoreCheck with EqAST {
       val zVal = eval(z, named, Nil)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val zType = iType(i, named, bound, z)
-      checkEqual(zType, aVal)
+      checkEqual(i, zType, aVal)
 
       VEq(aVal, zVal, zVal)
 
@@ -157,26 +158,26 @@ trait EqCheck extends CoreCheck with EqAST {
       val eqVal = eval(y, named, Nil)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(xType, aVal)
+      checkEqual(i, xType, aVal)
 
       val yType = iType(i, named, bound, y)
-      checkEqual(yType, aVal)
+      checkEqual(i, yType, aVal)
 
       val propType = iType(i, named, bound, prop)
-      checkEqual(propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})}))
+      checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})}))
 
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
       val propRType = iType(i, named, bound, propR)
       //println("checking propr")
-      checkEqual(propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
+      checkEqual(i, propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
       //println("checked propr")
 
       val eqType = iType(i, named, bound, eq)
-      checkEqual(eqType, VEq(aVal, xVal, yVal))
+      checkEqual(i, eqType, VEq(aVal, xVal, yVal))
 
       propVal @@ xVal @@ yVal @@ eqVal
     case _ =>

@@ -61,12 +61,12 @@ trait ListDriver extends CoreDriver with ListAST {
   // boilerplate/indirections
   case object ConsLabel extends Label
 
-  case class ConsStep(a: Conf, h: Conf, t: Conf) extends Step {
+  case class ConsStep(h: Conf, t: Conf) extends Step {
     override val graphStep =
-      AddChildNodesStep[Conf, Label](List(a -> ConsLabel, h -> ConsLabel, t -> ConsLabel))
+      AddChildNodesStep[Conf, Label](List(h -> ConsLabel, t -> ConsLabel))
   }
-  case class ConsDStep(a: Conf, head: Conf, tail: Conf) extends DriveStep {
-    override def step(t: Conf) = ConsStep(a, head, tail)
+  case class ConsDStep(head: Conf, tail: Conf) extends DriveStep {
+    override def step(t: Conf) = ConsStep(head, tail)
   }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
@@ -94,7 +94,7 @@ trait ListDriver extends CoreDriver with ListAST {
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case PiCons(a, h, t) =>
-      ConsDStep(Conf(a, Star), Conf(h, a), Conf(t, c.term))
+      ConsDStep(Conf(h, a), Conf(t, c.term))
     case _ =>
       super.decompose(c)
   }
@@ -119,15 +119,10 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
             fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))
         VNeutral(NFree(Global("listElim"))) @@
-          aVal @@
-          motive @@
-          nilCase @@
-          consCase @@
-          env(sel)
-      case TEdge(a, ConsLabel) :: TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
-        val VPiList(aType) = eval(node.conf.tp, env, bound)
-        VNeutral(NFree(Global("Cons"))) @@
-          fold(a, env, bound, recM) @@
+          aVal @@ motive @@ nilCase @@ consCase @@ env(sel)
+      case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
+        val VPiList(a) = eval(node.conf.tp, env, bound)
+        VNeutral(NFree(Global("Cons"))) @@ a @@
           fold(h, env, bound, recM) @@
           fold(t, env, bound, recM)
       case _ =>
@@ -147,15 +142,12 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
 
         val aVal = eval(a, env, bound)
 
-        // =====
-
         val motive =
           VLam(VPiList(aVal), n =>
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM))
-          )
+              fold(node, env + (sel -> n), n :: bound, recM)))
 
         val nilCase =
           proofFold(nodeZ,
@@ -171,15 +163,17 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
 
               env2 + (hN -> h) + (tN -> t),
               rec :: t :: h :: bound,
-              recM2 + (node.tPath -> fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec))))
-          )))
+              recM2 + (node.tPath -> fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))))
 
-        VNeutral(NFree(Global("listElim"))) @@
-          aVal @@
-          motive @@
-          nilCase @@
-          consCase @@
-          env(sel)
+        VNeutral(NFree(Global("listElim"))) @@ aVal @@
+          motive @@ nilCase @@ consCase @@ env(sel)
+      case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
+        val VPiList(a) = eval(node.conf.tp, env, bound)
+        VNeutral(NFree(Global("Cons"))) @@ a @@
+          fold(h, env, bound, recM) @@
+          fold(t, env, bound, recM)
+
+
       case _ =>
         super.proofFold(node,
           env, bound, recM,
@@ -192,26 +186,26 @@ trait ListCheck extends CoreCheck with ListAST with ListEval {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case PiList(a) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
       VStar
     case PiNil(a) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       VPiList(aVal)
     case PiCons(a, head, tail) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val hType = iType(i, named, bound, head)
-      checkEqual(hType, aVal)
+      checkEqual(i, hType, aVal)
 
       val tType = iType(i, named, bound, tail)
-      checkEqual(tType, VPiList(aVal))
+      checkEqual(i, tType, VPiList(aVal))
 
       VPiList(aVal)
     case PiListElim(a, m, nilCase, consCase, xs) =>
@@ -220,21 +214,21 @@ trait ListCheck extends CoreCheck with ListAST with ListEval {
       val xsVal = eval(xs, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(aType, Star)
+      checkEqual(i, aType, Star)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(mType, VPi(VPiList(aVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VPiList(aVal), {_ => VStar}))
 
       val nilCaseType = iType(i, named, bound, nilCase)
-      checkEqual(nilCaseType, mVal @@ VPiNil(aVal))
+      checkEqual(i, nilCaseType, mVal @@ VPiNil(aVal))
 
       val consCaseType = iType(i, named, bound, consCase)
-      checkEqual(consCaseType,
+      checkEqual(i, consCaseType,
         VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(aVal, y, ys) }) }) })
       )
 
       val xsType = iType(i, named, bound, xs)
-      checkEqual(xsType, VPiList(aVal))
+      checkEqual(i, xsType, VPiList(aVal))
 
       mVal @@ xsVal
     case _ =>
