@@ -209,8 +209,8 @@ trait SumCheck extends CoreCheck with SumAST {
       val lcType = iType(i, named, bound, lc)
       checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
 
-      val rcType = iType(i, named, bound, lc)
-      checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInL(ltVal, rtVal, rVal)}))
+      val rcType = iType(i, named, bound, rc)
+      checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInR(ltVal, rtVal, rVal)}))
 
       val sumType = iType(i, named, bound, sum)
       checkEqual(i, sumType, VSum(ltVal, rtVal))
