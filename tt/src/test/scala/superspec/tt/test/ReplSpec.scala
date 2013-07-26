@@ -1,4 +1,4 @@
-package superspec
+package superspec.tt.test
 
 import superspec.tt._
 
@@ -44,14 +44,4 @@ class ReplSpec extends org.scalatest.FunSpec {
     TTREPLMain.main(Array("examples/ex10_tt.pi"))
   }
 
-  describe("ScREPL should supercompile all tasks in examples/sc01.pi") {
-    TTScREPL.main(Array("examples/sc01.pi"))
-  }
-
-}
-
-class ReplSpec1 extends org.scalatest.FunSpec {
-  describe("ScREPL should supercompile all tasks in examples/sc02.pi") {
-    TTScREPL.main(Array("examples/sc02.pi"))
-  }
 }

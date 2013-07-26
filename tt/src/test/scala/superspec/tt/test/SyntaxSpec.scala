@@ -1,4 +1,4 @@
-package superspec
+package superspec.tt.test
 
 import superspec.tt._
 
