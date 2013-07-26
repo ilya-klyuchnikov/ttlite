@@ -183,7 +183,7 @@ object TTScREPL
 
   override def initialState = State(interactive = true, ve, te, Set())
 
-  override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {
+  override def handleStmt(state: State, stmt: Stmt[T, T]): State = stmt match {
     case Supercompile(it) =>
       import int._
       iinfer(state.ne, state.ctx, iquote(ieval(state.ne, it))) match {

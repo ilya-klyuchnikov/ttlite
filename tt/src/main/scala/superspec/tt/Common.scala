@@ -51,11 +51,8 @@ trait REPL extends Common {
 
   case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
 
-
-  type I // inferable term
-  type C // checkable term
+  type T // term
   type V // value
-  type TInf // type info
 
   val int: Interpreter
   def initialState: State
@@ -90,14 +87,14 @@ trait REPL extends Common {
     override val lexical = new HaskellLikeLexical
 
     val prompt: String
-    def itype(ne: NameEnv[V], ctx: NameEnv[V], i: I): Result[V]
-    def iquote(v: V): C
-    def ieval(ne: NameEnv[V], i: I): V
-    def icprint(c: C): String
+    def itype(ne: NameEnv[V], ctx: NameEnv[V], i: T): Result[V]
+    def iquote(v: V): T
+    def ieval(ne: NameEnv[V], i: T): V
+    def icprint(c: T): String
     def itprint(t: V): String
-    val iParse: Parser[I]
-    val stmtParse: Parser[Stmt[I, TInf]]
-    def assume(s: State, x: (String, TInf)): State
+    val iParse: Parser[T]
+    val stmtParse: Parser[Stmt[T, T]]
+    def assume(s: State, x: (String, T)): State
 
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
       case t if t.successful =>
@@ -107,7 +104,7 @@ trait REPL extends Common {
         None
     }
 
-    def iinfer(ne: NameEnv[V], ctx: NameEnv[V], i: I): Option[V] = {
+    def iinfer(ne: NameEnv[V], ctx: NameEnv[V], i: T): Option[V] = {
       itype(ne, ctx, i) match {
         case Right(t) =>
           Some(t)
@@ -183,8 +180,8 @@ trait REPL extends Common {
         load(f, state, reload = true)
     }
 
-  def handleStmt(state: State, stmt: Stmt[I, TInf]): State = {
-    def checkEval(s: String, it: I): State = {
+  def handleStmt(state: State, stmt: Stmt[T, T]): State = {
+    def checkEval(s: String, it: T): State = {
       int.iinfer(state.ne, state.ctx, it) match {
         case None =>
           handleError()

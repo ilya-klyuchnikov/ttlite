@@ -11,7 +11,7 @@ trait CoreAST extends Common {
   case class Bound(i: Int) extends Term
   case class Free(n: Name) extends Term
   case class :@:(h: Term, t: Term) extends Term
-  // Value
+
   trait Value {
     def @@(x: Value): Value = vapp(this, x)
   }
@@ -19,7 +19,7 @@ trait CoreAST extends Common {
   case object VStar extends Value
   case class VPi(t: Value, e: Value => Value) extends Value
   case class VNeutral(n: Neutral) extends Value
-  // Neutral
+
   trait Neutral
   case class NFree(n: Name) extends Neutral
   case class NApp(n: Neutral, v: Value) extends Neutral
@@ -312,11 +312,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
   import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
   import scala.language.postfixOps
-  type I = Term
-  type C = Term
+  type T = Term
   type V = Value
-  type TInf = Term
   override lazy val int = new CoreInterpreter
+  // TODO: decouple into parser and interpreter
   class CoreInterpreter extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
