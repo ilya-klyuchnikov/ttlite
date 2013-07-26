@@ -212,7 +212,6 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
                   VLam(VNat, n =>
                     VLam(VVec(a, n), {vec =>
                       eval(VecElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), vectorVE,
-                        List(vec, n, consCase, nilCase, m, a))
-                    })))))))
+                        List(vec, n, consCase, nilCase, m, a))})))))))
     )
 }

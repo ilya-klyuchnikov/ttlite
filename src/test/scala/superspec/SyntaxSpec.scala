@@ -1,9 +1,8 @@
 package superspec
 
-import org.scalatest.FunSpec
 import superspec.tt._
 
-class SyntaxSpec extends FunSpec {
+class SyntaxSpec extends org.scalatest.FunSpec {
 
   val coreRepl = new CoreREPL with CoreSubst {
     def initialState: State = State(interactive = false, emptyNEnv, emptyNEnv, Set())

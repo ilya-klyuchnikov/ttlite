@@ -7,7 +7,6 @@ import superspec.tt._
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
-  case class ProofConf(term1: Term, term2: Term, tp: Term)
   // sub - a substitution, using only this substitution we can perform a fold
   case class ElimBranch(ptr: Term, sub: Subst)
   trait DriveStep {
@@ -187,7 +186,7 @@ object TTScREPL
   override def handleStmt(state: State, stmt: Stmt[I, TInf]): State = stmt match {
     case Supercompile(it) =>
       import int._
-      iinfer(state.ne, state.ctx, it) match {
+      iinfer(state.ne, state.ctx, iquote(ieval(state.ne, it))) match {
         case None =>
           handleError()
           state
@@ -205,6 +204,7 @@ object TTScREPL
             println("result: " + icprint(cTerm))
 
             val iTerm = Ann(cTerm, cType)
+            println(cTerm == iquote(ieval(state.ne, it)));
 
             val t2 = iinfer(state.ne, state.ctx, cTerm)
 

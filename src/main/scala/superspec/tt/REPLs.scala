@@ -1,6 +1,4 @@
-package superspec
-
-import superspec.tt._
+package superspec.tt
 
 object CoreREPLMain extends CoreREPL {
   override def initialState =
@@ -52,4 +50,3 @@ object TTREPLMain extends CoreREPL with NatREPL with VectorREPL with EqREPL with
   val ve = natVE ++ eqVE ++ vectorVE ++ finVE ++ listVE ++ productVE ++ sumVE
   override def initialState = State(interactive = true, ve, te, Set())
 }
-
