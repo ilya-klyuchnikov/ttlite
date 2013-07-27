@@ -38,5 +38,5 @@ let nat1Elim =
             m0
             (\ (p :: Nat) (rec :: m p) -> natElim (\ (n :: Nat) -> m (Succ n)) m1 ms p) )
   :: forall (m :: Nat -> *) . m 0 -> m 1 ->
-     (forall n :: Nat . m (Succ n) -> m (Succ (Succ n))) ->
+     (forall (n :: Nat) . m (Succ n) -> m (Succ (Succ n))) ->
      forall (n :: Nat) . m n;

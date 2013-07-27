@@ -97,15 +97,15 @@ trait FinNatREPL extends NatREPL with FinNatAst with FinNatPrinter with FinNatCh
     )
 
   val FinTypeIn =
-    "forall x :: Nat . *"
+    "forall (x :: Nat) . *"
   val FZeroTypeIn =
-    "forall x :: Nat . Fin (Succ x)"
+    "forall (x :: Nat) . Fin (Succ x)"
   val FSuccTypeIn =
     "forall (x :: Nat) . forall (y :: Fin x) . Fin (Succ x)"
   val finElimTypeIn =
     """
       |forall (m :: forall (x :: Nat) . forall (y :: Fin x) . *) .
-      |forall (_ :: forall y :: Nat . m (Succ y) (FZero y)) .
+      |forall (_ :: forall (y :: Nat) . m (Succ y) (FZero y)) .
       |forall (_ :: forall (z :: Nat) . forall (a :: Fin z) . forall (b :: m z a) .
       |             m (Succ z) (FSucc z a)) .
       |forall (a :: Nat) .

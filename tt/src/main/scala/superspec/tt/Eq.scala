@@ -142,14 +142,14 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
     )
 
   val EqTypeIn =
-    "forall (A :: *) . forall (x :: A) . forall (y :: A) . *"
+    "forall (A :: *) (x :: A) (y :: A) . *"
   val ReflTypeIn =
-    "forall (A :: *) . forall (a :: A) . Eq A a a"
+    "forall (A :: *) (a :: A) . Eq A a a"
   val eqElimTypeIn =
     """
       |forall (A :: *) .
       |forall (prop :: forall (x :: A) . forall (y :: A) . forall (_ :: Eq A x y) . * ) .
-      |forall (propR :: forall a :: A . prop a a (Refl A a)) .
+      |forall (propR :: forall (a :: A) . prop a a (Refl A a)) .
       |forall (x :: A) .
       |forall (y :: A) .
       |forall (eq :: Eq A x y) .

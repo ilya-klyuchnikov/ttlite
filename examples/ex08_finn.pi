@@ -33,12 +33,12 @@ let z12 = \(m :: Void -> *) -> (natElim (\ (n :: Nat) -> Fin n -> *) m);
 -- z2 _ n = Fin n -> Unit
 let z2 = (\ (m :: *) -> (natElim (\ (n :: Nat) -> Fin n -> *)
                         (\ (_ :: Fin 0) -> m)
-                        (\ (a :: Nat) (b :: forall b :: Fin a . *) (c :: Fin (Succ a)) -> Unit))) ::
+                        (\ (a :: Nat) (b :: forall (b :: Fin a) . *) (c :: Fin (Succ a)) -> Unit))) ::
                  forall (m :: *) . forall (a :: Nat) (b :: Fin a) . *;
 
 let z1 = (\ (m :: Void -> *) -> (natElim (\ (n :: Nat) -> Fin n -> *)
                         m
-                        (\ (a :: Nat) (b :: forall b :: Fin a . *) (c :: Fin (Succ a)) -> Unit))) ::
+                        (\ (a :: Nat) (b :: forall (b :: Fin a) . *) (c :: Fin (Succ a)) -> Unit))) ::
                  forall (m :: Void -> *) . forall (a :: Nat) (b :: Fin a) . *;
 
 

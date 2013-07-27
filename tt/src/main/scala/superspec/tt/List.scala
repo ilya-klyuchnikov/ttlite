@@ -157,7 +157,7 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
       |  m ys
     """.stripMargin
   val NilTypeIn =
-    "forall A :: * . List A"
+    "forall (A :: *) . List A"
   val ConsTypeIn =
     "forall (A :: *) . forall (x :: A) . forall (xs :: List A) . List A"
 

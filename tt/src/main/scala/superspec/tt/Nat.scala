@@ -133,7 +133,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
     )
   val natElimTypeIn =
     """
-      |forall (m :: forall x :: Nat . *) .
+      |forall (m :: forall (x :: Nat) . *) .
       |forall (zCase :: m Zero) .
       |forall (sCase :: forall (n :: Nat) (a :: m n) . m (Succ n)) .
       |forall (n :: Nat) .

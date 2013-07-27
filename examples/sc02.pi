@@ -99,11 +99,11 @@ let yyyNorm =
             Zero
             (\ (b :: Nat) -> \ (c :: Nat) -> b)
             (natElim
-                (\ (b :: Nat) -> forall c :: Nat . Nat)
+                (\ (b :: Nat) -> forall (c :: Nat) . Nat)
                 (\ (b :: Nat) -> b)
-                (\ (b :: Nat) -> \ (c :: forall c :: Nat . Nat) -> \ (d :: Nat) -> Succ (c d))
+                (\ (b :: Nat) -> \ (c :: forall (c :: Nat) . Nat) -> \ (d :: Nat) -> Succ (c d))
                 a
-                Zero)) :: forall a :: Nat . Nat;
+                Zero)) :: forall (a :: Nat) . Nat;
 
 let yyySc =
     (\ (a :: Nat) ->
@@ -115,7 +115,7 @@ let yyySc =
                 (\ (d :: Nat) -> Nat)
                 Zero
                 (\ (d :: Nat) -> \ (e :: Nat) -> Succ e)
-                b) a) :: forall a :: Nat . Nat;
+                b) a) :: forall (a :: Nat) . Nat;
 
 let proof =
     \(a :: Nat) ->
@@ -125,9 +125,9 @@ let proof =
 
 let yyy1 = \(x :: Nat) -> yyy (Succ x);
 
-let yyy1Norm = \ (a :: Nat) -> natElim (\ (b :: Nat) -> forall c :: Nat . Nat)
+let yyy1Norm = \ (a :: Nat) -> natElim (\ (b :: Nat) -> forall (c :: Nat) . Nat)
     (\ (b :: Nat) -> b)
-    (\ (b :: Nat) -> \ (c :: forall c :: Nat . Nat) -> \ (d :: Nat) -> Succ
+    (\ (b :: Nat) -> \ (c :: forall (c :: Nat) . Nat) -> \ (d :: Nat) -> Succ
                     (c d))
     a
     Zero;
@@ -162,7 +162,7 @@ let proof =
             (Refl Nat 0)
             ( \ (b :: Nat) (c :: Eq Nat (natId b) (natId b)) ->
                 cong1 Nat Nat Succ (natId b) (natId b) c) a) ::
-                forall b :: Nat . Eq Nat (natId b) (natId b);
+                forall (b :: Nat) . Eq Nat (natId b) (natId b);
 
 assume (xx :: Nat);
 assume (c :: Nat);

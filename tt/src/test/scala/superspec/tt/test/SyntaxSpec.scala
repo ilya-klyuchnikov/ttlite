@@ -41,9 +41,9 @@ class SyntaxSpec extends org.scalatest.FunSpec {
     testSubOK("f <1>", "f <2>")
     testSubNO("f x", "f y")
 
-    testSubOK("forall x :: Nat. x -> Nat", "forall y :: Nat. y -> Nat")
-    testSubOK("forall x :: Nat. x -> <1>", "forall y :: Nat. y -> <2>")
+    testSubOK("forall (x :: Nat) . x -> Nat", "forall (y :: Nat) . y -> Nat")
+    testSubOK("forall (x :: Nat) . x -> <1>", "forall (y :: Nat) . y -> <2>")
 
-    testSubNO("forall x :: Bool. x -> Nat", "forall y :: Nat. y -> Nat")
+    testSubNO("forall (x :: Bool) . x -> Nat", "forall (y :: Nat) . y -> Nat")
   }
 }

@@ -186,7 +186,7 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
       |  y b c
     """.stripMargin
   val VNilTypeIn =
-    "forall x :: * . Vec x Zero"
+    "forall (x :: *) . Vec x Zero"
   val VConsTypeIn =
     "forall (x :: *) . forall (y :: Nat) . forall (z :: x) . forall (a :: Vec x y) . Vec x (Succ y)"
 

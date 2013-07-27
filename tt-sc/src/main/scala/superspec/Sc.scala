@@ -3,7 +3,6 @@ package superspec
 import mrsc.core._
 import superspec.tt._
 
-// base supercompiler for type theory
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
@@ -173,9 +172,9 @@ object TTScREPL
   class ScInterpreter extends CoreInterpreter {
 
     lazy val scStmt: PackratParser[Stmt[Term, Term]] =
-      "sc" ~> iterm0 <~ ";" ^^ {t => Supercompile(t(Nil))}
+      "sc" ~> term <~ ";" ^^ {t => Supercompile(t(Nil))}
     lazy val sc2Stmt: PackratParser[Stmt[Term, Term]] =
-      "sc2" ~> iterm0 <~ ";" ^^ {t => Supercompile2(t(Nil))}
+      "sc2" ~> term <~ ";" ^^ {t => Supercompile2(t(Nil))}
 
     lazy val scStmts = scStmt :: sc2Stmt :: stmts
     override lazy val stmt: PackratParser[Stmt[Term, Term]] = scStmts.reduce( _ | _)
@@ -192,7 +191,7 @@ object TTScREPL
           state
         case Some(tp) =>
           val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
-          println("sc: " + icprint(iquote(ieval(state.ne, it))))
+          output("sc: " + icprint(iquote(ieval(state.ne, it))))
           val rules = new Rules
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
@@ -201,10 +200,10 @@ object TTScREPL
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
-            println("result: " + icprint(cTerm))
+            output("result: " + icprint(cTerm))
 
             val iTerm = Ann(cTerm, cType)
-            println(cTerm == iquote(ieval(state.ne, it)));
+            output(cTerm == iquote(ieval(state.ne, it)));
 
             val t2 = iinfer(state.ne, state.ctx, cTerm)
 
@@ -248,10 +247,10 @@ object TTScREPL
                 val proofTerm = iquote(proof)
                 val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
                 val t4 = iinfer(state.ne, state.ctx, annProofTerm)
-                println("proof:")
-                println(icprint(proofTerm))
-                println("expected type:")
-                println(icprint(Eq(cType, it, cTerm)))
+                output("proof:")
+                output(icprint(proofTerm))
+                output("expected type:")
+                output(icprint(Eq(cType, it, cTerm)))
                 output("::")
                 output(icprint(iquote(t4.get)))
             }
