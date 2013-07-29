@@ -67,9 +67,9 @@ trait REPL extends Common {
   }
 
   def output(x: Any) {
-    if (!batch) {
+    //if (!batch) {
       Console.println(x)
-    }
+    //}
   }
 
   class HaskellLikeLexical extends StdLexical {

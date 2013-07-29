@@ -127,6 +127,8 @@ trait ProofResiduator extends BaseResiduator with EqAST {
                 env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.base match {
       case Some(tPath) =>
+        println(recM2)
+        VStar
         recM2(tPath)
       case None =>
         node.outs match { case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound) }
@@ -196,7 +198,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            //println(tgToString(tGraph))
+            println(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
@@ -244,13 +246,13 @@ object TTScREPL
               case Some(t3) =>
                 output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
                 val proof = proofResiduate(tGraph, state.ne)
-                val proofTerm = iquote(proof)
+                val proofTerm = iquote(proof) //iquote(ieval(state.ne, iquote(proof)))
                 val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
                 val t4 = iinfer(state.ne, state.ctx, annProofTerm)
                 output("proof:")
                 output(icprint(proofTerm))
-                output("expected type:")
-                output(icprint(Eq(cType, it, cTerm)))
+                //output("expected type:")
+                //output(icprint(Eq(cType, it, cTerm)))
                 output("::")
                 output(icprint(iquote(t4.get)))
             }
@@ -262,6 +264,6 @@ object TTScREPL
   }
 
   class Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
-    val maxDepth = 10
+    val maxDepth = 20
   }
 }

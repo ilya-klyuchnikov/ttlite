@@ -1,0 +1,101 @@
+listElim Nat
+(\ (a :: List Nat) -> Eq (List Nat)
+        (listElim Nat (\ (b :: List Nat) -> List Nat) b1
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: List Nat) -> Cons
+                            Nat
+                            b
+                            d)
+            a)
+        (listElim Nat (\ (b :: List Nat) -> List Nat) b1
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: List Nat) -> Cons
+                            Nat
+                            b
+                            (listElim Nat (\ (e :: List Nat) -> List Nat)
+                                b1
+                                (\ (e :: Nat) -> \ (f :: List Nat) -> \ (g :: List
+                                            Nat) -> Cons Nat e g)
+                                c))
+            a))
+(Refl (List Nat) b1)
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) b1
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                e)
+                b)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) b1
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                (listElim Nat
+                                    (\ (f :: List Nat) -> List Nat)
+                                    b1
+                                    (\ (f :: Nat) -> \ (g :: List Nat) -> \ (h :: List
+                                                Nat) -> Cons Nat f h)
+                                    d))
+                b)) -> fargCong (List Nat) (List Nat)
+                (listElim Nat (\ (d :: List Nat) -> List Nat) b1
+                    (\ (d :: Nat) -> \ (e :: List Nat) -> \ (f :: List Nat) -> Cons
+                                    Nat
+                                    d
+                                    f)
+                    b)
+                (listElim Nat (\ (d :: List Nat) -> List Nat) b1
+                    (\ (d :: Nat) -> \ (e :: List Nat) -> \ (f :: List Nat) -> Cons
+                                    Nat
+                                    d
+                                    f)
+                    b)
+                (Cons Nat a)
+                (Cons Nat a)
+                (listElim Nat
+                    (\ (d :: List Nat) -> Eq (List Nat)
+                            (listElim Nat (\ (e :: List Nat) -> List Nat)
+                                b1
+                                (\ (e :: Nat) -> \ (f :: List Nat) -> \ (g :: List
+                                            Nat) -> Cons Nat e g)
+                                d)
+                            (listElim Nat (\ (e :: List Nat) -> List Nat)
+                                b1
+                                (\ (e :: Nat) -> \ (f :: List Nat) -> \ (g :: List
+                                            Nat) -> Cons Nat e g)
+                                d))
+                    (Refl (List Nat) b1)
+                    (\ (d :: Nat) -> \ (e :: List Nat) -> \ (f :: Eq
+                                (List Nat)
+                                (listElim Nat
+                                    (\ (f :: List Nat) -> List Nat)
+                                    b1
+                                    (\ (f :: Nat) -> \ (g :: List Nat) -> \ (h :: List
+                                                Nat) -> Cons Nat f h)
+                                    e)
+                                (listElim Nat
+                                    (\ (f :: List Nat) -> List Nat)
+                                    b1
+                                    (\ (f :: Nat) -> \ (g :: List Nat) -> \ (h :: List
+                                                Nat) -> Cons Nat f h)
+                                    e)) ->
+                                    fargCong
+                                    (List Nat)
+                                    (List Nat)
+                                    (listElim Nat
+                                        (\ (g :: List Nat) -> List Nat)
+                                        b1
+                                        (\ (g :: Nat) -> \ (h :: List Nat) -> \ (i :: List
+                                                    Nat) -> Cons Nat g i)
+                                        e)
+                                    (Cons Nat d f)
+                                    (Cons Nat d)
+                                    (Cons Nat d)
+                                    f
+                                    (cong1 Nat
+                                        (forall g :: List Nat . List Nat)
+                                        (Cons Nat)
+                                        d
+                                        d
+                                        (Refl Nat d)))
+                    b)
+                (cong1 Nat (forall d :: List Nat . List Nat) (Cons Nat) a a
+                    (Refl Nat a)))
+b

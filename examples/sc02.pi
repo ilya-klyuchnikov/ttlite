@@ -56,6 +56,13 @@ let plus =
     ( \ (n :: Nat) -> n )                    -- case for Zero
     ( \ (p :: Nat) (rec :: Nat -> Nat) (n :: Nat) -> Succ (rec n) );   -- case for Succ
 
+let plusX =
+    \ (x :: Nat) (y :: Nat) ->
+        natElim
+        (\ (_ :: Nat) -> Nat )
+        y
+        ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
+
 let plus2 =
     \(x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
 
@@ -185,11 +192,13 @@ let plus1 = \ (x :: Nat) (y :: Nat) -> (plus x y);
 
 assume (x :: Nat);
 assume (y :: Nat);
+assume (z :: Nat);
+
 
 sc plus x y;
-sc2 plus x y;
+--sc2 plus x y;
 
-sc2 natId x;
+
 
 let list2zero =
     listElim Nat (\ (_ :: List Nat) -> Nat) 0 (\ (h :: Nat) (t :: List Nat) (rec :: Nat) -> 0);
@@ -222,3 +231,245 @@ let list2Nil =
     listElim Nat (\ (_ :: List Nat) -> List Nat) (Nil Nat) (\ (h :: Nat) (t :: List Nat) (rec :: List Nat) -> Nil Nat);
 
 sc2 list2Nil l;
+
+
+let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+let append =
+  (\(a :: *) (xs :: List a) (ys :: List a) ->
+    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
+        appendType;
+
+
+assume (l1 :: List Nat);
+assume (l2 :: List Nat);
+
+--let listId = \ (a :: *) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w);
+
+let listId1 = \ (a :: *) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v vs);
+let listId2 = \ (a :: *) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v vs);
+
+
+sc append Nat l1 l2;
+sc listId1 Nat l1;
+
+--sc2 append Nat l1 l2;
+
+
+
+--sc natId x;
+
+assume (b :: List Nat);
+assume (n :: Nat);
+
+let pp =
+    fargCong
+    (List Nat)
+    (List Nat)
+    b
+    b
+    (Cons Nat n)
+    (Cons Nat n)
+    (Refl (List Nat) b)
+    (Refl (List Nat -> List Nat) (Cons Nat n) );
+
+--Cons Nat n;
+
+listElim Nat
+(\ (a :: List Nat) -> Eq (List Nat)
+        (listId1 Nat a)
+        (listId1 Nat a))
+(Refl (List Nat) (Nil Nat))
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat) (listId1 Nat b) (listId1 Nat b)) ->
+  fargCong
+    (List Nat)
+    (List Nat)
+    b
+    b
+    (Cons Nat a)
+    (Cons Nat a)
+    (Refl (List Nat) b)
+    (Refl (List Nat -> List Nat) (Cons Nat a) )
+    ) ;
+
+
+let p2 = (\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) (Nil Nat)
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                d)
+                b)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) (Nil Nat)
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                d)
+                b)) -> fargCong (List Nat) (List Nat) b b (Cons Nat a)
+                (Cons Nat a)
+                (Refl (List Nat) b)
+                (cong1 Nat (forall (d :: List Nat) . List Nat) (Cons Nat) a a
+                    (Refl Nat a)));
+
+let ee =
+listElim Nat
+(\ (a :: List Nat) -> Eq (List Nat)
+        (listElim Nat (\ (b :: List Nat) -> List Nat) (Nil Nat)
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: List Nat) -> Cons
+                            Nat
+                            b
+                            c)
+            a)
+        (listElim Nat (\ (b :: List Nat) -> List Nat) (Nil Nat)
+            (\ (b :: Nat) -> \ (c :: List Nat) -> \ (d :: List Nat) -> Cons
+                            Nat
+                            b
+                            c)
+            a))
+(Refl (List Nat) (Nil Nat))
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) (Nil Nat)
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                d)
+                b)
+            (listElim Nat (\ (c :: List Nat) -> List Nat) (Nil Nat)
+                (\ (c :: Nat) -> \ (d :: List Nat) -> \ (e :: List Nat) -> Cons
+                                Nat
+                                c
+                                d)
+                b)) -> fargCong (List Nat) (List Nat) b b (Cons Nat a)
+                (Cons Nat a)
+                (Refl (List Nat) b)
+                (cong1 Nat (forall (d :: List Nat) . List Nat) (Cons Nat) a a
+                    (Refl Nat a)))
+b;
+
+assume (b1 :: List Nat);
+--sc2 listId1 Nat b;
+sc append Nat b b1;
+
+
+
+
+
+sc append Nat b b1;
+
+let scAppend_b1_1 = listElim
+        Nat
+        (\ (a :: List Nat) -> List Nat)
+        b1
+        (\ (a :: Nat) -> \ (bb :: List Nat) -> \ (c :: List Nat) ->
+            Cons
+            Nat
+            a
+            (listElim Nat (\ (d :: List Nat) -> List Nat)
+                                b1
+                                (\ (d :: Nat) -> \ (e :: List Nat) -> \ (f :: List Nat) -> Cons
+                                    Nat
+                                    d
+                                    f)
+                    bb));
+
+let scAppend_b1_2 = (\ (bb :: List Nat) -> (listElim Nat (\ (d :: List Nat) -> List Nat)
+                                b1
+                                (\ (d :: Nat) -> \ (e :: List Nat) -> \ (f :: List Nat) -> Cons
+                                    Nat
+                                    d
+                                    f)
+                    bb));
+
+let ee1 =
+listElim Nat
+    (\ (a :: List Nat) ->
+        Eq (List Nat)
+        (append Nat a b1)
+        (append Nat a b1))
+(Refl (List Nat) b1)
+
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat) (append Nat b b1) (append Nat b b1)) ->
+  fargCong
+    (List Nat)
+    (List Nat)
+    (append Nat b b1)
+    (append Nat b b1)
+    (Cons Nat a)
+    (Cons Nat a)
+    c
+    (Refl (List Nat -> List Nat) (Cons Nat a) )
+    );
+
+--let scAppend2  = \ (xs :: List Nat) (ys :: List Nat) -> 1;
+
+--sc append Nat b b1;
+
+let scAppend_b1_3 = listElim
+        Nat
+        (\ (a :: List Nat) -> List Nat)
+        b1
+        (\ (a :: Nat) -> \ (bb :: List Nat) -> \ (c :: List Nat) ->
+            Cons
+            Nat
+            a
+            (scAppend_b1_2 bb));
+
+assume (ff :: forall (b :: List Nat). Eq (List Nat) (append Nat b b1) (scAppend_b1_2 b));
+
+let ee3 =
+listElim Nat
+    (\ (a :: List Nat) ->
+        Eq (List Nat)
+        (append Nat a b1)
+        (scAppend_b1_2 a))
+(Refl (List Nat) b1)
+
+(\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat) (append Nat b b1) (scAppend_b1_2 b)) ->
+  fargCong
+    (List Nat)
+    (List Nat)
+    (append Nat b b1)
+    (scAppend_b1_2 b)
+    (Cons Nat a)
+    (Cons Nat a)
+    c
+    (Refl (List Nat -> List Nat) (Cons Nat a) )
+    );
+
+let ee2 =
+listElim Nat
+    (\ (a :: List Nat) ->
+        Eq (List Nat)
+        (append Nat a b1)
+        (scAppend_b1_3 a))
+    (Refl (List Nat) b1)
+    (\ (a :: Nat) -> \ (b :: List Nat) -> \ (c :: Eq (List Nat) (append Nat b b1) (scAppend_b1_3 b)) ->
+      fargCong
+          (List Nat)
+          (List Nat)
+          (append Nat b b1)
+          (scAppend_b1_2 b)
+          (Cons Nat a)
+          (Cons Nat a)
+          (ee3 b)
+          (Refl (List Nat -> List Nat) (Cons Nat a) )
+          ) b :: Eq (List Nat)
+                         (append Nat b b1)
+                         (scAppend_b1_3 b);
+
+sc2 listId1 Nat l1;
+sc2 append Nat b b1;
+
+sc plus x y;
+
+sc plusX x y;
+
+--sc2 plusX x y;
+
+--sc2 plus (plus x y) z;
+
+sc append Nat b b1;
+
+--sc plus x y;
+sc2 plus x y;
+
+sc2 natId x;

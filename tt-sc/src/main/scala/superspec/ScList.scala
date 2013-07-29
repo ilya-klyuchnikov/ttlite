@@ -41,7 +41,7 @@ trait ListDriver extends CoreDriver with ListAST {
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case PiCons(a, h, t) =>
-      ConsDStep(Conf(h, a), Conf(t, c.term))
+      ConsDStep(Conf(h, a), Conf(t, c.tp))
     case _ =>
       super.decompose(c)
   }
@@ -106,21 +106,40 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
             proofFold(nodeS,
               env + (hN -> h) + (tN -> t),
               rec :: t :: h :: bound,
-              recM + (node.tPath -> rec),
+              recM + (node.tPath -> fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec))),
 
               env2 + (hN -> h) + (tN -> t),
-              rec :: t :: h :: bound,
-              recM2 + (node.tPath -> fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))))
+              rec :: t :: h :: bound2,
+              recM2 + (node.tPath -> rec)
+            ))))
 
         VNeutral(NFree(Global("listElim"))) @@ aVal @@
           motive @@ nilCase @@ consCase @@ env(sel)
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(a) = eval(node.conf.tp, env, bound)
-        VNeutral(NFree(Global("Cons"))) @@ a @@
-          fold(h, env, bound, recM) @@
-          fold(t, env, bound, recM)
+        val consA = VNeutral(NFree(Global("Cons"))) @@ a
+        val h1 = eval(h.conf.term, env, bound)
+        val h2 = fold(h, env, bound, recM)
+        val eq_h1_h2 = proofFold(h, env, bound, recM, env2, bound2, recM2)
+        // proof that Cons a x1 == Cond a x2
+        val app1 =
+          VNeutral(NFree(Global("cong1"))) @@
+            a @@ VPi(VPiList(a), _ => VPiList(a)) @@ consA @@ h1 @@ h2 @@ eq_h1_h2
 
+        val t1 = eval(t.conf.term, env, bound)
+        val t2 = fold(t, env, bound, recM)
+        val eq_t1_t2 = proofFold(t, env, bound, recM, env2, bound2, recM2)
 
+        val app2 =
+          VNeutral(NFree(Global("fargCong"))) @@
+            VPiList(a) @@
+            VPiList(a) @@
+            t1 @@
+            t2 @@
+            (consA @@ h1) @@ (consA @@ h2) @@
+            eq_t1_t2 @@ app1
+
+        app2
       case _ =>
         super.proofFold(node,
           env, bound, recM,
