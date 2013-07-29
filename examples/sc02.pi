@@ -252,7 +252,7 @@ let listId2 = \ (a :: *) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (
 sc append Nat l1 l2;
 sc listId1 Nat l1;
 
---sc2 append Nat l1 l2;
+sc2 append Nat l1 l2;
 
 
 
@@ -467,9 +467,9 @@ sc plusX x y;
 
 --sc2 plus (plus x y) z;
 
-sc append Nat b b1;
-
 --sc plus x y;
 sc2 plus x y;
 
 sc2 natId x;
+
+sc append Nat b b1;

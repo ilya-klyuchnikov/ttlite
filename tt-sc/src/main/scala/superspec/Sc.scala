@@ -246,7 +246,7 @@ object TTScREPL
               case Some(t3) =>
                 output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
                 val proof = proofResiduate(tGraph, state.ne)
-                val proofTerm = iquote(proof) //iquote(ieval(state.ne, iquote(proof)))
+                val proofTerm = /*iquote(proof)*/ iquote(ieval(state.ne, iquote(proof)))
                 val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
                 val t4 = iinfer(state.ne, state.ctx, annProofTerm)
                 output("proof:")

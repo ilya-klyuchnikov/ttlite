@@ -100,19 +100,17 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
             env2, bound2, recM2)
 
         val sCase =
-          VLam(VNat, n => VLam(motive @@ n, rec =>
+          VLam(VNat, n => VLam(motive @@ n, {rec =>
+            // SIC!! - node, not nodeS!!
+            val rec1 = fold(node, env + (sel -> n), n :: bound, recM)
             proofFold(nodeS,
               env + (fresh -> n),
-              fold(node, env + (sel -> n), n :: bound, recM) :: n :: bound,
-              recM + (node.tPath -> fold(node, env + (sel -> n), n :: bound, recM)),
-
+              rec1 :: n :: bound,
+              recM + (node.tPath -> rec1),
               env2 + (fresh -> n),
               rec :: n :: bound2,
-              // or in this way?? - it is an open question
-              // fold(node, env + (sel -> n), n :: bound, recM)
-              //recM2 + (node.tPath -> rec))
               recM2 + (node.tPath -> rec)
-            )))
+            )}))
 
         VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>

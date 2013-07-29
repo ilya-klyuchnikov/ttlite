@@ -105,17 +105,14 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
 
         val consCase =
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, {rec =>
-
-            val folded1 =
-              fold(node, env + (sel -> t), VPiCons(aVal, h, t) :: bound, recM)
-
-            lazy val folded =
-              fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> folded1))
+            // SIC!! - node, not nodeS!!
+            val rec1 =
+              fold(node, env + (sel -> t), t :: bound, recM)
 
             proofFold(nodeS,
               env + (hN -> h) + (tN -> t),
-              folded :: t :: h :: bound,
-              recM + (node.tPath -> folded1),
+              rec1 :: t :: h :: bound,
+              recM + (node.tPath -> rec1),
 
               env2 + (hN -> h) + (tN -> t),
               rec :: t :: h :: bound2,
