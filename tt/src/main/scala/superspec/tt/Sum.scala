@@ -15,13 +15,13 @@ trait SumAST extends CoreAST {
 trait SumPrinter extends CorePrinter with SumAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      print(p, ii, Free(Global("Sum")) @@ a @@ b)
+      print(p, ii, 'Sum @@ a @@ b)
     case InL(lt, rt, l) =>
-      print(p, ii, Free(Global("InL")) @@ lt @@ rt @@ l)
+      print(p, ii, 'InL @@ lt @@ rt @@ l)
     case InR(lt, rt, r) =>
-      print(p, ii, Free(Global("InR")) @@ lt @@ rt @@ r)
+      print(p, ii, 'InR @@ lt @@ rt @@ r)
     case SumElim(lt, rt, m, lc, rc, sum) =>
-      print(p, ii, Free(Global("sumElim")) @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
+      print(p, ii, 'sumElim @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
     case _ =>
       super.print(p, ii, t)
   }

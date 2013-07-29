@@ -45,7 +45,7 @@ trait CoreDriver extends TTSc with CoreCheck {
   }
 
   def decompose(c: Conf): DriveStep = c.term match {
-    // TODO: into separate trait "WithLambda"
+    // TODO: into separate trait "WithLambda" and use axiom for extensional equality
     /*
     case Lam(t, f) =>
       val Pi(t1, t2) = c.tp
@@ -76,13 +76,11 @@ trait CoreResiduator extends BaseResiduator with CoreDriver {
 }
 
 trait CoreProofResiduator extends ProofResiduator with CoreResiduator {
-  import mrsc.core._
 
   override def proofFold(node: N,
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+      case _ =>  super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
 }

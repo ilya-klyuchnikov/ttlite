@@ -27,7 +27,7 @@ trait FinResiduator extends BaseResiduator with FinDriver {
         val motive =
           VLam(VFin(n), s => eval(node.conf.tp, env + (sel -> s), s :: bound))
         val cases = node.outs.map(_.node).map(fold(_, env, bound, recM))
-        cases.foldLeft(VNeutral(NFree(Global(s"finElim_${n}"))) @@ motive)(_ @@ _) @@ env(sel)
+        cases.foldLeft(s"finElim_$n" @@ motive)(_ @@ _) @@ env(sel)
       case _ =>
         super.fold(node, env, bound, recM)
     }

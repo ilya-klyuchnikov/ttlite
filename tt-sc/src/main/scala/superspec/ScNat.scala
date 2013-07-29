@@ -5,7 +5,6 @@ import mrsc.core._
 
 trait NatDriver extends CoreDriver with NatAST {
 
-  // boilerplate/indirections
   case object SuccLabel extends Label
   case class SuccStep(next: Term) extends Step {
     override val graphStep =
@@ -65,11 +64,10 @@ trait NatResiduator extends BaseResiduator with NatDriver {
           fold(nodeZ, env, bound, recM)
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, rec =>
-            fold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))
-          ))
-        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
+            fold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))))
+        'natElim @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
-        VNeutral(NFree(Global("Succ"))) @@ fold(n1, env, bound, recM)
+        'Succ @@ fold(n1, env, bound, recM)
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -79,7 +77,7 @@ trait NatResiduator extends BaseResiduator with NatDriver {
 trait NatProofResiduator extends NatResiduator with ProofResiduator {
   override def proofFold(node: N,
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
-                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value = {
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
         TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
@@ -109,26 +107,20 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
               recM + (node.tPath -> rec1),
               env2 + (fresh -> n),
               rec :: n :: bound2,
-              recM2 + (node.tPath -> rec)
-            )}))
+              recM2 + (node.tPath -> rec))}))
 
-        VNeutral(NFree(Global("natElim"))) @@ motive @@ zCase @@ sCase @@ env(sel)
+        'natElim @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
         println("---")
         println(recM2)
-        VNeutral(NFree(Global("cong1"))) @@
+        'cong1 @@
           VNat @@
           VNat @@
-          VNeutral(NFree(Global("Succ"))) @@
+          'Succ @@
           eval(n1.conf.term, env, bound) @@
           fold(n1, env, bound, recM) @@
-          proofFold(n1,
-            env, bound, recM,
-            env2, bound2, recM2)
+          proofFold(n1, env, bound, recM, env2, bound2, recM2)
       case _ =>
-        super.proofFold(node,
-          env, bound, recM,
-          env2, bound2, recM2)
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
-  }
 }

@@ -5,10 +5,8 @@ import mrsc.core._
 
 trait SumDriver extends CoreDriver with SumAST {
 
-  // boilerplate/indirections
   case object InLLabel extends Label
   case object InRLabel extends Label
-
   case class InLStep(L: Conf, R: Conf, l: Conf) extends Step {
     override val graphStep =
       AddChildNodesStep[Conf, Label](List(L -> InLLabel, R -> InLLabel, l -> InLLabel))
@@ -52,7 +50,6 @@ trait SumDriver extends CoreDriver with SumAST {
     case _ =>
       super.decompose(c)
   }
-
 }
 
 trait SumResiduator extends BaseResiduator with SumDriver {
@@ -70,7 +67,7 @@ trait SumResiduator extends BaseResiduator with SumDriver {
         val lCase = VLam(aVal, l => fold(nodeL, env + (lN -> l), l :: bound, recM))
         val rCase = VLam(bVal, r => fold(nodeR, env + (rN -> r), r :: bound, recM))
 
-        VNeutral(NFree(Global("sumElim"))) @@
+        'sumElim @@
           aVal @@
           bVal @@
           motive @@
@@ -79,13 +76,13 @@ trait SumResiduator extends BaseResiduator with SumDriver {
           env(sel)
       case TEdge(a, InLLabel) :: TEdge(b, InLLabel) :: TEdge(l, InLLabel) :: Nil =>
         val VSum(_, _) = eval(node.conf.tp, env, bound)
-        VNeutral(NFree(Global("InL"))) @@
+        'InL @@
           fold(a, env, bound, recM) @@
           fold(b, env, bound, recM) @@
           fold(l, env, bound, recM)
       case TEdge(a, InRLabel) :: TEdge(b, InRLabel) :: TEdge(r, InRLabel) :: Nil =>
         val VSum(_, _) = eval(node.conf.tp, env, bound)
-        VNeutral(NFree(Global("InR"))) @@
+        'InR @@
           fold(a, env, bound, recM) @@
           fold(b, env, bound, recM) @@
           fold(r, env, bound, recM)

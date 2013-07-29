@@ -14,11 +14,11 @@ trait EqAST extends CoreAST {
 trait EqPrinter extends CorePrinter with EqAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Eq(a, x, y) =>
-      print(p, ii, Free(Global("Eq")) @@ a @@ x @@ y)
+      print(p, ii, 'Eq @@ a @@ x @@ y)
     case Refl(a, x) =>
-      print(p, ii, Free(Global("Refl")) @@ a @@ x)
+      print(p, ii, 'Refl @@ a @@ x)
     case EqElim(a, m, mr, x, y, eq) =>
-      print(p, ii, Free(Global("eqElim")) @@ a @@ m @@ mr @@ x @@ y @@ eq)
+      print(p, ii, 'eqElim @@ a @@ m @@ mr @@ x @@ y @@ eq)
     case _ =>
       super.print(p, ii, t)
   }

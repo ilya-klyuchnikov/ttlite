@@ -42,6 +42,15 @@ trait CoreAST extends Common {
     case _ => Set()
   }
 
+  implicit def sym2val(s: Symbol): Value =
+    VNeutral(NFree(Global(s.name)))
+  implicit def sym2Term(s: Symbol): Term =
+    Free(Global(s.name))
+  implicit def s2val(s: String): Value =
+    VNeutral(NFree(Global(s)))
+  implicit def s2Term(s: String): Term =
+    Free(Global(s))
+
 }
 
 trait CorePrinter extends CoreAST {

@@ -17,11 +17,11 @@ trait NatPrinter extends CorePrinter with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      print(p, ii, Free(Global("natElim")) @@ m @@ z @@ s @@ n)
+      print(p, ii, 'natElim @@ m @@ z @@ s @@ n)
     case Zero =>
-      print(p, ii, Free(Global("Zero")))
+      print(p, ii, 'Zero)
     case Succ(n) =>
-      print(p, ii, Free(Global("Succ")) @@ n)
+      print(p, ii, 'Succ @@ n)
     case _ =>
       super.print(p, ii, t)
   }
@@ -64,10 +64,8 @@ trait NatEval extends CoreEval with NatAST {
 trait NatCheck extends CoreCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Nat =>
-      //println("checking " + pprint(t))
       VStar
     case NatElim(m, mz, ms, n) =>
-      //println("checking " + pprint(t))
       val mVal = eval(m, named, Nil)
       val nVal = eval(n, named, Nil)
 
@@ -150,8 +148,7 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
           VLam( m @@ VZero, zCase =>
             VLam(VPi(VNat, n => VPi(m @@ n, a => m @@ VSucc(n))), sCase =>
               VLam(VNat, {n =>
-                eval(NatElim(Bound(3), Bound(2), Bound(1), Bound(0)), natVE, List(n, sCase, zCase, m))
-              }))))
+                eval(NatElim(Bound(3), Bound(2), Bound(1), Bound(0)), natVE, List(n, sCase, zCase, m))}))))
     )
 
   def toNat1(n: Int): Term =

@@ -15,13 +15,13 @@ trait VectorAST extends CoreAST {
 trait VectorPrinter extends NatPrinter with VectorAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      print(p, ii, Free(Global("Vec")) @@ a @@ n)
+      print(p, ii, 'Vec @@ a @@ n)
     case VecNil(a) =>
-      print(p, ii, Free(Global("VNil")) @@ a)
+      print(p, ii, 'VNil @@ a)
     case VecCons(a, n, x, xs) =>
-      print(p, ii, Free(Global("VCons")) @@ a @@ n @@ x @@ xs)
+      print(p, ii, 'VCons @@ a @@ n @@ x @@ xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      print(p, ii, Free(Global("veqElim")) @@ a @@ m @@ mn @@ mc @@ n @@ xs)
+      print(p, ii, 'vecElim @@ a @@ m @@ mn @@ mc @@ n @@ xs)
     case _ =>
       super.print(p, ii, t)
   }

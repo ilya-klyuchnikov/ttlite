@@ -13,11 +13,11 @@ trait ProductAST extends CoreAST {
 trait ProductPrinter extends CorePrinter with ProductAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      print(p, ii, Free(Global("Product")) @@ a @@ b)
+      print(p, ii, 'Product @@ a @@ b)
     case Pair(a, b, x, y) =>
-      print(p, ii, Free(Global("Pair")) @@ a @@ b @@ x @@ y)
+      print(p, ii, 'Pair @@ a @@ b @@ x @@ y)
     case ProductElim(a, b, m, f, pair) =>
-      print(p, ii, Free(Global("productElim")) @@ a @@ b @@ m @@ f @@ pair)
+      print(p, ii, 'productElim @@ a @@ b @@ m @@ f @@ pair)
     case _ =>
       super.print(p, ii, t)
   }

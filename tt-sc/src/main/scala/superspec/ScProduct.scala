@@ -6,7 +6,6 @@ import mrsc.core._
 trait ProductDriver extends CoreDriver with ProductAST {
 
   case object PairLabel extends Label
-
   case class PairStep(a: Conf, b: Conf, x: Conf, y: Conf) extends Step {
     override val graphStep =
       AddChildNodesStep[Conf, Label](List(a -> PairLabel, b -> PairLabel, x -> PairLabel, y -> PairLabel))
@@ -60,7 +59,7 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
           fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM)))
 
-        VNeutral(NFree(Global("productElim"))) @@
+        'productElim @@
           aVal @@
           bVal @@
           motive @@
@@ -68,7 +67,7 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
           env(sel)
       case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
-        VNeutral(NFree(Global("Pair"))) @@
+        'Pair @@
           fold(a, env, bound, recM) @@
           fold(b, env, bound, recM) @@
           fold(x, env, bound, recM) @@

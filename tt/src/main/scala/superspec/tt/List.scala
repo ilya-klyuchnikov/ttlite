@@ -15,13 +15,13 @@ trait ListAST extends CoreAST {
 trait ListPrinter extends CorePrinter with ListAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      print(p, ii, Free(Global("List")) @@ a)
+      print(p, ii, 'List @@ a)
     case PiNil(a) =>
-      print(p, ii, Free(Global("Nil")) @@ a)
+      print(p, ii, 'Nil @@ a)
     case PiCons(a, x, xs) =>
-      print(p, ii, Free(Global("Cons")) @@ a @@ x @@ xs)
+      print(p, ii, 'Cons @@ a @@ x @@ xs)
     case PiListElim(a, m, mn, mc, xs) =>
-      print(p, ii, Free(Global("listElim")) @@ a @@ m @@ mn @@ mc @@ xs)
+      print(p, ii, 'listElim @@ a @@ m @@ mn @@ mc @@ xs)
     case _ =>
       super.print(p, ii, t)
   }

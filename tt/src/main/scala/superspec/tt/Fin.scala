@@ -13,11 +13,11 @@ trait FinAST extends CoreAST {
 trait FinPrinter extends CorePrinter with FinAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Fin(n) =>
-      print(p, ii, Free(Global(s"Fin_$n")))
+      print(p, ii, s"Fin_$n")
     case FinElem(i, n) =>
-      print(p, ii, Free(Global(s"finElem_${i}_${n}")))
+      print(p, ii, s"finElem_${i}_${n}")
     case FinElim(n, m, cases, elem) =>
-      val t = cases.foldLeft(Free(Global(s"finElim_${n}")) @@ m)(_ @@ _) @@ elem
+      val t = cases.foldLeft(s"finElim_${n}" @@ m)(_ @@ _) @@ elem
       print(p, ii, t)
     case _ =>
       super.print(p, ii, t)
@@ -122,10 +122,8 @@ trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with Fi
       val lam0: Value = VLam(VFin(n), e => {elem = e; body})
       val tt: Value = (1 to n).foldRight(lam0)((i, lam) => VLam(m @@ VFinElem(i, n), arg => {args = arg :: args; lam}))
       tt
-    }
-    )
+    })
 
   lazy val finTE = finsTE ++ finElemsTE ++ finElimsTE
   lazy val finVE = finsVE ++ finElemsVE ++ finElimsVE
-
 }

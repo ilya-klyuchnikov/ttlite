@@ -19,13 +19,13 @@ trait FinNatAst extends CoreAST {
 trait FinNatPrinter extends NatPrinter with FinNatAst {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case FinNat(n) =>
-      print(p, ii, Free(Global("Fin")) @@ n)
+      print(p, ii, 'Fin @@ n)
     case FZero(n) =>
-      print(p, ii, Free(Global("Fin")) @@ n)
+      print(p, ii, 'FZero @@ n)
     case FSucc(n, f) =>
-      print(p, ii, Free(Global("FSucc")) @@ n @@ f)
+      print(p, ii, 'FSucc @@ n @@ f)
     case FinElim(m, mz, ms, n, f) =>
-      print(p, ii, Free(Global("finElim")) @@ m @@ mz @@ ms @@ n @@ f)
+      print(p, ii, 'finElim @@ m @@ mz @@ ms @@ n @@ f)
     case _ =>
       super.print(p, ii, t)
   }
