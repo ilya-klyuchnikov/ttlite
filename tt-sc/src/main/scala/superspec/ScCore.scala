@@ -83,6 +83,6 @@ trait CoreProofResiduator extends ProofResiduator with CoreResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM)
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
 }
