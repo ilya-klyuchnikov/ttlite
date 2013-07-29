@@ -101,17 +101,27 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
             env, bound, recM,
             env2, bound2, recM2)
 
+
+
         val consCase =
-          VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
+          VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, {rec =>
+
+            val folded1 =
+              fold(node, env + (sel -> t), VPiCons(aVal, h, t) :: bound, recM)
+
+            lazy val folded =
+              fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> folded1))
+
             proofFold(nodeS,
               env + (hN -> h) + (tN -> t),
-              rec :: t :: h :: bound,
-              recM + (node.tPath -> fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec))),
+              folded :: t :: h :: bound,
+              recM + (node.tPath -> folded1),
 
               env2 + (hN -> h) + (tN -> t),
               rec :: t :: h :: bound2,
               recM2 + (node.tPath -> rec)
-            ))))
+            )}
+          )))
 
         VNeutral(NFree(Global("listElim"))) @@ aVal @@
           motive @@ nilCase @@ consCase @@ env(sel)
@@ -136,7 +146,8 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
             VPiList(a) @@
             t1 @@
             t2 @@
-            (consA @@ h1) @@ (consA @@ h2) @@
+            (consA @@ h1) @@
+            (consA @@ h2) @@
             eq_t1_t2 @@ app1
 
         app2
