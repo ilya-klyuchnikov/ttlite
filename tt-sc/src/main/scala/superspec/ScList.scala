@@ -115,23 +115,15 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
         val h1 = eval(h.conf.term, env, bound)
         val h2 = fold(h, env, bound, recM)
         val eq_h1_h2 = proofFold(h, env, bound, recM, env2, bound2, recM2)
-        // proof that Cons a h1 == Cond a h2
-        val eq_cons_h1_h2 =
-          'cong1 @@ a @@ VPi(VPiList(a), _ => VPiList(a)) @@ ('Cons @@ a) @@ h1 @@ h2 @@ eq_h1_h2
 
         val t1 = eval(t.conf.term, env, bound)
         val t2 = fold(t, env, bound, recM)
         val eq_t1_t2 = proofFold(t, env, bound, recM, env2, bound2, recM2)
 
-        'fargCong @@
-          VPiList(a) @@
-          VPiList(a) @@
-          t1 @@
-          t2 @@
-          ('Cons @@ a @@ h1) @@
-          ('Cons @@ a @@ h2) @@
-          eq_t1_t2 @@
-          eq_cons_h1_h2
+        'cong2 @@ a @@ VPiList(a) @@ VPiList(a) @@
+          ('Cons @@ a) @@
+          h1 @@ h2 @@ eq_h1_h2 @@
+          t1 @@ t2 @@ eq_t1_t2
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
