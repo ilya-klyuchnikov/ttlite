@@ -76,7 +76,7 @@ trait ProductCheck extends CoreCheck with ProductAST {
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
       val mVal = eval(m, named, List())
-      val pVal = eval(f, named, List())
+      val pVal = eval(p, named, List())
 
       val aType = iType(i, named, bound, a)
       checkEqual(i, aType, Star)
