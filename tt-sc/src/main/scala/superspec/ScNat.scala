@@ -89,8 +89,7 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM))
-          )
+              fold(node, env + (sel -> n), n :: bound, recM)))
 
         val zCase =
           proofFold(nodeZ,
