@@ -67,12 +67,12 @@ trait REPL extends Common {
   }
 
   def output(x: Any) {
-    //if (!batch) {
+    if (!batch) {
       Console.println(x)
-    //}
+    }
   }
 
-  class HaskellLikeLexical extends StdLexical {
+  class CoreLexical extends StdLexical {
     import scala.util.parsing.input.CharArrayReader._
     override def whitespace: Parser[Any] = rep(
       whitespaceChar
@@ -81,10 +81,11 @@ trait REPL extends Common {
         | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
         | '/' ~ '*' ~ failure("unclosed comment")
     )
+    override def identChar = letter | elem('_') | elem('$')
   }
 
   trait Interpreter extends StandardTokenParsers with PackratParsers {
-    override val lexical = new HaskellLikeLexical
+    override val lexical = new CoreLexical
 
     val prompt: String
     def itype(ne: NameEnv[V], ctx: NameEnv[V], i: T): Result[V]

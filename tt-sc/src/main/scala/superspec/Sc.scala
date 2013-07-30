@@ -127,8 +127,6 @@ trait ProofResiduator extends BaseResiduator with EqAST {
                 env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.base match {
       case Some(tPath) =>
-        println(recM2)
-        VStar
         recM2(tPath)
       case None =>
         node.outs match { case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound) }
@@ -198,7 +196,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            println(tgToString(tGraph))
+            output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)

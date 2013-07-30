@@ -111,8 +111,6 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
 
         'natElim @@ motive @@ zCase @@ sCase @@ env(sel)
       case TEdge(n1, SuccLabel) :: Nil =>
-        println("---")
-        println(recM2)
         'cong1 @@
           VNat @@
           VNat @@

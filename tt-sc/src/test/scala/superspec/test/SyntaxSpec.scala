@@ -1,6 +1,7 @@
-package superspec.tt.test
+package superspec.test
 
 import superspec.tt._
+import superspec._
 
 class SyntaxSpec extends org.scalatest.FunSpec {
 
