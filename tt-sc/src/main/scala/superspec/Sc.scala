@@ -163,6 +163,7 @@ object TTScREPL
   with CoreProofResiduator
   with NatProofResiduator
   with ListProofResiduator
+  with FinProofResiduator
 {
 
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
@@ -196,7 +197,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            //output(tgToString(tGraph))
+            output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)

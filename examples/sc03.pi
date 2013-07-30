@@ -1,3 +1,12 @@
+------------------
+-- LIBRARY FUNCTIONS
+------------------
+
+let id  = (\ (a :: *) (x :: a) -> x )
+    :: forall (a :: *) . a -> a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+
 let cong1 =
   ( \ (a :: *) (b :: *) (f :: a -> b) ->
         eqElim a
@@ -20,6 +29,10 @@ let fargCong =
          (g :: a -> b) .
          Eq a x y -> Eq (a -> b) f g -> Eq b (f x) (g y);
 
+------------------
+-- LISTS
+------------------
+
 let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
 let append =
   (\(a :: *) (xs :: List a) (ys :: List a) ->
@@ -36,4 +49,44 @@ sc append Nat (append Nat $l1 $l2) $l3;
 sc append Nat $l1 (append Nat $l2 $l3);
 
 sc2 append Nat (append Nat $l1 $l2) $l3;
+
+------------------
+-- FINITE TYPES
+------------------
+
+let Void = Fin_0;
+-- unit type
+let Unit = Fin_1;
+-- constructor
+let U = finElem_1_1;
+
+-- booleans
+let Bool = Fin_2;
+-- constructors
+let False = finElem_1_2;
+let True  = finElem_2_2;
+
+let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+
+let boolElim = finElim_2 ::
+    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+
+let not = boolElim (\ (_ :: Bool) -> Bool) True False;
+let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
+let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
+
+assume
+    ($b1 :: Bool)
+    ($b2 :: Bool);
+
+sc not $b1;
+sc2 not $b1;
+
+sc and $b1 $b2;
+
+sc and $b1 $b1;
+sc2 and $b1 $b1;
+
+sc or $b1 $b1;
+sc2 or $b1 $b1;
 

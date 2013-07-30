@@ -32,3 +32,23 @@ trait FinResiduator extends BaseResiduator with FinDriver {
         super.fold(node, env, bound, recM)
     }
 }
+
+trait FinProofResiduator extends FinResiduator with ProofResiduator {
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(FinElem(_, n), _))) :: _ =>
+        val motive =
+          VLam(VFin(n), n =>
+            VEq(
+              eval(node.conf.tp, env + (sel -> n), n :: bound),
+              eval(node.conf.term, env + (sel -> n), n :: bound),
+              fold(node, env + (sel -> n), n :: bound, recM)))
+        val cases =
+          node.outs.map(_.node).map(proofFold(_, env, bound, recM, env2, bound2, recM2))
+        cases.foldLeft(s"finElim_$n" @@ motive)(_ @@ _) @@ env(sel)
+      case _ =>
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+    }
+}
