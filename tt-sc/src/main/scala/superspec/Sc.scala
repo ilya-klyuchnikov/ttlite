@@ -163,6 +163,7 @@ object TTScREPL
   with CoreProofResiduator
   with NatProofResiduator
   with ListProofResiduator
+  with ProductProofResiduator
   with FinProofResiduator
 {
 

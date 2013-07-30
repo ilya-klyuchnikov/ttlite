@@ -6,12 +6,12 @@ import mrsc.core._
 trait ProductDriver extends CoreDriver with ProductAST {
 
   case object PairLabel extends Label
-  case class PairStep(a: Conf, b: Conf, x: Conf, y: Conf) extends Step {
+  case class PairStep(x: Conf, y: Conf) extends Step {
     override val graphStep =
-      AddChildNodesStep[Conf, Label](List(a -> PairLabel, b -> PairLabel, x -> PairLabel, y -> PairLabel))
+      AddChildNodesStep[Conf, Label](List(x -> PairLabel, y -> PairLabel))
   }
-  case class PairDStep(a: Conf, b: Conf, x: Conf, y: Conf) extends DriveStep {
-    override def step(t: Conf) = PairStep(a, b, x, y)
+  case class PairDStep(x: Conf, y: Conf) extends DriveStep {
+    override def step(t: Conf) = PairStep(x, y)
   }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
@@ -40,7 +40,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
   override def decompose(c: Conf): DriveStep = c.term match {
     case Pair(a, b, x, y) =>
       val Product(a1, b1) = c.tp
-      PairDStep(Conf(a, Star), Conf(b, Star), Conf(x, a), Conf(y, b))
+      PairDStep(Conf(x, a), Conf(y, b))
     case _ =>
       super.decompose(c)
   }
@@ -65,14 +65,61 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
           motive @@
           pairCase @@
           env(sel)
-      case TEdge(a, PairLabel) :: TEdge(b, PairLabel) :: TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
+      case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
         'Pair @@
-          fold(a, env, bound, recM) @@
-          fold(b, env, bound, recM) @@
+          aType @@
+          bType @@
           fold(x, env, bound, recM) @@
           fold(y, env, bound, recM)
       case _ =>
         super.fold(node, env, bound, recM)
+    }
+}
+
+trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
+        val aVal = eval(a, env, bound)
+        val bVal = eval(b, env, bound)
+        val motive =
+          VLam(VProduct(aVal, bVal), n =>
+            VEq(
+              eval(node.conf.tp, env + (sel -> n), n :: bound),
+              eval(node.conf.term, env + (sel -> n), n :: bound),
+              fold(node, env + (sel -> n), n :: bound, recM)))
+
+        val pairCase = VLam(aVal, x => VLam(bVal, y =>
+          proofFold(nodeS,
+            env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
+            env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
+
+        'productElim @@
+          aVal @@
+          bVal @@
+          motive @@
+          pairCase @@
+          env(sel)
+
+      case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
+        val VProduct(a, b) = eval(node.conf.tp, env, bound)
+        val x1 = eval(x.conf.term, env, bound)
+        val x2 = fold(x, env, bound, recM)
+        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+
+        val y1 = eval(y.conf.term, env, bound)
+        val y2 = fold(y, env, bound, recM)
+        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+
+        'cong2 @@ a @@ b @@ ('Product @@ a @@ b) @@
+          ('Pair @@ a @@ b) @@
+          x1 @@ x2 @@ eq_x1_x2 @@
+          y1 @@ y2 @@ eq_y1_y2
+
+      case _ =>
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
 }

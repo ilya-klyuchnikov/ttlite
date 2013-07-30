@@ -104,3 +104,39 @@ sc2 and $b1 $b1;
 sc or $b1 $b1;
 sc2 or $b1 $b1;
 
+---------------
+-- PRODUCT
+---------------
+
+let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
+let snd = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
+
+assume ($p :: Product Nat Nat);
+
+sc (fst Nat Nat $p);
+sc2 (fst Nat Nat $p);
+
+Pair Nat Nat (fst Nat Nat $p) (snd Nat Nat $p);
+
+sc Pair Nat Nat (fst Nat Nat $p) (snd Nat Nat $p);
+
+let productId =
+    productElim Nat Nat (\ (_ :: Product Nat Nat) -> Product Nat Nat) (\(x :: Nat) (y :: Nat) -> Pair Nat Nat x y);
+
+sc productId $p;
+
+let thPId =
+    forall (p :: Product Nat Nat) . Eq (Product Nat Nat) p (productId p);
+
+-- TODO: currently such code cannot be produced by a supercompiler
+let proofPId =
+    (\ (p :: Product Nat Nat) ->
+        productElim
+            Nat
+            Nat
+            (\ (p :: Product Nat Nat) -> Eq (Product Nat Nat) p (productId p))
+            (\ (x :: Nat) (y :: Nat) -> Refl (Product Nat Nat) (Pair Nat Nat x y))
+            p
+            ) :: thPId;
