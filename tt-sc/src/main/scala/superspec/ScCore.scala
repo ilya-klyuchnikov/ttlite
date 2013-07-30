@@ -16,6 +16,8 @@ trait CoreSubst extends CoreEval with CoreQuote {
   def findSubst0(from: Any, to: Any): Option[Subst] = (from, to) match {
     case (Free(n@Local(_)), t: Term) =>
       if (isFreeSubTerm(t, 0)) Some(Map(n -> t)) else None
+    case (Free(n@Assumed(_)), t: Term) =>
+      if (isFreeSubTerm(t, 0)) Some(Map(n -> t)) else None
     case (Free(Global(n)), Free(Global(m))) =>
       if (n == m) Some(Map()) else None
     case (Free(Global(n)), _) =>

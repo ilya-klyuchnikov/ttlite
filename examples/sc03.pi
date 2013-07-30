@@ -1,0 +1,39 @@
+let cong1 =
+  ( \ (a :: *) (b :: *) (f :: a -> b) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x)) )
+  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+let fargCong =
+  ( \ (a :: *) (b :: *) (x :: a) (y :: a) (f :: a -> b) (g :: a -> b) (eq_x_y :: Eq a x y) ->
+        eqElim (a -> b)
+            (\ (f :: a -> b) (g :: a -> b) (eq_f_g :: Eq (a -> b) f g) ->  Eq b (f x) (g y))
+            (\ (f :: a -> b) -> cong1 a b f x y eq_x_y)
+            f
+            g) ::
+  forall (a :: *)
+         (b :: *)
+         (x :: a)
+         (y :: a)
+         (f :: a -> b)
+         (g :: a -> b) .
+         Eq a x y -> Eq (a -> b) f g -> Eq b (f x) (g y);
+
+let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+let append =
+  (\(a :: *) (xs :: List a) (ys :: List a) ->
+    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
+        appendType;
+
+assume
+    ($l1 :: List Nat)
+    ($l2 :: List Nat)
+    ($l3 :: List Nat);
+
+-- look into results they are equal
+sc append Nat (append Nat $l1 $l2) $l3;
+sc append Nat $l1 (append Nat $l2 $l3);
+
+sc2 append Nat (append Nat $l1 $l2) $l3;
+

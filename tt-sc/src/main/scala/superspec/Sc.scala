@@ -191,29 +191,28 @@ object TTScREPL
           state
         case Some(tp) =>
           val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
-          output("sc: " + icprint(iquote(ieval(state.ne, it))))
+
           val rules = new Rules
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            output(tgToString(tGraph))
+            //output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
-            output("result: " + icprint(cTerm))
+
 
             val iTerm = Ann(cTerm, cType)
-            output(cTerm == iquote(ieval(state.ne, it)));
-
-            val t2 = iinfer(state.ne, state.ctx, cTerm)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
 
             t2 match {
               case None =>
                 println("error for term: \n" + icprint(cTerm))
                 handleError()
               case Some(t3) =>
-                output(icprint(cTerm))// + " :: " + icprint(iquote(t3)) + ";")
-                output(icprint(iquote(t3)))
+                output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
+                output("output: [\n" + icprint(cTerm) + "\n]")
+                output("output type: " + icprint(iquote(t3)))
             }
           }
       }
@@ -230,7 +229,7 @@ object TTScREPL
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
             val tGraph = Transformations.transpose(g)
-            output(tgToString(tGraph))
+            //output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)

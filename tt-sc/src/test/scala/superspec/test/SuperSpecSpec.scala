@@ -13,3 +13,10 @@ class ProofSpec extends org.scalatest.FunSpec {
     TTScREPL.main(Array("examples/sc02.pi"))
   }
 }
+
+// refactored with assumed vars
+class ScSpecWIP extends org.scalatest.FunSpec {
+  describe("ScREPL should supercompile all tasks in examples/sc03.pi") {
+    TTScREPL.main(Array("examples/sc03.pi"))
+  }
+}

@@ -71,6 +71,8 @@ trait CorePrinter extends CoreAST {
       vars(ii - k - 1)
     case Free(Global(s)) =>
       s
+    case Free(Assumed(s)) =>
+      s
     case Free(Local(i)) =>
       s"<$i>"
     case i :@: c =>
@@ -258,7 +260,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val app: PackratParser[Res[Term]] =
       (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce{_ @@ _} }
     lazy val aTerm: PackratParser[Res[Term]] = // atomicTerm
-      ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => Free(Global(i)) case j => Bound(j)}} |
+      ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => free(i) case j => Bound(j)}} |
         "<" ~> numericLit <~ ">" ^^ {x => ctx: C => Free(Local(x.toInt))} |
         "(" ~> term <~ ")" | numericLit ^^ {x => ctx: C => toNat(x.toInt)} |
         "*" ^^^ {ctx: C => Star}
@@ -301,12 +303,18 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val letStmt: PackratParser[Stmt[Term, Term]] =
       "let" ~> ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
     lazy val assumeStmt: PackratParser[Stmt[Term, Term]] =
-      "assume" ~> bindingPar <~ ";" ^^ {b => Assume(List(b(Nil)))}
+      "assume" ~> (bindingPar+) <~ ";" ^^ {bs => Assume(bs.map(_(Nil)))}
     lazy val importStmt: PackratParser[Stmt[Term, Term]] =
       "import" ~> stringLit <~ ";" ^^ Import
     lazy val evalStmt: PackratParser[Stmt[Term, Term]] =
       term <~ ";" ^^ {t => Eval(t(Nil))}
   }
+
+  def s2name(s: String): Name =
+    if (s.startsWith("$")) Assumed(s) else Global(s)
+
+  def free(s: String): Free =
+    Free(s2name(s))
 
   class CoreInterpreter extends CoreParser {
     val prompt: String = "TT> "
@@ -334,7 +342,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         case Right(_) =>
           val v = ieval(state.ne, Ann(x._2, Star))
           output(v)
-          state.copy(ctx = state.ctx + (Global(x._1) -> v))
+          state.copy(ctx = state.ctx + (s2name(x._1) -> v))
         case Left(_) =>
           state
       }

@@ -5,6 +5,7 @@ import org.kiama.output.PrettyPrinter
 trait Common extends PrettyPrinter {
   trait Name
   case class Global(n: String) extends Name
+  case class Assumed(n: String) extends Name
   case class Local(i: Int) extends Name
   case class Quote(i: Int) extends Name
 
@@ -244,6 +245,9 @@ trait REPL extends Common {
     args match {
       case Array() =>
         loop()
+      case Array("-i", f) =>
+        Compile(CompileFile(f))
+        state = handleCommand(state, Compile(CompileFile(f)))
       case _ =>
         batch = true
         val cmds = args.map(f => Compile(CompileFile(f)))
