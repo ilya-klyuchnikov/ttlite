@@ -164,6 +164,7 @@ object TTScREPL
   with NatProofResiduator
   with ListProofResiduator
   with ProductProofResiduator
+  with SumProofResiduator
   with FinProofResiduator
 {
 

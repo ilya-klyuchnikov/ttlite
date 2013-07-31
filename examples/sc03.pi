@@ -140,3 +140,20 @@ let proofPId =
             (\ (x :: Nat) (y :: Nat) -> Refl (Product Nat Nat) (Pair Nat Nat x y))
             p
             ) :: thPId;
+
+------
+-- SUM
+-----
+
+let thSum01 =
+    forall (A :: *) (B :: *). Sum A B -> Sum B A;
+let proofSum01 =
+    (\ (A :: *) (B :: *) (s :: Sum A B) -> sumElim A B (\ (_ :: Sum A B) -> Sum B A) (InR B A) (InL B A) s)
+        :: thSum01;
+
+assume ($n1 :: Nat) ($n2 :: Nat);
+assume ($s :: Sum Nat Nat);
+
+sc proofSum01 Nat Nat $s;
+
+sc2 proofSum01 Nat Nat $s;
