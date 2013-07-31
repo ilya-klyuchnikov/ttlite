@@ -157,3 +157,11 @@ assume ($s :: Sum Nat Nat);
 sc proofSum01 Nat Nat $s;
 
 sc2 proofSum01 Nat Nat $s;
+
+--------------------------
+-- Dependent product
+--------------------------
+
+let ee = exists (x :: Nat) . Eq Nat x 1;
+
+let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;

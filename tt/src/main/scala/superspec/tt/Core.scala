@@ -4,20 +4,28 @@ trait CoreAST extends Common {
   trait Term {
     def @@(t1: Term) = :@:(this, t1)
   }
+
+  case class Pi(c1: Term, c2: Term) extends Term
   case class Lam(t: Term, e: Term) extends Term
+  case class :@:(h: Term, t: Term) extends Term
+
+  case class Sigma(c1: Term, c2: Term) extends Term
+  case class DPair(sigma: Term, t: Term, e: Term) extends Term
+  // todo: sigma-elim
+
   case class Ann(c1: Term, ct2: Term) extends Term
   case object Star extends Term
-  case class Pi(c1: Term, c2: Term) extends Term
   case class Bound(i: Int) extends Term
   case class Free(n: Name) extends Term
-  case class :@:(h: Term, t: Term) extends Term
 
   trait Value {
     def @@(x: Value): Value = vapp(this, x)
   }
   case class VLam(t: Value, e: Value => Value) extends Value
+  case class VDPair(sigma: Value, t: Value, e: Value) extends Value
   case object VStar extends Value
   case class VPi(t: Value, e: Value => Value) extends Value
+  case class VSigma(t: Value, e: Value => Value) extends Value
   case class VNeutral(n: Neutral) extends Value
 
   trait Neutral
@@ -104,8 +112,12 @@ trait CoreQuote extends CoreAST {
       Star
     case VPi(v, f) =>
       Pi(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
+    case VSigma(v, f) =>
+      Sigma(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
     case VNeutral(n) =>
       neutralQuote(ii, n)
+    case VDPair(sigma, t, f) =>
+      DPair(quote(ii, sigma), quote(ii, t), quote(ii, t))
   }
 
   def neutralQuote(ii: Int, n: Neutral): Term = n match {
@@ -133,6 +145,8 @@ trait CoreEval extends CoreAST {
       VStar
     case Pi(ty, ty1) =>
       VPi(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
+    case Sigma(ty, ty1) =>
+      VSigma(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
     case Free(x) =>
       named.getOrElse(x, vfree(x))
     case Bound(ii) =>
@@ -141,6 +155,8 @@ trait CoreEval extends CoreAST {
       eval(e1, named, bound) @@ eval(e2, named, bound)
     case Lam(t, e) =>
       VLam(eval(t, named, bound), x => eval(e, named, x :: bound))
+    case DPair(sigma, e1, e2) =>
+      VDPair(eval(sigma, named, bound), eval(e1, named, bound), eval(e2, named, bound))
   }
 }
 
@@ -193,6 +209,16 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       checkEqual(i, tpType, Star)
 
       VStar
+    case Sigma(x, tp) =>
+      val xVal = eval(x, named, Nil)
+
+      val xType = iType(i, named, bound, x)
+      checkEqual(i, xType, Star)
+
+      val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
+      checkEqual(i, tpType, Star)
+
+      VStar
     case Free(x) =>
       bound.get(x) match {
         case Some(ty) => ty
@@ -205,6 +231,21 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
           checkEqual(i, e2Type, x)
 
           f(eval(e2, named, Nil))
+        case _ =>
+          sys.error(s"illegal application: $t")
+      }
+    case DPair(sigma, x, y) =>
+      eval(sigma, named, Nil) match {
+        case VSigma(a, f) =>
+          val xType = iType(i, named, bound, x)
+          checkEqual(i, xType, a)
+
+          val xVal = eval(x, named, Nil)
+
+          val yType = iType(i, named, bound, y)
+          checkEqual(i, yType, f(xVal))
+
+          VSigma(a, f)
         case _ =>
           sys.error(s"illegal application: $t")
       }
@@ -236,6 +277,11 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 }
 
 trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
+  lazy val coreTE: NameEnv[Value] =
+    Map(
+
+    )
+
   import scala.util.parsing.combinator.{PackratParsers, ImplicitConversions}
   import scala.language.postfixOps
   type T = Term
@@ -243,7 +289,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   override lazy val int = new CoreInterpreter
 
   trait CoreParser extends Interpreter with PackratParsers with ImplicitConversions {
-    lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2")
+    lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2", "exists", "dpair")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
 
     type C = List[String]
@@ -253,10 +299,12 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         maybeTyped ~ ("->" ~> term) ^^ {case x ~ y => ctx: C => Pi(x(ctx), y("" :: ctx))} |
         maybeTyped
     lazy val maybeTyped: PackratParser[Res[Term]] =
+      dpair ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
       app ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
         ("(" ~> lam <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
         ("(" ~> forall <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        app | lam | forall
+        ("(" ~> exists <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
+        dpair | app | lam | forall | exists
     lazy val app: PackratParser[Res[Term]] =
       (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce{_ @@ _} }
     lazy val aTerm: PackratParser[Res[Term]] = // atomicTerm
@@ -264,13 +312,22 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         "<" ~> numericLit <~ ">" ^^ {x => ctx: C => Free(Local(x.toInt))} |
         "(" ~> term <~ ")" | numericLit ^^ {x => ctx: C => toNat(x.toInt)} |
         "*" ^^^ {ctx: C => Star}
-
+    lazy val dpair: PackratParser[Res[Term]] =
+      ("dpair" ~> aTerm) ~ aTerm ~ aTerm ^^ {case t1 ~ t2 ~ t3 => ctx: C => DPair(t1(ctx), t2(ctx), t3(ctx))}
     lazy val forallBs: PackratParser[Res[Term]] = {
       "." ~> term |
         bindingPar ~ forallBs ^^ { case b ~ t1 => ctx: C =>
           val bb = b(ctx)
           val t = bb._2
           Pi(t, t1(bb._1 :: ctx))
+        }
+    }
+    lazy val existsBs: PackratParser[Res[Term]] = {
+      "." ~> term |
+        bindingPar ~ existsBs ^^ { case b ~ t1 => ctx: C =>
+          val bb = b(ctx)
+          val t = bb._2
+          Sigma(t, t1(bb._1 :: ctx))
         }
     }
     lazy val lamBs: PackratParser[Res[Term]] = {
@@ -286,6 +343,12 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         val bb = b(ctx)
         val t = bb._2
         Pi(t, t1(bb._1 :: ctx))
+      }
+    lazy val exists: PackratParser[Res[Term]] =
+      ("exists" ~> bindingPar) ~ forallBs ^^ { case b ~ t1 => ctx: C =>
+        val bb = b(ctx)
+        val t = bb._2
+        Sigma(t, t1(bb._1 :: ctx))
       }
     lazy val lam: PackratParser[Res[Term]] =
       ("\\" ~> bindingPar) ~ lamBs ^^ {case b ~ t1 => ctx: C =>
