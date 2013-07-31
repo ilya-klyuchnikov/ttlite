@@ -301,9 +301,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val maybeTyped: PackratParser[Res[Term]] =
       dpair ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
       app ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        ("(" ~> lam <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        ("(" ~> forall <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        ("(" ~> exists <~ ")") ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
+        exists ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
         dpair | app | lam | forall | exists
     lazy val app: PackratParser[Res[Term]] =
       (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce{_ @@ _} }
