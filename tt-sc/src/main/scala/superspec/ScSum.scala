@@ -140,7 +140,7 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
       case TEdge(r, InRLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env, bound)
         'cong1 @@
-          a @@
+          b @@
           VSum(a, b) @@
           ('InR @@ a @@ b) @@
           eval(r.conf.term, env, bound) @@
