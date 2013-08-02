@@ -1,0 +1,73 @@
+let cong =
+  ( \ (a :: *) (b :: *) (f :: a -> b) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x)) )
+  :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
+
+let tran =
+  ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) . Eq a y z -> Eq a x z)
+            (\ (x :: a) -> \ (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
+             x
+             y
+             eq_x_y
+             z )
+  :: forall (a :: *) (x :: a) (y :: a) (z :: a) .
+     Eq a x y -> Eq a y z -> Eq a x z;
+
+let plus =
+    (\ (n1 :: Nat) (n2 :: Nat) ->
+        -- motive
+        natElim ( \ (n :: Nat) -> Nat )
+        -- case for Zero
+        n2
+        -- case for (Succ n)
+        (\ (n :: Nat) (rec :: Nat) -> Succ rec)
+        -- argument
+        n1);
+
+-- Examples of normalization
+
+-- plus 0;
+-- plus 1;
+-- assume (n :: Nat);
+-- plus n 2;
+
+let eq_plus_0_n_plus_n_0 =
+    forall (n :: Nat) . Eq Nat (plus 0 n) (plus n 0) ;
+
+let eq_plus_0_n_plus_n_0_proof =
+    (\ (n :: Nat) ->
+        natElim
+            (\ (n :: Nat) -> Eq Nat (plus 0 n) (plus n 0))
+            (Refl Nat 0)
+            (\ (n :: Nat) (pr :: Eq Nat (plus 0 n) (plus n 0)) -> cong Nat Nat Succ (plus 0 n) (plus n 0) pr)
+            n) :: eq_plus_0_n_plus_n_0;
+
+let eq_s_plus_a_b__plus_a_s_b =
+    forall (a :: Nat) (b :: Nat) . Eq Nat (Succ (plus a b)) (plus a (Succ b));
+
+let eq_s_plus_a_b__plus_a_s_b__proof =
+    ( \(a :: Nat) (b :: Nat) ->
+        natElim
+            (\ (n :: Nat) -> Eq Nat (Succ (plus n b)) (plus n (Succ b)))
+            (Refl Nat (Succ b))
+            ( \ (n :: Nat) (pr :: Eq Nat (Succ (plus n b)) (plus n (Succ b))) -> cong Nat Nat Succ (Succ (plus n b)) (plus n (Succ b)) pr )
+            a
+            ) :: eq_s_plus_a_b__plus_a_s_b;
+
+let eq_plus_a_b_plus_b_a =
+    forall (a :: Nat) (b :: Nat) . Eq Nat (plus a b) (plus b a);
+
+let eq_plus_a_b_plus_b_a_proof =
+    ( \(a :: Nat) (b :: Nat) ->
+        natElim
+            (\ (n :: Nat) -> Eq Nat (plus n b) (plus b n))
+            (eq_plus_0_n_plus_n_0_proof b)
+            (\ (n :: Nat) (pr :: Eq Nat (plus n b) (plus b n)) ->
+              tran Nat (Succ (plus n b)) (Succ (plus b n)) (plus b (Succ n))
+                (cong Nat Nat Succ (plus n b) (plus b n) pr)
+                (eq_s_plus_a_b__plus_a_s_b__proof b n)
+            ));

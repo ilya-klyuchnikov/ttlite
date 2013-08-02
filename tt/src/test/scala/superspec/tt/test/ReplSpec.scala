@@ -44,4 +44,20 @@ class ReplSpec extends org.scalatest.FunSpec {
     TTREPLMain.main(Array("examples/ex10_tt.pi"))
   }
 
+  describe("All REPL should process `tutorial/01.tt` without errors") {
+    TTREPLMain.main(Array("tutorial/01.tt"))
+  }
+
+  describe("All REPL should process `tutorial/02.tt` without errors") {
+    TTREPLMain.main(Array("tutorial/02.tt"))
+  }
+
+  describe("All REPL should process `tutorial/03.tt` without errors") {
+    TTREPLMain.main(Array("tutorial/03.tt"))
+  }
+
+  describe("All REPL should process `tutorial/04.tt` without errors") {
+    TTREPLMain.main(Array("tutorial/04.tt"))
+  }
+
 }

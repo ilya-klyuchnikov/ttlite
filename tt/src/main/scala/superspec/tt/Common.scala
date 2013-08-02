@@ -191,9 +191,9 @@ trait REPL extends Common {
         case Some(tp) =>
           val v = int.ieval(state.ne, it)
           if (s == "it"){
-            output(int.icprint(int.iquote(v)) + " :!!: " + int.itprint(tp) + ";")
+            output(int.icprint(int.iquote(v)) + "\n::\n" + int.itprint(tp) + ";")
           } else {
-            output(s"$s :!!: ${int.itprint(tp)};")
+            output(s"$s \n::\n ${int.itprint(tp)};")
           }
           State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
       }

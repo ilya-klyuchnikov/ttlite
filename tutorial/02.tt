@@ -1,0 +1,10 @@
+--import "tutorial/01.tt";
+
+-- a :: *, b :: *
+-- f Zero     = a
+-- f (Succ n) = b
+let natTypeElim =
+    (\ (a :: *) (b :: *) ->
+        natElim (\ (n :: Nat) -> *)
+        a
+        (\ (n :: Nat) (rec :: *) -> b));

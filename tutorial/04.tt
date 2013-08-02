@@ -1,0 +1,31 @@
+-- n-tuples
+
+-- n_product_of_nats :: Nat -> *;
+let n_product_of_nats =
+    \ (n :: Nat) ->
+        natElim
+            -- motive
+            ( \ (n :: Nat) -> *)
+            -- Zero case
+            Nat
+            -- inductive case
+            ( \ (n :: Nat) (tp :: *) -> Product Nat tp )
+            -- argument
+            n;
+
+let mk_tuple_of_zeros =
+    \ (n :: Nat) ->
+        natElim
+            (\ (n :: Nat) -> n_product_of_nats n)
+            Zero
+            ( \ (n :: Nat) (rec :: n_product_of_nats n) -> Pair Nat (n_product_of_nats n) Zero rec)
+            n;
+
+let t4 =
+    mk_tuple_of_zeros 3 :: n_product_of_nats 3;
+
+
+
+
+
+
