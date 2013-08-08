@@ -8,7 +8,8 @@ let cong =
 let tran =
   ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
         eqElim a
-            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) . Eq a y z -> Eq a x z)
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) ->
+                forall (z :: a) . Eq a y z -> Eq a x z)
             (\ (x :: a) -> \ (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
              x
              y
@@ -43,7 +44,8 @@ let eq_plus_0_n_plus_n_0_proof =
         natElim
             (\ (n :: Nat) -> Eq Nat (plus 0 n) (plus n 0))
             (Refl Nat 0)
-            (\ (n :: Nat) (pr :: Eq Nat (plus 0 n) (plus n 0)) -> cong Nat Nat Succ (plus 0 n) (plus n 0) pr)
+            (\ (n :: Nat) (pr :: Eq Nat (plus 0 n) (plus n 0)) ->
+                cong Nat Nat Succ (plus 0 n) (plus n 0) pr)
             n) :: eq_plus_0_n_plus_n_0;
 
 let eq_s_plus_a_b__plus_a_s_b =
@@ -54,7 +56,8 @@ let eq_s_plus_a_b__plus_a_s_b__proof =
         natElim
             (\ (n :: Nat) -> Eq Nat (Succ (plus n b)) (plus n (Succ b)))
             (Refl Nat (Succ b))
-            ( \ (n :: Nat) (pr :: Eq Nat (Succ (plus n b)) (plus n (Succ b))) -> cong Nat Nat Succ (Succ (plus n b)) (plus n (Succ b)) pr )
+            ( \ (n :: Nat) (pr :: Eq Nat (Succ (plus n b)) (plus n (Succ b))) ->
+                cong Nat Nat Succ (Succ (plus n b)) (plus n (Succ b)) pr )
             a
             ) :: eq_s_plus_a_b__plus_a_s_b;
 

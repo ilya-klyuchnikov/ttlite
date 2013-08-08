@@ -8,6 +8,7 @@ class ReplSpec extends org.scalatest.FunSpec {
     CoreREPLMain.main(Array("examples/ex01_core.pi"))
   }
 
+
   describe("Nat REPL should process `examples/ex02_nat.pi` without errors") {
     NatREPLMain.main(Array("examples/ex02_nat.pi"))
   }
@@ -19,6 +20,7 @@ class ReplSpec extends org.scalatest.FunSpec {
   describe("Sum REPL should process `examples/ex04_sum.pi` without errors") {
     SumREPLMain.main(Array("examples/ex04_sum.pi"))
   }
+
 
   describe("List REPL should process `examples/ex05_list.pi` without errors") {
     ListREPLMain.main(Array("examples/ex05_list.pi"))
@@ -48,16 +50,15 @@ class ReplSpec extends org.scalatest.FunSpec {
     TTREPLMain.main(Array("tutorial/01.tt"))
   }
 
-  describe("All REPL should process `tutorial/02.tt` without errors") {
-    TTREPLMain.main(Array("tutorial/02.tt"))
-  }
 
   describe("All REPL should process `tutorial/03.tt` without errors") {
     TTREPLMain.main(Array("tutorial/03.tt"))
   }
 
+  /*
   describe("All REPL should process `tutorial/04.tt` without errors") {
     TTREPLMain.main(Array("tutorial/04.tt"))
   }
+  */
 
 }

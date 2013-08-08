@@ -17,10 +17,9 @@ let True  = finElem_2_2;
 
 let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 
-let boolElim = finElim_2 ::
-    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+let boolElim = finElim_2;
 
-let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
+--let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
 
 let not = boolElim (\ (_ :: Bool) -> Bool) True False;
 let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);

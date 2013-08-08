@@ -187,6 +187,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   // todo: eval with bound!!!
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+    // TODO: universes
+    //case Star => VStar
+    case Ann(e, Star) =>
+      val eType = iType(i, named, bound, e)
+      checkEqual(i, eType, VStar)
+      VStar
     case Ann(e, tp) =>
       val tpVal = eval(tp, named, Nil)
 
@@ -197,7 +203,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       checkEqual(i, eType, tpVal)
 
       tpVal
-    case Star =>
+
+    case Pi(Star, tp) =>
+      val tpType = iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), tp))
+      checkEqual(i, tpType, Star)
       VStar
     case Pi(x, tp) =>
       val xVal = eval(x, named, Nil)
@@ -208,6 +217,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
       checkEqual(i, tpType, Star)
 
+      VStar
+    case Sigma(Star, tp) =>
+      val tpType = iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), tp))
+      checkEqual(i, tpType, Star)
       VStar
     case Sigma(x, tp) =>
       val xVal = eval(x, named, Nil)
@@ -249,8 +262,11 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
         case _ =>
           sys.error(s"illegal application: $t")
       }
+    case Lam(Star, e) =>
+      VPi(VStar, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> VStar) , iSubst(0, Free(Local(i)), e)))
     case Lam(t, e) =>
       val tVal = eval(t, named, Nil)
+      // todo - t maybe * or tt0 term
       val tType = iType(i, named, bound, t)
 
       checkEqual(i, tType, Star)

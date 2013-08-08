@@ -34,16 +34,16 @@ let tran =
 -- apply an equality proof on two types
 -- input: proof that two types A and P are equal
 -- output is a function from A to B (it is constructed in a trivial way (as id))
-let apply =
-  eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
-  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
+--let apply =
+--  eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
+--  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
 
-assume (X :: *);
-assume (x :: X);
-assume (y :: X);
+--assume (X :: *);
+--assume (x :: X);
+--assume (y :: X);
 
-assume (eqxy :: Eq X x y);
+--assume (eqxy :: Eq X x y);
 
-eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> X ) (\(x :: X) -> y) x x (Refl X x);
+--eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> X ) (\(x :: X) -> y) x x (Refl X x);
 
-let t = eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> Eq X x y ) (\(x :: X) -> Refl X x) x x (Refl X x);
+--let t = eqElim X (\ (x:: X) (y :: X) (eq :: Eq X x y) -> Eq X x y ) (\(x :: X) -> Refl X x) x x (Refl X x);

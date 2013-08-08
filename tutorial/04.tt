@@ -1,5 +1,5 @@
 -- n-tuples
-
+-- TODO - this example works with universes only
 -- n_product_of_nats :: Nat -> *;
 let n_product_of_nats =
     \ (n :: Nat) ->
@@ -18,7 +18,8 @@ let mk_tuple_of_zeros =
         natElim
             (\ (n :: Nat) -> n_product_of_nats n)
             Zero
-            ( \ (n :: Nat) (rec :: n_product_of_nats n) -> Pair Nat (n_product_of_nats n) Zero rec)
+            ( \ (n :: Nat) (rec :: n_product_of_nats n) ->
+                Pair Nat (n_product_of_nats n) Zero rec)
             n;
 
 let t4 =

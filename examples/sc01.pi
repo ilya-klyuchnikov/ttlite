@@ -48,19 +48,6 @@ let natFold =
                    ( \ (n1 :: Nat) (rec :: m) -> ms rec ) )
   :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
 
--- special case for 1
-let nat1Elim =
-  ( \ (m :: Nat -> *)
-      (m0 :: m 0)
-      (m1 :: m 1)
-      (ms :: forall (a :: Nat) . (m (Succ a)) -> m (Succ (Succ a))) ->
-        natElim
-            m
-            m0
-            (\ (p :: Nat) (rec :: m p) -> natElim (\ (n :: Nat) -> m (Succ n)) m1 ms p) )
-  :: forall (m :: Nat -> *) . m 0 -> m 1 ->
-     (forall (n :: Nat) . m (Succ n) -> m (Succ (Succ n))) ->
-     forall (n :: Nat) . m n;
 
 -- increment by one
 let inc = natFold Nat (Succ Zero) Succ;
@@ -74,12 +61,6 @@ let append =
 let len =
   (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
-
-let nat2Elim =
-  ( \ (m :: Nat -> *) -> natElim (\ (n :: Nat) -> m (Succ n))) ;
-
-assume (A :: *);
-let LA = List A;
 
 let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
                     productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
@@ -149,52 +130,6 @@ let tran0 =
      Eq a x y -> Eq a y z -> Eq a x z;
 
 
-
-let apply =
-  eqElim * (\ (a :: *) (b :: *) (eq_a_b :: Eq * a b) -> a -> b) id
-  :: forall (A :: *) (B :: *) (_ :: Eq * A B) . A -> B;
-
-
-let apply1 =
-    (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
-        eqElim *
-                (\ (d :: *) -> \ (e :: *) -> \ (_ :: Eq * d e) -> (d -> e))
-                id
-                a
-                b
-                c) :: forall (a :: *) (b :: *) . (Eq * a b) -> a -> b;
-
-assume (a1 :: *);
-assume (b1 :: *);
-assume (eq1 :: Eq * a1 b1);
-
-apply1 a1 b1 eq1;
-
--- equality types supercompilation - see wiki
---sc apply1;
-
---let apply2 =
---  (\ (a :: *) -> \ (b :: *) -> \ (c :: Eq * a b) ->
---              eqElim
---              *
---              (\ (d :: *) -> \ (e :: *) -> \ (f :: Eq * d e) -> forall g :: a . b)
---              (\ (d :: *) -> \ (e :: a) -> e)
---              a
---              b
---              c);
-
-let apply2 =
-    (\ (a :: Product * *) -> \ (b :: Product * *) -> \ (c :: Eq (Product * *) a b) ->
-        eqElim (Product * *)
-                (\ (d :: Product * *) -> \ (e :: Product * *) -> \ (_ :: Eq (Product * *) d e) -> (fst * * d) -> (fst * * e))
-                (\ (d :: Product * *)  (x :: fst * * d) -> x)
-                a
-                b
-                c);
-
-let apply3 = ( \ (a :: *) (b :: *) -> apply2 (Pair * * a b) (Pair * * a b));
-
-
 let thSum01 =
     forall (A :: *) (B :: *). Sum A B -> Sum B A;
 let proofSum01 =
@@ -217,10 +152,9 @@ let True  = finElem_2_2;
 
 let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 
-let boolElim = finElim_2 ::
-    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
+let boolElim = finElim_2;
 
-let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
+--let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
 
 let not = boolElim (\ (_ :: Bool) -> Bool) True False;
 let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
@@ -228,12 +162,6 @@ let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id 
 let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
 let xor = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) not;
 let if  = boolElim (\ (_ :: Bool) -> Bool -> Bool) not (id Bool);
-
-
-let Not = (\ (a :: *) -> a -> Void) :: * -> *;
-
--- maps zero to Void and (Succ _) to Unit
-let natVoidUnit = natElim (\ (n :: Nat) -> *) Void (\ (_ :: Nat) (_ :: *) -> Unit);
 
 -- equality congruence
 let cong1 =
@@ -244,40 +172,40 @@ let cong1 =
   :: forall (a :: *) (b :: *) (f :: a -> b) (x :: a) (y :: a) . Eq a x y -> Eq b (f x) (f y);
 
 -- contr. Input: proof that 1 is 0. Output is proof that Unit = Void.
-let contr = cong1 Nat * natVoidUnit 1 0
-            :: forall(a :: Eq Nat 1 0). Eq * Unit Void;
+--let contr = cong1 Nat * natVoidUnit 1 0
+--            :: forall(a :: Eq Nat 1 0). Eq * Unit Void;
 
 -- TODO: this is the case which requires higher-order unification
 --sc contr;
 
 -- proof that 1 is not 0
-let p1IsNot0 =
-  (\ (p1eq0 :: Eq Nat 1 0) -> apply Unit Void (contr p1eq0) U) :: Not (Eq Nat 1 0);
+--let p1IsNot0 =
+--  (\ (p1eq0 :: Eq Nat 1 0) -> apply Unit Void (contr p1eq0) U) :: Not (Eq Nat 1 0);
 
 -- thompson 4.3 (b)
-let doubleNeg = forall (A :: *) . A -> Not (Not A); -- = A -> Not A -> Void
-let doubleNegProof = (\(A :: *) (a :: A) (notA :: Not A) -> notA a) :: doubleNeg;
+--let doubleNeg = forall (A :: *) . A -> Not (Not A); -- = A -> Not A -> Void
+--let doubleNegProof = (\(A :: *) (a :: A) (notA :: Not A) -> notA a) :: doubleNeg;
 
 
 let len =
   (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
 
-let thSum02 =
-    forall (A :: *) (B :: *). Sum (Not A) B -> (A -> B);
+--let thSum02 =
+--    forall (A :: *) (B :: *). Sum (Not A) B -> (A -> B);
 
 let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 
-let proofSum02 =
-    (\(A :: *) (B :: *) (s :: Sum (Not A) B) (a :: A) ->
-        sumElim (Not A) B
-            (\(s :: Sum (Not A) B) -> B)
-            (\(notA :: Not A) -> abort B (notA a))
-            (\(b :: B) -> b) s) :: thSum02;
+--let proofSum02 =
+--    (\(A :: *) (B :: *) (s :: Sum (Not A) B) (a :: A) ->
+--        sumElim (Not A) B
+--            (\(s :: Sum (Not A) B) -> B)
+--            (\(notA :: Not A) -> abort B (notA a))
+--            (\(b :: B) -> b) s) :: thSum02;
 
 
 let nRight = forall (n :: Nat) . Eq Nat (plus n 0) n;
-// the other direction requires induction on N:
+-- the other direction requires induction on N:
 let pNPlus0isN =
   natElim ( \ (n :: Nat) -> Eq Nat (plus n 0) n )
           ( Refl Nat 0 )
@@ -288,7 +216,7 @@ pNPlus0isN;
 
 
 --sc leibniz;
-sc natVoidUnit;
+--sc natVoidUnit;
 --sc cong1;
 
 -- supercompiling everything
@@ -300,43 +228,31 @@ sc plus1;
 sc pred;
 sc fZSucc0;
 sc natFold;
-sc nat1Elim;
+
 sc inc;
 sc append;
 sc len;
-sc nat2Elim;
+
 sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
-sc (\ (x :: List A) (y :: List A) (z :: List A) -> append A x (append A y z));
-sc productElim;
+
+-- we cannot supercompile it - eliminator should be saturated
+--sc productElim;
 sc fst;
 sc snd;
 
---sc xxx;
---sc yyy;
---sc pr2;
-
---sc eqElim;
---sc symm;
---sc tran;
---sc tran0;
---sc apply;
--- equality types supercompilation - see wiki
--- sc apply2;
---sc apply3;
 sc thSum01;
 sc proofSum01;
 sc abort;
-sc boolElim;
+--sc boolElim;
 sc not;
 sc and;
 sc or;
 sc xor;
 sc if;
 sc len;
-sc abort;
-sc proofSum02;
+--sc proofSum02;
 
-sc pNPlus0isN;
+--sc pNPlus0isN;
 
 assume (x :: Nat);
 assume (y :: Nat);

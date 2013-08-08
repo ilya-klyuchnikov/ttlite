@@ -82,12 +82,9 @@ let True  = finElem_2_2;
 
 let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 
-let boolElim = finElim_2 ::
-    forall (m :: Bool -> *) . m False -> m True -> forall (b :: Bool) . m b;
-
-let not = boolElim (\ (_ :: Bool) -> Bool) True False;
-let and = boolElim (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
-let or  = boolElim (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
+let not = finElim_2 (\ (_ :: Bool) -> Bool) True False;
+let and = finElim_2 (\ (_ :: Bool) -> Bool -> Bool) (\ (_ :: Bool) -> False) (id Bool);
+let or  = finElim_2 (\ (_ :: Bool) -> Bool -> Bool) (id Bool) (\ (_ :: Bool) -> True);
 
 assume
     ($b1 :: Bool)
