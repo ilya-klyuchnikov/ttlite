@@ -41,3 +41,12 @@ $ sbt
 > eclipse
 > gen-idea
 ```
+
+### SBT settings
+
+Building/testing SuperSpec with default sbt settings may fail due to `OutOfMemory` issues. I use following settings for SBT (file `~/.sbtconfig`):
+```
+SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
+```
+
+
