@@ -38,6 +38,6 @@ $ git clone git@bitbucket.org:lambdamix/superspec.git
 $ cd superspec
 $ sbt
 > test
-> exlipse
+> eclipse
 > gen-idea
 ```
