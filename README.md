@@ -4,7 +4,7 @@ The big idea of the project is described in `notes.md`.
 
 ## SuperSpec v0.2 - Certified SuperCompiler for Martin-Löf Type Theory
 
-SuperSpec v0.2 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory.
+SuperSpec v0.2 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 
 Look into tests for examples.
 
@@ -20,3 +20,24 @@ Proof is written in type theory and checked by the type checker (hence, certifie
 * Traditional supercompilation - focusing on the current neutral.
 * Reconstruction of motive during residualization.
 * (In progress) Dependent-types in Scala - via DSL + macros
+
+## How to build
+
+SuperSpec depends on [MRSC](https://github.com/ilya-klyuchnikov/mrsc) 0.5, so you need to install MRSC first:
+
+```
+$ git clone git@github.com:ilya-klyuchnikov/mrsc.git
+$ cd mrsc
+$ sbt publish-local
+```
+
+Then you can build SuperSpec project:
+
+```
+$ git clone git@bitbucket.org:lambdamix/superspec.git
+$ cd superspec
+$ sbt
+> test
+> exlipse
+> gen-idea
+```
