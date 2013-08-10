@@ -19,9 +19,8 @@ trait NatDriver extends CoreDriver with NatAST {
       natElim.n match {
         case NFree(n) =>
           val caseZ = ElimBranch(Zero, Map())
-          val n1 = freshName(Nat)
-          val v1 = Free(n1)
-          val caseS = ElimBranch(Succ(v1), Map(n1 -> Free(n)))
+          val v1 = freshLocal(Nat)
+          val caseS = ElimBranch(Succ(v1), Map(n -> v1))
           ElimDStep(n, List(caseZ, caseS))
         case n =>
           driveNeutral(n)
@@ -30,12 +29,12 @@ trait NatDriver extends CoreDriver with NatAST {
       super.driveNeutral(n)
   }
 
+  // TODO: change the order
   override def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = typeMap(fv) match {
     case Nat =>
       val caseZ = ElimBranch(Zero, Map())
-      val n1 = freshName(Nat)
-      val v1 = Free(n1)
-      val caseS = ElimBranch(Succ(v1), Map(n1 -> Free(fv)))
+      val v1 = freshLocal(Nat)
+      val caseS = ElimBranch(Succ(v1), Map(fv -> v1))
       List(ElimDStep(fv, List(caseZ, caseS)))
     case _ =>
       super.elimFreeVar(c, fv)

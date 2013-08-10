@@ -62,8 +62,10 @@ trait TTSc extends CoreSubst {
       while (node.in != null) {
         node.in.driveInfo match {
           case CaseBranchLabel(_, ElimBranch(_, sub))
-            if Some(sub) == findRenaming(term, node.in.node.conf.term) =>
-            return Some(node.in.node)
+            //if Some(sub) == findRenaming(term, node.in.node.conf.term) =>
+            // TODO: it can be calculated just once
+            if (applySubst(node.in.node.conf.term, sub) == term) =>
+              return Some(node.in.node)
           case _ =>
         }
         node = node.in.node

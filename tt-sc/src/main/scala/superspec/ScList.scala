@@ -20,13 +20,9 @@ trait ListDriver extends CoreDriver with ListAST {
         val aType = quote0(a)
         val caseNil = ElimBranch(PiNil(aType), Map())
 
-        val hName = freshName(quote0(a))
-        val h1 = Free(hName)
-
-        val tName = freshName(quote0(VPiList(a)))
-        val t1 = Free(tName)
-
-        val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(tName -> Free(n)))
+        val h1 = freshLocal(quote0(a))
+        val t1 = freshLocal(quote0(VPiList(a)))
+        val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(n -> t1))
 
         ElimDStep(n, List(caseNil, caseCons))
       case n =>
