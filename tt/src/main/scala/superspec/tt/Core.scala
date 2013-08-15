@@ -11,7 +11,7 @@ trait CoreAST extends Common {
 
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term
-  // todo: sigma-elim
+  case class SigmaElim(sigma: Term, m: Term, f: Term, pair: Term) extends Term
 
   case class Ann(c1: Term, ct2: Term) extends Term
   case object Star extends Term
@@ -31,6 +31,7 @@ trait CoreAST extends Common {
   trait Neutral
   case class NFree(n: Name) extends Neutral
   case class NApp(n: Neutral, v: Value) extends Neutral
+  case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 
   type Env = List[Value]
   val emptyNEnv = Map[Name, Value]()
@@ -74,7 +75,11 @@ trait CorePrinter extends CoreAST {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
-      parensIf(p > 0, sep(Seq("forall " <> vars(ii) <> " :: " <> print(0, ii, d) <> " .", nest(print(0, ii + 1, r)))))
+      parensIf(p > 0, sep(Seq("forall " <> parens(vars(ii) <> " :: " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
+    case Sigma(d, Sigma(d1, r)) =>
+      parens(nestedExists(ii + 2, List((ii + 1, d1), (ii, d)), r))
+    case Sigma(d, r) =>
+      parensIf(p > 0, sep(Seq("exists " <> parens(vars(ii) <> " :: " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case Bound(k) if ii - k - 1 >= 0 =>
       vars(ii - k - 1)
     case Free(Global(s)) =>
@@ -87,6 +92,10 @@ trait CorePrinter extends CoreAST {
       parensIf(p > 2, sep(Seq(print(2, ii, i), nest(print(3, ii, c)))))
     case Lam(t, c) =>
       parensIf(p > 0,  "\\ " <> parens(vars(ii) <> " :: " <> print(0, ii, t)) <> " -> " <> nest(print(0, ii + 1, c)))
+    case DPair(s, a, b) =>
+      print(p, ii, 'dpair @@ s @@ a @@ b)
+    case SigmaElim(s, m, f, dp) =>
+      print(p, ii, 'sigmaElim @@ s @@ m @@ f @@ dp)
     case _ =>
       t.toString
   }
@@ -98,6 +107,15 @@ trait CorePrinter extends CoreAST {
       val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " :: " <> nest(print(0, n, d)))}.toSeq
       val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
       nest(sep((text("forall") +: fors1).toSeq ++ Seq(print(0, i , x))))
+  }
+
+  def nestedExists(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Sigma(d, r) =>
+      nestedExists(i + 1, (i, d) :: fs, r)
+    case x =>
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " :: " <> nest(print(0, n, d)))}.toSeq
+      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
+      nest(sep((text("exists") +: fors1).toSeq ++ Seq(print(0, i , x))))
   }
 }
 
@@ -118,6 +136,7 @@ trait CoreQuote extends CoreAST {
       neutralQuote(ii, n)
     case VDPair(sigma, t, f) =>
       DPair(quote(ii, sigma), quote(ii, t), quote(ii, t))
+
   }
 
   def neutralQuote(ii: Int, n: Neutral): Term = n match {
@@ -125,6 +144,8 @@ trait CoreQuote extends CoreAST {
       boundFree(ii, x)
     case NApp(n, v) =>
       neutralQuote(ii, n) @@ quote(ii, v)
+    case NSigmaElim(sigma, m, f, p) =>
+      SigmaElim(quote(ii, sigma), quote(ii, m), quote(ii, f), neutralQuote(ii, p))
   }
 
   // the problem is here!!!
@@ -157,6 +178,20 @@ trait CoreEval extends CoreAST {
       VLam(eval(t, named, bound), x => eval(e, named, x :: bound))
     case DPair(sigma, e1, e2) =>
       VDPair(eval(sigma, named, bound), eval(e1, named, bound), eval(e2, named, bound))
+    case SigmaElim(sigma, m, f, p) =>
+      val pVal = eval(p, named, bound)
+      pVal match {
+        case VDPair(_, x, y) =>
+          val fVal = eval(f, named, bound)
+          fVal @@ x @@ y
+        case VNeutral(n) =>
+          VNeutral(NSigmaElim(
+            eval(sigma, named, bound),
+            eval(m, named, bound),
+            eval(f, named, bound),
+            n
+          ))
+      }
   }
 }
 
@@ -185,10 +220,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     }
   }
 
-  // todo: eval with bound!!!
+  // todo: eval with bound - do we need it?? !!!
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     // TODO: universes
-    //case Star => VStar
+    case Star => VStar
     case Ann(e, Star) =>
       val eType = iType(i, named, bound, e)
       checkEqual(i, eType, VStar)
@@ -242,7 +277,6 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
         case VPi(x, f) =>
           val e2Type = iType(i, named, bound, e2)
           checkEqual(i, e2Type, x)
-
           f(eval(e2, named, Nil))
         case _ =>
           sys.error(s"illegal application: $t")
@@ -262,14 +296,41 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
         case _ =>
           sys.error(s"illegal application: $t")
       }
+    case SigmaElim(sigma, m, f, p) =>
+      val sigmaType = iType(i, named, bound, sigma)
+      checkEqual(i, sigmaType, Star)
+      eval(sigma, named, Nil) match {
+        case sigmaVal@VSigma(x1, x2) =>
+
+          val pType = iType(i, named, bound, p)
+          checkEqual(i, pType, sigmaVal)
+
+          val pVal = eval(p, named, List())
+
+          val mType = iType(i, named, bound, m)
+          checkEqual(i, mType, VPi(sigmaVal, {_ => VStar}))
+
+          val mVal = eval(m, named, List())
+
+          val fType = iType(i, named, bound, f)
+          checkEqual(i, fType, VPi(x1, {x => VPi(x2(x), y => mVal @@ VDPair(sigmaVal, x, y))}))
+
+          mVal @@ pVal
+        case _ =>
+          sys.error(s"illegal application: $t")
+      }
+
     case Lam(Star, e) =>
+      // to force early error
+      iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), e))
       VPi(VStar, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> VStar) , iSubst(0, Free(Local(i)), e)))
     case Lam(t, e) =>
       val tVal = eval(t, named, Nil)
-      // todo - t maybe * or tt0 term
       val tType = iType(i, named, bound, t)
 
       checkEqual(i, tType, Star)
+      // to force early error
+      iType(i + 1, named,  bound + (Local(i) -> tVal), iSubst(0, Free(Local(i)), e))
 
       VPi(tVal, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> tVal) , iSubst(0, Free(Local(i)), e)))
   }
@@ -283,6 +344,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       Lam(iSubst(i, r, t), iSubst(i + 1, r, e))
     case Pi(ty, ty1) =>
       Pi(iSubst(i, r, ty), iSubst(i + 1, r, ty1))
+    case Sigma(ty, ty1) =>
+      Sigma(iSubst(i, r, ty), iSubst(i + 1, r, ty1))
+    case DPair(sigma, e1, e2) =>
+      DPair(iSubst(i, r, sigma), iSubst(i, r, e1), iSubst(i, r, e2))
+    case SigmaElim(sigma, m, f, p) =>
+      SigmaElim(iSubst(i, r, sigma), iSubst(i, r, m), iSubst(i, r, f), iSubst(i, r, p))
     case Bound(j) =>
       if (i == j) r else Bound(j)
     case Free(y) =>
@@ -305,7 +372,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
   override lazy val int = new CoreInterpreter
 
   trait CoreParser extends Interpreter with PackratParsers with ImplicitConversions {
-    lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2", "exists", "dpair")
+    lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2", "exists", "dpair", "sigmaElim")
     lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
 
     type C = List[String]
@@ -315,10 +382,11 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         maybeTyped ~ ("->" ~> term) ^^ {case x ~ y => ctx: C => Pi(x(ctx), y("" :: ctx))} |
         maybeTyped
     lazy val maybeTyped: PackratParser[Res[Term]] =
+      sigmaElim ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
       dpair ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
       app ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
         exists ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        dpair | app | lam | forall | exists
+        sigmaElim | dpair | app | lam | forall | exists
     lazy val app: PackratParser[Res[Term]] =
       (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce{_ @@ _} }
     lazy val aTerm: PackratParser[Res[Term]] = // atomicTerm
@@ -328,6 +396,10 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         "*" ^^^ {ctx: C => Star}
     lazy val dpair: PackratParser[Res[Term]] =
       ("dpair" ~> aTerm) ~ aTerm ~ aTerm ^^ {case t1 ~ t2 ~ t3 => ctx: C => DPair(t1(ctx), t2(ctx), t3(ctx))}
+    lazy val sigmaElim: PackratParser[Res[Term]] =
+      ("sigmaElim" ~> aTerm) ~ aTerm ~ aTerm ~ aTerm ^^ {
+        case t1 ~ t2 ~ t3 ~ t4 => ctx: C => SigmaElim(t1(ctx), t2(ctx), t3(ctx), t4(ctx))
+      }
     lazy val forallBs: PackratParser[Res[Term]] = {
       "." ~> term |
         bindingPar ~ forallBs ^^ { case b ~ t1 => ctx: C =>
@@ -415,17 +487,27 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     override def itprint(t: Value): String =
       pretty(print(0, 0, quote0(t)))
     def assume(state: State, x: (String, Term)): State = {
-      itype(state.ne, state.ctx, Ann(x._2, Star)) match {
-        case Right(_) =>
-          val v = ieval(state.ne, Ann(x._2, Star))
-          output(v)
-          state.copy(ctx = state.ctx + (s2name(x._1) -> v))
-        case Left(_) =>
-          state
+      x._2 match {
+        case Star =>
+          output(icprint(iquote(VStar)))
+          state.copy(ctx = state.ctx + (s2name(x._1) -> VStar))
+        case _ =>
+          itype(state.ne, state.ctx, Ann(x._2, Star)) match {
+            case Right(_) =>
+              val v = ieval(state.ne, Ann(x._2, Star))
+              output(icprint(iquote(v)))
+              state.copy(ctx = state.ctx + (s2name(x._1) -> v))
+            case Left(_) =>
+              state
+          }
       }
+
     }
     override lazy val iParse: Parser[Term] = term ^^ {_(Nil)}
     override val stmtParse: Parser[Stmt[Term, Term]] = stmt
   }
-  def toNat(i: Int): Term = sys.error("not implemented")
+  def toNat(i: Int): Term = {
+    println("==== " + i )
+    sys.error("not implemented")
+  }
 }
