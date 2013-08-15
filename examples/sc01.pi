@@ -281,3 +281,10 @@ let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
                 p;
 
 sc snd1 A1 B1 $p;
+
+let ee = exists (x :: Nat) . Eq Nat x 1;
+
+let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
+
+sc eep;
+

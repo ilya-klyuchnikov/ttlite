@@ -170,6 +170,7 @@ object TTScREPL
   with FinProofResiduator
   with DProductDriver
   with DProductResiduator
+  with DProductProofResiduator
 {
 
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
@@ -192,7 +193,7 @@ object TTScREPL
   override def handleStmt(state: State, stmt: Stmt[T, T]): State = stmt match {
     case Supercompile(it) =>
       import int._
-      iinfer(state.ne, state.ctx, iquote(ieval(state.ne, it))) match {
+      iinfer(state.ne, state.ctx, it) match {
         case None =>
           handleError()
           state
@@ -202,12 +203,15 @@ object TTScREPL
           val rules = new Rules
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
+            println("---")
             val tGraph = Transformations.transpose(g)
             output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)
             val cTerm = iquote(resVal)
             val cType = iquote(tp)
 
+            output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
+            output("output: [\n" + icprint(cTerm) + "\n]")
 
             val iTerm = Ann(cTerm, cType)
             val t2 = iinfer(state.ne, state.ctx, iTerm)

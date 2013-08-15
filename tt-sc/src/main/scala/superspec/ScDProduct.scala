@@ -66,3 +66,51 @@ trait DProductResiduator extends CoreResiduator with DProductDriver {
     }
 }
 
+trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
+        val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
+        val motive =
+          VLam(sigmaVal, n =>
+            VEq(
+              eval(node.conf.tp, env + (sel -> n), n :: bound),
+              eval(node.conf.term, env + (sel -> n), n :: bound),
+              fold(node, env + (sel -> n), n :: bound, recM)))
+
+        val pairCase = VLam(x1, x => VLam(y1(x), y =>
+          proofFold(nodeS,
+            env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
+            env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
+
+        val VNeutral(n) = env(sel)
+        VNeutral(NSigmaElim(sigmaVal, motive, pairCase, n))
+
+      case TEdge(x, DPairLabel) :: TEdge(y, DPairLabel) :: Nil =>
+        val sigma = eval(node.conf.tp, env, bound)
+        val x1 = eval(x.conf.term, env, bound)
+        val x2 = fold(x, env, bound, recM)
+        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+
+        val y1 = eval(y.conf.term, env, bound)
+        val y2 = fold(y, env, bound, recM)
+        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+
+        val a = eval(x.conf.tp, env, bound)
+        println(a)
+        val b = eval(y.conf.tp, env, bound)
+        println(b)
+
+        'cong2 @@ a @@ b @@ sigma @@
+          VLam(a, x => VLam(b, y => VDPair(sigma, x, y))) @@
+          x1 @@ x2 @@ eq_x1_x2 @@
+          y1 @@ y2 @@ eq_y1_y2
+
+      case _ =>
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+    }
+}
+
+

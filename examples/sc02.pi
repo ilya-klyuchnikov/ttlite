@@ -473,3 +473,34 @@ sc2 plus x y;
 sc2 natId x;
 
 sc append Nat b b1;
+
+let fst1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (_ :: exists (x :: a) . b x) -> a)
+                (\(x :: a) (y :: b x) -> x)
+                p;
+
+assume (A1 :: *);
+assume (B1 :: A1 -> *);
+
+assume ($p :: exists (x :: A1) . B1 x);
+
+sc fst1 A1 B1 $p;
+sc2 fst1 A1 B1 $p;
+
+let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))
+                (\(x :: a) (y :: b x) -> y)
+                p;
+
+sc snd1 A1 B1 $p;
+sc2 snd1 A1 B1 $p;
+
+let ee = exists (x :: Nat) . Eq Nat x 1;
+
+--let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
+
+--sc eep;
