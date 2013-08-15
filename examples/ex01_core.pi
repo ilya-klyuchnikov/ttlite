@@ -56,11 +56,6 @@ let fst1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
                 p;
 
 let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
-     (\ (p :: (exists (x :: a) . b x)) -> b);
-
-assume (B1 :: A -> *);
-
-let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))

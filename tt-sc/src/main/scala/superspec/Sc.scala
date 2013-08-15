@@ -168,6 +168,8 @@ object TTScREPL
   with ProductProofResiduator
   with SumProofResiduator
   with FinProofResiduator
+  with DProductDriver
+  with DProductResiduator
 {
 
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
