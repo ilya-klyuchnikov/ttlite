@@ -9,7 +9,7 @@ trait FinDriver extends CoreDriver with FinAST {
     case NFinElim(n, m, cases, sel) =>
       sel match {
         case NFree(v) =>
-          val cases1 = (1 to n).toList.map(i => ElimBranch(FinElem(i, n), Map()))
+          val cases1 = (1 to n).toList.map(i => Elim(FinElem(i, n), Map()))
           ElimDStep(v, cases1)
         case n =>
           driveNeutral(n)
@@ -23,7 +23,7 @@ trait FinDriver extends CoreDriver with FinAST {
 trait FinResiduator extends BaseResiduator with FinDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(FinElem(_, n), _))) :: _ =>
+      case TEdge(nodeL, CaseBranchLabel(sel, Elim(FinElem(_, n), _))) :: _ =>
         val motive =
           VLam(VFin(n), s => eval(node.conf.tp, env + (sel -> s), s :: bound))
         val cases = node.outs.map(_.node).map(fold(_, env, bound, recM))
@@ -38,7 +38,7 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(FinElem(_, n), _))) :: _ =>
+      case TEdge(nodeL, CaseBranchLabel(sel, Elim(FinElem(_, n), _))) :: _ =>
         val motive =
           VLam(VFin(n), n =>
             VEq(

@@ -18,9 +18,9 @@ trait NatDriver extends CoreDriver with NatAST {
     case natElim: NNatElim =>
       natElim.n match {
         case NFree(n) =>
-          val caseZ = ElimBranch(Zero, Map())
+          val caseZ = Elim(Zero, Map())
           val v1 = freshLocal(Nat)
-          val caseS = ElimBranch(Succ(v1), Map(n -> v1))
+          val caseS = Elim(Succ(v1), Map(n -> v1))
           ElimDStep(n, List(caseZ, caseS))
         case n =>
           driveNeutral(n)
@@ -43,8 +43,8 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, Elim(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, Elim(Succ(Free(fresh)), _))) ::
           Nil =>
         val motive =
           VLam(VNat, n => eval(node.conf.tp, env + (sel -> n), n :: bound))
@@ -68,8 +68,8 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(Succ(Free(fresh)), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, Elim(Zero, _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, Elim(Succ(Free(fresh)), _))) ::
           Nil =>
 
         val motive =

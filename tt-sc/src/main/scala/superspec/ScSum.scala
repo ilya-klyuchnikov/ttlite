@@ -29,8 +29,8 @@ trait SumDriver extends CoreDriver with SumAST {
           val lType = quote0(l)
           val rType = quote0(r)
 
-          val lCase = ElimBranch(InL(lType, rType, freshLocal(lType)), Map())
-          val rCase = ElimBranch(InR(lType, rType, freshLocal(rType)), Map())
+          val lCase = Elim(InL(lType, rType, freshLocal(lType)), Map())
+          val rCase = Elim(InR(lType, rType, freshLocal(rType)), Map())
 
           ElimDStep(n, List(lCase, rCase))
         case n =>
@@ -55,8 +55,8 @@ trait SumDriver extends CoreDriver with SumAST {
 trait SumResiduator extends BaseResiduator with SumDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(InL(a, b, Free(lN)), _))) ::
-        TEdge(nodeR, CaseBranchLabel(_, ElimBranch(InR(_, _, Free(rN)), _))) ::
+      case TEdge(nodeL, CaseBranchLabel(sel, Elim(InL(a, b, Free(lN)), _))) ::
+        TEdge(nodeR, CaseBranchLabel(_, Elim(InR(_, _, Free(rN)), _))) ::
         Nil =>
 
         val aVal = eval(a, env, bound)
@@ -96,8 +96,8 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, ElimBranch(InL(a, b, Free(lN)), _))) ::
-        TEdge(nodeR, CaseBranchLabel(_, ElimBranch(InR(_, _, Free(rN)), _))) ::
+      case TEdge(nodeL, CaseBranchLabel(sel, Elim(InL(a, b, Free(lN)), _))) ::
+        TEdge(nodeR, CaseBranchLabel(_, Elim(InR(_, _, Free(rN)), _))) ::
         Nil =>
 
         val aVal = eval(a, env, bound)

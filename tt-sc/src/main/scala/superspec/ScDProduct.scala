@@ -26,7 +26,7 @@ trait DProductDriver extends CoreDriver {
           val yName = freshName(bX)
           val y = Free(yName)
 
-          val pairCase = ElimBranch(DPair(sigmaT, x, y), Map())
+          val pairCase = Elim(DPair(sigmaT, x, y), Map())
 
           ElimDStep(n, List(pairCase))
         case n =>
@@ -51,7 +51,7 @@ trait DProductDriver extends CoreDriver {
 trait DProductResiduator extends CoreResiduator with DProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, CaseBranchLabel(sel, Elim(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, p => eval(node.conf.tp, env + (sel -> p), p :: bound))
@@ -72,7 +72,7 @@ trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, ElimBranch(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, CaseBranchLabel(sel, Elim(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, n =>

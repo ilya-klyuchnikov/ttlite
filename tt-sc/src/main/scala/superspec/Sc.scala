@@ -6,13 +6,21 @@ import superspec.tt._
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
-  case class ElimBranch(ptr: Term, sub: Subst)
+  case class Elim(ptr: Term, sub: Subst)
 
-  // drive steps
+  trait Label
+  case object NormLabelNormLabel extends Label {
+    override def toString = "->"
+  }
+  case class CaseBranchLabel(sel: Name, elim: Elim) extends Label {
+    override def toString = sel + " = " + elim
+  }
+
+  // drive steps are very high level
   trait DriveStep {
     def step(t: Conf): Step
   }
-  case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep {
+  case class ElimDStep(sel: Name, cases: List[Elim]) extends DriveStep {
     override def step(t: Conf) =
       VariantsStep(sel, cases.map(b => b -> Conf(t.term / Map(sel -> b.ptr), t.tp / Map(sel -> b.ptr))))
   }
@@ -20,13 +28,6 @@ trait TTSc extends CoreSubst {
     override def step(t: Conf) = StopStep
   }
 
-  trait Label
-  case object NormLabelNormLabel extends Label {
-    override def toString = "->"
-  }
-  case class CaseBranchLabel(sel: Name, elim: ElimBranch) extends Label {
-    override def toString = sel + " = " + elim
-  }
 
   trait Step {
     val graphStep: GraphRewriteStep[Conf, Label]
@@ -34,7 +35,7 @@ trait TTSc extends CoreSubst {
   case object StopStep extends Step {
     override val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
-  case class VariantsStep(sel: Name, cases: List[(ElimBranch, Conf)]) extends Step {
+  case class VariantsStep(sel: Name, cases: List[(Elim, Conf)]) extends Step {
     override val graphStep =
       AddChildNodesStep[Conf, Label](cases.map(v => (v._2, CaseBranchLabel(sel, v._1))))
   }
@@ -53,7 +54,7 @@ trait TTSc extends CoreSubst {
       var node = g.current
       while (node.in != null) {
         node.in.driveInfo match {
-          case CaseBranchLabel(_, ElimBranch(_, sub))
+          case CaseBranchLabel(_, Elim(_, sub))
             if node.in.node.conf.term / sub == term =>
               return Some(node.in.node)
           case _ =>

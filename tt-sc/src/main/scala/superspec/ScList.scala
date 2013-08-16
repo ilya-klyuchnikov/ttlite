@@ -18,11 +18,11 @@ trait ListDriver extends CoreDriver with ListAST {
     case NPiListElim(a, m, nilCase, consCase, l) => l match {
       case NFree(n) =>
         val aType = quote0(a)
-        val caseNil = ElimBranch(PiNil(aType), Map())
+        val caseNil = Elim(PiNil(aType), Map())
 
         val h1 = freshLocal(quote0(a))
         val t1 = freshLocal(quote0(VPiList(a)))
-        val caseCons = ElimBranch(PiCons(aType, h1, t1), Map(n -> t1))
+        val caseCons = Elim(PiCons(aType, h1, t1), Map(n -> t1))
 
         ElimDStep(n, List(caseNil, caseCons))
       case n =>
@@ -45,8 +45,8 @@ trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Free(hN), Free(tN)), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, Elim(PiNil(a), _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, Elim(PiCons(_, Free(hN), Free(tN)), _))) ::
           Nil =>
 
         val aVal = eval(a, env, bound)
@@ -74,8 +74,8 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, ElimBranch(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, ElimBranch(PiCons(_, Free(hN), Free(tN)), _))) ::
+        TEdge(nodeZ, CaseBranchLabel(sel, Elim(PiNil(a), _))) ::
+          TEdge(nodeS, CaseBranchLabel(_, Elim(PiCons(_, Free(hN), Free(tN)), _))) ::
           Nil =>
 
         val aVal = eval(a, env, bound)
