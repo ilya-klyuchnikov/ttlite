@@ -381,12 +381,9 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val term: PackratParser[Res[Term]] =
         maybeTyped ~ ("->" ~> term) ^^ {case x ~ y => ctx: C => Pi(x(ctx), y("" :: ctx))} |
         maybeTyped
+    lazy val untyped = sigmaElim | dpair | app | lam | forall | exists
     lazy val maybeTyped: PackratParser[Res[Term]] =
-      sigmaElim ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-      dpair ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-      app ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        exists ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} |
-        sigmaElim | dpair | app | lam | forall | exists
+      untyped ~ ("::" ~> term) ^^ {case e ~ t => ctx: C => Ann(e(ctx), t(ctx))} | untyped
     lazy val app: PackratParser[Res[Term]] =
       (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce{_ @@ _} }
     lazy val aTerm: PackratParser[Res[Term]] = // atomicTerm

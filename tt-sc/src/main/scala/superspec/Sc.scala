@@ -167,6 +167,9 @@ object TTScREPL
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
   val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE ++ finVE
 
+  case class Supercompile[I](e: I) extends Stmt[I, Nothing]
+  case class Supercompile2[I](e: I) extends Stmt[I, Nothing]
+
   override lazy val int = new ScInterpreter
   class ScInterpreter extends CoreInterpreter {
 

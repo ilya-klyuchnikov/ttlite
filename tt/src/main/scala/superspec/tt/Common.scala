@@ -3,22 +3,28 @@ package superspec.tt
 import org.kiama.output.PrettyPrinter
 
 trait Common extends PrettyPrinter {
+  // meta-syntax
   trait Name
   case class Global(n: String) extends Name
   case class Assumed(n: String) extends Name
   case class Local(i: Int) extends Name
   case class Quote(i: Int) extends Name
 
+  trait MetaTerm
+  case class MApp(t1: MetaTerm, t2: MetaTerm) extends MetaTerm
+  case class MAnn(t1: MetaTerm, t2: MetaTerm) extends MetaTerm
+  // typed binders
+  case class Binder(tp: MetaTerm, body: MetaTerm) extends MetaTerm
+
   type Result[A] = Either[String, A]
   type NameEnv[V] = Map[Name, V]
 
+  // commands
   trait Stmt[+I, +TInf]
   case class Let[I](n: String, i: I) extends Stmt[I, Nothing]
   case class Assume[TInf](ns: List[(String, TInf)]) extends Stmt[Nothing, TInf]
   case class Eval[I](e: I) extends Stmt[I, Nothing]
   case class Import(s: String) extends Stmt[Nothing, Nothing]
-  case class Supercompile[I](e: I) extends Stmt[I, Nothing]
-  case class Supercompile2[I](e: I) extends Stmt[I, Nothing]
 
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
@@ -28,7 +34,10 @@ trait Common extends PrettyPrinter {
     if (b) parens(d) else d
 
   case class TypeError(msg: String) extends Exception(msg)
+
 }
+
+
 
 trait REPL extends Common {
   import scala.language.postfixOps
@@ -255,6 +264,5 @@ trait REPL extends Common {
           state = handleCommand(state, cmd)
         }
     }
-
   }
 }
