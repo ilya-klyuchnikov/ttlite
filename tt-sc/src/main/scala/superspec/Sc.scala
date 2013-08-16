@@ -25,7 +25,7 @@ trait TTSc extends CoreSubst {
   // everything else we get from evaluation!!
   def driveTerm(c: Conf): DriveStep
   // for experimental supercompilers
-  def elimFreeVar(c: Conf, fv: Local): List[ElimDStep]
+  def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = Nil
 
   trait Label
   case object NormLabelNormLabel extends Label {
@@ -62,8 +62,6 @@ trait TTSc extends CoreSubst {
       while (node.in != null) {
         node.in.driveInfo match {
           case CaseBranchLabel(_, ElimBranch(_, sub))
-            //if Some(sub) == findRenaming(term, node.in.node.conf.term) =>
-            // TODO: it can be calculated just once
             if (applySubst(node.in.node.conf.term, sub) == term) =>
               return Some(node.in.node)
           case _ =>
@@ -119,9 +117,8 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
 
 trait ProofResiduator extends BaseResiduator with EqAST {
   def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
-    proofFold(g.root,
-      nEnv.withDefault(vfree), Nil, Map(),
-      nEnv.withDefault(vfree), Nil, Map())
+    val env = nEnv.withDefault(vfree)
+    proofFold(g.root, env, Nil, Map(), env, Nil, Map())
   }
 
   def proofFold(node: N,

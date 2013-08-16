@@ -187,3 +187,5 @@ let ee = exists (x :: Nat) . Eq Nat x 1;
 let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
 
 sc2 eep;
+
+sc2 Pair Nat Nat 1 1;
