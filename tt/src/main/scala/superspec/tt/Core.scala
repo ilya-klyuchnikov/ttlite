@@ -1,6 +1,8 @@
 package superspec.tt
 
-trait CoreAST extends Common {
+import org.kiama.output.PrettyPrinter
+
+trait CoreAST {
   trait Term {
     def @@(t1: Term) = :@:(this, t1)
   }
@@ -62,8 +64,9 @@ trait CoreAST extends Common {
 
 }
 
-trait CorePrinter extends CoreAST {
-
+trait CorePrinter extends CoreAST with PrettyPrinter {
+  def parensIf(b: Boolean, d: Doc) =
+    if (b) parens(d) else d
   def pprint(c: Term): String =
     pretty(print(0, 0, c))
 
