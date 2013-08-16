@@ -134,8 +134,8 @@ trait CoreQuote extends CoreAST {
       Sigma(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
     case VNeutral(n) =>
       neutralQuote(ii, n)
-    case VDPair(sigma, t, f) =>
-      DPair(quote(ii, sigma), quote(ii, t), quote(ii, t))
+    case VDPair(sigma, e1, e2) =>
+      DPair(quote(ii, sigma), quote(ii, e1), quote(ii, e2))
 
   }
 
@@ -507,7 +507,6 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     override val stmtParse: Parser[Stmt[Term, Term]] = stmt
   }
   def toNat(i: Int): Term = {
-    println("==== " + i )
     sys.error("not implemented")
   }
 }

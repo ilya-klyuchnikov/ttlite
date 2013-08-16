@@ -39,7 +39,8 @@ trait DProductDriver extends CoreDriver {
   override def decompose(c: Conf): DriveStep = c.term match {
     case DPair(sigma, x, y) =>
       val Sigma(a, b) = c.tp
-      val bX = quote0(eval(b @@ x, emptyNEnv, Nil))
+      val VSigma(_, f) = eval(c.tp, emptyNEnv, Nil)
+      val bX = quote0(f (eval(x, emptyNEnv, Nil)))
       DPairDStep(Conf(x, a), Conf(y, bX))
     case _ =>
       super.decompose(c)
@@ -99,9 +100,7 @@ trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
         val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
 
         val a = eval(x.conf.tp, env, bound)
-        println(a)
         val b = eval(y.conf.tp, env, bound)
-        println(b)
 
         'cong2 @@ a @@ b @@ sigma @@
           VLam(a, x => VLam(b, y => VDPair(sigma, x, y))) @@

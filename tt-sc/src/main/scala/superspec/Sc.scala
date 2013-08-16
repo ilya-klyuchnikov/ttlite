@@ -155,6 +155,7 @@ object TTScREPL
   with EqREPL
   with EqDriver
   with EqResiduator
+  with EqProofResiduator
   with SumREPL
   with SumDriver
   with SumResiduator
@@ -203,7 +204,6 @@ object TTScREPL
           val rules = new Rules
           val gs = GraphGenerator(rules, goal)
           for (g <- gs) {
-            println("---")
             val tGraph = Transformations.transpose(g)
             output(tgToString(tGraph))
             val resVal = residuate(tGraph, state.ne)

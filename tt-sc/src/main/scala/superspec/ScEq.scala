@@ -34,3 +34,24 @@ trait EqResiduator extends BaseResiduator with EqDriver { self =>
         super.fold(node, env, bound, recM)
     }
 }
+
+trait EqProofResiduator extends EqResiduator with ProofResiduator {
+  override def proofFold(node: N,
+                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+    node.outs match {
+      case TEdge(x, ReflLabel) :: Nil =>
+
+        val eq@VEq(a, _, _) = eval(node.conf.tp, env, bound)
+        'cong1 @@
+          a @@
+          eq @@
+          ('Refl @@ a) @@
+          eval(x.conf.term, env, bound) @@
+          fold(x, env, bound, recM) @@
+          proofFold(x, env, bound, recM, env2, bound2, recM2)
+      case _ =>
+        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+    }
+
+}
