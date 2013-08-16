@@ -1,5 +1,6 @@
 package superspec
 
+import superspec.tt._
 import mrsc.core._
 
 trait DProductDriver extends CoreDriver {
