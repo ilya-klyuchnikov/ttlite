@@ -8,7 +8,6 @@ class ReplSpec extends org.scalatest.FunSpec {
     CoreREPLMain.main(Array("examples/ex01_core.pi"))
   }
 
-
   describe("Nat REPL should process `examples/ex02_nat.pi` without errors") {
     NatREPLMain.main(Array("examples/ex02_nat.pi"))
   }
@@ -32,10 +31,6 @@ class ReplSpec extends org.scalatest.FunSpec {
 
   describe("Vector REPL should process `examples/ex07_vec.pi` without errors") {
     VectorREPLMain.main(Array("examples/ex07_vec.pi"))
-  }
-
-  describe("Fin REPL should process `examples/ex08_finn.pi` without errors") {
-    FinNatREPLMain.main(Array("examples/ex08_finn.pi"))
   }
 
   describe("Fin REPL should process `examples/ex09_fin.pi` without errors") {
