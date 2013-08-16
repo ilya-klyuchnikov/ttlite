@@ -6,26 +6,19 @@ import superspec.tt._
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
-  // sub - a substitution, using only this substitution we can perform a fold
   case class ElimBranch(ptr: Term, sub: Subst)
+
+  // drive steps
   trait DriveStep {
     def step(t: Conf): Step
   }
-
   case class ElimDStep(sel: Name, cases: List[ElimBranch]) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(sel, cases.map { b =>
-        b -> Conf(applySubst(t.term, Map(sel -> b.ptr)), applySubst(t.tp, Map(sel -> b.ptr)))
-      })
+      VariantsStep(sel, cases.map(b => b -> Conf(t.term / Map(sel -> b.ptr), t.tp / Map(sel -> b.ptr))))
   }
   case object StopDStep extends DriveStep {
     override def step(t: Conf) = StopStep
   }
-  // the only concern is driving neutral terms!!
-  // everything else we get from evaluation!!
-  def driveTerm(c: Conf): DriveStep
-  // for experimental supercompilers
-  def elimFreeVar(c: Conf, fv: Local): List[ElimDStep] = Nil
 
   trait Label
   case object NormLabelNormLabel extends Label {
@@ -35,21 +28,20 @@ trait TTSc extends CoreSubst {
     override def toString = sel + " = " + elim
   }
 
-  // higher-level steps performed by supercompiler
-  // this higher-level steps are translated into low-level
   trait Step {
     val graphStep: GraphRewriteStep[Conf, Label]
   }
-
   case object StopStep extends Step {
     override val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
   case class VariantsStep(sel: Name, cases: List[(ElimBranch, Conf)]) extends Step {
-    override val graphStep = {
-      val ns = cases map { v => (v._2, CaseBranchLabel(sel, v._1)) }
-      AddChildNodesStep[Conf, Label](ns)
-    }
+    override val graphStep =
+      AddChildNodesStep[Conf, Label](cases.map(v => (v._2, CaseBranchLabel(sel, v._1))))
   }
+
+  // the only concern is driving neutral terms!!
+  // everything else we get from evaluation!!
+  def driveTerm(c: Conf): DriveStep
 
   trait PiRules extends MRSCRules[Conf, Label] {
     type Signal = Option[N]
@@ -62,7 +54,7 @@ trait TTSc extends CoreSubst {
       while (node.in != null) {
         node.in.driveInfo match {
           case CaseBranchLabel(_, ElimBranch(_, sub))
-            if (applySubst(node.in.node.conf.term, sub) == term) =>
+            if node.in.node.conf.term / sub == term =>
               return Some(node.in.node)
           case _ =>
         }
@@ -90,12 +82,6 @@ trait TTSc extends CoreSubst {
       if (signal.isDefined) return List()
       val t = g.current.conf
       val piStep = driveTerm(t).step(t)
-      // TODO
-      // val fv = freeLocals(g.current.conf.ct).toList
-      // val ss = fv.flatMap(x => elimFreeVar(g.current.conf, x).map(_.step(g.current.conf)))
-      // This part generates too much results for now
-      // piStep.graphStep :: ss.map(_.graphStep)
-      // Experiments are needed.
       piStep.graphStep :: Nil
     }
   }
@@ -111,7 +97,10 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
   def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.base match {
       case Some(tPath) => recM(tPath)
-      case None => node.outs match { case Nil => eval(node.conf.term, env, bound) }
+      case None => node.outs match {
+        case Nil => eval(node.conf.term, env, bound)
+        case outs => sys.error(s"Do not know how to fold $outs")
+      }
     }
 }
 
@@ -128,7 +117,10 @@ trait ProofResiduator extends BaseResiduator with EqAST {
       case Some(tPath) =>
         recM2(tPath)
       case None =>
-        node.outs match { case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound) }
+        node.outs match {
+          case Nil => eval(Refl(node.conf.tp, node.conf.term), env, bound)
+          case outs => sys.error(s"Do not know how to fold $outs")
+        }
     }
 }
 

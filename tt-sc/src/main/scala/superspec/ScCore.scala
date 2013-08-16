@@ -5,12 +5,12 @@ import mrsc.core._
 
 trait CoreSubst extends CoreEval with CoreQuote {
   type Subst = Map[Name, Term]
-
-  def applySubst(t: Term, subst: Subst): Term = {
-    val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}
-    quote0(eval(t, env, Nil))
+  implicit class TermSubst(t: Term) {
+    def /(subst: Subst) = {
+      val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}
+      quote0(eval(t, env, Nil))
+    }
   }
-
 }
 
 trait CoreDriver extends TTSc with CoreCheck {
