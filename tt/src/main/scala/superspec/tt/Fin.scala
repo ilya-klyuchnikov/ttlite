@@ -96,18 +96,18 @@ trait FinQuote extends CoreQuote with FinAST {
 
 trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
   private lazy val finsTE: NameEnv[Value] =
-    (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VStar).toMap
+    (0 to 10).map(n => Global(s"Fin_$n") -> VStar).toMap
   private lazy val finElemsTE: NameEnv[Value] =
-    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFin(n))).toMap
+    (for {n <- 0 to 10; i <- 1 to n} yield Global(s"finElem_${i}_$n") -> VFin(n)).toMap
   private lazy val finElimsTE: NameEnv[Value] =
-    (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElimType(n)).toMap
+    (0 to 10).map(n => Global(s"finElim_$n") -> finElimType(n)).toMap
 
   lazy val finsVE: NameEnv[Value] =
-    (0 to 10).toList.map(n => Global(s"Fin_${n}") -> VFin(n)).toMap
+    (0 to 10).map(n => Global(s"Fin_$n") -> VFin(n)).toMap
   private lazy val finElemsVE: NameEnv[Value] =
-    (for {n <- (0 to 10); i <- (1 to n)} yield (Global(s"finElem_${i}_${n}") -> VFinElem(i, n))).toMap
+    (for {n <- 0 to 10; i <- 1 to n} yield Global(s"finElem_${i}_$n") -> VFinElem(i, n)).toMap
   private lazy val finElimsVE: NameEnv[Value] =
-    (0 to 10).toList.map(n => Global(s"finElim_${n}") -> finElim(n)).toMap
+    (0 to 10).map(n => Global(s"finElim_$n") -> finElim(n)).toMap
 
   def finElimType(n: Int): Value =
     VPi(VPi(VFin(n), _ => VStar), m =>

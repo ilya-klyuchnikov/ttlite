@@ -6,38 +6,38 @@ import superspec.tt._
 trait TTSc extends CoreSubst {
 
   case class Conf(term: Term, tp: Term)
-  case class Elim(ptr: Term, sub: Subst)
 
   trait Label
-  case object NormLabelNormLabel extends Label {
-    override def toString = "->"
-  }
-  case class CaseBranchLabel(sel: Name, elim: Elim) extends Label {
-    override def toString = sel + " = " + elim
+  case class ElimLabel(sel: Name, ptr: Term, sub: Subst) extends Label {
+    override def toString = s"$sel = $ptr"
   }
 
   // drive steps are very high level
-  trait DriveStep {
+  sealed trait DriveStep {
     def step(t: Conf): Step
   }
-  case class ElimDStep(sel: Name, cases: List[Elim]) extends DriveStep {
+  case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(sel, cases.map(b => b -> Conf(t.term / Map(sel -> b.ptr), t.tp / Map(sel -> b.ptr))))
+      VariantsStep(cases.toList.map(b => b -> Conf(t.term / Map(b.sel -> b.ptr), t.tp / Map(b.sel -> b.ptr))))
+  }
+  case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
+    override def step(t: Conf) = DecomposeStep(label, args.toList)
   }
   case object StopDStep extends DriveStep {
     override def step(t: Conf) = StopStep
   }
 
-
-  trait Step {
+  sealed trait Step {
     val graphStep: GraphRewriteStep[Conf, Label]
+  }
+  case class VariantsStep(cases: List[(ElimLabel, Conf)]) extends Step {
+    override val graphStep = AddChildNodesStep[Conf, Label](cases.map(v => (v._2, v._1)))
+  }
+  case class DecomposeStep(label: Label, args: List[Conf]) extends Step {
+    override val graphStep = AddChildNodesStep[Conf, Label](args.map(_ -> label))
   }
   case object StopStep extends Step {
     override val graphStep = CompleteCurrentNodeStep[Conf, Label]()
-  }
-  case class VariantsStep(sel: Name, cases: List[(Elim, Conf)]) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](cases.map(v => (v._2, CaseBranchLabel(sel, v._1))))
   }
 
   // the only concern is driving neutral terms!!
@@ -54,7 +54,7 @@ trait TTSc extends CoreSubst {
       var node = g.current
       while (node.in != null) {
         node.in.driveInfo match {
-          case CaseBranchLabel(_, Elim(_, sub))
+          case ElimLabel(_, _, sub)
             if node.in.node.conf.term / sub == term =>
               return Some(node.in.node)
           case _ =>

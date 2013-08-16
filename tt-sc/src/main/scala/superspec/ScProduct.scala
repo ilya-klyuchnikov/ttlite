@@ -6,13 +6,6 @@ import mrsc.core._
 trait ProductDriver extends CoreDriver with ProductAST {
 
   case object PairLabel extends Label
-  case class PairStep(x: Conf, y: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(x -> PairLabel, y -> PairLabel))
-  }
-  case class PairDStep(x: Conf, y: Conf) extends DriveStep {
-    override def step(t: Conf) = PairStep(x, y)
-  }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NProductElim(a, b, _, _, p) =>
@@ -27,9 +20,9 @@ trait ProductDriver extends CoreDriver with ProductAST {
           val yName = freshName(bType)
           val y = Free(yName)
 
-          val pairCase = Elim(Pair(aType, bType, x, y), Map())
+          val pairCase = ElimLabel(n, Pair(aType, bType, x, y), Map())
 
-          ElimDStep(n, List(pairCase))
+          ElimDStep(pairCase)
         case n =>
           driveNeutral(n)
       }
@@ -40,7 +33,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
   override def decompose(c: Conf): DriveStep = c.term match {
     case Pair(a, b, x, y) =>
       val Product(a1, b1) = c.tp
-      PairDStep(Conf(x, a), Conf(y, b))
+      DecomposeDStep(PairLabel, Conf(x, a), Conf(y, b))
     case _ =>
       super.decompose(c)
   }
@@ -50,7 +43,7 @@ trait ProductDriver extends CoreDriver with ProductAST {
 trait ProductResiduator extends BaseResiduator with ProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, Elim(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, Pair(a, b, Free(xN), Free(yN)), _)) :: Nil =>
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =
@@ -82,7 +75,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, Elim(Pair(a, b, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, Pair(a, b, Free(xN), Free(yN)), _)) :: Nil =>
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =

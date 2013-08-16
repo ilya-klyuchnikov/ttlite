@@ -5,6 +5,7 @@ import mrsc.core._
 
 trait CoreSubst extends CoreEval with CoreQuote {
   type Subst = Map[Name, Term]
+
   implicit class TermSubst(t: Term) {
     def /(subst: Subst) = {
       val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}

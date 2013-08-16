@@ -6,22 +6,15 @@ import mrsc.core._
 trait NatDriver extends CoreDriver with NatAST {
 
   case object SuccLabel extends Label
-  case class SuccStep(next: Term) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(Conf(next, Nat) -> SuccLabel))
-  }
-  case class SuccDStep(next: Term) extends DriveStep {
-    override def step(t: Conf) = SuccStep(next)
-  }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case natElim: NNatElim =>
       natElim.n match {
         case NFree(n) =>
-          val caseZ = Elim(Zero, Map())
+          val caseZ = ElimLabel(n, Zero, Map())
           val v1 = freshLocal(Nat)
-          val caseS = Elim(Succ(v1), Map(n -> v1))
-          ElimDStep(n, List(caseZ, caseS))
+          val caseS = ElimLabel(n, Succ(v1), Map(n -> v1))
+          ElimDStep(caseZ, caseS)
         case n =>
           driveNeutral(n)
       }
@@ -32,7 +25,7 @@ trait NatDriver extends CoreDriver with NatAST {
   override def decompose(c: Conf): DriveStep = c.term match {
     case Succ(c1) =>
       val Nat = c.tp
-      SuccDStep(c1)
+      DecomposeDStep(SuccLabel, Conf(c1, Nat))
     case _ =>
       super.decompose(c)
   }
@@ -43,8 +36,8 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, Elim(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, Elim(Succ(Free(fresh)), _))) ::
+        TEdge(nodeZ, ElimLabel(sel, Zero, _)) ::
+          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _)) ::
           Nil =>
         val motive =
           VLam(VNat, n => eval(node.conf.tp, env + (sel -> n), n :: bound))
@@ -68,8 +61,8 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, Elim(Zero, _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, Elim(Succ(Free(fresh)), _))) ::
+        TEdge(nodeZ, ElimLabel(sel, Zero, _)) ::
+          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _)) ::
           Nil =>
 
         val motive =

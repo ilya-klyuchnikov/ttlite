@@ -6,18 +6,11 @@ import mrsc.core._
 trait EqDriver extends CoreDriver with EqAST {
 
   case object ReflLabel extends Label
-  case class ReflStep(x: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(x -> ReflLabel))
-  }
-  case class ReflDStep(x: Conf) extends DriveStep {
-    override def step(t: Conf) = ReflStep(x)
-  }
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
       val Eq(_, _, _) = c.tp
-      ReflDStep(Conf(x, a))
+      DecomposeDStep(ReflLabel, Conf(x, a))
     case _ =>
       super.decompose(c)
   }

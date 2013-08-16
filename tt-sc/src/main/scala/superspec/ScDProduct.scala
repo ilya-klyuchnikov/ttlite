@@ -5,13 +5,6 @@ import mrsc.core._
 trait DProductDriver extends CoreDriver {
 
   case object DPairLabel extends Label
-  case class DPairStep(x: Conf, y: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(x -> DPairLabel, y -> DPairLabel))
-  }
-  case class DPairDStep(x: Conf, y: Conf) extends DriveStep {
-    override def step(t: Conf) = DPairStep(x, y)
-  }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NSigmaElim(sigma@VSigma(a, b), m, f, p) =>
@@ -26,9 +19,8 @@ trait DProductDriver extends CoreDriver {
           val yName = freshName(bX)
           val y = Free(yName)
 
-          val pairCase = Elim(DPair(sigmaT, x, y), Map())
-
-          ElimDStep(n, List(pairCase))
+          val pairCase = ElimLabel(n, DPair(sigmaT, x, y), Map())
+          ElimDStep(pairCase)
         case n =>
           driveNeutral(n)
       }
@@ -41,7 +33,7 @@ trait DProductDriver extends CoreDriver {
       val Sigma(a, b) = c.tp
       val VSigma(_, f) = eval(c.tp, emptyNEnv, Nil)
       val bX = quote0(f (eval(x, emptyNEnv, Nil)))
-      DPairDStep(Conf(x, a), Conf(y, bX))
+      DecomposeDStep(DPairLabel, Conf(x, a), Conf(y, bX))
     case _ =>
       super.decompose(c)
   }
@@ -51,7 +43,7 @@ trait DProductDriver extends CoreDriver {
 trait DProductResiduator extends CoreResiduator with DProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, Elim(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _)) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, p => eval(node.conf.tp, env + (sel -> p), p :: bound))
@@ -72,7 +64,7 @@ trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, CaseBranchLabel(sel, Elim(DPair(sigma, Free(xN), Free(yN)), _))) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _)) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, n =>

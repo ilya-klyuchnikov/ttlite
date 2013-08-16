@@ -6,25 +6,18 @@ import mrsc.core._
 trait ListDriver extends CoreDriver with ListAST {
 
   case object ConsLabel extends Label
-  case class ConsStep(h: Conf, t: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(h -> ConsLabel, t -> ConsLabel))
-  }
-  case class ConsDStep(head: Conf, tail: Conf) extends DriveStep {
-    override def step(t: Conf) = ConsStep(head, tail)
-  }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NPiListElim(a, m, nilCase, consCase, l) => l match {
       case NFree(n) =>
         val aType = quote0(a)
-        val caseNil = Elim(PiNil(aType), Map())
+        val caseNil = ElimLabel(n, PiNil(aType), Map())
 
         val h1 = freshLocal(quote0(a))
         val t1 = freshLocal(quote0(VPiList(a)))
-        val caseCons = Elim(PiCons(aType, h1, t1), Map(n -> t1))
+        val caseCons = ElimLabel(n, PiCons(aType, h1, t1), Map(n -> t1))
 
-        ElimDStep(n, List(caseNil, caseCons))
+        ElimDStep(caseNil, caseCons)
       case n =>
         driveNeutral(n)
     }
@@ -34,7 +27,7 @@ trait ListDriver extends CoreDriver with ListAST {
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case PiCons(a, h, t) =>
-      ConsDStep(Conf(h, a), Conf(t, c.tp))
+      DecomposeDStep(ConsLabel, Conf(h, a), Conf(t, c.tp))
     case _ =>
       super.decompose(c)
   }
@@ -45,8 +38,8 @@ trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, Elim(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, Elim(PiCons(_, Free(hN), Free(tN)), _))) ::
+        TEdge(nodeZ, ElimLabel(sel, PiNil(a), _)) ::
+          TEdge(nodeS, ElimLabel(_, PiCons(_, Free(hN), Free(tN)), _)) ::
           Nil =>
 
         val aVal = eval(a, env, bound)
@@ -74,8 +67,8 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, CaseBranchLabel(sel, Elim(PiNil(a), _))) ::
-          TEdge(nodeS, CaseBranchLabel(_, Elim(PiCons(_, Free(hN), Free(tN)), _))) ::
+        TEdge(nodeZ, ElimLabel(sel, PiNil(a), _)) ::
+          TEdge(nodeS, ElimLabel(_, PiCons(_, Free(hN), Free(tN)), _)) ::
           Nil =>
 
         val aVal = eval(a, env, bound)

@@ -7,20 +7,6 @@ trait SumDriver extends CoreDriver with SumAST {
 
   case object InLLabel extends Label
   case object InRLabel extends Label
-  case class InLStep(l: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(l -> InLLabel))
-  }
-  case class InRStep(r: Conf) extends Step {
-    override val graphStep =
-      AddChildNodesStep[Conf, Label](List(r -> InRLabel))
-  }
-  case class InLDStep(l: Conf) extends DriveStep {
-    override def step(t: Conf) = InLStep(l)
-  }
-  case class InRDStep(r: Conf) extends DriveStep {
-    override def step(t: Conf) = InRStep(r)
-  }
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NSumElim(l, r, _, _, _, s) =>
@@ -29,10 +15,10 @@ trait SumDriver extends CoreDriver with SumAST {
           val lType = quote0(l)
           val rType = quote0(r)
 
-          val lCase = Elim(InL(lType, rType, freshLocal(lType)), Map())
-          val rCase = Elim(InR(lType, rType, freshLocal(rType)), Map())
+          val lCase = ElimLabel(n, InL(lType, rType, freshLocal(lType)), Map())
+          val rCase = ElimLabel(n, InR(lType, rType, freshLocal(rType)), Map())
 
-          ElimDStep(n, List(lCase, rCase))
+          ElimDStep(lCase, rCase)
         case n =>
           driveNeutral(n)
       }
@@ -43,10 +29,10 @@ trait SumDriver extends CoreDriver with SumAST {
   override def decompose(c: Conf): DriveStep = c.term match {
     case InL(lType, rType, l) =>
       val Sum(_, _) = c.tp
-      InLDStep(Conf(l, lType))
+      DecomposeDStep(InLLabel, Conf(l, lType))
     case InR(lType, rType, r) =>
       val Sum(_, _) = c.tp
-      InRDStep(Conf(r, rType))
+      DecomposeDStep(InRLabel, Conf(r, rType))
     case _ =>
       super.decompose(c)
   }
@@ -55,8 +41,8 @@ trait SumDriver extends CoreDriver with SumAST {
 trait SumResiduator extends BaseResiduator with SumDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, Elim(InL(a, b, Free(lN)), _))) ::
-        TEdge(nodeR, CaseBranchLabel(_, Elim(InR(_, _, Free(rN)), _))) ::
+      case TEdge(nodeL, ElimLabel(sel, InL(a, b, Free(lN)), _)) ::
+        TEdge(nodeR, ElimLabel(_, InR(_, _, Free(rN)), _)) ::
         Nil =>
 
         val aVal = eval(a, env, bound)
@@ -96,8 +82,8 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, CaseBranchLabel(sel, Elim(InL(a, b, Free(lN)), _))) ::
-        TEdge(nodeR, CaseBranchLabel(_, Elim(InR(_, _, Free(rN)), _))) ::
+      case TEdge(nodeL, ElimLabel(sel, InL(a, b, Free(lN)), _)) ::
+        TEdge(nodeR, ElimLabel(_, InR(_, _, Free(rN)), _)) ::
         Nil =>
 
         val aVal = eval(a, env, bound)
