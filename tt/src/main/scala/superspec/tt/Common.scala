@@ -66,7 +66,7 @@ trait REPL {
     def icprint(c: T): String
     def itprint(t: V): String
     val iParse: Parser[T]
-    val stmtParse: Parser[Stmt[T, T]]
+    val stmtParse: Parser[Stmt[T]]
     def assume(s: State, x: (String, T)): State
 
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
@@ -153,7 +153,7 @@ trait REPL {
         load(f, state, reload = true)
     }
 
-  def handleStmt(state: State, stmt: Stmt[T, T]): State = {
+  def handleStmt(state: State, stmt: Stmt[T]): State = {
     def checkEval(s: String, it: T): State = {
       int.iinfer(state.ne, state.ctx, it) match {
         case None =>

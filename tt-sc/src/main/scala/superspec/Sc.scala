@@ -167,25 +167,22 @@ object TTScREPL
   val te = natTE ++ listTE ++ productTE ++ eqTE ++ sumTE ++ finTE
   val ve = natVE ++ listVE ++ productVE ++ eqVE ++ sumVE ++ finVE
 
-  case class Supercompile[I](e: I) extends Stmt[I, Nothing]
-  case class Supercompile2[I](e: I) extends Stmt[I, Nothing]
-
   override lazy val int = new ScInterpreter
   class ScInterpreter extends CoreInterpreter {
 
-    lazy val scStmt: PackratParser[Stmt[Term, Term]] =
-      "sc" ~> term <~ ";" ^^ {t => Supercompile(t(Nil))}
-    lazy val sc2Stmt: PackratParser[Stmt[Term, Term]] =
-      "sc2" ~> term <~ ";" ^^ {t => Supercompile2(t(Nil))}
+    lazy val scStmt: PackratParser[Stmt[Term]] =
+      "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
+    lazy val sc2Stmt: PackratParser[Stmt[Term]] =
+      "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
 
     lazy val scStmts = scStmt :: sc2Stmt :: stmts
-    override lazy val stmt: PackratParser[Stmt[Term, Term]] = scStmts.reduce( _ | _)
+    override lazy val stmt: PackratParser[Stmt[Term]] = scStmts.reduce( _ | _)
   }
 
   override def initialState = State(interactive = true, ve, te, Set())
 
-  override def handleStmt(state: State, stmt: Stmt[T, T]): State = stmt match {
-    case Supercompile(it) =>
+  override def handleStmt(state: State, stmt: Stmt[T]): State = stmt match {
+    case SC(it) =>
       import int._
       iinfer(state.ne, state.ctx, it) match {
         case None =>
@@ -221,7 +218,7 @@ object TTScREPL
           }
       }
       state
-    case Supercompile2(it) =>
+    case CertSC(it) =>
       import int._
       iinfer(state.ne, state.ctx, it) match {
         case None =>

@@ -447,15 +447,15 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val bindingPar: PackratParser[Res[(String, Term)]] =
       "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => ctx: C => (i, x(ctx))}
 
-    lazy val stmt: PackratParser[Stmt[Term, Term]] = stmts.reduce( _ | _)
+    lazy val stmt: PackratParser[Stmt[Term]] = stmts.reduce( _ | _)
     lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt)
-    lazy val letStmt: PackratParser[Stmt[Term, Term]] =
+    lazy val letStmt: PackratParser[Stmt[Term]] =
       "let" ~> ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
-    lazy val assumeStmt: PackratParser[Stmt[Term, Term]] =
+    lazy val assumeStmt: PackratParser[Stmt[Term]] =
       "assume" ~> (bindingPar+) <~ ";" ^^ {bs => Assume(bs.map(_(Nil)))}
-    lazy val importStmt: PackratParser[Stmt[Term, Term]] =
+    lazy val importStmt: PackratParser[Stmt[Term]] =
       "import" ~> stringLit <~ ";" ^^ Import
-    lazy val evalStmt: PackratParser[Stmt[Term, Term]] =
+    lazy val evalStmt: PackratParser[Stmt[Term]] =
       term <~ ";" ^^ {t => Eval(t(Nil))}
   }
 
@@ -504,7 +504,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
 
     }
     override lazy val iParse: Parser[Term] = term ^^ {_(Nil)}
-    override val stmtParse: Parser[Stmt[Term, Term]] = stmt
+    override val stmtParse: Parser[Stmt[Term]] = stmt
   }
   def toNat(i: Int): Term = {
     sys.error("not implemented")
