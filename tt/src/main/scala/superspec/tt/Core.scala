@@ -392,8 +392,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     lazy val aTerm: PackratParser[Res[Term]] = // atomicTerm
       ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => free(i) case j => Bound(j)}} |
         "<" ~> numericLit <~ ">" ^^ {x => ctx: C => Free(Local(x.toInt))} |
-        "(" ~> term <~ ")" | numericLit ^^ {x => ctx: C => toNat(x.toInt)} |
-        "*" ^^^ {ctx: C => Star}
+        "(" ~> term <~ ")" | "*" ^^^ {ctx: C => Star}
     lazy val dpair: PackratParser[Res[Term]] =
       ("dpair" ~> aTerm) ~ aTerm ~ aTerm ^^ {case t1 ~ t2 ~ t3 => ctx: C => DPair(t1(ctx), t2(ctx), t3(ctx))}
     lazy val sigmaElim: PackratParser[Res[Term]] =
@@ -505,8 +504,5 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     }
     override lazy val iParse: Parser[Term] = term ^^ {_(Nil)}
     override val stmtParse: Parser[Stmt[Term]] = stmt
-  }
-  def toNat(i: Int): Term = {
-    sys.error("not implemented")
   }
 }

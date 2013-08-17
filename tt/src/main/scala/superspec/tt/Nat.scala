@@ -150,10 +150,4 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
               VLam(VNat, {n =>
                 eval(NatElim(Bound(3), Bound(2), Bound(1), Bound(0)), natVE, List(n, sCase, zCase, m))}))))
     )
-
-  def toNat1(n: Int): Term =
-    if (n == 0) Zero else Succ(toNat1(n - 1))
-
-  override def toNat(i: Int): Term =
-    Ann(toNat1(i), Nat)
 }

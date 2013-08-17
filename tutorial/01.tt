@@ -31,22 +31,22 @@ let plus =
 
 -- Examples of normalization
 
--- plus 0;
+-- plus Zero;
 -- plus 1;
 -- assume (n :: Nat);
 -- plus n 2;
 
-let eq_plus_0_n_plus_n_0 =
-    forall (n :: Nat) . Eq Nat (plus 0 n) (plus n 0) ;
+let eq_plus_Zero_n_plus_n_Zero =
+    forall (n :: Nat) . Eq Nat (plus Zero n) (plus n Zero) ;
 
-let eq_plus_0_n_plus_n_0_proof =
+let eq_plus_Zero_n_plus_n_Zero_proof =
     (\ (n :: Nat) ->
         natElim
-            (\ (n :: Nat) -> Eq Nat (plus 0 n) (plus n 0))
-            (Refl Nat 0)
-            (\ (n :: Nat) (pr :: Eq Nat (plus 0 n) (plus n 0)) ->
-                cong Nat Nat Succ (plus 0 n) (plus n 0) pr)
-            n) :: eq_plus_0_n_plus_n_0;
+            (\ (n :: Nat) -> Eq Nat (plus Zero n) (plus n Zero))
+            (Refl Nat Zero)
+            (\ (n :: Nat) (pr :: Eq Nat (plus Zero n) (plus n Zero)) ->
+                cong Nat Nat Succ (plus Zero n) (plus n Zero) pr)
+            n) :: eq_plus_Zero_n_plus_n_Zero;
 
 let eq_s_plus_a_b__plus_a_s_b =
     forall (a :: Nat) (b :: Nat) . Eq Nat (Succ (plus a b)) (plus a (Succ b));
@@ -68,7 +68,7 @@ let eq_plus_a_b_plus_b_a_proof =
     ( \(a :: Nat) (b :: Nat) ->
         natElim
             (\ (n :: Nat) -> Eq Nat (plus n b) (plus b n))
-            (eq_plus_0_n_plus_n_0_proof b)
+            (eq_plus_Zero_n_plus_n_Zero_proof b)
             (\ (n :: Nat) (pr :: Eq Nat (plus n b) (plus b n)) ->
               tran Nat (Succ (plus n b)) (Succ (plus b n)) (plus b (Succ n))
                 (cong Nat Nat Succ (plus n b) (plus b n) pr)

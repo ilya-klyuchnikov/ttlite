@@ -182,10 +182,10 @@ let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
 
 sc2 snd1 A1 B1 $p;
 
-let ee = exists (x :: Nat) . Eq Nat x 1;
+let ee = exists (x :: Nat) . Eq Nat x (Succ Zero);
 
-let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
+let eep = dpair (exists (x :: Nat) . Eq Nat x (Succ Zero)) (Succ Zero) (Refl Nat (Succ Zero)) :: ee;
 
 sc2 eep;
 
-sc2 Pair Nat Nat 1 1;
+sc2 Pair Nat Nat (Succ Zero) (Succ Zero);

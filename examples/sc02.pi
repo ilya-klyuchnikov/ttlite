@@ -66,7 +66,7 @@ let plusX =
 let plus2 =
     \(x :: Nat) (y :: Nat) (z :: Nat) -> plus (plus x y) z;
 
-let plus0 = \(x :: Nat) -> plus x 0;
+let plus0 = \(x :: Nat) -> plus x Zero;
 
 let pred =
   natElim
@@ -77,24 +77,24 @@ let pred =
 let pred0 =
   natElim
     ( \ (_ :: Nat) -> Nat )
-    0
+    Zero
     ( \ (n1 :: Nat) (rec :: Nat) -> rec );
 
 let id1 =
   natElim
     ( \ (_ :: Nat) -> Nat )
-    0
+    Zero
     ( \ (n1 :: Nat) (rec :: Nat) -> pred0 n1 );
 
 
-let xxx = \ (x :: Nat) -> pred0 (plus x 1);
+let xxx = \ (x :: Nat) -> pred0 (plus x (Succ Zero));
 --sc2 xxx;
 
 let xxx1 = \ (x :: Nat) (y :: Nat) -> pred0 (plus x y);
 --sc2 xxx1;
 
 
-let yyy = \ (x :: Nat) -> pred (plus x 0);
+let yyy = \ (x :: Nat) -> pred (plus x Zero);
 --sc2 yyy;
 
 let zzz = \ (x :: Nat) -> Succ x;
@@ -166,7 +166,7 @@ let proof =
     (\ (a :: Nat) ->
         natElim
             (\ (b :: Nat) -> Eq Nat (natId b) (natId b))
-            (Refl Nat 0)
+            (Refl Nat Zero)
             ( \ (b :: Nat) (c :: Eq Nat (natId b) (natId b)) ->
                 cong1 Nat Nat Succ (natId b) (natId b) c) a) ::
                 forall (b :: Nat) . Eq Nat (natId b) (natId b);
@@ -201,7 +201,7 @@ sc plus x y;
 
 
 let list2zero =
-    listElim Nat (\ (_ :: List Nat) -> Nat) 0 (\ (h :: Nat) (t :: List Nat) (rec :: Nat) -> 0);
+    listElim Nat (\ (_ :: List Nat) -> Nat) Zero (\ (h :: Nat) (t :: List Nat) (rec :: Nat) -> Zero);
 
 assume (l :: List Nat);
 
@@ -499,7 +499,7 @@ let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
 sc snd1 A1 B1 $p;
 sc2 snd1 A1 B1 $p;
 
-let ee = exists (x :: Nat) . Eq Nat x 1;
+let ee = exists (x :: Nat) . Eq Nat x (Succ Zero);
 
 --let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
 

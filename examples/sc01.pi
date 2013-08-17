@@ -59,7 +59,7 @@ let append =
         appendType;
 
 let len =
-  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
+  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) Zero (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
 
 let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
@@ -188,7 +188,7 @@ let cong1 =
 
 
 let len =
-  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) 0 (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
+  (\ (a :: *) -> listElim a (\ (_ :: List a) -> Nat) Zero (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w)) ::
     forall (a :: *) . forall (v :: List a) . Nat;
 
 --let thSum02 =
@@ -204,12 +204,12 @@ let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 --            (\(b :: B) -> b) s) :: thSum02;
 
 
-let nRight = forall (n :: Nat) . Eq Nat (plus n 0) n;
+let nRight = forall (n :: Nat) . Eq Nat (plus n Zero) n;
 -- the other direction requires induction on N:
 let pNPlus0isN =
-  natElim ( \ (n :: Nat) -> Eq Nat (plus n 0) n )
-          ( Refl Nat 0 )
-          ( \ (n1 :: Nat) -> cong1 Nat Nat Succ (plus n1 0) n1 )
+  natElim ( \ (n :: Nat) -> Eq Nat (plus n Zero) n )
+          ( Refl Nat Zero )
+          ( \ (n1 :: Nat) -> cong1 Nat Nat Succ (plus n1 Zero) n1 )
   :: nRight;
 
 pNPlus0isN;
@@ -282,9 +282,9 @@ let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
 
 sc snd1 A1 B1 $p;
 
-let ee = exists (x :: Nat) . Eq Nat x 1;
+let ee = exists (x :: Nat) . Eq Nat x (Succ Zero);
 
-let eep = dpair (exists (x :: Nat) . Eq Nat x 1) 1 (Refl Nat 1) :: ee;
+let eep = dpair (exists (x :: Nat) . Eq Nat x (Succ Zero)) (Succ Zero) (Refl Nat (Succ Zero)) :: ee;
 
 sc eep;
 

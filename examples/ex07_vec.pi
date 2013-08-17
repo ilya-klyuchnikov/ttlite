@@ -1,7 +1,7 @@
 -- sample vectors
-let v0 = VNil Nat :: Vec Nat 0;
-let v1 = VCons Nat 0 1 v0 :: Vec Nat 1;
-let v2 = VCons Nat 1 2 v1 :: Vec Nat 2;
+let v0 = VNil Nat :: Vec Nat Zero;
+let v1 = VCons Nat Zero (Succ Zero) v0 :: Vec Nat (Succ Zero);
+let v2 = VCons Nat (Succ Zero) (Succ (Succ Zero)) v1 :: Vec Nat (Succ (Succ Zero));
 
 -- generate a vector of given length from a specified element (replicate)
 let replicate =
@@ -11,7 +11,7 @@ let replicate =
       ( \ (n :: Nat) (rec :: forall (a :: *) . a -> Vec a n) (a :: *) (x :: a) -> VCons a n x (rec a x) ) )
   :: forall (n :: Nat) . forall (a :: *) . a -> Vec a n;
 
-let v3 = replicate 3 Nat 0;
+--let v3 = replicate 3 Nat 0;
 
 -- generate a vector of given length n, containing the natural numbers smaller than n
 let fromto =
@@ -20,7 +20,7 @@ let fromto =
     ( VNil Nat )
     ( \ (n :: Nat) (rec :: Vec Nat n) -> VCons Nat n n rec );
 
-let v4 = fromto 4;
+--let v4 = fromto 4;
 
 
 
