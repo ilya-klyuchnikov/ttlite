@@ -15,13 +15,13 @@ package object tt {
   case class Local(i: Int) extends Name
   case class Quote(i: Int) extends Name
 
-  sealed trait MetaTerm {
-    def @@(t1: MetaTerm) = MApp(this, t1)
+  sealed trait MTerm {
+    def @@(t1: MTerm) = MApp(this, t1)
   }
-  case class MApp(t1: MetaTerm, t2: MetaTerm) extends MetaTerm
-  case class MAnn(t1: MetaTerm, t2: MetaTerm) extends MetaTerm
-  case class MVar(n: Name) extends MetaTerm
-  case class MBind(id: String, tp: MetaTerm, body: MetaTerm) extends MetaTerm
+  case class MApp(t1: MTerm, t2: MTerm) extends MTerm
+  case class MAnn(t1: MTerm, t2: MTerm) extends MTerm
+  case class MVar(n: Name) extends MTerm
+  case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm
 
   // statements in the input file
   // TODO: test commands, external commands
@@ -54,35 +54,33 @@ package object tt {
     override val lexical = new MetaLexical
     lexical.delimiters += ("(", ")", "::", ".")
 
-    type Ctx = List[String]
-    type Res[A] = Ctx => A
+    type C = List[String]
+    type Res = C => MTerm
 
-    lazy val term: PackratParser[Res[MetaTerm]] = optTyped
-    lazy val aTerm: PackratParser[Res[MetaTerm]] =
+    lazy val term: PackratParser[Res] = optTyped
+    lazy val aTerm: PackratParser[Res] =
       mVar | "(" ~> term <~ ")"
-    lazy val mVar: PackratParser[Res[MetaTerm]] =
-      ident ^^ {i => ctx: Ctx => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}}
-    lazy val app: PackratParser[Res[MetaTerm]] =
-      (aTerm+) ^^ {ts => ctx: Ctx => ts.map{_(ctx)}.reduce(MApp)}
-    lazy val bind: PackratParser[Res[MetaTerm]] =
-      ident ~ (arg+) ~ ("." ~> term) ^^ {case id ~ args ~ body => ctx: Ctx =>
-        def mkBind(xs: List[(String, Res[MetaTerm])], c: Ctx): MetaTerm = xs match {
+    lazy val mVar: PackratParser[Res] =
+      ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}}
+    lazy val app: PackratParser[Res] =
+      (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce(MApp)}
+    lazy val bind: PackratParser[Res] =
+      ident ~ (arg+) ~ ("." ~> term) ^^ {case id ~ args ~ body => ctx: C =>
+        def mkBind(xs: List[(String, Res)], c: C): MTerm = xs match {
           case Nil => body(c)
           case (n, tp) :: xs => MBind(id, tp(c), mkBind(xs, n :: c))
         }
         mkBind(args, ctx)
       }
-    lazy val untyped: PackratParser[Res[MetaTerm]] = bind | app
-    lazy val optTyped: PackratParser[Res[MetaTerm]] =
-      untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: Ctx => MAnn(e(ctx), t(ctx))} | untyped
-    val arg: PackratParser[(String, Res[MetaTerm])] =
+    lazy val untyped: PackratParser[Res] = bind | app
+    lazy val optTyped: PackratParser[Res] =
+      untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
+    val arg: PackratParser[(String, Res)] =
       "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
     def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
     def parseIO[A](p: Parser[A], in: String): Option[A] =
       phrase(p)(new lexical.Scanner(in)).map(Some(_)).getOrElse(None)
-
-    def parseMTerm(in: String) =
-      parseIO(term, in).map(_(Nil)).get
+    def parseMTerm(in: String) = parseIO(term, in).map(_(Nil)).get
   }
 
 }
