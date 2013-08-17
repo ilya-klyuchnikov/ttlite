@@ -57,7 +57,7 @@ package object tt {
     type Ctx = List[String]
     type Res[A] = Ctx => A
 
-    lazy val term: PackratParser[Res[MetaTerm]] = maybeTyped
+    lazy val term: PackratParser[Res[MetaTerm]] = optTyped
     lazy val aTerm: PackratParser[Res[MetaTerm]] =
       mVar | "(" ~> term <~ ")"
     lazy val mVar: PackratParser[Res[MetaTerm]] =
@@ -65,24 +65,18 @@ package object tt {
     lazy val app: PackratParser[Res[MetaTerm]] =
       (aTerm+) ^^ {ts => ctx: Ctx => ts.map{_(ctx)}.reduce(MApp)}
     lazy val bind: PackratParser[Res[MetaTerm]] =
-      ident >> {id => arg(id) ~ args(id)} ^^ { case b ~ t1 => ctx: Ctx =>
-        val (id, n, t) = b(ctx)
-        MBind(id, t, t1(n :: ctx))
+      ident ~ (arg+) ~ ("." ~> term) ^^ {case id ~ args ~ body => ctx: Ctx =>
+        def mkBind(xs: List[(String, Res[MetaTerm])], c: Ctx): MetaTerm = xs match {
+          case Nil => body(c)
+          case (n, tp) :: xs => MBind(id, tp(c), mkBind(xs, n :: c))
+        }
+        mkBind(args, ctx)
       }
     lazy val untyped: PackratParser[Res[MetaTerm]] = bind | app
-    lazy val maybeTyped: PackratParser[Res[MetaTerm]] =
+    lazy val optTyped: PackratParser[Res[MetaTerm]] =
       untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: Ctx => MAnn(e(ctx), t(ctx))} | untyped
-    def arg(id: String): PackratParser[Res[(String, String, MetaTerm)]] =
-      "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => ctx: Ctx => (id, i, x(ctx))}
-    def args(id: String): PackratParser[Res[MetaTerm]] = {
-      val b: PackratParser[Res[(String, String, MetaTerm)]] = arg(id)
-      lazy val parser: PackratParser[Res[MetaTerm]] =
-        "." ~> term | b ~ parser ^^ { case b ~ t1 => ctx: Ctx =>
-          val (_, n, t) = b(ctx)
-          MBind(id, t, t1(n :: ctx))
-        }
-      parser
-    }
+    val arg: PackratParser[(String, Res[MetaTerm])] =
+      "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
     def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
     def parseIO[A](p: Parser[A], in: String): Option[A] =
       phrase(p)(new lexical.Scanner(in)).map(Some(_)).getOrElse(None)
