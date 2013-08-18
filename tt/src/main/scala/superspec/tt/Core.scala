@@ -64,6 +64,31 @@ trait CoreAST {
 
 }
 
+/**
+ * Translation of MetaLanguage into concrete language
+ */
+trait MCore extends CoreAST {
+  def fromM(m: MTerm): Term = m match {
+    case MVar(Quote(i)) =>
+      Bound(i)
+    case MVar(n) =>
+      Free(n)
+    case MAnn(t1, t2) =>
+      Ann(fromM(t1), fromM(t2))
+    case MVar(Global("elim")) :@@: tp =>
+      sys.error(s"incorrect eliminator: $m")
+    case t1 :@@: t2 =>
+      fromM(t1) @@ fromM(t2)
+    case MBind("forall", t1, t2) =>
+      Pi(fromM(t1), fromM(t2))
+    case MBind("\\", t1, t2) =>
+      Lam(fromM(t1), fromM(t2))
+    case MBind("exists", t1, t2) =>
+      Sigma(fromM(t1), fromM(t2))
+  }
+
+}
+
 trait CorePrinter extends CoreAST with PrettyPrinter {
   def parensIf(b: Boolean, d: Doc) =
     if (b) parens(d) else d
@@ -376,7 +401,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
 
   trait CoreParser extends Interpreter with PackratParsers with ImplicitConversions {
     lexical.reserved += ("assume", "let", "forall", "import", "sc", "sc2", "exists", "dpair", "sigmaElim")
-    lexical.delimiters += ("(", ")", "::", ":=", "->", "=>", ":", "*", "=", "\\", ";", ".", "<", ">", ",")
+    lexical.delimiters += ("(", ")", "::", "->", "*", "=", "\\", ";", ".")
 
     type C = List[String]
     type Res[A] = C => A

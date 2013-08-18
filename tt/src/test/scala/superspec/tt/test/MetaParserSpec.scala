@@ -14,8 +14,8 @@ class MetaParserSpec extends org.scalatest.FunSpec {
     }
 
     it("should parse assumed application") {
-      assert(MetaParser.parseMTerm("$x $x") === MApp(MVar(Assumed("$x")), MVar(Assumed("$x"))))
-      assert(MetaParser.parseMTerm("$x $x $x") === MApp(MApp(MVar(Assumed("$x")), MVar(Assumed("$x"))), MVar(Assumed("$x"))))
+      assert(MetaParser.parseMTerm("$x $x") === MVar(Assumed("$x")) @@ MVar(Assumed("$x")))
+      assert(MetaParser.parseMTerm("$x $x $x") === MVar(Assumed("$x")) @@ MVar(Assumed("$x")) @@ MVar(Assumed("$x")))
     }
 
     it("should parse annotated term") {
@@ -33,9 +33,8 @@ class MetaParserSpec extends org.scalatest.FunSpec {
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(0)))))
       assert(MetaParser.parseMTerm("forall (x :: a) . forall (y :: x) . x") ==
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
-
       assert(MetaParser.parseMTerm("forall (x :: a) . exists (y :: x) . f x") ===
-        MBind("forall",MVar(Global("a")),MBind("exists",MVar(Quote(0)),MApp(MVar(Global("f")),MVar(Quote(1))))))
+        MBind("forall", MVar(Global("a")), MBind("exists",MVar(Quote(0)), MVar(Global("f")) @@ MVar(Quote(1)))))
     }
 
   }

@@ -1,26 +1,26 @@
 package superspec.tt
 
+trait Command
+case class TypeOf(in: String) extends Command
+case class Compile(cf: CompileForm) extends Command
+case class Reload(f: String) extends Command
+case object Browse extends Command
+case object Quit extends Command
+case object Help extends Command
+case object Noop extends Command
+
+trait CompileForm
+case class CompileInteractive(s: String) extends CompileForm
+case class CompileFile(f: String) extends CompileForm
+
+case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
+
 trait REPL {
   import scala.language.postfixOps
   import scala.util.parsing.combinator.PackratParsers
   import scala.util.parsing.combinator.syntactical.StandardTokenParsers
   import scala.util.parsing.combinator.lexical.StdLexical
   import org.kiama.util.JLineConsole
-
-  trait Command
-  case class TypeOf(in: String) extends Command
-  case class Compile(cf: CompileForm) extends Command
-  case class Reload(f: String) extends Command
-  case object Browse extends Command
-  case object Quit extends Command
-  case object Help extends Command
-  case object Noop extends Command
-
-  trait CompileForm
-  case class CompileInteractive(s: String) extends CompileForm
-  case class CompileFile(f: String) extends CompileForm
-
-  case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
 
   type T // term
   type V // value
@@ -33,26 +33,25 @@ trait REPL {
   case class State(interactive: Boolean, ne: NameEnv[V], ctx: NameEnv[V], modules: Set[String])
 
   def handleError() {
-    if (batch) {
-      throw new Exception
-    }
+    if (batch) throw new Exception
   }
 
   def output(x: Any) {
-    if (!batch) {
-      Console.println(x)
-    }
+    if (!batch) Console.println(x)
   }
 
   class CoreLexical extends StdLexical {
     import scala.util.parsing.input.CharArrayReader._
     override def whitespace: Parser[Any] = rep(
       whitespaceChar
-        | '/' ~ '*' ~ comment
-        | '/' ~ '/' ~ rep( chrExcept(EofCh, '\n') )
+        | '{' ~ '-' ~ comment
         | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
-        | '/' ~ '*' ~ failure("unclosed comment")
+        | '{' ~ '-' ~ failure("unclosed comment")
     )
+    override protected def comment: Parser[Any] = (
+      '-' ~ '}'  ^^ { case _ => ' '  }
+        | chrExcept(EofCh) ~ comment
+      )
     override def identChar = letter | elem('_') | elem('$')
   }
 
