@@ -43,6 +43,7 @@ package object tt {
   }
   object MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
     override val lexical = new MetaLexical
+    lexical.reserved += ("assume", "let", "import", "sc", "sc2")
     lexical.delimiters += ("(", ")", "::", ".")
     type C = List[String]
     type Res = C => MTerm
@@ -66,6 +67,17 @@ package object tt {
       untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
     val arg: PackratParser[(String, Res)] =
       "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
+    lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
+    lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt)
+    lazy val letStmt: PackratParser[Stmt[MTerm]] =
+      "let" ~> ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
+    lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
+      "assume" ~> (arg+) <~ ";" ^^ {bs => Assume(bs.map(b=> (b._1, b._2(Nil))))}
+    lazy val importStmt: PackratParser[Stmt[MTerm]] =
+      "import" ~> stringLit <~ ";" ^^ Import
+    lazy val evalStmt: PackratParser[Stmt[MTerm]] =
+      term <~ ";" ^^ {t => Eval(t(Nil))}
+
     def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
     def parseIO[A](p: Parser[A], in: String): Option[A] =
       phrase(p)(new lexical.Scanner(in)).map(Some(_)).getOrElse(None)
