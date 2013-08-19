@@ -3,17 +3,26 @@ package superspec
 package object tt {
   // NAMES
   sealed trait Name
-  case class Global(n: String) extends Name
-  case class Assumed(n: String) extends Name
-  // TODO: do we need local and quote together? is it possible to use only one of them?
-  case class Local(i: Int) extends Name
-  case class Quote(i: Int) extends Name
+  case class Global(n: String) extends Name {
+    override def toString = n
+  }
+  case class Assumed(n: String) extends Name {
+    override def toString = n
+  }
+  case class Local(i: Int) extends Name {
+    override def toString = s"<$i>"
+  }
+  case class Quote(i: Int) extends Name {
+    override def toString = s"$i"
+  }
   // META-SYNTAX
   sealed trait MTerm {
-    def @@(t1: MTerm) = :@@:(this, t1)
+    def ~(t1: MTerm) = @@(this, t1)
   }
   case class MVar(n: Name) extends MTerm
-  case class :@@:(t1: MTerm, t2: MTerm) extends MTerm
+  case class @@(t1: MTerm, t2: MTerm) extends MTerm {
+    override def toString = s"$t1 ~ $t2"
+  }
   case class MAnn(t1: MTerm, t2: MTerm) extends MTerm
   case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm
   implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
@@ -39,12 +48,13 @@ package object tt {
       '-' ~ '}'  ^^ { case _ => ' '  }
         | chrExcept(EofCh) ~ comment
       )
-    override def identChar = letter | elem('_') | elem('$')
+    override def identChar = letter | elem('_') | elem('$') | elem('\\') | elem('*')
   }
+
   object MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
     override val lexical = new MetaLexical
     lexical.reserved += ("assume", "let", "import", "sc", "sc2")
-    lexical.delimiters += ("(", ")", "::", ".")
+    lexical.delimiters += ("(", ")", "::", ".", "=", "->", ";")
     type C = List[String]
     type Res = C => MTerm
     lazy val term: PackratParser[Res] = optTyped
@@ -53,9 +63,9 @@ package object tt {
     lazy val mVar: PackratParser[Res] =
       ident ^^ {i => ctx: C => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}}
     lazy val app: PackratParser[Res] =
-      (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce(_ @@ _)}
+      (aTerm+) ^^ {ts => ctx: C => ts.map{_(ctx)}.reduce(_ ~ _)}
     lazy val bind: PackratParser[Res] =
-      ident ~ (arg+) ~ ("." ~> term) ^^ {case id ~ args ~ body => ctx: C =>
+      ident ~ (arg+) ~ (("." | "->") ~> term) ^^ {case id ~ args ~ body => ctx: C =>
         def mkBind(xs: List[(String, Res)], c: C): MTerm = xs match {
           case Nil => body(c)
           case (n, tp) :: xs => MBind(id, tp(c), mkBind(xs, n :: c))
@@ -79,10 +89,16 @@ package object tt {
       term <~ ";" ^^ {t => Eval(t(Nil))}
 
     def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
-    def parseIO[A](p: Parser[A], in: String): Option[A] =
-      phrase(p)(new lexical.Scanner(in)).map(Some(_)).getOrElse(None)
+    def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
+      case t if t.successful =>
+        Some(t.get)
+      case t              =>
+        Console.println(s"cannot parse: $t")
+        None
+    }
     def parseMTerm(in: String) = parseIO(term, in).map(_(Nil)).get
   }
+
   // MISC
   type NameEnv[V] = Map[Name, V]
   val ids = "abcdefghijklmnopqrstuvwxyz"

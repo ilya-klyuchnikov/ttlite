@@ -14,7 +14,7 @@ object SuperSpecBuild extends Build {
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD")
-    ) ++ ScctPlugin.instrumentSettings
+    ) //++ ScctPlugin.instrumentSettings
   )
 
   lazy val SuperSpecProject = Project("tt-sc", file("tt-sc"),
@@ -25,7 +25,7 @@ object SuperSpecBuild extends Build {
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file(".")
-    ) ++ ScctPlugin.instrumentSettings
+    ) //++ ScctPlugin.instrumentSettings
   ) dependsOn(TTProject)
 
   lazy val root = Project(id = "superspec", base = file(".")) aggregate(TTProject, SuperSpecProject)

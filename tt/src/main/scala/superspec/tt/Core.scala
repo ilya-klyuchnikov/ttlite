@@ -64,29 +64,31 @@ trait CoreAST {
 
 }
 
-/**
- * Translation of MetaLanguage into concrete language
- */
 trait MCore extends CoreAST {
   def fromM(m: MTerm): Term = m match {
+    case MVar(Global("*")) =>
+      Star
     case MVar(Quote(i)) =>
       Bound(i)
     case MVar(n) =>
       Free(n)
     case MAnn(t1, t2) =>
       Ann(fromM(t1), fromM(t2))
-    case MVar(Global("elim")) :@@: tp =>
+    case MVar(Global("elim")) @@ tp =>
       sys.error(s"incorrect eliminator: $m")
-    case t1 :@@: t2 =>
-      fromM(t1) @@ fromM(t2)
+    case MVar(Global("sigmaElim")) @@ sigma @@ m @@ f @@ p =>
+      SigmaElim(fromM(sigma), fromM(m), fromM(f), fromM(p))
+    case MVar(Global("dpair")) @@ sigma @@ e1 @@ e2 =>
+      DPair(fromM(sigma), fromM(e1), fromM(e2))
     case MBind("forall", t1, t2) =>
       Pi(fromM(t1), fromM(t2))
     case MBind("\\", t1, t2) =>
       Lam(fromM(t1), fromM(t2))
     case MBind("exists", t1, t2) =>
       Sigma(fromM(t1), fromM(t2))
+    case t1 @@ t2 =>
+      fromM(t1) @@ fromM(t2)
   }
-
 }
 
 trait CorePrinter extends CoreAST with PrettyPrinter {
@@ -176,7 +178,7 @@ trait CoreQuote extends CoreAST {
       SigmaElim(quote(ii, sigma), quote(ii, m), quote(ii, f), neutralQuote(ii, p))
   }
 
-  // the problem is here!!!
+  // the possible problem is here!!!
   def boundFree(ii: Int, n: Name): Term = n match {
     case Quote(k) =>
       Bound(math.max(ii - k - 1, 0))
@@ -441,7 +443,7 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
         }
     }
     lazy val lamBs: PackratParser[Res[Term]] = {
-      "->" ~> term |
+      ("->" | ".") ~> term |
         bindingPar ~ lamBs ^^ { case b ~ t1 => ctx: C =>
           val bb = b(ctx)
           val t = bb._2
@@ -530,4 +532,50 @@ trait CoreREPL extends CoreAST with CorePrinter with CoreEval with CoreCheck wit
     override lazy val iParse: Parser[Term] = term ^^ {_(Nil)}
     override val stmtParse: Parser[Stmt[Term]] = stmt
   }
+}
+
+trait CoreREPL2 extends CoreAST with MCore with CorePrinter with CoreEval with CoreCheck with CoreQuote with MREPL {
+  type T = Term
+  type V = Value
+
+  val prompt: String = "TT"
+
+  override def itype(ne: NameEnv[Value], ctx: NameEnv[Value], i: Term): Result[Value] =
+    try {
+      Right(iType0(ne, ctx, i))
+    } catch {
+      case e: Throwable =>
+        e.printStackTrace()
+        Left(e.getMessage)
+    }
+  override def iquote(v: Value): Term =
+    quote0(v)
+  override def ieval(ne: NameEnv[Value], i: Term): Value =
+    eval(i, ne, List())
+  def typeInfo(t: Value): Value =
+    t
+  override def icprint(c: Term): String =
+    pretty(print(0, 0, c))
+  override def itprint(t: Value): String =
+    pretty(print(0, 0, quote0(t)))
+  def assume(state: State, x: (String, Term)): State = {
+    x._2 match {
+      case Star =>
+        output(icprint(iquote(VStar)))
+        state.copy(ctx = state.ctx + (s2name(x._1) -> VStar))
+      case _ =>
+        itype(state.ne, state.ctx, Ann(x._2, Star)) match {
+          case Right(_) =>
+            val v = ieval(state.ne, Ann(x._2, Star))
+            output(icprint(iquote(v)))
+            state.copy(ctx = state.ctx + (s2name(x._1) -> v))
+          case Left(_) =>
+            state
+        }
+    }
+  }
+
+  def s2name(s: String): Name =
+    if (s.startsWith("$")) Assumed(s) else Global(s)
+
 }

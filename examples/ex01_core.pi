@@ -1,18 +1,17 @@
 let t = \ (x :: *) -> x;
 
-let id  = (\ (a :: *) (x :: a) -> x )
-    :: forall (a :: *) . a -> a;
+let id  = (\ (a :: *) (x :: a) . x )
+    :: forall (a :: *) (x :: a) . a;
 let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *). forall (b :: *) . a -> b -> a;
+    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
 
 let const1 = (\ (a :: *) (x :: a) (b :: *) (y :: b) -> x)
-    :: forall (a :: *). a -> forall (b :: *) . b -> a;
+    :: forall (a :: *) (_ :: a) (b :: *) (_ :: b) . a;
 
 -- TODO we need true universes here in order to specify fst and snd
 -- let fst = sigmaElim (exists (x :: Nat) . Eq Nat x 1;)
 
 let tmp = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) -> p;
-
 
 assume (A :: *);
 assume (B :: *);
@@ -47,15 +46,14 @@ let snd = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) ->
                 p;
 
 -- true fst - works only with universes or with macros
-
-let fst1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
+let fst1 = \ (a :: *) (b :: (forall (_ :: a). *)) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (_ :: exists (x :: a) . b x) -> a)
                 (\(x :: a) (y :: b x) -> x)
                 p;
 
-let snd1 = \ (a :: *) (b :: a -> *) (p :: (exists (x :: a) . b x)) ->
+let snd1 = \ (a :: *) (b :: (forall (_ :: a). *)) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))

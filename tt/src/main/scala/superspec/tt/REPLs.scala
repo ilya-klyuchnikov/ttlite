@@ -5,6 +5,8 @@ object CoreREPLMain extends CoreREPL {
     State(true, emptyNEnv, emptyNEnv, Set())
 }
 
+object CoreREPLMain2 extends CoreREPL2
+
 object NatREPLMain extends NatREPL {
   override def initialState =
     State(interactive = true, natVE, natTE, Set())
