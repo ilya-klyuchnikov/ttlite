@@ -6,6 +6,7 @@ object CoreREPLMain extends CoreREPL {
 }
 
 object CoreREPLMain2 extends CoreREPL2
+object SumREPLMain2 extends CoreREPL2 with SumREPL2
 
 object NatREPLMain extends NatREPL {
   override def initialState =

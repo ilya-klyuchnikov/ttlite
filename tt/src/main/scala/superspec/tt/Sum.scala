@@ -12,6 +12,20 @@ trait SumAST extends CoreAST {
   case class NSumElim(L: Value, R: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
+trait MSum extends MCore with SumAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Sum")) @@ l @@ r =>
+      Sum(fromM(l), fromM(r))
+    case MVar(Global("InL")) @@ l @@ r @@ inj =>
+      InL(fromM(l), fromM(r), fromM(inj))
+    case MVar(Global("InR")) @@ l @@ r @@ inj =>
+      InR(fromM(l), fromM(r), fromM(inj))
+    case MVar(Global("sumElim")) @@ l @@ r @@ m @@ lc @@ rc @@ inj =>
+      SumElim(fromM(l), fromM(r), fromM(m), fromM(lc), fromM(rc), fromM(inj))
+    case _ => super.fromM(m)
+  }
+}
+
 trait SumPrinter extends CorePrinter with SumAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
@@ -203,3 +217,5 @@ trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with Su
     )
 
 }
+
+trait SumREPL2 extends CoreREPL2 with SumAST with MSum with SumPrinter with SumCheck with SumEval with SumQuote

@@ -63,5 +63,9 @@ class ReplSpec2 extends org.scalatest.FunSpec {
   describe("Core REPL should process `examples/ex01_core.pi` without errors") {
     CoreREPLMain2.main(Array("examples/ex01_core.pi"))
   }
+
+  describe("Sum REPL should process `examples/ex04_sum.pi` without errors") {
+    SumREPLMain2.main(Array("examples/ex04_sum.pi"))
+  }
 }
 

@@ -1,5 +1,11 @@
 let thSum01 =
-    forall (A :: *) (B :: *). Sum A B -> Sum B A;
+    forall (A :: *) (B :: *) (_ :: Sum A B) . Sum B A;
+
 let proofSum01 =
-    (\ (A :: *) (B :: *) (s :: Sum A B) -> sumElim A B (\ (_ :: Sum A B) -> Sum B A) (InR B A) (InL B A) s)
+    (\ (A :: *) (B :: *) (s :: Sum A B) ->
+        sumElim A B
+            (\ (_ :: Sum A B) -> Sum B A)
+            (\ (a :: A) . InR B A a)
+            (\ (b :: B) . InL B A b)
+            s)
         :: thSum01;
