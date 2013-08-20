@@ -1,28 +1,35 @@
-let id  = (\ (a :: *) (x :: a) -> x )
-    :: forall (a :: *) . a -> a;
+let id  = (\ (a :: *) (x :: a) . x )
+    :: forall (a :: *) (x :: a) . a;
 let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *). forall (b :: *) . a -> b -> a;
-
+    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
 
 -- addition of natural numbers
 let plus =
-  natElim
-    ( \ (_ :: Nat) -> Nat -> Nat )           -- motive
-    ( \ (n :: Nat) -> n )                    -- case for Zero
-    ( \ (p :: Nat) (rec :: Nat -> Nat) (n :: Nat) -> Succ (rec n) );   -- case for Succ
+    \ (n :: Nat) .
+        natElim
+            (\ (_ :: Nat) . forall (_ :: Nat) . Nat )
+            (\ (n :: Nat) . n )
+            (\ (p :: Nat) (rec :: forall (_ :: Nat) . Nat) (n :: Nat) -> Succ (rec n) )
+            n;
+
+let x = Zero :: Nat;
 
 -- predecessor, mapping 0 to 0
 let pred =
-  natElim
-    ( \ (_ :: Nat) -> Nat )
-    Zero
-    ( \ (n1 :: Nat) (rec :: Nat) -> n1 );
+    \ (n :: Nat) .
+        natElim
+            ( \ (_ :: Nat) . Nat )
+            Zero
+            ( \ (n1 :: Nat) (rec :: Nat) . n1 )
+            n;
 
--- a simpler elimination scheme for natural numbers
+-- a simpler elimination scheme for natural numbers:
+-- a result type doesn't depend on n
 let natFold =
-  ( \ (m :: *) (mz :: m) (ms :: m -> m) ->
-            natElim
-                   ( \ (_ :: Nat) -> m )
-                   mz
-                   ( \ (n1 :: Nat) (rec :: m) -> ms rec ) )
-  :: forall (m :: *) . m -> (m -> m) -> Nat -> m;
+    ( \ (m :: *) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
+        natElim
+            (\ (_ :: Nat) -> m )
+             mz
+             (\ (n1 :: Nat) (rec :: m) -> ms rec )
+             n )
+  :: forall (m :: *) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;

@@ -12,6 +12,20 @@ trait NatAST extends CoreAST {
   case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
+trait MNat extends MCore with NatAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Nat")) =>
+      Nat
+    case MVar(Global("Zero")) =>
+      Zero
+    case MVar(Global("Succ")) @@ n =>
+      Succ(fromM(n))
+    case MVar(Global("natElim")) @@ m @@ cZ @@ cS @@ n =>
+      NatElim(fromM(m), fromM(cZ), fromM(cS), fromM(n))
+    case _ => super.fromM(m)
+  }
+}
+
 trait NatPrinter extends CorePrinter with NatAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
@@ -151,3 +165,5 @@ trait NatREPL extends CoreREPL with NatAST with NatPrinter with NatCheck with Na
                 eval(NatElim(Bound(3), Bound(2), Bound(1), Bound(0)), natVE, List(n, sCase, zCase, m))}))))
     )
 }
+
+trait NatREPL2 extends CoreREPL2 with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote

@@ -1,14 +1,26 @@
 package superspec.tt
 
 trait EqAST extends CoreAST {
-  // Refl A x :: Eq A x x
   case class Eq(A: Term, x: Term, y: Term) extends Term
   case class Refl(A: Term, x: Term) extends Term
   // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
   case class EqElim(A: Term, prop: Term, propR: Term, x: Term, y: Term, eq: Term) extends Term
+
   case class VEq(A: Value, x: Value, y: Value) extends Value
   case class VRefl(A: Value, x: Value) extends Value
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
+}
+
+trait MEq extends MCore with EqAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Eq")) @@ a @@ x @@ y =>
+      Eq(fromM(a), fromM(x), fromM(y))
+    case MVar(Global("Refl")) @@ a @@ x =>
+      Refl(fromM(a), fromM(x))
+    case MVar(Global("eqElim")) @@ a @@ p @@ pr @@ x @@ y @@ eq =>
+      EqElim(fromM(a), fromM(p), fromM(pr), fromM(x), fromM(y), fromM(eq))
+    case _ => super.fromM(m)
+  }
 }
 
 trait EqPrinter extends CorePrinter with EqAST {
@@ -177,3 +189,5 @@ trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval
                       List(eq, y, x, propR, prop, a))}))))))
     )
 }
+
+trait EqREPL2 extends CoreREPL2 with EqAST with MEq with EqPrinter with EqCheck with EqEval with EqQuote

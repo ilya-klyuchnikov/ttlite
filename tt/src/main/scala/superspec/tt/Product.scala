@@ -10,6 +10,18 @@ trait ProductAST extends CoreAST {
   case class NProductElim(A: Value, B: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
+trait MProduct extends MCore with ProductAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Product")) @@ a @@ b =>
+      Product(fromM(a), fromM(b))
+    case MVar(Global("Pair")) @@ a @@ b @@ x @@ y =>
+      Pair(fromM(a), fromM(b), fromM(x), fromM(y))
+    case MVar(Global("productElim")) @@ a @@ b @@ m @@ f @@ p =>
+      ProductElim(fromM(a), fromM(b), fromM(m), fromM(f), fromM(p))
+    case _ => super.fromM(m)
+  }
+}
+
 trait ProductPrinter extends CorePrinter with ProductAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
@@ -164,3 +176,5 @@ trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with Prod
 
     )
 }
+
+trait ProductREPL2 extends CoreREPL2 with ProductAST with MProduct with ProductPrinter with ProductCheck with ProductEval with ProductQuote

@@ -5,20 +5,24 @@ let v2 = VCons Nat (Succ Zero) (Succ (Succ Zero)) v1 :: Vec Nat (Succ (Succ Zero
 
 -- generate a vector of given length from a specified element (replicate)
 let replicate =
-  ( natElim
-      ( \ (n :: Nat) -> forall (a :: *) . a -> Vec a n )
-      ( \ (a :: *) (_ :: a) -> VNil a )
-      ( \ (n :: Nat) (rec :: forall (a :: *) . a -> Vec a n) (a :: *) (x :: a) -> VCons a n x (rec a x) ) )
-  :: forall (n :: Nat) . forall (a :: *) . a -> Vec a n;
+    (\ (n :: Nat) ->
+        natElim
+            (\ (n :: Nat) -> forall (a :: *) (_ :: a) . Vec a n )
+            (\ (a :: *) (_ :: a) -> VNil a )
+            (\ (n :: Nat) (rec :: forall (a :: *) (_ :: a) . Vec a n) (a :: *) (x :: a) -> VCons a n x (rec a x) )
+             n )
+  :: forall (n :: Nat) . forall (a :: *) (_ :: a) . Vec a n;
 
 --let v3 = replicate 3 Nat 0;
 
 -- generate a vector of given length n, containing the natural numbers smaller than n
 let fromto =
-  natElim
-    ( \ (n :: Nat) -> Vec Nat n )
-    ( VNil Nat )
-    ( \ (n :: Nat) (rec :: Vec Nat n) -> VCons Nat n n rec );
+    \ (n :: Nat) ->
+        natElim
+        ( \ (n :: Nat) -> Vec Nat n )
+        ( VNil Nat )
+        ( \ (n :: Nat) (rec :: Vec Nat n) -> VCons Nat n n rec )
+        n;
 
 --let v4 = fromto 4;
 

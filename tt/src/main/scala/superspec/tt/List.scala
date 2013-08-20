@@ -12,6 +12,20 @@ trait ListAST extends CoreAST {
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
+trait MList extends MCore with ListAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("List")) @@ a =>
+      PiList(fromM(a))
+    case MVar(Global("Nil")) @@ a =>
+      PiNil(fromM(a))
+    case MVar(Global("Cons")) @@ a @@ h @@ t =>
+      PiCons(fromM(a), fromM(h), fromM(t))
+    case MVar(Global("listElim")) @@ a @@ m @@ cN @@ cC @@ n =>
+      PiListElim(fromM(a), fromM(m), fromM(cN), fromM(cC), fromM(n))
+    case _ => super.fromM(m)
+  }
+}
+
 trait ListPrinter extends CorePrinter with ListAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
@@ -182,3 +196,5 @@ trait ListREPL extends CoreREPL with ListAST with ListPrinter with ListCheck wit
                 })))))
     )
 }
+
+trait ListREPL2 extends CoreREPL2 with ListAST with MList with ListPrinter with ListCheck with ListEval with ListQuote

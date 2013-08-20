@@ -10,6 +10,30 @@ trait FinAST extends CoreAST {
   case class NFinElim(n: Int, motive: Value, cases: List[Value], elem: Neutral) extends Neutral
 }
 
+trait MFin extends MCore with FinAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Fin_0")) =>
+      Fin(0)
+    case MVar(Global("Fin_1")) =>
+      Fin(1)
+    case MVar(Global("Fin_2")) =>
+      Fin(2)
+    case MVar(Global("finElem_1_1")) =>
+      FinElem(1, 1)
+    case MVar(Global("finElem_1_2")) =>
+      FinElem(1, 2)
+    case MVar(Global("finElem_2_2")) =>
+      FinElem(2, 2)
+    case MVar(Global("finElim_0")) @@ m @@ el =>
+      FinElim(0, fromM(m), List(), fromM(el))
+    case MVar(Global("finElim_1")) @@ m @@ c1 @@ el =>
+      FinElim(1, fromM(m), List(fromM(c1)), fromM(el))
+    case MVar(Global("finElim_2")) @@ m @@ c1 @@ c2 @@ el =>
+      FinElim(2, fromM(m), List(fromM(c1), fromM(c2)), fromM(el))
+    case _ => super.fromM(m)
+  }
+}
+
 trait FinPrinter extends CorePrinter with FinAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Fin(n) =>
@@ -127,3 +151,5 @@ trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with Fi
   lazy val finTE = finsTE ++ finElemsTE ++ finElimsTE
   lazy val finVE = finsVE ++ finElemsVE ++ finElimsVE
 }
+
+trait FinREPL2 extends CoreREPL2 with FinAST with MFin with FinPrinter with FinCheck with FinEval with FinQuote

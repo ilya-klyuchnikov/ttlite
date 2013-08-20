@@ -12,6 +12,20 @@ trait VectorAST extends CoreAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
+trait MVector extends MNat with VectorAST {
+  override def fromM(m: MTerm): Term = m match {
+    case MVar(Global("Vec")) @@ a @@ n =>
+      Vec(fromM(a), fromM(n))
+    case MVar(Global("VNil")) @@ a =>
+      VecNil(fromM(a))
+    case MVar(Global("VCons")) @@ a @@ n @@ h @@ t =>
+      VecCons(fromM(a), fromM(n), fromM(h), fromM(t))
+    case MVar(Global("vecElim")) @@ a @@ m @@ cN @@ cC @@ n @@ xs =>
+      VecElim(fromM(a), fromM(m), fromM(cN), fromM(cC), fromM(n), fromM(xs))
+    case _ => super.fromM(m)
+  }
+}
+
 trait VectorPrinter extends NatPrinter with VectorAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
@@ -215,3 +229,5 @@ trait VectorREPL extends NatREPL with VectorAST with VectorPrinter with VectorCh
                         List(vec, n, consCase, nilCase, m, a))})))))))
     )
 }
+
+trait VectorREPL2 extends NatREPL2 with VectorAST with MVector with VectorPrinter with VectorCheck with VectorEval with VectorQuote
