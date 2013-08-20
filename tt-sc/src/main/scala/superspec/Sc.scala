@@ -88,7 +88,7 @@ trait TTSc extends CoreSubst {
   }
 }
 
-trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreREPL {
+trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreQuote {
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
   def residuate(g: TG, nEnv: NameEnv[Value]): Value = {
@@ -265,3 +265,128 @@ object TTScREPL
     val maxDepth = 20
   }
 }
+
+object TTScREPL2
+  extends TTSc
+  with BaseResiduator
+  with GraphPrettyPrinter2
+  with CoreREPL2
+  with CoreSubst
+  with CoreDriver
+  with CoreResiduator
+  with NatREPL2
+  with NatDriver
+  with NatResiduator
+  with ListREPL2
+  with ListDriver
+  with ListResiduator
+  with ProductREPL2
+  with ProductDriver
+  with ProductResiduator
+  with EqREPL2
+  with EqDriver
+  with EqResiduator
+  with EqProofResiduator
+  with SumREPL2
+  with SumDriver
+  with SumResiduator
+  with FinREPL2
+  with FinDriver
+  with FinResiduator
+  with ProofResiduator
+  with CoreProofResiduator
+  with NatProofResiduator
+  with ListProofResiduator
+  with ProductProofResiduator
+  with SumProofResiduator
+  with FinProofResiduator
+  with DProductDriver
+  with DProductResiduator
+  with DProductProofResiduator
+{
+
+  override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
+    case SC(it0) =>
+      val it = fromM(it0)
+      iinfer(state.ne, state.ctx, it) match {
+        case None =>
+          handleError("types")
+          state
+        case Some(tp) =>
+          val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+
+          val rules = new Rules
+          val gs = GraphGenerator(rules, goal)
+          for (g <- gs) {
+            val tGraph = Transformations.transpose(g)
+            output(tgToString(tGraph))
+            val resVal = residuate(tGraph, state.ne)
+            val cTerm = iquote(resVal)
+            val cType = iquote(tp)
+
+            output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
+            output("output: [\n" + icprint(cTerm) + "\n]")
+
+            val iTerm = Ann(cTerm, cType)
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
+
+            t2 match {
+              case None =>
+                println("error for term: \n" + icprint(cTerm))
+                handleError("error for term: \n" + icprint(cTerm))
+              case Some(t3) =>
+                output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
+                output("output: [\n" + icprint(cTerm) + "\n]")
+                output("output type: " + icprint(iquote(t3)))
+            }
+          }
+      }
+      state
+    case CertSC(it0) =>
+      val it = fromM(it0)
+      iinfer(state.ne, state.ctx, it) match {
+        case None =>
+          handleError("")
+          state
+        case Some(tp) =>
+          val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+          val rules = new Rules
+          val gs = GraphGenerator(rules, goal)
+          for (g <- gs) {
+            val tGraph = Transformations.transpose(g)
+            //output(tgToString(tGraph))
+            val resVal = residuate(tGraph, state.ne)
+            val cTerm = iquote(resVal)
+            val cType = iquote(tp)
+
+            val iTerm = Ann(cTerm, cType)
+
+            val t2 = iinfer(state.ne, state.ctx, iTerm)
+            t2 match {
+              case None =>
+                handleError("")
+              case Some(t3) =>
+                output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+                val proof = proofResiduate(tGraph, state.ne)
+                val proofTerm = /*iquote(proof)*/ iquote(ieval(state.ne, iquote(proof)))
+                val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
+                val t4 = iinfer(state.ne, state.ctx, annProofTerm)
+                output("proof:")
+                output(icprint(proofTerm))
+                //output("expected type:")
+                //output(icprint(Eq(cType, it, cTerm)))
+                output("::")
+                output(icprint(iquote(t4.get)))
+            }
+          }
+      }
+      state
+    case _ =>
+      super.handleStmt(state, stmt)
+  }
+
+  class Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
+    val maxDepth = 20
+  }
+}
+

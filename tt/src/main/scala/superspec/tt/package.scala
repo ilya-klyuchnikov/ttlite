@@ -87,6 +87,10 @@ package object tt {
       "import" ~> stringLit <~ ";" ^^ Import
     lazy val evalStmt: PackratParser[Stmt[MTerm]] =
       term <~ ";" ^^ {t => Eval(t(Nil))}
+    lazy val scStmt: PackratParser[Stmt[MTerm]] =
+      "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
+    lazy val sc2Stmt: PackratParser[Stmt[MTerm]] =
+      "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
 
     def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
     def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
