@@ -38,16 +38,8 @@ trait CoreDriver extends TTSc with CoreCheck {
     case _ => decompose(c)
   }
 
-  // TODO: if override returns stop, then we can decompose
-  def driveNeutral(n: Neutral): DriveStep = n match {
-    case NApp(n, _) => driveNeutral(n)
-    case _ => StopDStep
-  }
-
-  def decompose(c: Conf): DriveStep = c.term match {
-    // TODO: decomposition of application
-    case _ => StopDStep
-  }
+  def driveNeutral(n: Neutral): DriveStep = StopDStep
+  def decompose(c: Conf): DriveStep = StopDStep
 
 }
 

@@ -26,7 +26,7 @@ trait MVector extends MNat with VectorAST {
   }
 }
 
-trait VectorPrinter extends NatPrinter with VectorAST {
+trait VectorPrinter extends FunPrinter with VectorAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
       print(p, ii, 'Vec @@ a @@ n)
@@ -41,7 +41,7 @@ trait VectorPrinter extends NatPrinter with VectorAST {
   }
 }
 
-trait VectorEval extends CoreEval with VectorAST {
+trait VectorEval extends FunEval with VectorAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
       VVec(eval(a, named, bound), eval(n, named, bound))
@@ -66,7 +66,7 @@ trait VectorEval extends CoreEval with VectorAST {
   }
 }
 
-trait VectorCheck extends CoreCheck with VectorAST with NatAST with VectorEval {
+trait VectorCheck extends FunCheck with VectorAST with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, named, bound, a)

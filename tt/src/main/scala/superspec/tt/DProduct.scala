@@ -22,7 +22,7 @@ trait MDProduct extends MCore with DProductAST {
   }
 }
 
-trait DProductPrinter extends CorePrinter with DProductAST {
+trait DProductPrinter extends FunPrinter with DProductAST {
 
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, Sigma(d1, r)) =>
@@ -63,7 +63,7 @@ trait DProductQuote extends CoreQuote with DProductAST {
   }
 }
 
-trait DProductEval extends CoreEval with DProductAST {
+trait DProductEval extends FunEval with DProductAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Sigma(ty, ty1) =>
       VSigma(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
@@ -85,7 +85,7 @@ trait DProductEval extends CoreEval with DProductAST {
   }
 }
 
-trait DProductCheck extends CoreCheck with DProductAST {
+trait DProductCheck extends FunCheck with DProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Sigma(Star, tp) =>
       val tpType = iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), tp))

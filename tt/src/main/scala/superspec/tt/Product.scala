@@ -22,7 +22,7 @@ trait MProduct extends MCore with ProductAST {
   }
 }
 
-trait ProductPrinter extends CorePrinter with ProductAST {
+trait ProductPrinter extends FunPrinter with ProductAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       print(p, ii, 'Product @@ a @@ b)
@@ -35,7 +35,7 @@ trait ProductPrinter extends CorePrinter with ProductAST {
   }
 }
 
-trait ProductEval extends CoreEval with ProductAST {
+trait ProductEval extends FunEval with ProductAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Product(a, b) =>
       VProduct(eval(a, named, bound), eval(b, named, bound))
@@ -61,7 +61,7 @@ trait ProductEval extends CoreEval with ProductAST {
     }
 }
 
-trait ProductCheck extends CoreCheck with ProductAST {
+trait ProductCheck extends FunCheck with ProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, named, bound, a)

@@ -213,6 +213,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
 
 object TTScREPL2 extends ScREPL
   with CoreREPL2 with CoreDriver with CoreResiduator with CoreProofResiduator
+  with FunREPL2 with FunDriver with FunResiduator with FunProofResiduator
   with DProductREPL2 with DProductDriver with DProductResiduator with DProductProofResiduator
   with SumREPL2 with SumDriver with SumResiduator with SumProofResiduator
   with EqREPL2 with EqDriver with EqResiduator with EqProofResiduator

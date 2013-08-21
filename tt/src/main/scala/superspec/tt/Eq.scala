@@ -23,7 +23,7 @@ trait MEq extends MCore with EqAST {
   }
 }
 
-trait EqPrinter extends CorePrinter with EqAST {
+trait EqPrinter extends FunPrinter with EqAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Eq(a, x, y) =>
       print(p, ii, 'Eq @@ a @@ x @@ y)
@@ -36,7 +36,7 @@ trait EqPrinter extends CorePrinter with EqAST {
   }
 }
 
-trait EqEval extends CoreEval with EqAST with CoreQuote {
+trait EqEval extends FunEval with EqAST with CoreQuote {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Eq(a, x, y) =>
       VEq(eval(a, named, bound), eval(x, named, bound), eval(y, named, bound))
@@ -61,7 +61,7 @@ trait EqEval extends CoreEval with EqAST with CoreQuote {
   }
 }
 
-trait EqCheck extends CoreCheck with EqAST {
+trait EqCheck extends FunCheck with EqAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Eq(a, x, y) =>
       val aVal = eval(a, named, Nil)

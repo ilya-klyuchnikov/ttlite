@@ -26,7 +26,7 @@ trait MNat extends MCore with NatAST {
   }
 }
 
-trait NatPrinter extends CorePrinter with NatAST {
+trait NatPrinter extends FunPrinter with NatAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
       "Nat"
@@ -55,7 +55,7 @@ trait NatQuote extends CoreQuote with NatAST {
   }
 }
 
-trait NatEval extends CoreEval with NatAST {
+trait NatEval extends FunEval with NatAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Zero =>
       VZero
@@ -83,7 +83,7 @@ trait NatEval extends CoreEval with NatAST {
   }
 }
 
-trait NatCheck extends CoreCheck with NatAST {
+trait NatCheck extends FunCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Nat =>
       VStar

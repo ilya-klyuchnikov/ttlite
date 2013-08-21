@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait EqDriver extends CoreDriver with EqAST {
+trait EqDriver extends CoreDriver with EqEval {
 
   case object ReflLabel extends Label
 

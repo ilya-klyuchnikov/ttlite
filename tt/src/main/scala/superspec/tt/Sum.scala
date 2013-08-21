@@ -26,7 +26,7 @@ trait MSum extends MCore with SumAST {
   }
 }
 
-trait SumPrinter extends CorePrinter with SumAST {
+trait SumPrinter extends FunPrinter with SumAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
       print(p, ii, 'Sum @@ a @@ b)
@@ -41,7 +41,7 @@ trait SumPrinter extends CorePrinter with SumAST {
   }
 }
 
-trait SumEval extends CoreEval with SumAST {
+trait SumEval extends FunEval with SumAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Sum(lt, rt) =>
       VSum(eval(lt, named, bound), eval(rt, named, bound))
@@ -72,7 +72,7 @@ trait SumEval extends CoreEval with SumAST {
     }
 }
 
-trait SumCheck extends CoreCheck with SumAST {
+trait SumCheck extends FunCheck with SumAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Sum(a, b) =>
       val aType = iType(i, named, bound, a)

@@ -14,7 +14,7 @@ case class Local(i: Int) extends Name {
   override def toString = s"<$i>"
 }
 case class Quote(i: Int) extends Name {
-  override def toString = s"$i"
+  override def toString = s"[$i]"
 }
 // META-SYNTAX
 sealed trait MTerm {

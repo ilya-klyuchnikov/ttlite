@@ -34,21 +34,27 @@ trait MFin extends MCore with FinAST {
   }
 }
 
-trait FinPrinter extends CorePrinter with FinAST {
+trait FinPrinter extends FunPrinter with FinAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Fin(n) =>
       print(p, ii, s"Fin_$n")
     case FinElem(i, n) =>
       print(p, ii, s"finElem_${i}_${n}")
-    case FinElim(n, m, cases, elem) =>
-      val t = cases.foldLeft(s"finElim_${n}" @@ m)(_ @@ _) @@ elem
+    case FinElim(0, m, cases, elem) =>
+      val t = cases.foldLeft('finElim_0 @@ m)(_ @@ _) @@ elem
+      print(p, ii, t)
+    case FinElim(1, m, cases, elem) =>
+      val t = cases.foldLeft('finElim_1 @@ m)(_ @@ _) @@ elem
+      print(p, ii, t)
+    case FinElim(2, m, cases, elem) =>
+      val t = cases.foldLeft('finElim_2 @@ m)(_ @@ _) @@ elem
       print(p, ii, t)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait FinEval extends CoreEval with FinAST {
+trait FinEval extends FunEval with FinAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Fin(n) =>
       VFin(n)
@@ -96,7 +102,7 @@ trait FinEval extends CoreEval with FinAST {
   }
 }
 
-trait FinCheck extends CoreCheck with FinAST {
+trait FinCheck extends FunCheck with FinAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Fin(n) =>
       VStar

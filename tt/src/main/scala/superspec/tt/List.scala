@@ -26,7 +26,7 @@ trait MList extends MCore with ListAST {
   }
 }
 
-trait ListPrinter extends CorePrinter with ListAST {
+trait ListPrinter extends FunPrinter with ListAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
       print(p, ii, 'List @@ a)
@@ -41,7 +41,7 @@ trait ListPrinter extends CorePrinter with ListAST {
   }
 }
 
-trait ListEval extends CoreEval with ListAST {
+trait ListEval extends FunEval with ListAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case PiList(a) =>
       VPiList(eval(a, named, bound))
@@ -70,7 +70,7 @@ trait ListEval extends CoreEval with ListAST {
   }
 }
 
-trait ListCheck extends CoreCheck with ListAST with ListEval {
+trait ListCheck extends FunCheck with ListAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case PiList(a) =>
       val aType = iType(i, named, bound, a)
