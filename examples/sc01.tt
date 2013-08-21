@@ -1,0 +1,233 @@
+let id  = (\ (a :: *) (x :: a) . x )
+    :: forall (a :: *) (x :: a) . a;
+let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
+    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
+
+let x = Zero :: Nat;
+
+-- addition of natural numbers
+let plus =
+    \ (n :: Nat) .
+        natElim
+            (\ (_ :: Nat) . forall (_ :: Nat) . Nat )
+            (\ (n :: Nat) . n )
+            (\ (p :: Nat) (rec :: forall (_ :: Nat) . Nat) (n :: Nat) -> Succ (rec n) )
+            n;
+
+-- alternative (more readable??) variation of plus
+let plus1 =
+  (\(x :: Nat) (y :: Nat) ->
+    natElim
+    ( \ (_ :: Nat) -> Nat )
+    y
+    (\ (n :: Nat) (rec :: Nat) -> Succ rec) x) ::
+    forall (a :: Nat) (b :: Nat) . Nat;
+
+-- predecessor, mapping 0 to 0
+let pred =
+    \ (n :: Nat) .
+        natElim
+            ( \ (_ :: Nat) . Nat )
+            Zero
+            ( \ (n1 :: Nat) (rec :: Nat) . n1 )
+            n;
+
+-- fZSucc0 Z        = a1 :: A
+-- fZSucc0 (Succ _) = a2 :: A
+-- this function allows to eliminate nats
+-- in simple (homo) way
+let fZSucc0 =
+    (\(A :: *) (a1 :: A) (a2 :: A) (n :: Nat) -> natElim (\(_ :: Nat) -> A) a1 (\(_ :: Nat) (pred :: A) -> a2) n)
+    :: forall (A :: *) (a1 :: A) (a2 :: A) (n :: Nat) . A;
+
+-- a simpler elimination scheme for natural numbers:
+-- a result type doesn't depend on n
+let natFold =
+    ( \ (m :: *) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
+        natElim
+            (\ (_ :: Nat) -> m )
+             mz
+             (\ (n1 :: Nat) (rec :: m) -> ms rec )
+             n )
+  :: forall (m :: *) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;
+
+-- increment by one
+let inc = natFold Nat (Succ Zero) (\ (n :: Nat) -> Succ n);
+
+let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+let append =
+  (\(a :: *) (xs :: List a) (ys :: List a) ->
+    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
+        appendType;
+
+let len =
+  (\ (a :: *) (v :: List a) -> listElim a (\ (_ :: List a) -> Nat) Zero (\ (v :: a) (vs :: List a) (w :: Nat) -> Succ w) v) ::
+    forall (a :: *) . forall (v :: List a) . Nat;
+
+let fst = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
+let snd = (\ (a :: *) (b :: *) (p :: Product a b) ->
+                    productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
+
+let xxx = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) -> (fst A B (fst (Product A B) C p)));
+let yyy = (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C) ->
+    (fst (Product A B) C p));
+
+let th2 =
+    forall (A :: *) (B :: *) (C :: *) (_ :: Product (Product A B) C) . Product A (Product B C);
+
+let pr2 =
+    (\(A :: *) (B :: *) (C :: *) (p :: Product (Product A B) C)->
+        Pair A (Product B C)
+            (fst A B (fst (Product A B) C p))
+            (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
+
+let leibniz =
+  ( \ (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Eq a x y) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x))
+            x
+            y
+            eq)
+  :: forall (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (_ :: Eq a x y) . Eq b (f x) (f y);
+
+-- symmetry of (general) equality
+let symm =
+  ( \ (a :: *) (x :: a) (y :: a) (eq :: Eq a x y) ->
+    eqElim a
+        (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq a y x)
+        (\ (x :: a) -> Refl a x)
+        x
+        y
+        eq)
+  :: forall (a :: *) (x :: a) (y :: a) (_ :: Eq a x y) . Eq a y x;
+
+-- transitivity of (general) equality
+let tran =
+  ( \ (a :: *) (x :: a) (y :: a) (z :: a) (eq_x_y :: Eq a x y) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) (_ :: Eq a y z) . Eq a x z)
+            (\ (x :: a) (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
+             x
+             y
+             eq_x_y z )
+  :: forall (a :: *) (x :: a) (y :: a) (z :: a) (_ :: Eq a x y) (_ :: Eq a y z) . Eq a x z;
+
+let thSum01 =
+    forall (A :: *) (B :: *) (_ :: Sum A B) . Sum B A;
+let proofSum01 =
+    (\ (A :: *) (B :: *) (s :: Sum A B) ->
+        sumElim A B
+            (\ (_ :: Sum A B) -> Sum B A)
+            (\ (a :: A) . InR B A a)
+            (\ (b :: B) . InL B A b)
+            s)
+        :: thSum01;
+
+let Void = Fin_0;
+-- unit type
+let Unit = Fin_1;
+-- constructor
+let U = finElem_1_1;
+
+-- booleans
+let Bool = Fin_2;
+-- constructors
+let False = finElem_1_2;
+let True  = finElem_2_2;
+
+let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+
+let boolElim =
+    \ (m :: forall (_ :: Fin_2) . *) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
+        finElim_2 m c1 c2 b;
+
+let not = boolElim (\ (_ :: Bool) -> Bool) True False;
+let and = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (\ (_ :: Bool) -> False) (id Bool);
+
+let or  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) (\ (_ :: Bool) -> True);
+let xor = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) not;
+let if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
+
+-- equality congruence
+let cong1 =
+  ( \ (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Eq a x y) ->
+        eqElim a
+            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (\ (x :: a) -> Refl b (f x))
+            x
+            y
+            eq)
+  :: forall (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (_ :: Eq a x y) . Eq b (f x) (f y);
+
+let nRight = forall (n :: Nat) . Eq Nat (plus n Zero) n;
+
+-- supercompiling everything
+sc id;
+sc const;
+sc plus;
+
+sc plus1;
+sc pred;
+sc fZSucc0;
+sc natFold;
+
+sc inc;
+sc append;
+sc len;
+
+sc (\(a :: *) (x :: List a) (y :: List a) (z :: List a) -> append a x (append a y z));
+
+-- we cannot supercompile it - eliminator should be saturated
+--sc productElim;
+sc fst;
+sc snd;
+
+sc thSum01;
+sc proofSum01;
+sc abort;
+--sc boolElim;
+sc not;
+sc and;
+sc or;
+sc xor;
+sc if;
+sc len;
+
+assume (x :: Nat);
+assume (y :: Nat);
+
+sc plus x y;
+
+-- first element of a dependent pair
+let fst1 = \ (a :: *) (b :: forall (_ :: a) . *) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (_ :: exists (x :: a) . b x) -> a)
+                (\(x :: a) (y :: b x) -> x)
+                p;
+
+assume (A1 :: *);
+assume (B1 :: forall (_ :: A1) . *);
+
+assume ($p :: exists (x :: A1) . B1 x);
+
+sc fst1 A1 B1 $p;
+
+let snd1 = \ (a :: *) (b :: forall (_ :: a) . *) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))
+                (\(x :: a) (y :: b x) -> y)
+                p;
+
+sc snd1 A1 B1 $p;
+
+let ee = exists (x :: Nat) . Eq Nat x (Succ Zero);
+
+let eep = dpair (exists (x :: Nat) . Eq Nat x (Succ Zero)) (Succ Zero) (Refl Nat (Succ Zero)) :: ee;
+
+sc eep;
+
+
