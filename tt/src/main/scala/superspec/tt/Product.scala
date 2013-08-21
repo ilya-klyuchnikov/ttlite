@@ -141,44 +141,4 @@ trait ProductQuote extends CoreQuote with ProductAST {
   }
 }
 
-trait ProductREPL extends CoreREPL with ProductAST with ProductPrinter with ProductCheck with ProductEval with ProductQuote {
-  lazy val productTE: NameEnv[Value] =
-    Map(
-      Global("Product") ->
-        VPi(VStar, _ => VPi(VStar, _ => VStar)),
-      Global("Pair") ->
-        VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VPi(b, _ => VProduct(a, b))))),
-      Global("productElim") ->
-        productElimType
-    )
-
-  val productElimTypeIn =
-    """
-      |forall (A :: *) .
-      |forall (B :: *) .
-      |forall (m :: forall (_ :: Product A B) . *) .
-      |forall (f :: forall (a :: A) (b :: B) . m (Pair A B a b)) .
-      |forall (p :: Product A B) .
-      |  m p
-    """.stripMargin
-
-  lazy val productElimType = int.ieval(productVE, int.parseIO(int.iParse, productElimTypeIn).get)
-
-  val productVE: NameEnv[Value] =
-    Map(
-      Global("Product") ->
-        VLam(VStar, a => VLam(VStar, b => VProduct(a, b))),
-      Global("Pair") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(a, x => VLam(b, y => VPair(a, b, x, y))))),
-      Global("productElim") ->
-        VLam(VStar, a => VLam(VStar, b =>
-          VLam(VPi(VProduct(a, b), _ => VStar), m =>
-            VLam(VPi(a, x => VPi(b, y => m @@ VPair(a, b, x, y))), f =>
-                VLam(VProduct(a, b), p =>
-                  eval(ProductElim(Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), productVE, List(p, f, m, b, a))
-                )))))
-
-    )
-}
-
 trait ProductREPL2 extends CoreREPL2 with ProductAST with MProduct with ProductPrinter with ProductCheck with ProductEval with ProductQuote

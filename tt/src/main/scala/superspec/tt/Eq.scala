@@ -147,49 +147,4 @@ trait EqQuote extends CoreQuote with EqAST {
   }
 }
 
-trait EqREPL extends CoreREPL with EqAST with EqPrinter with EqCheck with EqEval with EqQuote {
-  lazy val eqTE: NameEnv[Value] =
-    Map(
-      Global("Refl") -> ReflType,
-      Global("Eq") -> EqType,
-      Global("eqElim") -> eqElimType
-    )
-
-  val EqTypeIn =
-    "forall (A :: *) (x :: A) (y :: A) . *"
-  val ReflTypeIn =
-    "forall (A :: *) (a :: A) . Eq A a a"
-  val eqElimTypeIn =
-    """
-      |forall (A :: *) .
-      |forall (prop :: forall (x :: A) . forall (y :: A) . forall (_ :: Eq A x y) . * ) .
-      |forall (propR :: forall (a :: A) . prop a a (Refl A a)) .
-      |forall (x :: A) .
-      |forall (y :: A) .
-      |forall (eq :: Eq A x y) .
-      |prop x y eq
-    """.stripMargin
-
-  lazy val EqType = int.ieval(eqVE, int.parseIO(int.iParse, EqTypeIn).get)
-  lazy val ReflType = int.ieval(eqVE, int.parseIO(int.iParse, ReflTypeIn).get)
-  lazy val eqElimType = int.ieval(eqVE, int.parseIO(int.iParse, eqElimTypeIn).get)
-
-  val eqVE: NameEnv[Value] =
-    Map(
-      Global("Refl") ->
-        VLam(VStar, {a => VLam(a, {x => VRefl(a, x)})}),
-      Global("Eq") ->
-        VLam(VStar, a => VLam(a, x => VLam(a, y => VEq(a, x, y)))),
-      Global("eqElim") ->
-        VLam(VStar, a =>
-          VLam( VPi(a, x => VPi(a, y => VPi(VEq(a, x, y), _ => VStar))), prop =>
-            VLam(VPi(a, x => prop @@ x @@ x @@ VRefl(a, x)), propR =>
-              VLam(a, x =>
-                VLam(a, y =>
-                  VLam(VEq(a, x, y), {eq =>
-                    eval(EqElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), eqVE,
-                      List(eq, y, x, propR, prop, a))}))))))
-    )
-}
-
 trait EqREPL2 extends CoreREPL2 with EqAST with MEq with EqPrinter with EqCheck with EqEval with EqQuote

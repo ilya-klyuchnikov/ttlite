@@ -1,5 +1,19 @@
 package superspec.tt
 
+trait Command
+case class TypeOf(in: String) extends Command
+case class Compile(cf: CompileForm) extends Command
+case class Reload(f: String) extends Command
+case object Browse extends Command
+case object Quit extends Command
+case object Help extends Command
+case object Noop extends Command
+
+trait CompileForm
+case class CompileInteractive(s: String) extends CompileForm
+case class CompileFile(f: String) extends CompileForm
+case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
+
 trait MREPL {
 
   // TO OVERRIDE STARTS

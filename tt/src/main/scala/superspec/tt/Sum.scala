@@ -172,49 +172,4 @@ trait SumQuote extends CoreQuote with SumAST {
   }
 }
 
-trait SumREPL extends CoreREPL with SumAST with SumPrinter with SumCheck with SumEval with SumQuote {
-  lazy val sumTE: NameEnv[Value] =
-    Map(
-      Global("Sum") ->
-        VPi(VStar, _ => VPi(VStar, _ => VStar)),
-      Global("InL") ->
-        VPi(VStar, a => VPi(VStar, b => VPi(a, _ => VSum(a, b)))),
-      Global("InR") ->
-        VPi(VStar, a => VPi(VStar, b => VPi(b, _ => VSum(a, b)))),
-      Global("sumElim") -> sumElimType
-    )
-  val sumElimTypeIn =
-    """
-      |forall (A :: *) .
-      |forall (B :: *) .
-      |forall (m :: forall (_ :: Sum A B) . *) .
-      |forall (_ :: forall (l :: A) . m (InL A B l)) .
-      |forall (_ :: forall (r :: B) . m (InR A B r)) .
-      |forall (s :: Sum A B) .
-      |  m s
-    """.stripMargin
-
-  lazy val sumElimType = int.ieval(sumVE, int.parseIO(int.iParse, sumElimTypeIn).get)
-
-  val sumVE: NameEnv[Value] =
-    Map(
-      Global("Sum") ->
-        VLam(VStar, a => VLam(VStar, b => VSum(a, b))),
-      Global("InL") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(a, x => VInL(a, b, x)))),
-      Global("InR") ->
-        VLam(VStar, a => VLam(VStar, b => VLam(b, y => VInR(a, b, y)))),
-      Global("sumElim") ->
-        VLam(VStar, a =>
-          VLam(VStar, b =>
-            VLam(VPi(VSum(a, b), _ => VStar), m =>
-              VLam(VPi(a, l => m @@ VInL(a, b, l)) , lc =>
-                VLam(VPi(b, r => m @@ VInR(a, b, r)), rc =>
-                  VLam(VSum(a, b), {sum =>
-                    eval(SumElim(Bound(5), Bound(4), Bound(3), Bound(2), Bound(1), Bound(0)), sumVE, List(sum, rc, lc, m, b, a))
-                  }))))))
-    )
-
-}
-
 trait SumREPL2 extends CoreREPL2 with SumAST with MSum with SumPrinter with SumCheck with SumEval with SumQuote

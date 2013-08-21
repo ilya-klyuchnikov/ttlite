@@ -145,38 +145,4 @@ trait FinQuote extends CoreQuote with FinAST {
   }
 }
 
-trait FinREPL extends CoreREPL with FinAST with FinPrinter with FinCheck with FinEval with FinQuote {
-  private lazy val finsTE: NameEnv[Value] =
-    (0 to 2).map(n => Global(s"Fin_$n") -> VStar).toMap
-  private lazy val finElemsTE: NameEnv[Value] =
-    (for {n <- 0 to 2; i <- 1 to n} yield Global(s"finElem_${i}_$n") -> VFin(n)).toMap
-  private lazy val finElimsTE: NameEnv[Value] =
-    (0 to 2).map(n => Global(s"finElim_$n") -> finElimType(n)).toMap
-
-  lazy val finsVE: NameEnv[Value] =
-    (0 to 2).map(n => Global(s"Fin_$n") -> VFin(n)).toMap
-  private lazy val finElemsVE: NameEnv[Value] =
-    (for {n <- 0 to 2; i <- 1 to n} yield Global(s"finElem_${i}_$n") -> VFinElem(i, n)).toMap
-  private lazy val finElimsVE: NameEnv[Value] =
-    (0 to 2).map(n => Global(s"finElim_$n") -> finElim(n)).toMap
-
-  def finElimType(n: Int): Value =
-    VPi(VPi(VFin(n), _ => VStar), m =>
-      (1 to n).foldRight(VPi(VFin(n), elem => m @@ elem))((i, pi) => VPi(m @@ VFinElem(i, n), e => pi)))
-
-  def finElim(n: Int) =
-    VLam(VPi(VFin(n), _ => VStar), m => {
-      var args: List[Value] = List(m)
-      var elem: Value = null
-      lazy val body =
-        eval(FinElim(n, Bound(n + 1), (1 to n).toList.reverse.map(Bound), Bound(0)), Map(), elem :: args)
-      val lam0: Value = VLam(VFin(n), e => {elem = e; body})
-      val tt: Value = (1 to n).foldRight(lam0)((i, lam) => VLam(m @@ VFinElem(i, n), arg => {args = arg :: args; lam}))
-      tt
-    })
-
-  lazy val finTE = finsTE ++ finElemsTE ++ finElimsTE
-  lazy val finVE = finsVE ++ finElemsVE ++ finElimsVE
-}
-
 trait FinREPL2 extends CoreREPL2 with FinAST with MFin with FinPrinter with FinCheck with FinEval with FinQuote
