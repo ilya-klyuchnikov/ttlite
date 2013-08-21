@@ -39,7 +39,7 @@ trait EqProofResiduator extends EqResiduator with ProofResiduator {
         'cong1 @@
           a @@
           eq @@
-          ('Refl @@ a) @@
+          VLam(a, x => VRefl(a, x)) @@
           eval(x.conf.term, env, bound) @@
           fold(x, env, bound, recM) @@
           proofFold(x, env, bound, recM, env2, bound2, recM2)

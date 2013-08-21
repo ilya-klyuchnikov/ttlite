@@ -50,27 +50,26 @@ trait SumEval extends CoreEval with SumAST {
     case InR(lt, rt, r) =>
       VInR(eval(lt, named, bound), eval(rt, named, bound), eval(r, named, bound))
     case SumElim(lt, rt, m, lc, rc, sum) =>
+      val ltVal = eval(lt, named, bound)
+      val rtVal = eval(rt, named, bound)
+      val mVal = eval(m, named, bound)
+      val lcVal = eval(lc, named, bound)
+      val rcVal = eval(rc, named, bound)
       val sumVal = eval(sum, named, bound)
-      sumVal match {
-        case VInL(_, _, lVal) =>
-          val lcVal = eval(lc, named, bound)
-          lcVal @@ lVal
-        case VInR(_, _, rVal) =>
-          val rcVal = eval(rc, named, bound)
-          rcVal @@ rVal
-        case VNeutral(n) =>
-          VNeutral(
-            NSumElim(
-              eval(lt, named, bound),
-              eval(rt, named, bound),
-              eval(m, named, bound),
-              eval(lc, named, bound),
-              eval(rc, named, bound), n)
-          )
-      }
+      sumElim(ltVal, rtVal, mVal, lcVal, rcVal, sumVal)
     case _ =>
       super.eval(t, named, bound)
   }
+
+  def sumElim(ltVal: Value, rtVal: Value, mVal: Value, lcVal: Value, rcVal: Value, sumVal: Value): Value =
+    sumVal match {
+      case VInL(_, _, lVal) =>
+        lcVal @@ lVal
+      case VInR(_, _, rVal) =>
+        rcVal @@ rVal
+      case VNeutral(n) =>
+        VNeutral(NSumElim(ltVal, rtVal, mVal, lcVal, rcVal, n))
+    }
 }
 
 trait SumCheck extends CoreCheck with SumAST {

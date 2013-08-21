@@ -1,10 +1,16 @@
 package superspec.test
 
-import superspec.TTScREPL
+import superspec.{TTScREPL, TTScREPL2}
 
 class ScSpec extends org.scalatest.FunSpec {
   describe("ScREPL should supercompile all tasks in examples/sc01.pi") {
     TTScREPL.main(Array("examples/sc01.pi"))
+  }
+}
+
+class Sc2Spec extends org.scalatest.FunSpec {
+  describe("ScREPL should supercompile all tasks in examples/sc01.tt") {
+    TTScREPL2.main(Array("examples/sc01.tt"))
   }
 }
 

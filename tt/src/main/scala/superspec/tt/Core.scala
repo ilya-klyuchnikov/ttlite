@@ -209,20 +209,17 @@ trait CoreEval extends CoreAST {
     case DPair(sigma, e1, e2) =>
       VDPair(eval(sigma, named, bound), eval(e1, named, bound), eval(e2, named, bound))
     case SigmaElim(sigma, m, f, p) =>
+      val sigmaVal = eval(sigma, named, bound)
+      val mVal = eval(m, named, bound)
+      val fVal = eval(f, named, bound)
       val pVal = eval(p, named, bound)
-      pVal match {
-        case VDPair(_, x, y) =>
-          val fVal = eval(f, named, bound)
-          fVal @@ x @@ y
-        case VNeutral(n) =>
-          VNeutral(NSigmaElim(
-            eval(sigma, named, bound),
-            eval(m, named, bound),
-            eval(f, named, bound),
-            n
-          ))
-      }
+      sigmaElim(sigmaVal, mVal, fVal, pVal)
   }
+
+  def sigmaElim(sigmaVal: Value, mVal: Value, fVal: Value, pVal: Value): Value = pVal match {
+      case VDPair(_, x, y) => fVal @@ x @@ y
+      case VNeutral(n) => VNeutral(NSigmaElim(sigmaVal, mVal, fVal, n))
+    }
 }
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {

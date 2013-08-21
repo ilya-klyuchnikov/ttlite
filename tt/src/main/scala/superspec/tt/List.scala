@@ -50,19 +50,23 @@ trait ListEval extends CoreEval with ListAST {
     case PiCons(a, head, tail) =>
       VPiCons(eval(a, named, bound), eval(head, named, bound), eval(tail, named, bound))
     case PiListElim(a, m, nilCase, consCase, ls) =>
+      val aVal = eval(a, named, bound)
+      val mVal = eval(m, named, bound)
       val nilCaseVal = eval(nilCase, named, bound)
       val consCaseVal = eval(consCase, named, bound)
-      def rec(listVal: Value): Value = listVal match {
-        case VPiNil(_) =>
-          nilCaseVal
-        case VPiCons(_, head, tail) =>
-          consCaseVal @@ head @@ tail @@ rec(tail)
-        case VNeutral(n) =>
-          VNeutral(NPiListElim(eval(a, named, bound), eval(m, named, bound), nilCaseVal, consCaseVal, n))
-      }
-      rec(eval(ls, named, bound))
+      val listVal = eval(ls, named, bound)
+      listElim(aVal, mVal, nilCaseVal, consCaseVal, listVal)
     case _ =>
       super.eval(t, named, bound)
+  }
+
+  def listElim(aVal: Value, mVal: Value, nilCaseVal: Value, consCaseVal: Value, listVal: Value): Value = listVal match {
+    case VPiNil(_) =>
+      nilCaseVal
+    case VPiCons(_, head, tail) =>
+      consCaseVal @@ head @@ tail @@ listElim(aVal, mVal, nilCaseVal, consCaseVal, tail)
+    case VNeutral(n) =>
+      VNeutral(NPiListElim(aVal, mVal, nilCaseVal, consCaseVal, n))
   }
 }
 

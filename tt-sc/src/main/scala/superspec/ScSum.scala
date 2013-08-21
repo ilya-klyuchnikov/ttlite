@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait SumDriver extends CoreDriver with SumAST {
+trait SumDriver extends CoreDriver with SumAST with SumEval {
 
   case object InLLabel extends Label
   case object InRLabel extends Label
@@ -53,25 +53,13 @@ trait SumResiduator extends BaseResiduator with SumDriver {
         val lCase = VLam(aVal, l => fold(nodeL, env + (lN -> l), l :: bound, recM))
         val rCase = VLam(bVal, r => fold(nodeR, env + (rN -> r), r :: bound, recM))
 
-        'sumElim @@
-          aVal @@
-          bVal @@
-          motive @@
-          lCase @@
-          rCase @@
-          env(sel)
+        sumElim(aVal, bVal, motive, lCase, rCase, env(sel))
       case TEdge(l, InLLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env, bound)
-        'InL @@
-          a @@
-          b @@
-          fold(l, env, bound, recM)
+        VInL(a, b, fold(l, env, bound, recM))
       case TEdge(r, InRLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env, bound)
-        'InR @@
-          a @@
-          b @@
-          fold(r, env, bound, recM)
+        VInR(a, b, fold(r, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }

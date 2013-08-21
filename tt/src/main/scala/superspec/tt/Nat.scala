@@ -59,19 +59,22 @@ trait NatEval extends CoreEval with NatAST {
     case Nat =>
       VNat
     case NatElim(m, mz, ms, n) =>
+      val mVal = eval(m, named, bound)
       val mzVal = eval(mz, named, bound)
       val msVal = eval(ms, named, bound)
-      def rec(nVal: Value): Value = nVal match {
-        case VZero =>
-          mzVal
-        case VSucc(k) =>
-          msVal @@ k @@ rec(k)
-        case VNeutral(n) =>
-          VNeutral(NNatElim(eval(m, named, bound), mzVal, msVal, n))
-      }
-      rec(eval(n, named, bound))
+      val nVal = eval(n, named, bound)
+      natElim(mVal, mzVal, msVal, nVal)
     case _ =>
       super.eval(t, named, bound)
+  }
+
+  def natElim(mVal: Value, czVal: Value, csVal: Value, nVal: Value): Value = nVal match {
+    case VZero =>
+      czVal
+    case VSucc(k) =>
+      csVal @@ k @@ natElim(mVal, czVal, csVal, k)
+    case VNeutral(n) =>
+      VNeutral(NNatElim(mVal, czVal, csVal, n))
   }
 }
 

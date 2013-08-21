@@ -50,8 +50,7 @@ trait DProductResiduator extends CoreResiduator with DProductDriver {
           VLam(sigmaVal, p => eval(node.conf.tp, env + (sel -> p), p :: bound))
         val pairCase = VLam(x1, x => VLam(y1(x), y =>
           fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM)))
-        val VNeutral(n) = env(sel)
-        VNeutral(NSigmaElim(sigmaVal, motive, pairCase, n))
+        sigmaElim(sigmaVal, motive, pairCase, env(sel))
       case TEdge(x, DPairLabel) :: TEdge(y, DPairLabel) :: Nil =>
         val sigma = eval(node.conf.tp, env, bound)
         VDPair(sigma, fold(x, env, bound, recM), fold(y, env, bound, recM))
@@ -79,8 +78,7 @@ trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
             env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
             env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
 
-        val VNeutral(n) = env(sel)
-        VNeutral(NSigmaElim(sigmaVal, motive, pairCase, n))
+        sigmaElim(sigmaVal, motive, pairCase, env(sel))
 
       case TEdge(x, DPairLabel) :: TEdge(y, DPairLabel) :: Nil =>
         val sigma = eval(node.conf.tp, env, bound)

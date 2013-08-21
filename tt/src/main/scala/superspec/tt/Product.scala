@@ -46,15 +46,19 @@ trait ProductEval extends CoreEval with ProductAST {
       val bVal = eval(b, named, bound)
       val mVal = eval(m, named, bound)
       val fVal = eval(f, named, bound)
-      eval(pair, named, bound) match {
-        case VPair(_, _, x, y) =>
-          fVal @@ x @@ y
-        case VNeutral(n) =>
-          VNeutral(NProductElim(aVal, bVal, mVal, fVal, n))
-      }
+      val pVal = eval(pair, named, bound)
+      productElim(aVal, bVal, mVal, fVal, pVal)
     case _ =>
       super.eval(t, named, bound)
   }
+
+  def productElim(aVal: Value, bVal: Value, mVal: Value, fVal: Value, pVal: Value) =
+    pVal match {
+      case VPair(_, _, x, y) =>
+        fVal @@ x @@ y
+      case VNeutral(n) =>
+        VNeutral(NProductElim(aVal, bVal, mVal, fVal, n))
+    }
 }
 
 trait ProductCheck extends CoreCheck with ProductAST {

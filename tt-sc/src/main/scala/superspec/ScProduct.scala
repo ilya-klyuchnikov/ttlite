@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait ProductDriver extends CoreDriver with ProductAST {
+trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
 
   case object PairLabel extends Label
 
@@ -52,19 +52,10 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
           fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM)))
 
-        'productElim @@
-          aVal @@
-          bVal @@
-          motive @@
-          pairCase @@
-          env(sel)
+        productElim(aVal, bVal, motive, pairCase, env(sel))
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
-        'Pair @@
-          aType @@
-          bType @@
-          fold(x, env, bound, recM) @@
-          fold(y, env, bound, recM)
+        VPair(aType, bType, fold(x, env, bound, recM), fold(y, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -90,12 +81,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
             env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
             env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
 
-        'productElim @@
-          aVal @@
-          bVal @@
-          motive @@
-          pairCase @@
-          env(sel)
+        productElim(aVal, bVal, motive, pairCase, env(sel))
 
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(a, b) = eval(node.conf.tp, env, bound)
@@ -107,8 +93,8 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
         val y2 = fold(y, env, bound, recM)
         val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
 
-        'cong2 @@ a @@ b @@ ('Product @@ a @@ b) @@
-          ('Pair @@ a @@ b) @@
+        'cong2 @@ a @@ b @@ VProduct(a, b) @@
+          VLam(a, x => VLam(b, y => VPair(a, b, x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
 

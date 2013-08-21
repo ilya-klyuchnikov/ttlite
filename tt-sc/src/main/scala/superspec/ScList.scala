@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait ListDriver extends CoreDriver with ListAST {
+trait ListDriver extends CoreDriver with ListAST with ListEval {
 
   case object ConsLabel extends Label
 
@@ -52,10 +52,10 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
             fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))
 
-        'listElim @@ aVal @@ motive @@ nilCase @@ consCase @@ env(sel)
+        listElim(aVal, motive, nilCase, consCase, env(sel))
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(a) = eval(node.conf.tp, env, bound)
-        'Cons @@ a @@ fold(h, env, bound, recM) @@ fold(t, env, bound, recM)
+        VPiCons(a, fold(h, env, bound, recM), fold(t, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -98,7 +98,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
               rec :: t :: h :: bound2,
               recM2 + (node.tPath -> rec))})))
 
-        'listElim @@ aVal @@ motive @@ nilCase @@ consCase @@ env(sel)
+        listElim(aVal, motive, nilCase, consCase, env(sel))
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(a) = eval(node.conf.tp, env, bound)
         val h1 = eval(h.conf.term, env, bound)
@@ -110,7 +110,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
         val eq_t1_t2 = proofFold(t, env, bound, recM, env2, bound2, recM2)
 
         'cong2 @@ a @@ VPiList(a) @@ VPiList(a) @@
-          ('Cons @@ a) @@
+          VLam(a, x => VLam(VPiList(a), y => VPiCons(a, x, y))) @@
           h1 @@ h2 @@ eq_h1_h2 @@
           t1 @@ t2 @@ eq_t1_t2
       case _ =>

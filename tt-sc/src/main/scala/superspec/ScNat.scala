@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait NatDriver extends CoreDriver with NatAST {
+trait NatDriver extends CoreDriver with NatAST with NatEval {
 
   case object SuccLabel extends Label
 
@@ -46,9 +46,9 @@ trait NatResiduator extends BaseResiduator with NatDriver {
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, rec =>
             fold(nodeS, env + (fresh -> n), rec :: n :: bound, recM + (node.tPath -> rec))))
-        'natElim @@ motive @@ zCase @@ sCase @@ env(sel)
+        natElim(motive, zCase, sCase, env(sel))
       case TEdge(n1, SuccLabel) :: Nil =>
-        'Succ @@ fold(n1, env, bound, recM)
+        VSucc(fold(n1, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -89,12 +89,12 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
               rec :: n :: bound2,
               recM2 + (node.tPath -> rec))}))
 
-        'natElim @@ motive @@ zCase @@ sCase @@ env(sel)
+        natElim(motive, zCase, sCase, env(sel))
       case TEdge(n1, SuccLabel) :: Nil =>
         'cong1 @@
           VNat @@
           VNat @@
-          'Succ @@
+          VLam(VNat, n => VSucc(n)) @@
           eval(n1.conf.term, env, bound) @@
           fold(n1, env, bound, recM) @@
           proofFold(n1, env, bound, recM, env2, bound2, recM2)

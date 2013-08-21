@@ -43,19 +43,21 @@ trait EqEval extends CoreEval with EqAST with CoreQuote {
     case Refl(a, x) =>
       VRefl(eval(a, named, bound), eval(x, named, bound))
     case EqElim(a, prop, propR, x, y, eq) =>
-      eval(eq, named, bound) match {
-        case r@VRefl(a, z) =>
-          eval(propR, named, bound) @@ z
-        case VNeutral(n) =>
-          VNeutral(NEqElim(
-            eval(a, named, bound),
-            eval(prop, named, bound),
-            eval(propR, named, bound),
-            eval(x, named, bound),
-            eval(y, named, bound),
-            n))
-      }
+      val aVal = eval(a, named, bound)
+      val propVal = eval(prop, named, bound)
+      val propRVal = eval(propR, named, bound)
+      val xVal = eval(x, named, bound)
+      val yVal = eval(y, named, bound)
+      val eqVal = eval(eq, named, bound)
+      eqElim(aVal, propVal, propRVal, xVal, yVal, eqVal)
     case _ => super.eval(t, named, bound)
+  }
+
+  def eqElim(aVal: Value, propVal: Value, propRVal: Value, xVal: Value, yVal: Value, eqVal: Value) = eqVal match {
+    case r@VRefl(a, z) =>
+      propRVal @@ z
+    case VNeutral(n) =>
+      VNeutral(NEqElim(aVal, propVal, propRVal, xVal, yVal, n))
   }
 }
 
