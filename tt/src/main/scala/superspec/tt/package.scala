@@ -78,7 +78,7 @@ package object tt {
     val arg: PackratParser[(String, Res)] =
       "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
     lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-    lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt)
+    lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt, scStmt, sc2Stmt)
     lazy val letStmt: PackratParser[Stmt[MTerm]] =
       "let" ~> ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
     lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
