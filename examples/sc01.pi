@@ -259,7 +259,7 @@ let fst1 = \ (a :: *) (b :: forall (_ :: a) . *) (p :: (exists (x :: a) . b x)) 
                 p;
 
 assume (A1 :: *);
-assume (B1 :: forall (_ :: A1) -> *);
+assume (B1 :: forall (_ :: A1) . *);
 
 assume ($p :: exists (x :: A1) . B1 x);
 
