@@ -39,14 +39,19 @@ trait NatPrinter extends CorePrinter with NatAST {
     case _ =>
       super.print(p, ii, t)
   }
+}
 
-  def fromNat(n: Int, ii: Int, t: Term): Doc = t match {
-    case Zero =>
-      "Zero"
-    case Succ(k) =>
-      fromNat(n + 1, ii, k)
-    case _ =>
-      parens(n.toString <> " + " <> print(3, ii, t))
+trait NatQuote extends CoreQuote with NatAST {
+  override def quote(ii: Int, v: Value): Term = v match {
+    case VNat => Nat
+    case VZero => Zero
+    case VSucc(n) => Succ(quote(ii, n))
+    case _ => super.quote(ii, v)
+  }
+  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+    case NNatElim(m, z, s, n) =>
+      NatElim(quote(ii, m), quote(ii, z), quote(ii, s), neutralQuote(ii, n))
+    case _ => super.neutralQuote(ii, n)
   }
 }
 
@@ -122,20 +127,6 @@ trait NatCheck extends CoreCheck with NatAST {
     case _ => super.iSubst(i, r, it)
   }
 
-}
-
-trait NatQuote extends CoreQuote with NatAST {
-  override def quote(ii: Int, v: Value): Term = v match {
-    case VNat => Nat
-    case VZero => Zero
-    case VSucc(n) => Succ(quote(ii, n))
-    case _ => super.quote(ii, v)
-  }
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NNatElim(m, z, s, n) =>
-      NatElim(quote(ii, m), quote(ii, z), quote(ii, s), neutralQuote(ii, n))
-    case _ => super.neutralQuote(ii, n)
-  }
 }
 
 trait NatREPL2 extends CoreREPL2 with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote

@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait DProductDriver extends CoreDriver {
+trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
 
   case object DPairLabel extends Label
 

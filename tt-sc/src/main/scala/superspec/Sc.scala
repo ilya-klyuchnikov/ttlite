@@ -125,45 +125,7 @@ trait ProofResiduator extends BaseResiduator with EqAST {
     }
 }
 
-object TTScREPL2
-  extends TTSc
-  with BaseResiduator
-  with GraphPrettyPrinter2
-  with CoreREPL2
-  with CoreSubst
-  with CoreDriver
-  with CoreResiduator
-  with NatREPL2
-  with NatDriver
-  with NatResiduator
-  with ListREPL2
-  with ListDriver
-  with ListResiduator
-  with ProductREPL2
-  with ProductDriver
-  with ProductResiduator
-  with EqREPL2
-  with EqDriver
-  with EqResiduator
-  with EqProofResiduator
-  with SumREPL2
-  with SumDriver
-  with SumResiduator
-  with FinREPL2
-  with FinDriver
-  with FinResiduator
-  with ProofResiduator
-  with CoreProofResiduator
-  with NatProofResiduator
-  with ListProofResiduator
-  with ProductProofResiduator
-  with SumProofResiduator
-  with FinProofResiduator
-  with DProductDriver
-  with DProductResiduator
-  with DProductProofResiduator
-{
-
+trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
     case SC(it0) =>
       val it = fromM(it0)
@@ -249,3 +211,12 @@ object TTScREPL2
   }
 }
 
+object TTScREPL2 extends ScREPL
+  with CoreREPL2 with CoreDriver with CoreResiduator with CoreProofResiduator
+  with DProductREPL2 with DProductDriver with DProductResiduator with DProductProofResiduator
+  with SumREPL2 with SumDriver with SumResiduator with SumProofResiduator
+  with EqREPL2 with EqDriver with EqResiduator with EqProofResiduator
+  with NatREPL2 with NatDriver with NatResiduator with NatProofResiduator
+  with ListREPL2 with ListDriver with ListResiduator with ListProofResiduator
+  with ProductREPL2 with ProductDriver with ProductResiduator with ProductProofResiduator
+  with FinREPL2 with FinDriver with FinResiduator with FinProofResiduator

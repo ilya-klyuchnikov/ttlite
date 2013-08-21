@@ -8,6 +8,10 @@ class ReplSpec2 extends org.scalatest.FunSpec {
     CoreREPLMain2.main(Array("examples/ex01_core.pi"))
   }
 
+  describe("DProduct REPL should process `examples/ex01_product.tt` without errors") {
+    DProductREPLMain2.main(Array("examples/ex01_product.tt"))
+  }
+
   describe("Nat REPL should process `examples/ex02_nat.pi` without errors") {
     NatREPLMain2.main(Array("examples/ex02_nat.pi"))
   }
