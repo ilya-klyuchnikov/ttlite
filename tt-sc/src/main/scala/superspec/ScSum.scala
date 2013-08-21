@@ -93,20 +93,14 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
             env + (rN -> r), r :: bound, recM,
             env2 + (rN -> r), r :: bound2, recM2))
 
-        'sumElim @@
-          aVal @@
-          bVal @@
-          motive @@
-          lCase @@
-          rCase @@
-          env(sel)
+        sumElim(aVal, bVal, motive, lCase, rCase, env(sel))
 
       case TEdge(l, InLLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env, bound)
         'cong1 @@
           a @@
           VSum(a, b) @@
-          ('InL @@ a @@ b) @@
+          VLam(a, x => VInL(a, b, x)) @@
           eval(l.conf.term, env, bound) @@
           fold(l, env, bound, recM) @@
           proofFold(l, env, bound, recM, env2, bound2, recM2)
@@ -116,7 +110,7 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
         'cong1 @@
           b @@
           VSum(a, b) @@
-          ('InR @@ a @@ b) @@
+          VLam(b, y => VInR(a, b, y)) @@
           eval(r.conf.term, env, bound) @@
           fold(r, env, bound, recM) @@
           proofFold(r, env, bound, recM, env2, bound2, recM2)

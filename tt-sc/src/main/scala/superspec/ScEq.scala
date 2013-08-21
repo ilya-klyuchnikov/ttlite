@@ -22,7 +22,7 @@ trait EqResiduator extends BaseResiduator with EqDriver { self =>
     node.outs match {
       case TEdge(x, ReflLabel) :: Nil =>
         val VEq(a, _, _) = eval(node.conf.tp, env, bound)
-        'Refl @@ a @@ fold(x, env, bound, recM)
+        VRefl(a, fold(x, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
