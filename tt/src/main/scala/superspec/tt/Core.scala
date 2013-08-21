@@ -6,7 +6,6 @@ trait CoreAST {
   trait Term {
     def @@(t1: Term) = :@:(this, t1)
   }
-
   case class Pi(c1: Term, c2: Term) extends Term
   case class Lam(t: Term, e: Term) extends Term
   case class :@:(h: Term, t: Term) extends Term
