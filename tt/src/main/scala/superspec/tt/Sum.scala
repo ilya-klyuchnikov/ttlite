@@ -76,21 +76,21 @@ trait SumCheck extends FunCheck with SumAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Sum(a, b) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      val j = checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      val k = checkUniverse(i, bType)
 
-      VStar
+      VUniverse(math.max(j, k))
     case InL(a, b, l) =>
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      checkUniverse(i, bType)
 
       val lType = iType(i, named, bound, l)
       checkEqual(i, lType, aVal)
@@ -101,10 +101,10 @@ trait SumCheck extends FunCheck with SumAST {
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      checkUniverse(i, bType)
 
       val rType = iType(i, named, bound, r)
       checkEqual(i, rType, bVal)
@@ -117,13 +117,13 @@ trait SumCheck extends FunCheck with SumAST {
       val sumVal = eval(sum, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      checkUniverse(i, bType)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VUniverse(-1)}))
 
       val lcType = iType(i, named, bound, lc)
       checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))

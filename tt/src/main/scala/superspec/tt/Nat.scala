@@ -86,13 +86,13 @@ trait NatEval extends FunEval with NatAST {
 trait NatCheck extends FunCheck with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Nat =>
-      VStar
+      VUniverse(0)
     case NatElim(m, mz, ms, n) =>
       val mVal = eval(m, named, Nil)
       val nVal = eval(n, named, Nil)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, Pi(Nat, Star))
+      checkEqual(i, mType, Pi(Nat, Universe(-1)))
 
       val mzType = iType(i, named, bound, mz)
       checkEqual(i, mzType, mVal @@ VZero)

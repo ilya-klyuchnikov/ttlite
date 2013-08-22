@@ -91,29 +91,21 @@ trait FunEval extends CoreEval with FunAST {
 
 trait FunCheck extends CoreCheck with FunAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
-    case Pi(Star, tp) =>
-      val tpType = iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), tp))
-      checkEqual(i, tpType, Star)
-      VStar
     case Pi(x, tp) =>
       val xVal = eval(x, named, Nil)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(i, xType, Star)
+      val j = checkUniverse(i, xType)
 
       val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
-      checkEqual(i, tpType, Star)
+      val k = checkUniverse(i, tpType)
 
-      VStar
-    case Lam(Star, e) =>
-      // to force early error
-      iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), e))
-      VPi(VStar, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> VStar) , iSubst(0, Free(Local(i)), e)))
+      VUniverse(math.max(j, k))
     case Lam(t, e) =>
       val tVal = eval(t, named, Nil)
       val tType = iType(i, named, bound, t)
 
-      checkEqual(i, tType, Star)
+      checkUniverse(i, tType)
       // to force early error
       iType(i + 1, named,  bound + (Local(i) -> tVal), iSubst(0, Free(Local(i)), e))
 

@@ -70,17 +70,17 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, VStar)
+      val j = checkUniverse(i, aType)
 
       val nType = iType(i, named, bound, n)
       checkEqual(i, nType, VNat)
 
-      VStar
+      VUniverse(j)
     case VecNil(a) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, VStar)
+      checkUniverse(i, aType)
 
       VVec(aVal, VZero)
     case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
@@ -88,7 +88,7 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
       val nVal = eval(n, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, VStar)
+      checkUniverse(i, aType)
 
       val nType = iType(i, named, bound, n)
       checkEqual(i, nType, VNat)
@@ -107,10 +107,10 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
       val vecVal = eval(vec, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, VStar)
+      checkUniverse(i, aType)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VStar})}))
+      checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VUniverse(-1)})}))
 
       val nilCaseType = iType(i, named, bound, nilCase)
       checkEqual(i, nilCaseType, mVal @@ VZero @@ VVecNil(aVal))

@@ -5,12 +5,18 @@ import org.kiama.output.PrettyPrinter
 trait CoreAST {
   trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
-  case object Star extends Term
   case class Bound(i: Int) extends Term
   case class Free(n: Name) extends Term
 
+  case class Universe(i: Int) extends Term {
+    override def equals(that: Any) = that match {
+      case Universe(k) => i == k || i == -1 || k == -1
+      case _ => false
+    }
+  }
+
   trait Value
-  case object VStar extends Value
+  case class VUniverse(i: Int) extends Value
   case class VNeutral(n: Neutral) extends Value
   trait Neutral
   case class NFree(n: Name) extends Neutral
@@ -31,8 +37,14 @@ trait CoreAST {
 
 trait MCore extends CoreAST {
   def fromM(m: MTerm): Term = m match {
-    case MVar(Global("*")) =>
-      Star
+    case MVar(Global("Set")) =>
+      Universe(0)
+    case MVar(Global("Set0")) =>
+      Universe(0)
+    case MVar(Global("Set1")) =>
+      Universe(1)
+    case MVar(Global("Set2")) =>
+      Universe(2)
     case MVar(Quote(i)) =>
       Bound(i)
     case MVar(n) =>
@@ -53,8 +65,8 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
   def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " :: " , nest(print(0, ii, ty))))))
-    case Star =>
-      "*"
+    case Universe(i) =>
+      s"Set$i"
     case Bound(k) if ii - k - 1 >= 0 =>
       vars(ii - k - 1)
     case Free(n) =>
@@ -69,8 +81,8 @@ trait CoreQuote extends CoreAST {
     quote(0, v)
 
   def quote(ii: Int, v: Value): Term = v match {
-    case VStar =>
-      Star
+    case VUniverse(i) =>
+      Universe(i)
     case VNeutral(n) =>
       neutralQuote(ii, n)
   }
@@ -95,8 +107,8 @@ trait CoreEval extends CoreAST {
   def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Ann(e, _) =>
       eval(e, named, bound)
-    case Star =>
-      VStar
+    case Universe(i) =>
+      VUniverse(i)
     case Free(x) =>
       named.getOrElse(x, vfree(x))
     case Bound(ii) =>
@@ -129,25 +141,28 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     }
   }
 
+  def checkUniverse(i: Int, inferred: Value): Int = inferred match {
+    case VUniverse(k) =>
+      k
+    case _ =>
+      val infTerm = quote(i, inferred)
+      throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: Set(_)")
+  }
+
   // todo: eval with bound - do we need it?? !!!
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
-    // TODO: universes
-    case Star => VStar
-    case Ann(e, Star) =>
-      val eType = iType(i, named, bound, e)
-      checkEqual(i, eType, VStar)
-      VStar
+    case Universe(i) =>
+      VUniverse(i + 1)
     case Ann(e, tp) =>
       val tpVal = eval(tp, named, Nil)
 
       val tpType = iType(i, named, bound, tp)
-      checkEqual(i, tpType, Star)
+      checkUniverse(i, tpType)
 
       val eType = iType(i, named, bound, e)
       checkEqual(i, eType, tpVal)
 
       tpVal
-
     case Free(x) =>
       bound.get(x) match {
         case Some(ty) => ty
@@ -158,8 +173,8 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Ann(c, c1) =>
       Ann(iSubst(i, r, c), iSubst(i, r, c1))
-    case Star =>
-      Star
+    case Universe(k) =>
+      Universe(k)
     case Bound(j) =>
       if (i == j) r else Bound(j)
     case Free(y) =>
@@ -193,16 +208,14 @@ trait CoreREPL2 extends CoreAST with MCore with CorePrinter with CoreEval with C
     pretty(print(0, 0, quote0(t)))
   def assume(state: State, x: (String, Term)): State = {
     x._2 match {
-      case Star =>
-        output(icprint(iquote(VStar)))
-        state.copy(ctx = state.ctx + (s2name(x._1) -> VStar))
       case _ =>
-        itype(state.ne, state.ctx, Ann(x._2, Star)) match {
-          case Right(_) =>
-            val v = ieval(state.ne, Ann(x._2, Star))
+        itype(state.ne, state.ctx, x._2) match {
+          case Right(VUniverse(k)) =>
+            val v = ieval(state.ne, Ann(x._2, Universe(k)))
             output(icprint(iquote(v)))
             state.copy(ctx = state.ctx + (s2name(x._1) -> v))
           case Left(_) =>
+            handleError("not a type")
             state
         }
     }

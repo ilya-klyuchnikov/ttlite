@@ -1,25 +1,25 @@
 -- here we have proofs of correctness of transformations!!!
 
 -- :r tt/sc02.pi
-let id  = (\ (a :: *) (x :: a) . x )
-    :: forall (a :: *) (x :: a) . a;
-let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
+let id  = (\ (a :: Set) (x :: a) . x )
+    :: forall (a :: Set) (x :: a) . a;
+let const = (\ (a :: Set) (b :: Set) (x :: a) (y :: b) -> x)
+    :: forall (a :: Set) (b :: Set) (_ :: a) (_ :: b) . a;
 
 -- equality congruence for arguments
 -- equality congruence
 let cong1 =
-  ( \ (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Eq a x y) ->
+  ( \ (a :: Set) (b :: Set) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Eq a x y) ->
         eqElim a
             (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
             (\ (x :: a) -> Refl b (f x))
             x
             y
             eq)
-  :: forall (a :: *) (b :: *) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (_ :: Eq a x y) . Eq b (f x) (f y);
+  :: forall (a :: Set) (b :: Set) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (_ :: Eq a x y) . Eq b (f x) (f y);
 
 let fcong1 =
-  ( \ (a :: *) (b :: *) (x :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq :: Eq (forall (_ :: a) . b) f g) ->
+  ( \ (a :: Set) (b :: Set) (x :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq :: Eq (forall (_ :: a) . b) f g) ->
         eqElim
             (forall (_ :: a) . b)
             (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Eq (forall (_ :: a) . b) f g) -> Eq b (f x) (g x))
@@ -28,8 +28,8 @@ let fcong1 =
             g
             eq)
   :: forall
-        (a :: *)
-        (b :: *)
+        (a :: Set)
+        (b :: Set)
         (x :: a)
         (f :: forall (_ :: a) . b)
         (g :: forall (_ :: a) . b)
@@ -37,15 +37,15 @@ let fcong1 =
         Eq b (f x) (g x);
 
 let fargCong =
-  ( \ (a :: *) (b :: *) (x :: a) (y :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_x_y :: Eq a x y) (eq_f_g :: Eq (forall (_ :: a) . b) f g)  ->
+  ( \ (a :: Set) (b :: Set) (x :: a) (y :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_x_y :: Eq a x y) (eq_f_g :: Eq (forall (_ :: a) . b) f g)  ->
         eqElim (forall (_ :: a) . b)
             (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Eq (forall (_ :: a) . b) f g) ->  Eq b (f x) (g y))
             (\ (f :: forall (_ :: a) . b) -> cong1 a b f x y eq_x_y)
             f
             g
             eq_f_g) ::
-  forall (a :: *)
-         (b :: *)
+  forall (a :: Set)
+         (b :: Set)
          (x :: a)
          (y :: a)
          (f :: forall (_ :: a) . b)
@@ -55,9 +55,9 @@ let fargCong =
          Eq b (f x) (g y);
 
 let cong2 =
-     \ (a :: *)
-       (b :: *)
-       (c :: *)
+     \ (a :: Set)
+       (b :: Set)
+       (c :: Set)
        (f :: forall (_ :: a) (_ :: b) . c)
        (x1 :: a)
        (x2 :: a)
@@ -232,21 +232,21 @@ let list2Nil = \ (n :: List Nat) ->
 
 sc2 list2Nil l;
 
-let appendType = forall (a :: *) . forall (_ :: List a) . forall (_ :: List a) . List a;
+let appendType = forall (a :: Set) . forall (_ :: List a) . forall (_ :: List a) . List a;
 let append =
-  (\(a :: *) (xs :: List a) (ys :: List a) ->
+  (\(a :: Set) (xs :: List a) (ys :: List a) ->
     listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
         appendType;
 
 assume (l1 :: List Nat);
 assume (l2 :: List Nat);
 
---let listId = \ (a :: *) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w);
+--let listId = \ (a :: Set) -> listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w);
 
-let listId1 = \ (a :: *) (xs :: List a) ->
+let listId1 = \ (a :: Set) (xs :: List a) ->
     listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v vs) xs;
 
-let listId2 = \ (a :: *) (xs :: List a) ->
+let listId2 = \ (a :: Set) (xs :: List a) ->
     listElim a (\ (_ :: List a) -> List a ) (Nil a) (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v vs) xs;
 
 sc append Nat l1 l2;
@@ -280,22 +280,22 @@ sc2 natId x;
 
 sc append Nat b b1;
 
-let fst1 = \ (a :: *) (b :: forall (_ :: a) . *) (p :: (exists (x :: a) . b x)) ->
+let fst1 = \ (a :: Set) (b :: forall (_ :: a) . Set) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (_ :: exists (x :: a) . b x) -> a)
                 (\(x :: a) (y :: b x) -> x)
                 p;
 
-assume (A1 :: *);
-assume (B1 :: forall (_ :: A1) . *);
+assume (A1 :: Set);
+assume (B1 :: forall (_ :: A1) . Set);
 
 assume ($p :: exists (x :: A1) . B1 x);
 
 sc fst1 A1 B1 $p;
 sc2 fst1 A1 B1 $p;
 
-let snd1 = \ (a :: *) (b :: forall (_ :: a) . *) (p :: (exists (x :: a) . b x)) ->
+let snd1 = \ (a :: Set) (b :: forall (_ :: a) . Set) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))

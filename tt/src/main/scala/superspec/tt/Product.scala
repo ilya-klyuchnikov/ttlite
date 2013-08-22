@@ -65,21 +65,21 @@ trait ProductCheck extends FunCheck with ProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      val j = checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      val k = checkUniverse(i, bType)
 
-      VStar
+      VUniverse(math.max(j, k))
     case Pair(a, b, x, y) =>
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      checkUniverse(i, bType)
 
       val xType = iType(i, named, bound, x)
       checkEqual(i, xType, aVal)
@@ -95,16 +95,16 @@ trait ProductCheck extends FunCheck with ProductAST {
       val pVal = eval(p, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val bType = iType(i, named, bound, b)
-      checkEqual(i, bType, Star)
+      checkUniverse(i, bType)
 
       val pType = iType(i, named, bound, p)
       checkEqual(i, pType, VProduct(aVal, bVal))
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VUniverse(-1)}))
 
       val fType = iType(i, named, bound, f)
       checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(aVal, bVal, a, b))))

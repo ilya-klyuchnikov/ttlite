@@ -1,8 +1,3 @@
-let id  = (\ (a :: *) (x :: a) . x )
-    :: forall (a :: *) (x :: a) . a;
-let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
-
 -- addition of natural numbers
 let plus =
     \ (n :: Nat) .
@@ -26,10 +21,10 @@ let pred =
 -- a simpler elimination scheme for natural numbers:
 -- a result type doesn't depend on n
 let natFold =
-    ( \ (m :: *) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
+    ( \ (m :: Set) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
         natElim
             (\ (_ :: Nat) -> m )
              mz
              (\ (n1 :: Nat) (rec :: m) -> ms rec )
              n )
-  :: forall (m :: *) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;
+  :: forall (m :: Set) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;

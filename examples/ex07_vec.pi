@@ -7,11 +7,11 @@ let v2 = VCons Nat (Succ Zero) (Succ (Succ Zero)) v1 :: Vec Nat (Succ (Succ Zero
 let replicate =
     (\ (n :: Nat) ->
         natElim
-            (\ (n :: Nat) -> forall (a :: *) (_ :: a) . Vec a n )
-            (\ (a :: *) (_ :: a) -> VNil a )
-            (\ (n :: Nat) (rec :: forall (a :: *) (_ :: a) . Vec a n) (a :: *) (x :: a) -> VCons a n x (rec a x) )
+            (\ (n :: Nat) -> forall (a :: Set) (_ :: a) . Vec a n )
+            (\ (a :: Set) (_ :: a) -> VNil a )
+            (\ (n :: Nat) (rec :: forall (a :: Set) (_ :: a) . Vec a n) (a :: Set) (x :: a) -> VCons a n x (rec a x) )
              n )
-  :: forall (n :: Nat) . forall (a :: *) (_ :: a) . Vec a n;
+  :: forall (n :: Nat) . forall (a :: Set) (_ :: a) . Vec a n;
 
 --let v3 = replicate 3 Nat 0;
 

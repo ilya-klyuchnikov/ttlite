@@ -1,8 +1,8 @@
 let thSum01 =
-    forall (A :: *) (B :: *) (_ :: Sum A B) . Sum B A;
+    forall (A :: Set) (B :: Set) (_ :: Sum A B) . Sum B A;
 
 let proofSum01 =
-    (\ (A :: *) (B :: *) (s :: Sum A B) ->
+    (\ (A :: Set) (B :: Set) (s :: Sum A B) ->
         sumElim A B
             (\ (_ :: Sum A B) -> Sum B A)
             (\ (a :: A) . InR B A a)

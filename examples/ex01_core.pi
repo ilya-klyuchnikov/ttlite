@@ -1,9 +1,16 @@
-let t = \ (x :: *) -> x;
+Set0 :: Set1;
 
-let id  = (\ (a :: *) (x :: a) . x )
-    :: forall (a :: *) (x :: a) . a;
-let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
+(forall (x :: Set0) . Set0) :: Set1;
+(forall (x :: Set1) . Set0) :: Set2;
+(forall (x :: Set1) . Set1) :: Set2;
 
-let const1 = (\ (a :: *) (x :: a) (b :: *) (y :: b) -> x)
-    :: forall (a :: *) (_ :: a) (b :: *) (_ :: b) . a;
+let t = \ (x :: Set) -> x;
+
+let id  = (\ (a :: Set) (x :: a) . x )
+    :: forall (a :: Set) (x :: a) . a;
+
+let const = (\ (a :: Set) (b :: Set) (x :: a) (y :: b) -> x)
+    :: forall (a :: Set) (b :: Set) (_ :: a) (_ :: b) . a;
+
+let const1 = (\ (a :: Set) (x :: a) (b :: Set) (y :: b) -> x)
+    :: forall (a :: Set) (_ :: a) (b :: Set) (_ :: b) . a;

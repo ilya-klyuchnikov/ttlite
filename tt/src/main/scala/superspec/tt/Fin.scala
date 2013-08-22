@@ -105,7 +105,7 @@ trait FinEval extends FunEval with FinAST {
 trait FinCheck extends FunCheck with FinAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Fin(n) =>
-      VStar
+      VUniverse(0)
     case FinElem(i, n) =>
       VFin(n)
     case FinElim(n, m, cases, elem) =>
@@ -113,7 +113,7 @@ trait FinCheck extends FunCheck with FinAST {
       val elemVal = eval(elem, named, List())
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VFin(n), {_ => VStar}))
+      checkEqual(i, mType, VPi(VFin(n), {_ => VUniverse(-1)}))
 
       val casesTypes = cases.map(iType(i, named, bound, _))
       casesTypes.zipWithIndex.foreach { case (tp, in) =>

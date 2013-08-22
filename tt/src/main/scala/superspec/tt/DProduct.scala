@@ -87,20 +87,16 @@ trait DProductEval extends FunEval with DProductAST {
 
 trait DProductCheck extends FunCheck with DProductAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
-    case Sigma(Star, tp) =>
-      val tpType = iType(i + 1, named,  bound + (Local(i) -> VStar), iSubst(0, Free(Local(i)), tp))
-      checkEqual(i, tpType, Star)
-      VStar
     case Sigma(x, tp) =>
       val xVal = eval(x, named, Nil)
 
       val xType = iType(i, named, bound, x)
-      checkEqual(i, xType, Star)
+      val j = checkUniverse(i, xType)
 
       val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
-      checkEqual(i, tpType, Star)
+      val k = checkUniverse(i, tpType)
 
-      VStar
+      VUniverse(math.max(j, k))
     case DPair(sigma, x, y) =>
       eval(sigma, named, Nil) match {
         case VSigma(a, f) =>
@@ -118,7 +114,7 @@ trait DProductCheck extends FunCheck with DProductAST {
       }
     case SigmaElim(sigma, m, f, p) =>
       val sigmaType = iType(i, named, bound, sigma)
-      checkEqual(i, sigmaType, Star)
+      checkUniverse(i, sigmaType)
       eval(sigma, named, Nil) match {
         case sigmaVal@VSigma(x1, x2) =>
 
@@ -128,7 +124,7 @@ trait DProductCheck extends FunCheck with DProductAST {
           val pVal = eval(p, named, List())
 
           val mType = iType(i, named, bound, m)
-          checkEqual(i, mType, VPi(sigmaVal, {_ => VStar}))
+          checkEqual(i, mType, VPi(sigmaVal, {_ => VUniverse(-1)}))
 
           val mVal = eval(m, named, List())
 

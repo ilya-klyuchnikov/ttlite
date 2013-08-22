@@ -1,20 +1,21 @@
-let t = \ (x :: *) -> x;
+let t = \ (x :: Set) -> x;
 
-let id  = (\ (a :: *) (x :: a) . x )
-    :: forall (a :: *) (x :: a) . a;
-let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
+let id  = (\ (a :: Set) (x :: a) . x )
+    :: forall (a :: Set) (x :: a) . a;
 
-let const1 = (\ (a :: *) (x :: a) (b :: *) (y :: b) -> x)
-    :: forall (a :: *) (_ :: a) (b :: *) (_ :: b) . a;
+let const = (\ (a :: Set) (b :: Set) (x :: a) (y :: b) -> x)
+    :: forall (a :: Set) (b :: Set) (_ :: a) (_ :: b) . a;
+
+let const1 = (\ (a :: Set) (x :: a) (b :: Set) (y :: b) -> x)
+    :: forall (a :: Set) (_ :: a) (b :: Set) (_ :: b) . a;
 
 -- TODO we need true universes here in order to specify fst and snd
 -- let fst = sigmaElim (exists (x :: Nat) . Eq Nat x 1;)
 
 --let tmp = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) -> p;
 
-assume (A :: *);
-assume (B :: *);
+assume (A :: Set);
+assume (B :: Set);
 assume (p :: (exists (x :: A) . B));
 
 assume (xa :: A);
@@ -30,15 +31,16 @@ let e1 = sigmaElim (exists (x :: A) . B) m f p1;
 
 let fst0 = \ (p2 :: (exists (x :: A) . B)) -> sigmaElim (exists (x :: A) . B) m f p2;
 
+
 -- fst for non-dependent pairs
-let fst = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) ->
+let fst = \ (a :: Set) (b :: Set) (p :: (exists (x :: a) . b)) ->
             sigmaElim
                 (exists (x :: a) . b)
                 (\ (_ :: exists (x :: a) . b) -> a)
                 (\(x :: a) (y :: b) -> x)
                 p;
 
-let snd = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) ->
+let snd = \ (a :: Set) (b :: Set) (p :: (exists (x :: a) . b)) ->
             sigmaElim
                 (exists (x :: a) . b)
                 (\ (_ :: exists (x :: a) . b) -> b)
@@ -46,14 +48,14 @@ let snd = \ (a :: *) (b :: *) (p :: (exists (x :: a) . b)) ->
                 p;
 
 -- true fst - works only with universes or with macros
-let fst1 = \ (a :: *) (b :: (forall (_ :: a). *)) (p :: (exists (x :: a) . b x)) ->
+let fst1 = \ (a :: Set) (b :: (forall (_ :: a). Set)) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (_ :: exists (x :: a) . b x) -> a)
                 (\(x :: a) (y :: b x) -> x)
                 p;
 
-let snd1 = \ (a :: *) (b :: (forall (_ :: a). *)) (p :: (exists (x :: a) . b x)) ->
+let snd1 = \ (a :: Set) (b :: (forall (_ :: a). Set)) (p :: (exists (x :: a) . b x)) ->
             sigmaElim
                 (exists (x :: a) . b x)
                 (\ (p :: (exists (x :: a) . b x)) -> b (fst1 a b p))

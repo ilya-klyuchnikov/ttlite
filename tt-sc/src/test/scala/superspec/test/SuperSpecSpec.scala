@@ -19,3 +19,4 @@ class Sc2SpecWIP extends org.scalatest.FunSpec {
     TTScREPL2.main(Array("examples/sc03.tt"))
   }
 }
+

@@ -1,7 +1,7 @@
-let id  = (\ (a :: *) (x :: a) . x )
-    :: forall (a :: *) (x :: a) . a;
-let const = (\ (a :: *) (b :: *) (x :: a) (y :: b) -> x)
-    :: forall (a :: *) (b :: *) (_ :: a) (_ :: b) . a;
+let id  = (\ (a :: Set) (x :: a) . x )
+    :: forall (a :: Set) (x :: a) . a;
+let const = (\ (a :: Set) (b :: Set) (x :: a) (y :: b) -> x)
+    :: forall (a :: Set) (b :: Set) (_ :: a) (_ :: b) . a;
 
 let Void = Fin_0;
 -- unit type
@@ -15,13 +15,13 @@ let Bool = Fin_2;
 let False = finElem_1_2;
 let True  = finElem_2_2;
 
-let abort = \(m :: *) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+let abort = \(m :: Set) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
 
 let boolElim =
-    \ (m :: forall (_ :: Fin_2) . *) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
+    \ (m :: forall (_ :: Fin_2) . Set) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
         finElim_2 m c1 c2 b;
 
---let Prop = boolElim (\ (_ :: Bool) -> *) Void Unit;
+--let Prop = boolElim (\ (_ :: Bool) -> Set) Void Unit;
 
 let not = boolElim (\ (_ :: Bool) -> Bool) True False;
 let and = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (\ (_ :: Bool) -> False) (id Bool);

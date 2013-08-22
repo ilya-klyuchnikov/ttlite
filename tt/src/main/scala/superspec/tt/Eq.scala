@@ -67,7 +67,7 @@ trait EqCheck extends FunCheck with EqAST {
       val aVal = eval(a, named, Nil)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      val m = checkUniverse(i, aType)
 
       val xType = iType(i, named, bound, x)
       checkEqual(i, xType, aVal)
@@ -75,13 +75,13 @@ trait EqCheck extends FunCheck with EqAST {
       val yType = iType(i, named, bound, y)
       checkEqual(i, yType, aVal)
 
-      VStar
+      VUniverse(m)
     case Refl(a, z) =>
       val aVal = eval(a, named, Nil)
       val zVal = eval(z, named, Nil)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val zType = iType(i, named, bound, z)
       checkEqual(i, zType, aVal)
@@ -96,7 +96,7 @@ trait EqCheck extends FunCheck with EqAST {
       val eqVal = eval(y, named, Nil)
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val xType = iType(i, named, bound, x)
       checkEqual(i, xType, aVal)
@@ -105,7 +105,7 @@ trait EqCheck extends FunCheck with EqAST {
       checkEqual(i, yType, aVal)
 
       val propType = iType(i, named, bound, prop)
-      checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VStar})})}))
+      checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VUniverse(-1)})})}))
 
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}

@@ -74,20 +74,20 @@ trait ListCheck extends FunCheck with ListAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case PiList(a) =>
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
-      VStar
+      val j = checkUniverse(i, aType)
+      VUniverse(j)
     case PiNil(a) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       VPiList(aVal)
     case PiCons(a, head, tail) =>
       val aVal = eval(a, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val hType = iType(i, named, bound, head)
       checkEqual(i, hType, aVal)
@@ -102,10 +102,10 @@ trait ListCheck extends FunCheck with ListAST {
       val xsVal = eval(xs, named, List())
 
       val aType = iType(i, named, bound, a)
-      checkEqual(i, aType, Star)
+      checkUniverse(i, aType)
 
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VPiList(aVal), {_ => VStar}))
+      checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}))
 
       val nilCaseType = iType(i, named, bound, nilCase)
       checkEqual(i, nilCaseType, mVal @@ VPiNil(aVal))

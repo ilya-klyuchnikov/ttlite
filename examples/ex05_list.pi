@@ -1,13 +1,13 @@
-let appendType = forall (a :: *) (_ :: List a) (_ :: List a) . List a;
+let appendType = forall (a :: Set) (_ :: List a) (_ :: List a) . List a;
 let append =
-  (\(a :: *) (xs :: List a) (ys :: List a) ->
+  (\(a :: Set) (xs :: List a) (ys :: List a) ->
     listElim a
         (\ (_ :: List a) -> List a)
         ys
         (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs) ::
             appendType;
 
-let X = (forall (a :: *). a);
+assume (X :: Set);
 assume (x :: X);
 
 let l1 = Cons X x (Nil X);
