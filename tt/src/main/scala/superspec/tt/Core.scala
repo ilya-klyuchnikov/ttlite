@@ -80,7 +80,7 @@ trait CoreQuote extends CoreAST {
   }
 
   private def boundFree(ii: Int, n: Name): Term = n match {
-    // "shift hack - for beta reduction
+    // "shift hack" - for beta reduction
     case Quote(k) if ii - k - 1 == 0 =>
       Bound(0)
     case Quote(k) =>
@@ -147,7 +147,6 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       checkEqual(i, eType, tpVal)
 
       tpVal
-
 
     case Free(x) =>
       bound.get(x) match {

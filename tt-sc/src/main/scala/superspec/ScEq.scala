@@ -34,7 +34,6 @@ trait EqProofResiduator extends EqResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(x, ReflLabel) :: Nil =>
-
         val eq@VEq(a, _, _) = eval(node.conf.tp, env, bound)
         'cong1 @@
           a @@

@@ -5,6 +5,7 @@ import superspec.tt._
 
 trait TTSc extends CoreSubst {
 
+  // todo: it should be a term + context
   case class Conf(term: Term, tp: Term)
 
   trait Label
@@ -27,6 +28,7 @@ trait TTSc extends CoreSubst {
     override def step(t: Conf) = StopStep
   }
 
+  // just steps are more low-level
   sealed trait Step {
     val graphStep: GraphRewriteStep[Conf, Label]
   }
@@ -54,9 +56,8 @@ trait TTSc extends CoreSubst {
       var node = g.current
       while (node.in != null) {
         node.in.driveInfo match {
-          case ElimLabel(_, _, sub)
-            if node.in.node.conf.term / sub == term =>
-              return Some(node.in.node)
+          case ElimLabel(_, _, sub) if node.in.node.conf.term / sub == term =>
+            return Some(node.in.node)
           case _ =>
         }
         node = node.in.node
@@ -65,9 +66,8 @@ trait TTSc extends CoreSubst {
     }
   }
   trait Folding extends PiRules {
-    override def fold(signal: Signal, g: G): List[S] = {
+    override def fold(signal: Signal, g: G): List[S] =
       signal.map(n => FoldStep(n.sPath): S).toList
-    }
   }
   trait NoRebuildings extends PiRules {
     override def rebuild(signal: Signal, g: G) = List()
@@ -127,39 +127,36 @@ trait ProofResiduator extends BaseResiduator with EqAST {
 
 trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
-    case SC(it0) =>
-      val it = fromM(it0)
-      iinfer(state.ne, state.ctx, it) match {
+    case SC(mterm) =>
+      val term = fromM(mterm)
+      iinfer(state.ne, state.ctx, term) match {
         case None =>
           handleError("types")
           state
         case Some(tp) =>
-          val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+          val conf = Conf(iquote(ieval(state.ne, term)), iquote(tp))
+          val sGraph = GraphGenerator(Rules, conf).toList.head
+          val tGraph = Transformations.transpose(sGraph)
+          output(tgToString(tGraph))
 
-          val rules = new Rules
-          val gs = GraphGenerator(rules, goal)
-          for (g <- gs) {
-            val tGraph = Transformations.transpose(g)
-            output(tgToString(tGraph))
-            val resVal = residuate(tGraph, state.ne)
-            val cTerm = iquote(resVal)
-            val cType = iquote(tp)
+          val resVal = residuate(tGraph, state.ne)
+          val resTerm = iquote(resVal)
+          val inType = iquote(tp)
 
-            output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
-            output("output: [\n" + icprint(cTerm) + "\n]")
+          output("input: [\n" + icprint(iquote(ieval(state.ne, term))) + "\n]")
+          output("output: [\n" + icprint(resTerm) + "\n]")
 
-            val iTerm = Ann(cTerm, cType)
-            val t2 = iinfer(state.ne, state.ctx, iTerm)
+          // checking that residual term has the same type
+          val t2 = iinfer(state.ne, state.ctx, Ann(resTerm, inType))
 
-            t2 match {
-              case None =>
-                println("error for term: \n" + icprint(cTerm))
-                handleError("error for term: \n" + icprint(cTerm))
-              case Some(t3) =>
-                output("input: [\n" + icprint(iquote(ieval(state.ne, it))) + "\n]")
-                output("output: [\n" + icprint(cTerm) + "\n]")
-                output("output type: " + icprint(iquote(t3)))
-            }
+          t2 match {
+            case None =>
+              println("error for term: \n" + icprint(resTerm))
+              handleError("error for term: \n" + icprint(resTerm))
+            case Some(t3) =>
+              output("input: [\n" + icprint(iquote(ieval(state.ne, term))) + "\n]")
+              output("output: [\n" + icprint(resTerm) + "\n]")
+              output("output type: " + icprint(iquote(t3)))
           }
       }
       state
@@ -170,35 +167,33 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
           handleError("")
           state
         case Some(tp) =>
-          val goal = Conf(iquote(ieval(state.ne, it)), iquote(tp))
-          val rules = new Rules
-          val gs = GraphGenerator(rules, goal)
-          for (g <- gs) {
-            val tGraph = Transformations.transpose(g)
-            //output(tgToString(tGraph))
-            val resVal = residuate(tGraph, state.ne)
-            val cTerm = iquote(resVal)
-            val cType = iquote(tp)
+          val conf = Conf(iquote(ieval(state.ne, it)), iquote(tp))
+          val sGraph = GraphGenerator(Rules, conf).toList.head
+          val tGraph = Transformations.transpose(sGraph)
 
-            val iTerm = Ann(cTerm, cType)
+          //output(tgToString(tGraph))
+          val resVal = residuate(tGraph, state.ne)
+          val cTerm = iquote(resVal)
+          val cType = iquote(tp)
 
-            val t2 = iinfer(state.ne, state.ctx, iTerm)
-            t2 match {
-              case None =>
-                handleError("")
-              case Some(t3) =>
-                output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
-                val proof = proofResiduate(tGraph, state.ne)
-                val proofTerm = /*iquote(proof)*/ iquote(ieval(state.ne, iquote(proof)))
-                val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
-                val t4 = iinfer(state.ne, state.ctx, annProofTerm)
-                output("proof:")
-                output(icprint(proofTerm))
-                //output("expected type:")
-                //output(icprint(Eq(cType, it, cTerm)))
-                output("::")
-                output(icprint(iquote(t4.get)))
-            }
+          val iTerm = Ann(cTerm, cType)
+
+          val t2 = iinfer(state.ne, state.ctx, iTerm)
+          t2 match {
+            case None =>
+              handleError("")
+            case Some(t3) =>
+              output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
+              val proof = proofResiduate(tGraph, state.ne)
+              val proofTerm = /*iquote(proof)*/ iquote(ieval(state.ne, iquote(proof)))
+              val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
+              val t4 = iinfer(state.ne, state.ctx, annProofTerm)
+              output("proof:")
+              output(icprint(proofTerm))
+              //output("expected type:")
+              //output(icprint(Eq(cType, it, cTerm)))
+              output("::")
+              output(icprint(iquote(t4.get)))
           }
       }
       state
@@ -206,12 +201,13 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
       super.handleStmt(state, stmt)
   }
 
-  class Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
+  object Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
     val maxDepth = 20
   }
 }
 
-object TTScREPL2 extends ScREPL
+object TTScREPL2
+  extends ScREPL
   with CoreREPL2 with CoreDriver with CoreResiduator with CoreProofResiduator
   with FunREPL2 with FunDriver with FunResiduator with FunProofResiduator
   with DProductREPL2 with DProductDriver with DProductResiduator with DProductProofResiduator
