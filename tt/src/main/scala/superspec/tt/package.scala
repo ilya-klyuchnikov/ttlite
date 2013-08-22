@@ -32,8 +32,6 @@ case class Let[I](n: String, i: I) extends Stmt[I]
 case class Assume[I](ns: List[(String, I)]) extends Stmt[I]
 case class Eval[I](e: I) extends Stmt[I]
 case class Import(s: String) extends Stmt[Nothing]
-case class SC[I](e: I) extends Stmt[I]
-case class CertSC[I](e: I) extends Stmt[I]
 
 // PARSING
 class MetaLexical extends lexical.StdLexical {
@@ -77,8 +75,11 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
   val arg: PackratParser[(String, Res)] =
     "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
+
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-  lazy val stmts = List(letStmt, assumeStmt, importStmt, evalStmt, scStmt, sc2Stmt)
+
+  def stmts = List(letStmt, assumeStmt, importStmt, evalStmt)
+
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
     "let" ~> ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
   lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
@@ -87,10 +88,6 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     "import" ~> stringLit <~ ";" ^^ Import
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
     term <~ ";" ^^ {t => Eval(t(Nil))}
-  lazy val scStmt: PackratParser[Stmt[MTerm]] =
-    "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
-  lazy val sc2Stmt: PackratParser[Stmt[MTerm]] =
-    "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
 
   def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
   def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {

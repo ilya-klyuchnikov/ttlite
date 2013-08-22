@@ -125,7 +125,28 @@ trait ProofResiduator extends BaseResiduator with EqAST {
     }
 }
 
+case class SC[I](e: I) extends Stmt[I]
+case class CertSC[I](e: I) extends Stmt[I]
+case class LetSC[I](id1: String, id2: String, e: I) extends Stmt[I]
+
+trait ScParser extends MetaParser {
+  lexical.delimiters += ","
+  override def stmts = List(scStmt, sc2Stmt) ++ super.stmts
+  lazy val scStmt: PackratParser[Stmt[MTerm]] =
+    "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
+  lazy val sc2Stmt: PackratParser[Stmt[MTerm]] =
+    "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
+  // TODO: implement it
+  lazy val letScStmt: PackratParser[Stmt[MTerm]] =
+    ("let" ~ "(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
+      case id1 ~ id2 ~ t => LetSC(id1, id2, t(Nil))
+    }
+}
+
+object ScParser extends ScParser
+
 trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
+  override val parser = ScParser
   override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
     case SC(mterm) =>
       val term = fromM(mterm)

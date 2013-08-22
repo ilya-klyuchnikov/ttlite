@@ -30,6 +30,7 @@ trait MREPL {
   def itprint(t: V): String
   def assume(s: State, x: (String, T)): State
   def fromM(m: MTerm): T
+  val parser: MetaParser = MetaParser
   // TO OVERRIDE ENDS
 
   case class State(interactive: Boolean, ne: NameEnv[V], ctx: NameEnv[V], modules: Set[String])
@@ -80,12 +81,12 @@ trait MREPL {
     }
 
   private def loadModule(f: String, state: State, reload: Boolean): State =
-    if (state.modules(f) && ! reload)
+    if (state.modules(f) && !reload)
       return state
     else
       try {
         val input = scala.io.Source.fromFile(f).mkString
-        val parsed = MetaParser.parseIO(MetaParser.stmt+, input)
+        val parsed = parser.parseIO(parser.stmt+, input)
         parsed match {
           case Some(stmts) =>
             val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
