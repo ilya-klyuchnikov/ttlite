@@ -51,7 +51,7 @@ class MetaLexical extends lexical.StdLexical {
   override def identChar = letter | elem('_') | elem('$') | elem('\\') | elem('*')
 }
 
-object MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
+trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
   override val lexical = new MetaLexical
   lexical.reserved += ("assume", "let", "import", "sc", "sc2")
   lexical.delimiters += ("(", ")", "::", ".", "=", "->", ";")
@@ -102,6 +102,8 @@ object MetaParser extends syntactical.StandardTokenParsers with PackratParsers w
   }
   def parseMTerm(in: String) = parseIO(term, in).map(_(Nil)).get
 }
+
+object MetaParser extends MetaParser
 
 case class TypeError(msg: String) extends Exception(msg)
 
