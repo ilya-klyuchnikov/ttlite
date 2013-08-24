@@ -24,7 +24,7 @@ trait FunAST extends CoreAST {
     Free(Global(s.name))
 }
 
-trait MFun extends MCore with FunAST {
+trait FunMetaSyntax extends CoreMetaSyntax with FunAST {
   override def fromM(m: MTerm): Term = m match {
     case MBind("forall", t1, t2) =>
       Pi(fromM(t1), fromM(t2))
@@ -134,4 +134,4 @@ trait FunCheck extends CoreCheck with FunAST {
   }
 }
 
-trait FunREPL2 extends CoreREPL2 with FunAST with MFun with FunPrinter with FunCheck with FunEval with FunQuote
+trait FunREPL extends CoreREPL with FunAST with FunMetaSyntax with FunPrinter with FunCheck with FunEval with FunQuote

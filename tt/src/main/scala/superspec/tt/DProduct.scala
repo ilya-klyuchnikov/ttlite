@@ -10,7 +10,7 @@ trait DProductAST extends CoreAST {
   case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait MDProduct extends MCore with DProductAST {
+trait DProductMetaSyntax extends CoreMetaSyntax with DProductAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("sigmaElim")) @@ sigma @@ m @@ f @@ p =>
       SigmaElim(fromM(sigma), fromM(m), fromM(f), fromM(p))
@@ -151,10 +151,10 @@ trait DProductCheck extends FunCheck with DProductAST {
 
 }
 
-trait DProductREPL2
-  extends CoreREPL2
+trait DProductREPL
+  extends CoreREPL
   with DProductAST
-  with MDProduct
+  with DProductMetaSyntax
   with DProductPrinter
   with DProductCheck
   with DProductEval

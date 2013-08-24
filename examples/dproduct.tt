@@ -1,0 +1,15 @@
+-- projections of a dependent product
+
+let fstD = \ (a :: Set) (b :: (forall (_ :: a). Set)) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (_ :: exists (x :: a) . b x) -> a)
+                (\(x :: a) (y :: b x) -> x)
+                p;
+
+let sndD = \ (a :: Set) (b :: (forall (_ :: a). Set)) (p :: (exists (x :: a) . b x)) ->
+            sigmaElim
+                (exists (x :: a) . b x)
+                (\ (p :: (exists (x :: a) . b x)) -> b (fstD a b p))
+                (\(x :: a) (y :: b x) -> y)
+                p;

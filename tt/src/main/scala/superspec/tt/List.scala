@@ -12,7 +12,7 @@ trait ListAST extends CoreAST {
   case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
-trait MList extends MCore with ListAST {
+trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("List")) @@ a =>
       PiList(fromM(a))
@@ -154,4 +154,4 @@ trait ListQuote extends CoreQuote with ListAST {
   }
 }
 
-trait ListREPL2 extends CoreREPL2 with ListAST with MList with ListPrinter with ListCheck with ListEval with ListQuote
+trait ListREPL extends CoreREPL with ListAST with ListMetaSyntax with ListPrinter with ListCheck with ListEval with ListQuote

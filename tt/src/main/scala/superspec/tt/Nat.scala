@@ -12,7 +12,7 @@ trait NatAST extends CoreAST {
   case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
-trait MNat extends MCore with NatAST {
+trait MNat extends CoreMetaSyntax with NatAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Nat")) =>
       Nat
@@ -129,4 +129,4 @@ trait NatCheck extends FunCheck with NatAST {
 
 }
 
-trait NatREPL2 extends CoreREPL2 with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote
+trait NatREPL2 extends CoreREPL with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote

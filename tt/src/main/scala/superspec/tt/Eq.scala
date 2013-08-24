@@ -11,7 +11,7 @@ trait EqAST extends CoreAST {
   case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
 }
 
-trait MEq extends MCore with EqAST {
+trait EqMetaSyntax extends CoreMetaSyntax with EqAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Eq")) @@ a @@ x @@ y =>
       Eq(fromM(a), fromM(x), fromM(y))
@@ -147,4 +147,4 @@ trait EqQuote extends CoreQuote with EqAST {
   }
 }
 
-trait EqREPL2 extends CoreREPL2 with EqAST with MEq with EqPrinter with EqCheck with EqEval with EqQuote
+trait EqREPL extends CoreREPL with EqAST with EqMetaSyntax with EqPrinter with EqCheck with EqEval with EqQuote

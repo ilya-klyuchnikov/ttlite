@@ -1,3 +1,4 @@
+import "examples/list.tt";
 import "examples/eq.tt";
 
 -- compose (map f) unit = compose unit f
@@ -11,15 +12,6 @@ let comp =
 let unit =
     \ (A :: Set) (x :: A) ->
         Cons A x (Nil A);
-
-let map =
-    \ (A :: Set) (B :: Set) (f :: forall (_ :: A). B) (xs :: List A) ->
-        listElim
-            A
-            (\ (_ :: List A) -> List B)
-            (Nil B)
-            (\ (h :: A) (t :: List A) (rec :: List B) -> Cons B (f h) rec )
-            xs;
 
 assume ($A :: Set) ($B :: Set);
 assume ($f :: forall (_ :: $A). $B);

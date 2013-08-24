@@ -10,7 +10,7 @@ trait ProductAST extends CoreAST {
   case class NProductElim(A: Value, B: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait MProduct extends MCore with ProductAST {
+trait ProductMetaSyntax extends CoreMetaSyntax with ProductAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
       Product(fromM(a), fromM(b))
@@ -141,4 +141,4 @@ trait ProductQuote extends CoreQuote with ProductAST {
   }
 }
 
-trait ProductREPL2 extends CoreREPL2 with ProductAST with MProduct with ProductPrinter with ProductCheck with ProductEval with ProductQuote
+trait ProductREPL extends CoreREPL with ProductAST with ProductMetaSyntax with ProductPrinter with ProductCheck with ProductEval with ProductQuote

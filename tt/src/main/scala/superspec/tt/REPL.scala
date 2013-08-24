@@ -2,7 +2,7 @@ package superspec.tt
 
 import org.kiama.util.JLineConsole
 
-trait MREPL {
+trait REPL {
 
   // TO OVERRIDE STARTS
   type T // term
@@ -19,6 +19,7 @@ trait MREPL {
   def assume(s: State, x: (String, T)): State
   def fromM(m: MTerm): T
   val parser: MetaParser = MetaParser
+  val name: String
   // TO OVERRIDE ENDS
 
   case class State(interactive: Boolean, ne: NameEnv[V], ctx: NameEnv[V], modules: Set[String])
@@ -95,7 +96,7 @@ trait MREPL {
       }
 
   def loop(state: State) {
-    val in = JLineConsole.readLine("SUPERSPEC > ")
+    val in = JLineConsole.readLine(s"$name> ")
     parser.parseIO(parser.stmt, in) match {
       case Some(stm) =>
         val state1 = handleStmt(state, stm)
@@ -120,4 +121,18 @@ trait MREPL {
     }
   }
 
+}
+
+object TTREPL
+  extends CoreREPL
+  with FunREPL
+  with DProductREPL
+  with NatREPL2
+  with VectorREPL
+  with EqREPL
+  with FinREPL
+  with ListREPL
+  with ProductREPL
+  with SumREPL {
+  override val name = "TT"
 }

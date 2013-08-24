@@ -1,8 +1,6 @@
-let fst = (\ (a :: Set) (b :: Set) (p :: Product a b) ->
-                    productElim a b (\ (_ :: Product a b) -> a) (\(x :: a) (y :: b) -> x) p);
-let snd = (\ (a :: Set) (b :: Set) (p :: Product a b) ->
-                    productElim a b (\ (_ :: Product a b) -> b) (\(x :: a) (y :: b) -> y) p);
-
+import "examples/product.tt";
+import "examples/nat.tt";
+import "examples/fin.tt";
 
 let th1 = forall (A :: Set) (B :: Set) (_ :: Product A B) . Product B A;
 let pr1 = (\ (A :: Set) (B :: Set) (p :: Product A B) -> Pair B A (snd A B p) (fst A B p)) :: th1;
@@ -29,3 +27,9 @@ let pr2 =
         Pair A (Product B C)
             (fst A B (fst (Product A B) C p))
             (Pair B C (snd A B (fst (Product A B) C p)) (snd (Product A B) C p))) :: th2;
+
+
+let even    = natFold Bool True not;
+let odd     = natFold Bool False not;
+let isZero  = natFold Bool True (\  (_ :: Bool) -> False);
+let isSucc  = natFold Bool False (\ (_ :: Bool) -> True);

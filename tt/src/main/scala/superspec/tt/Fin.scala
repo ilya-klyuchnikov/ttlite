@@ -10,7 +10,7 @@ trait FinAST extends CoreAST {
   case class NFinElim(n: Int, motive: Value, cases: List[Value], elem: Neutral) extends Neutral
 }
 
-trait MFin extends MCore with FinAST {
+trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Fin_0")) =>
       Fin(0)
@@ -151,4 +151,4 @@ trait FinQuote extends CoreQuote with FinAST {
   }
 }
 
-trait FinREPL2 extends CoreREPL2 with FinAST with MFin with FinPrinter with FinCheck with FinEval with FinQuote
+trait FinREPL extends CoreREPL with FinAST with FinMetaSyntax with FinPrinter with FinCheck with FinEval with FinQuote

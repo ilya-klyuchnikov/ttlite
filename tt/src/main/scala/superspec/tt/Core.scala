@@ -35,7 +35,7 @@ trait CoreAST {
     Free(Global(s))
 }
 
-trait MCore extends CoreAST {
+trait CoreMetaSyntax extends CoreAST {
   def fromM(m: MTerm): Term = m match {
     case MVar(Global("Set")) =>
       Universe(0)
@@ -182,7 +182,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 }
 
-trait CoreREPL2 extends CoreAST with MCore with CorePrinter with CoreEval with CoreCheck with CoreQuote with MREPL {
+trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
   type T = Term
   type V = Value
 

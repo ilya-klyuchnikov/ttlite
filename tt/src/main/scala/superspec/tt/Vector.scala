@@ -12,7 +12,7 @@ trait VectorAST extends CoreAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
-trait MVector extends MNat with VectorAST {
+trait VectorMetaSyntax extends MNat with VectorAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Vec")) @@ a @@ n =>
       Vec(fromM(a), fromM(n))
@@ -178,4 +178,4 @@ trait VectorQuote extends CoreQuote with VectorAST {
   }
 }
 
-trait VectorREPL2 extends NatREPL2 with VectorAST with MVector with VectorPrinter with VectorCheck with VectorEval with VectorQuote
+trait VectorREPL extends NatREPL2 with VectorAST with VectorMetaSyntax with VectorPrinter with VectorCheck with VectorEval with VectorQuote

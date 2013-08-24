@@ -1,11 +1,8 @@
-let thSum01 =
-    forall (A :: Set) (B :: Set) (_ :: Sum A B) . Sum B A;
-
-let proofSum01 =
+let sum_swap =
     (\ (A :: Set) (B :: Set) (s :: Sum A B) ->
         sumElim A B
             (\ (_ :: Sum A B) -> Sum B A)
             (\ (a :: A) . InR B A a)
             (\ (b :: B) . InL B A b)
             s)
-        :: thSum01;
+        :: forall (A :: Set) (B :: Set) (_ :: Sum A B) . Sum B A;

@@ -1,3 +1,5 @@
+import "examples/core.tt";
+
 -- basic combinators for constructing
 -- equality proofs from equality proofs
 
@@ -163,3 +165,4 @@ let proof_by_sc =
       (eq_e2_res :: Eq A e2 res) ->
         tran A e1 res e2 eq_e1_res (symm A e2 res eq_e2_res)
             :: Eq A e1 e2;
+

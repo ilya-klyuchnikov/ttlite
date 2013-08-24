@@ -1,11 +1,3 @@
-Set0 :: Set1;
-
-(forall (x :: Set0) . Set0) :: Set1;
-(forall (x :: Set1) . Set0) :: Set2;
-(forall (x :: Set1) . Set1) :: Set2;
-
-let t = \ (x :: Set) -> x;
-
 let id  = (\ (a :: Set) (x :: a) . x )
     :: forall (a :: Set) (x :: a) . a;
 

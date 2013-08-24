@@ -273,12 +273,14 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
 
 object TTScREPL2
   extends ScREPL
-  with CoreREPL2 with CoreDriver with CoreResiduator with CoreProofResiduator
-  with FunREPL2 with FunDriver with FunResiduator with FunProofResiduator
-  with DProductREPL2 with DProductDriver with DProductResiduator with DProductProofResiduator
-  with SumREPL2 with SumDriver with SumResiduator with SumProofResiduator
-  with EqREPL2 with EqDriver with EqResiduator with EqProofResiduator
+  with CoreREPL with CoreDriver with CoreResiduator with CoreProofResiduator
+  with FunREPL with FunDriver with FunResiduator with FunProofResiduator
+  with DProductREPL with DProductDriver with DProductResiduator with DProductProofResiduator
+  with SumREPL with SumDriver with SumResiduator with SumProofResiduator
+  with EqREPL with EqDriver with EqResiduator with EqProofResiduator
   with NatREPL2 with NatDriver with NatResiduator with NatProofResiduator
-  with ListREPL2 with ListDriver with ListResiduator with ListProofResiduator
-  with ProductREPL2 with ProductDriver with ProductResiduator with ProductProofResiduator
-  with FinREPL2 with FinDriver with FinResiduator with FinProofResiduator
+  with ListREPL with ListDriver with ListResiduator with ListProofResiduator
+  with ProductREPL with ProductDriver with ProductResiduator with ProductProofResiduator
+  with FinREPL with FinDriver with FinResiduator with FinProofResiduator {
+  override val name = "SuperSpec"
+}

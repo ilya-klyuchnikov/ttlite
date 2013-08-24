@@ -1,14 +1,8 @@
+import "examples/nat.tt";
 import "examples/eq.tt";
 
 -- proof of the associativity of addition
 -- plus x (plus y z) = plus (plus x y) z
-
-let plus =
-    \ (x :: Nat) (y :: Nat) ->
-        natElim
-        (\ (_ :: Nat) -> Nat )
-        y
-        ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
 
 assume ($x :: Nat) ($y :: Nat) ($z :: Nat);
 

@@ -12,7 +12,7 @@ trait SumAST extends CoreAST {
   case class NSumElim(L: Value, R: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
-trait MSum extends MCore with SumAST {
+trait SumMetaSyntax extends CoreMetaSyntax with SumAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Sum")) @@ l @@ r =>
       Sum(fromM(l), fromM(r))
@@ -172,4 +172,4 @@ trait SumQuote extends CoreQuote with SumAST {
   }
 }
 
-trait SumREPL2 extends CoreREPL2 with SumAST with MSum with SumPrinter with SumCheck with SumEval with SumQuote
+trait SumREPL extends CoreREPL with SumAST with SumMetaSyntax with SumPrinter with SumCheck with SumEval with SumQuote
