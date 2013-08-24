@@ -1,0 +1,5 @@
+-- testing that each construction on sc-tt is executed at least once
+
+import "examples/core.tt";
+
+

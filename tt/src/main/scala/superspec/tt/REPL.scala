@@ -90,8 +90,8 @@ trait REPL {
         }
       } catch {
         case io: java.io.IOException =>
-          handleError("cannot open file")
           Console.println(s"Error: ${io.getMessage}")
+          handleError("cannot open file")
           state
       }
 
