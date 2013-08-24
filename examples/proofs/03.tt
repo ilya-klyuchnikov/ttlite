@@ -1,0 +1,23 @@
+import "examples/eq.tt";
+
+-- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuRcM
+-- Associativity of list concatenation
+
+let append =
+  (\(a :: Set) (xs :: List a) (ys :: List a) ->
+    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs);
+
+assume ($A :: Set) ($x :: List $A) ($y :: List $A) ($z :: List $A);
+
+
+let e1 = (append $A $x (append $A $y $z));
+let e2 = (append $A (append $A $x $y) $z);
+
+let (res1, proof1) = sc_with_proof e1;
+let (res2, proof2) = sc_with_proof e2;
+
+-- check that t1 and t2 are supercompiled into the same expression
+let eq_res1_res2 = Refl (List $A) res1 :: Eq (List $A) res1 res2;
+-- deriving equality
+let eq_e1_e2 =
+    proof_by_sc (List $A) e1 e2 res1 proof1 proof2 :: Eq (List $A) e1 e2;

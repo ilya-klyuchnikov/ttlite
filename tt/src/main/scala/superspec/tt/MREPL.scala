@@ -1,18 +1,6 @@
 package superspec.tt
 
-trait Command
-case class TypeOf(in: String) extends Command
-case class Compile(cf: CompileForm) extends Command
-case class Reload(f: String) extends Command
-case object Browse extends Command
-case object Quit extends Command
-case object Help extends Command
-case object Noop extends Command
-
-trait CompileForm
-case class CompileInteractive(s: String) extends CompileForm
-case class CompileFile(f: String) extends CompileForm
-case class Cmd(cs: List[String], argDesc: String, f: String => Command, info: String)
+import org.kiama.util.JLineConsole
 
 trait MREPL {
 
@@ -39,7 +27,7 @@ trait MREPL {
     if (batch) throw new Exception(msg)
 
   def output(x: Any): Unit =
-    if (!batch) Console.println(x)
+    if (!batch) Console.println(s"$x\n")
 
   def iinfer(ne: NameEnv[V], ctx: NameEnv[V], i: T): Option[V] =
     itype(ne, ctx, i) match {
@@ -52,6 +40,8 @@ trait MREPL {
 
   def handleStmt(state: State, stmt: Stmt[MTerm]): State =
     stmt match {
+      case Quit =>
+        sys.exit()
       case Assume(ass) =>
         val ass1 = ass.map{case (n, m) => (n, fromM(m))}
         ass1.foldLeft(state)(assume)
@@ -63,6 +53,8 @@ trait MREPL {
         handleLet(state, "it", e1)
       case Import(f) =>
         loadModule(f, state, reload = false)
+      case Reload(f) =>
+        loadModule(f, state, reload = true)
     }
 
   def handleLet(state: State, s: String, it: T): State =
@@ -102,9 +94,22 @@ trait MREPL {
           state
       }
 
+  def loop(state: State) {
+    val in = JLineConsole.readLine("SUPERSPEC > ")
+    parser.parseIO(parser.stmt, in) match {
+      case Some(stm) =>
+        val state1 = handleStmt(state, stm)
+        loop(state1)
+      case None =>
+        loop(state)
+    }
+  }
+
   def main(args: Array[String]) {
     var state = State(true, Map(), Map(), Set())
     args match {
+      case Array() =>
+        loop(state)
       case Array("-i", f) =>
         state = loadModule(f, state, reload = false)
       case _ =>

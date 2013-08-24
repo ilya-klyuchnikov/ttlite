@@ -1,0 +1,17 @@
+import "examples/eq.tt";
+
+-- Succ x = Succ x
+
+assume ($x :: Nat) ($y :: Nat) ($z :: Nat);
+
+let e1 = (Succ $x);
+let e2 = (Succ $x);
+let (res1, proof1) = sc_with_proof e1;
+let (res2, proof2) = sc_with_proof e2;
+
+-- associativity of addition using combinators
+-- check that t1 and t2 are supercompiled into the same expression
+let eq_res1_res2 = Refl Nat res1 :: Eq Nat res1 res2;
+-- deriving equality
+let eq_e1_e2 =
+    proof_by_sc Nat e1 e2 res1 proof1 proof2 :: Eq Nat e1 e2;

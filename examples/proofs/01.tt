@@ -1,0 +1,25 @@
+import "examples/eq.tt";
+
+-- proof of the associativity of addition
+-- plus x (plus y z) = plus (plus x y) z
+
+let plus =
+    \ (x :: Nat) (y :: Nat) ->
+        natElim
+        (\ (_ :: Nat) -> Nat )
+        y
+        ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
+
+assume ($x :: Nat) ($y :: Nat) ($z :: Nat);
+
+let e1 = (plus $x (plus $y $z));
+let e2 = (plus (plus $x $y) $z);
+let (res1, proof1) = sc_with_proof e1;
+let (res2, proof2) = sc_with_proof e2;
+
+-- associativity of addition using combinators
+-- check that t1 and t2 are supercompiled into the same expression
+let eq_res1_res2 = Refl Nat res1 :: Eq Nat res1 res2;
+-- deriving equality
+let eq_e1_e2 =
+    proof_by_sc Nat e1 e2 res1 proof1 proof2 :: Eq Nat e1 e2;

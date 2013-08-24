@@ -1,0 +1,31 @@
+import "examples/eq.tt";
+
+-- compose (map f) unit = compose unit f
+-- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuxcM
+-- we even do not need supercompilation here: normalization is enough
+
+let comp =
+    \ (A :: Set) (B :: Set) (C :: Set) (f :: forall (_ :: B). C) (g :: forall (_ :: A). B) (x :: A) ->
+        f (g x);
+
+let unit =
+    \ (A :: Set) (x :: A) ->
+        Cons A x (Nil A);
+
+let map =
+    \ (A :: Set) (B :: Set) (f :: forall (_ :: A). B) (xs :: List A) ->
+        listElim
+            A
+            (\ (_ :: List A) -> List B)
+            (Nil B)
+            (\ (h :: A) (t :: List A) (rec :: List B) -> Cons B (f h) rec )
+            xs;
+
+assume ($A :: Set) ($B :: Set);
+assume ($f :: forall (_ :: $A). $B);
+assume ($x :: $A);
+
+let e1 = comp $A $B (List $B) (unit $B) $f;
+let e2 = comp $A (List $A) (List $B) (map $A $B $f) (unit $A);
+
+let proof = Refl (forall (_ :: $A) . List $B) e1 :: Eq (forall (_ :: $A) . List $B) e1 e2;

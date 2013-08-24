@@ -24,7 +24,8 @@ object SuperSpecBuild extends Build {
       version := "0.1",
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
-      baseDirectory in run := file(".")
+      baseDirectory in run := file("."),
+      testOptions in Test += Tests.Argument("-oD")
     ) //++ ScctPlugin.instrumentSettings
   ) dependsOn(TTProject)
 

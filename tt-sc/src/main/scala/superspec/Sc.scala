@@ -131,14 +131,15 @@ case class LetSC[I](id1: String, id2: String, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
-  override def stmts = List(scStmt, sc2Stmt) ++ super.stmts
+  lexical.reserved += "sc_with_proof"
+  override def stmts = List(scStmt, sc2Stmt, letScStmt) ++ super.stmts
   lazy val scStmt: PackratParser[Stmt[MTerm]] =
     "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
   lazy val sc2Stmt: PackratParser[Stmt[MTerm]] =
     "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
   // TODO: implement it
   lazy val letScStmt: PackratParser[Stmt[MTerm]] =
-    ("let" ~ "(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
+    ("let" ~ "(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc_with_proof" ~> term <~ ";") ^^ {
       case id1 ~ id2 ~ t => LetSC(id1, id2, t(Nil))
     }
 }
@@ -218,12 +219,55 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
           }
       }
       state
+    case LetSC(scId, proofId, it0) =>
+      val it = fromM(it0)
+      iinfer(state.ne, state.ctx, it) match {
+        case None =>
+          handleError("")
+          state
+        case Some(inTpVal) =>
+          val conf = Conf(iquote(ieval(state.ne, it)), iquote(inTpVal))
+          val sGraph = GraphGenerator(Rules, conf).toList.head
+          val tGraph = Transformations.transpose(sGraph)
+
+          //output(tgToString(tGraph))
+          val resVal = ieval(state.ne, iquote(residuate(tGraph, state.ne)))
+          val resTerm = iquote(resVal)
+          val resType = iquote(inTpVal)
+
+          val iTerm = Ann(resTerm, resType)
+
+          val t2 = iinfer(state.ne, state.ctx, iTerm)
+          t2 match {
+            case None =>
+              handleError("")
+              state
+            case Some(t3) =>
+              output(icprint(resTerm) + " :: " + icprint(iquote(t3)) + ";")
+              val proofVal = ieval(state.ne, iquote(proofResiduate(tGraph, state.ne)))
+              val proofTerm = iquote(ieval(state.ne, iquote(proofVal)))
+              // to check that it really built correctly
+              val annProofTerm = Ann(proofTerm, Eq(resType, it, resTerm))
+              val proofTypeVal = iinfer(state.ne, state.ctx, annProofTerm)
+              output("proof:")
+              output(icprint(proofTerm))
+              //output("expected type:")
+              //output(icprint(Eq(cType, it, cTerm)))
+              output("::")
+              output(icprint(iquote(proofTypeVal.get)))
+              State(
+                state.interactive,
+                state.ne + (Global(scId) -> resVal) + (Global(proofId) -> proofVal),
+                state.ctx + (Global(scId) -> inTpVal) + (Global(proofId) -> proofTypeVal.get),
+                state.modules)
+          }
+      }
     case _ =>
       super.handleStmt(state, stmt)
   }
 
   object Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
-    val maxDepth = 20
+    val maxDepth = 10
   }
 }
 
