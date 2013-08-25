@@ -1,6 +1,6 @@
-## SuperSpec v1.0 (alpha) - SuperCompiler for Martin-Löf Type Theory
+## SuperSpec v1.0 - SuperCompiler for Martin-Löf Type Theory
 
-SuperSpec v0.2 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
+SuperSpec v1.0 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 
 The main feature of the supercompiler is that for any transformation performed by
 the supercompiler a proof of correctness is provided.
@@ -47,7 +47,7 @@ Launching examples:
 
 Quitting REPL:
 
-    TT > quit;
+    TT> quit;
 
 ### Supercompiler
 
