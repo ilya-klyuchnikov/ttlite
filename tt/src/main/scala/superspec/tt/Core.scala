@@ -212,8 +212,11 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
         val v = ieval(state.ne, Ann(t, Universe(k)))
         output(icprint(iquote(v)))
         state.copy(ctx = state.ctx + (s2name(x) -> v))
-      case Left(_) =>
+      case Right(_) =>
         handleError("not a type")
+        state
+      case Left(_) =>
+        handleError("type error")
         state
     }
   }
