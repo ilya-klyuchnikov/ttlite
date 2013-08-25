@@ -1,0 +1,7 @@
+import "examples/core.tt";
+import "examples/product.tt";
+import "examples/eq.tt";
+
+assume ($A :: Set) ($B :: Set) ($e :: Product $A $B);
+
+let (_, _) = sc_with_proof (product_id $A $B $e);

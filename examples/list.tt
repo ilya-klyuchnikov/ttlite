@@ -19,3 +19,11 @@ let append =
 let unit =
     \ (A :: Set) (x :: A) -> Cons A x (Nil A);
 
+let list_id =
+    \ (A :: Set) (xs :: List A) ->
+        listElim
+            A
+            (\ (_ :: List A) -> List A)
+            (Nil A)
+            (\ (h :: A) (t :: List A) (rec :: List A) -> Cons A h rec)
+            xs;

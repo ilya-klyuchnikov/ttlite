@@ -166,3 +166,12 @@ let proof_by_sc =
         tran A e1 res e2 eq_e1_res (symm A e2 res eq_e2_res)
             :: Eq A e1 e2;
 
+let eq_id =
+    \ (A :: Set) (x :: A) (y :: A) (eq_x_y :: Eq A x y) ->
+        eqElim
+            A
+            (\ (x :: A) (y :: A) (eq_x_y :: Eq A x y) -> Eq A x y)
+            (\ (x :: A) -> Refl A x)
+            x
+            y
+            eq_x_y;

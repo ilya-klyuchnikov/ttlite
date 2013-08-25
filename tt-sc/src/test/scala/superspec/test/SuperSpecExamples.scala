@@ -25,28 +25,26 @@ class SuperSpecExamples extends org.scalatest.FunSpec {
   }
 
   describe("Coverage Test") {
-    it ("coverage") {
-      TTScREPL2.main(Array("examples/tests/coverage.tt"))
+    it ("dproduct") {
+      TTScREPL2.main(Array("examples/tests/dproduct.tt"))
+    }
+    it ("sum") {
+      TTScREPL2.main(Array("examples/tests/sum.tt"))
+    }
+    it ("eq") {
+      TTScREPL2.main(Array("examples/tests/eq.tt"))
+    }
+    it ("list") {
+      TTScREPL2.main(Array("examples/tests/list.tt"))
+    }
+    it ("nat") {
+      TTScREPL2.main(Array("examples/tests/nat.tt"))
+    }
+    it ("product") {
+      TTScREPL2.main(Array("examples/tests/product.tt"))
+    }
+    it ("fin") {
+      TTScREPL2.main(Array("examples/tests/fin.tt"))
     }
   }
 }
-
-/*
-class Sc2Spec extends org.scalatest.FunSpec {
-  describe("ScREPL should supercompile all tasks in tests/sc01.tt") {
-    TTScREPL2.main(Array("tests/sc01.tt"))
-  }
-}
-
-class Proof2Spec extends org.scalatest.FunSpec {
-  describe("ScREPL should supercompile all tasks in tests/sc02.tt") {
-    TTScREPL2.main(Array("tests/sc02.tt"))
-  }
-}
-
-class Sc2SpecWIP extends org.scalatest.FunSpec {
-  describe("ScREPL should supercompile all tasks in tests/sc03.tt") {
-    TTScREPL2.main(Array("tests/sc03.tt"))
-  }
-}
-*/

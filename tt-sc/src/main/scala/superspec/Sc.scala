@@ -125,19 +125,12 @@ trait ProofResiduator extends BaseResiduator with EqAST {
     }
 }
 
-case class SC[I](e: I) extends Stmt[I]
-case class CertSC[I](e: I) extends Stmt[I]
 case class LetSC[I](id1: String, id2: String, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
   lexical.reserved += "sc_with_proof"
-  override def stmts = List(scStmt, sc2Stmt, letScStmt) ++ super.stmts
-  lazy val scStmt: PackratParser[Stmt[MTerm]] =
-    "sc" ~> term <~ ";" ^^ {t => SC(t(Nil))}
-  lazy val sc2Stmt: PackratParser[Stmt[MTerm]] =
-    "sc2" ~> term <~ ";" ^^ {t => CertSC(t(Nil))}
-  // TODO: implement it
+  override def stmts = List(letScStmt) ++ super.stmts
   lazy val letScStmt: PackratParser[Stmt[MTerm]] =
     ("let" ~ "(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc_with_proof" ~> term <~ ";") ^^ {
       case id1 ~ id2 ~ t => LetSC(id1, id2, t(Nil))
@@ -149,76 +142,6 @@ object ScParser extends ScParser
 trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   override val parser = ScParser
   override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
-    case SC(mterm) =>
-      val term = fromM(mterm)
-      iinfer(state.ne, state.ctx, term) match {
-        case None =>
-          handleError("types")
-          state
-        case Some(tp) =>
-          val conf = Conf(iquote(ieval(state.ne, term)), iquote(tp))
-          val sGraph = GraphGenerator(Rules, conf).toList.head
-          val tGraph = Transformations.transpose(sGraph)
-          output(tgToString(tGraph))
-
-          val resVal = residuate(tGraph, state.ne)
-          val resTerm = iquote(resVal)
-          val inType = iquote(tp)
-
-          output("input: [\n" + icprint(iquote(ieval(state.ne, term))) + "\n]")
-          output("output: [\n" + icprint(resTerm) + "\n]")
-
-          // checking that residual term has the same type
-          val t2 = iinfer(state.ne, state.ctx, Ann(resTerm, inType))
-
-          t2 match {
-            case None =>
-              println("error for term: \n" + icprint(resTerm))
-              handleError("error for term: \n" + icprint(resTerm))
-            case Some(t3) =>
-              output("input: [\n" + icprint(iquote(ieval(state.ne, term))) + "\n]")
-              output("output: [\n" + icprint(resTerm) + "\n]")
-              output("output type: " + icprint(iquote(t3)))
-          }
-      }
-      state
-    case CertSC(it0) =>
-      val it = fromM(it0)
-      iinfer(state.ne, state.ctx, it) match {
-        case None =>
-          handleError("")
-          state
-        case Some(tp) =>
-          val conf = Conf(iquote(ieval(state.ne, it)), iquote(tp))
-          val sGraph = GraphGenerator(Rules, conf).toList.head
-          val tGraph = Transformations.transpose(sGraph)
-
-          //output(tgToString(tGraph))
-          val resVal = residuate(tGraph, state.ne)
-          val cTerm = iquote(resVal)
-          val cType = iquote(tp)
-
-          val iTerm = Ann(cTerm, cType)
-
-          val t2 = iinfer(state.ne, state.ctx, iTerm)
-          t2 match {
-            case None =>
-              handleError("")
-            case Some(t3) =>
-              output(icprint(cTerm) + " :: " + icprint(iquote(t3)) + ";")
-              val proof = proofResiduate(tGraph, state.ne)
-              val proofTerm = /*iquote(proof)*/ iquote(ieval(state.ne, iquote(proof)))
-              val annProofTerm = Ann(proofTerm, Eq(cType, it, cTerm))
-              val t4 = iinfer(state.ne, state.ctx, annProofTerm)
-              output("proof:")
-              output(icprint(proofTerm))
-              //output("expected type:")
-              //output(icprint(Eq(cType, it, cTerm)))
-              output("::")
-              output(icprint(iquote(t4.get)))
-          }
-      }
-      state
     case LetSC(scId, proofId, it0) =>
       val it = fromM(it0)
       iinfer(state.ne, state.ctx, it) match {

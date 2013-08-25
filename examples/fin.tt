@@ -28,3 +28,18 @@ let or  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) (\ (_ 
 let xor = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) not;
 let if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
 
+let fin1_id =
+    \ (e :: Fin_1) ->
+        finElim_1
+            (\ (_ :: Fin_1) -> Fin_1)
+            finElem_1_1
+            e;
+
+let fin2_id =
+    \ (e :: Fin_2) ->
+        finElim_2
+            (\ (_ :: Fin_2) -> Fin_2)
+            finElem_1_2
+            finElem_2_2
+            e;
+

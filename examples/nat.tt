@@ -26,3 +26,11 @@ let natFold =
              (\ (n1 :: Nat) (rec :: m) -> ms rec )
              n )
   :: forall (m :: Set) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;
+
+let nat_id =
+    \ (n :: Nat) ->
+        natElim
+            (\ (_ :: Nat) -> Nat )
+            Zero
+            (\ (n1 :: Nat) (rec :: Nat) -> Succ rec)
+            n;

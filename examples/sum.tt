@@ -6,3 +6,12 @@ let sum_swap =
             (\ (b :: B) . InL B A b)
             s)
         :: forall (A :: Set) (B :: Set) (_ :: Sum A B) . Sum B A;
+
+let sum_id =
+    (\ (A :: Set) (B :: Set) (s :: Sum A B) ->
+        sumElim A B
+            (\ (_ :: Sum A B) -> Sum A B)
+            (\ (a :: A) . InL A B a)
+            (\ (b :: B) . InR A B b)
+            s)
+        :: forall (A :: Set) (B :: Set) (_ :: Sum A B) . Sum A B;

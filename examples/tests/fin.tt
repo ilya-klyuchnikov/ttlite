@@ -1,0 +1,8 @@
+import "examples/eq.tt";
+import "examples/fin.tt";
+
+assume ($f1 :: Fin_1) ($f2 :: Fin_2);
+
+let (_, _) = sc_with_proof (fin1_id $f1);
+
+let (_, _) = sc_with_proof (fin2_id $f2);
