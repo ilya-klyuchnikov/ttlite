@@ -1,5 +1,5 @@
-import "examples/eq.tt";
-import "examples/list.tt";
+import "examples/eq.hs";
+import "examples/list.hs";
 
 -- map f (append xs ys) = append (map f xs) (map f ys)
 

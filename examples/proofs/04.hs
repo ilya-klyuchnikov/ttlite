@@ -1,6 +1,6 @@
-import "examples/core.tt";
-import "examples/eq.tt";
-import "examples/list.tt";
+import "examples/core.hs";
+import "examples/eq.hs";
+import "examples/list.hs";
 
 -- map (comp f g) xs = (comp (map f)(map g)) xs
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYvhcM

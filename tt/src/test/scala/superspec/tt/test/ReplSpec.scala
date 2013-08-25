@@ -6,34 +6,34 @@ class ReplSpec extends org.scalatest.FunSpec {
 
   describe("TT REPL should process without errors") {
     it("core") {
-      TTREPL.main(Array("examples/core.tt"))
+      TTREPL.main(Array("examples/core.hs"))
     }
     it("dproduct") {
-      TTREPL.main(Array("examples/dproduct.tt"))
+      TTREPL.main(Array("examples/dproduct.hs"))
     }
     it("nat") {
-      TTREPL.main(Array("examples/nat.tt"))
+      TTREPL.main(Array("examples/nat.hs"))
     }
     it("product") {
-      TTREPL.main(Array("examples/product.tt"))
+      TTREPL.main(Array("examples/product.hs"))
     }
     it("sum") {
-      TTREPL.main(Array("examples/sum.tt"))
+      TTREPL.main(Array("examples/sum.hs"))
     }
     it("list") {
-      TTREPL.main(Array("examples/list.tt"))
+      TTREPL.main(Array("examples/list.hs"))
     }
     it("eq") {
-      TTREPL.main(Array("examples/eq.tt"))
+      TTREPL.main(Array("examples/eq.hs"))
     }
     it("vec") {
-      TTREPL.main(Array("examples/vec.tt"))
+      TTREPL.main(Array("examples/vec.hs"))
     }
     it("fin") {
-      TTREPL.main(Array("examples/fin.tt"))
+      TTREPL.main(Array("examples/fin.hs"))
     }
     it("misc") {
-      TTREPL.main(Array("examples/misc.tt"))
+      TTREPL.main(Array("examples/misc.hs"))
     }
   }
 }

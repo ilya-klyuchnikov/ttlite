@@ -1,4 +1,4 @@
-import "examples/core.tt";
+import "examples/core.hs";
 
 -- basic combinators for constructing
 -- equality proofs from equality proofs

@@ -1,6 +1,6 @@
-import "examples/product.tt";
-import "examples/nat.tt";
-import "examples/fin.tt";
+import "examples/product.hs";
+import "examples/nat.hs";
+import "examples/fin.hs";
 
 pr1 :: forall (A :: Set) (B :: Set) (_ :: Product A B) . Product B A;
 pr1 = (\ (A :: Set) (B :: Set) (p :: Product A B) -> Pair (Product B A) (snd A B p) (fst A B p));

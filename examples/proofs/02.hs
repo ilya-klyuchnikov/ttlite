@@ -1,6 +1,6 @@
-import "examples/core.tt";
-import "examples/list.tt";
-import "examples/eq.tt";
+import "examples/core.hs";
+import "examples/list.hs";
+import "examples/eq.hs";
 
 -- compose (map f) unit = compose unit f
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuxcM

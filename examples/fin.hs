@@ -1,4 +1,4 @@
-import "examples/core.tt";
+import "examples/core.hs";
 
 Void = Fin_0;
 -- unit type

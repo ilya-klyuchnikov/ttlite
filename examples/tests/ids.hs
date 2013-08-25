@@ -1,11 +1,11 @@
-import "examples/core.tt";
-import "examples/dproduct.tt";
-import "examples/eq.tt";
-import "examples/fin.tt";
-import "examples/list.tt";
-import "examples/nat.tt";
-import "examples/product.tt";
-import "examples/sum.tt";
+import "examples/core.hs";
+import "examples/dproduct.hs";
+import "examples/eq.hs";
+import "examples/fin.hs";
+import "examples/list.hs";
+import "examples/nat.hs";
+import "examples/product.hs";
+import "examples/sum.hs";
 
 $A :: Set;
 $B :: Set;

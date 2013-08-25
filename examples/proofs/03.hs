@@ -1,5 +1,5 @@
-import "examples/list.tt";
-import "examples/eq.tt";
+import "examples/list.hs";
+import "examples/eq.hs";
 
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuRcM
 -- Associativity of list concatenation
