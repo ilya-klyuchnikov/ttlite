@@ -6,3 +6,7 @@ let const = (\ (a :: Set) (b :: Set) (x :: a) (y :: b) -> x)
 
 let const1 = (\ (a :: Set) (x :: a) (b :: Set) (y :: b) -> x)
     :: forall (a :: Set) (_ :: a) (b :: Set) (_ :: b) . a;
+
+let comp =
+    \ (A :: Set) (B :: Set) (C :: Set) (f :: forall (_ :: B). C) (g :: forall (_ :: A). B) (x :: A) ->
+        f (g x);

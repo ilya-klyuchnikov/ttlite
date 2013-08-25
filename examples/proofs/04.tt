@@ -1,21 +1,10 @@
+import "examples/core.tt";
 import "examples/eq.tt";
+import "examples/list.tt";
 
 -- map (comp f g) xs = (comp (map f)(map g)) xs
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYvhcM
 -- we even do not need supercompilation here: normalization is enough
-
-let comp =
-    \ (A :: Set) (B :: Set) (C :: Set) (f :: forall (_ :: B). C) (g :: forall (_ :: A). B) (x :: A) ->
-        f (g x);
-
-let map =
-    \ (A :: Set) (B :: Set) (f :: forall (_ :: A). B) (xs :: List A) ->
-        listElim
-            A
-            (\ (_ :: List A) -> List B)
-            (Nil B)
-            (\ (h :: A) (t :: List A) (rec :: List B) -> Cons B (f h) rec )
-            xs;
 
 assume
     ($A :: Set)

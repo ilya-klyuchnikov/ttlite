@@ -1,3 +1,4 @@
+import "examples/core.tt";
 import "examples/list.tt";
 import "examples/eq.tt";
 
@@ -5,16 +6,7 @@ import "examples/eq.tt";
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuxcM
 -- we even do not need supercompilation here: normalization is enough
 
-let comp =
-    \ (A :: Set) (B :: Set) (C :: Set) (f :: forall (_ :: B). C) (g :: forall (_ :: A). B) (x :: A) ->
-        f (g x);
-
-let unit =
-    \ (A :: Set) (x :: A) ->
-        Cons A x (Nil A);
-
-assume ($A :: Set) ($B :: Set);
-assume ($f :: forall (_ :: $A). $B);
+assume ($A :: Set) ($B :: Set) ($f :: forall (_ :: $A). $B);
 assume ($x :: $A);
 
 let e1 = comp $A $B (List $B) (unit $B) $f;

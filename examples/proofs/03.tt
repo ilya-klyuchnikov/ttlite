@@ -1,14 +1,11 @@
+import "examples/list.tt";
 import "examples/eq.tt";
 
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuRcM
 -- Associativity of list concatenation
 
-let append =
-  (\(a :: Set) (xs :: List a) (ys :: List a) ->
-    listElim a (\(_ :: List a) -> List a) ys (\ (v :: a) (vs :: List a) (w :: List a) -> Cons a v w) xs);
 
 assume ($A :: Set) ($x :: List $A) ($y :: List $A) ($z :: List $A);
-
 
 let e1 = (append $A $x (append $A $y $z));
 let e2 = (append $A (append $A $x $y) $z);
