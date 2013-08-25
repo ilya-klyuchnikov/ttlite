@@ -2,15 +2,15 @@
 -- addition of natural numbers
 let plus =
     \ (x :: Nat) (y :: Nat) ->
-        natElim
-        (\ (_ :: Nat) -> Nat )
-        y
-        ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
+        elim Nat
+            (\ (_ :: Nat) -> Nat )
+            y
+            ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
 
 -- predecessor, mapping 0 to 0
 let pred =
     \ (n :: Nat) .
-        natElim
+        elim Nat
             ( \ (_ :: Nat) . Nat )
             Zero
             ( \ (n1 :: Nat) (rec :: Nat) . n1 )
@@ -20,7 +20,7 @@ let pred =
 -- a result type doesn't depend on n
 let natFold =
     ( \ (m :: Set) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
-        natElim
+        elim Nat
             (\ (_ :: Nat) -> m )
              mz
              (\ (n1 :: Nat) (rec :: m) -> ms rec )
@@ -29,7 +29,7 @@ let natFold =
 
 let nat_id =
     \ (n :: Nat) ->
-        natElim
+        elim Nat
             (\ (_ :: Nat) -> Nat )
             Zero
             (\ (n1 :: Nat) (rec :: Nat) -> Succ rec)

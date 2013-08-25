@@ -13,11 +13,11 @@ let False = finElem_1_2;
 let True  = finElem_2_2;
 
 let abort =
-    \(m :: Set) (v :: Void) -> finElim_0 ( \(_ :: Void) -> m) v;
+    \(m :: Set) (v :: Void) -> elim Fin_0 ( \(_ :: Void) -> m) v;
 
 let boolElim =
     \ (m :: forall (_ :: Fin_2) . Set) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
-        finElim_2 m c1 c2 b;
+        elim Fin_2 m c1 c2 b;
 
 --let Prop = boolElim (\ (_ :: Bool) -> Set) Void Unit;
 
@@ -30,14 +30,14 @@ let if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
 
 let fin1_id =
     \ (e :: Fin_1) ->
-        finElim_1
+        elim Fin_1
             (\ (_ :: Fin_1) -> Fin_1)
             finElem_1_1
             e;
 
 let fin2_id =
     \ (e :: Fin_2) ->
-        finElim_2
+        elim Fin_2
             (\ (_ :: Fin_2) -> Fin_2)
             finElem_1_2
             finElem_2_2

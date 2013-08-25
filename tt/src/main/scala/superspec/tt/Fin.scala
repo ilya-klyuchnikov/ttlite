@@ -24,11 +24,11 @@ trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
       FinElem(1, 2)
     case MVar(Global("finElem_2_2")) =>
       FinElem(2, 2)
-    case MVar(Global("finElim_0")) @@ m @@ el =>
+    case MVar(Global("elim")) @@ MVar(Global("Fin_0")) @@ m @@ el =>
       FinElim(0, fromM(m), List(), fromM(el))
-    case MVar(Global("finElim_1")) @@ m @@ c1 @@ el =>
+    case MVar(Global("elim")) @@ MVar(Global("Fin_1")) @@ m @@ c1 @@ el =>
       FinElim(1, fromM(m), List(fromM(c1)), fromM(el))
-    case MVar(Global("finElim_2")) @@ m @@ c1 @@ c2 @@ el =>
+    case MVar(Global("elim")) @@ MVar(Global("Fin_2")) @@ m @@ c1 @@ c2 @@ el =>
       FinElim(2, fromM(m), List(fromM(c1), fromM(c2)), fromM(el))
     case _ => super.fromM(m)
   }
@@ -41,13 +41,13 @@ trait FinPrinter extends FunPrinter with FinAST {
     case FinElem(i, n) =>
       print(p, ii, s"finElem_${i}_${n}")
     case FinElim(0, m, cases, elem) =>
-      val t = cases.foldLeft('finElim_0 @@ m)(_ @@ _) @@ elem
+      val t = cases.foldLeft('elim @@ Fin(0) @@ m)(_ @@ _) @@ elem
       print(p, ii, t)
     case FinElim(1, m, cases, elem) =>
-      val t = cases.foldLeft('finElim_1 @@ m)(_ @@ _) @@ elem
+      val t = cases.foldLeft('elim @@ Fin(1) @@ m)(_ @@ _) @@ elem
       print(p, ii, t)
     case FinElim(2, m, cases, elem) =>
-      val t = cases.foldLeft('finElim_2 @@ m)(_ @@ _) @@ elem
+      val t = cases.foldLeft('elim @@ Fin(2) @@ m)(_ @@ _) @@ elem
       print(p, ii, t)
     case _ =>
       super.print(p, ii, t)

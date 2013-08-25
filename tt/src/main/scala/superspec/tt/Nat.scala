@@ -20,7 +20,7 @@ trait MNat extends CoreMetaSyntax with NatAST {
       Zero
     case MVar(Global("Succ")) @@ n =>
       Succ(fromM(n))
-    case MVar(Global("natElim")) @@ m @@ cZ @@ cS @@ n =>
+    case MVar(Global("elim")) @@ MVar(Global("Nat")) @@ m @@ cZ @@ cS @@ n =>
       NatElim(fromM(m), fromM(cZ), fromM(cS), fromM(n))
     case _ => super.fromM(m)
   }
@@ -31,7 +31,7 @@ trait NatPrinter extends FunPrinter with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      print(p, ii, 'natElim @@ m @@ z @@ s @@ n)
+      print(p, ii, 'elim @@ Nat @@ m @@ z @@ s @@ n)
     case Zero =>
       print(p, ii, 'Zero)
     case Succ(n) =>
