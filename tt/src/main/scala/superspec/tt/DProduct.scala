@@ -12,7 +12,7 @@ trait DProductAST extends CoreAST {
 
 trait DProductMetaSyntax extends CoreMetaSyntax with DProductAST {
   override def fromM(m: MTerm): Term = m match {
-    case MVar(Global("sigmaElim")) @@ sigma @@ m @@ f @@ p =>
+    case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
       SigmaElim(fromM(sigma), fromM(m), fromM(f), fromM(p))
     case MVar(Global("dpair")) @@ sigma @@ e1 @@ e2 =>
       DPair(fromM(sigma), fromM(e1), fromM(e2))
@@ -32,7 +32,7 @@ trait DProductPrinter extends FunPrinter with DProductAST {
     case DPair(s, a, b) =>
       print(p, ii, 'dpair @@ s @@ a @@ b)
     case SigmaElim(s, m, f, dp) =>
-      print(p, ii, 'sigmaElim @@ s @@ m @@ f @@ dp)
+      print(p, ii, 'elim @@ s @@ m @@ f @@ dp)
     case _ =>
       super.print(p, ii, t)
   }
