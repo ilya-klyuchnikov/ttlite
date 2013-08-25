@@ -41,8 +41,7 @@ let (_, _) =
 let (_, _) =
     sc_with_proof (nat_id $n);
 
-let (_, _) =
-    sc_with_proof (product_id $A $B $p);
+let (x1, x2) = sc_with_proof (product_id $A $B $p);
 
 let (_, _) =
     sc_with_proof (sum_id $A $B $s);

@@ -2,26 +2,26 @@ package superspec.tt
 
 trait SumAST extends CoreAST {
   case class Sum(A: Term, B: Term) extends Term
-  case class InL(L: Term, R: Term, l: Term) extends Term
-  case class InR(L: Term, R: Term, r: Term) extends Term
-  case class SumElim(L: Term, R: Term, m: Term, lCase: Term, rCase: Term, sum: Term) extends Term
+  case class InL(et: Term, l: Term) extends Term
+  case class InR(et: Term, r: Term) extends Term
+  case class SumElim(et: Term, m: Term, lCase: Term, rCase: Term, sum: Term) extends Term
 
   case class VSum(L: Value, R: Value) extends Value
-  case class VInL(L: Value, R: Value, l: Value) extends Value
-  case class VInR(L: Value, R: Value, r: Value) extends Value
-  case class NSumElim(L: Value, R: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
+  case class VInL(et: Value, l: Value) extends Value
+  case class VInR(et: Value, r: Value) extends Value
+  case class NSumElim(et: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
 trait SumMetaSyntax extends CoreMetaSyntax with SumAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Sum")) @@ l @@ r =>
       Sum(fromM(l), fromM(r))
-    case MVar(Global("InL")) @@ l @@ r @@ inj =>
-      InL(fromM(l), fromM(r), fromM(inj))
-    case MVar(Global("InR")) @@ l @@ r @@ inj =>
-      InR(fromM(l), fromM(r), fromM(inj))
-    case MVar(Global("sumElim")) @@ l @@ r @@ m @@ lc @@ rc @@ inj =>
-      SumElim(fromM(l), fromM(r), fromM(m), fromM(lc), fromM(rc), fromM(inj))
+    case MVar(Global("InL")) @@ et @@ inj =>
+      InL(fromM(et), fromM(inj))
+    case MVar(Global("InR")) @@ et @@ inj =>
+      InR(fromM(et), fromM(inj))
+    case MVar(Global("elim")) @@ (MVar(Global("Sum")) @@ l @@ r) @@ m @@ lc @@ rc @@ inj =>
+      SumElim(Sum(fromM(l), fromM(r)), fromM(m), fromM(lc), fromM(rc), fromM(inj))
     case _ => super.fromM(m)
   }
 }
@@ -30,12 +30,12 @@ trait SumPrinter extends FunPrinter with SumAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
       print(p, ii, 'Sum @@ a @@ b)
-    case InL(lt, rt, l) =>
-      print(p, ii, 'InL @@ lt @@ rt @@ l)
-    case InR(lt, rt, r) =>
-      print(p, ii, 'InR @@ lt @@ rt @@ r)
-    case SumElim(lt, rt, m, lc, rc, sum) =>
-      print(p, ii, 'sumElim @@ lt @@ rt @@ m @@ lc @@ rc @@ sum)
+    case InL(et, l) =>
+      print(p, ii, 'InL @@ et @@ l)
+    case InR(et, r) =>
+      print(p, ii, 'InR @@ et @@ r)
+    case SumElim(et, m, lc, rc, sum) =>
+      print(p, ii, 'elim @@ et @@ m @@ lc @@ rc @@ sum)
     case _ =>
       super.print(p, ii, t)
   }
@@ -45,30 +45,29 @@ trait SumEval extends FunEval with SumAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Sum(lt, rt) =>
       VSum(eval(lt, named, bound), eval(rt, named, bound))
-    case InL(lt, rt, l) =>
-      VInL(eval(lt, named, bound), eval(rt, named, bound), eval(l, named, bound))
-    case InR(lt, rt, r) =>
-      VInR(eval(lt, named, bound), eval(rt, named, bound), eval(r, named, bound))
-    case SumElim(lt, rt, m, lc, rc, sum) =>
-      val ltVal = eval(lt, named, bound)
-      val rtVal = eval(rt, named, bound)
+    case InL(et, l) =>
+      VInL(eval(et, named, bound), eval(l, named, bound))
+    case InR(et, r) =>
+      VInR(eval(et, named, bound), eval(r, named, bound))
+    case SumElim(et@Sum(lt, rt), m, lc, rc, sum) =>
+      val etVal = eval(et, named, bound)
       val mVal = eval(m, named, bound)
       val lcVal = eval(lc, named, bound)
       val rcVal = eval(rc, named, bound)
       val sumVal = eval(sum, named, bound)
-      sumElim(ltVal, rtVal, mVal, lcVal, rcVal, sumVal)
+      sumElim(etVal, mVal, lcVal, rcVal, sumVal)
     case _ =>
       super.eval(t, named, bound)
   }
 
-  def sumElim(ltVal: Value, rtVal: Value, mVal: Value, lcVal: Value, rcVal: Value, sumVal: Value): Value =
+  def sumElim(etVal: Value, mVal: Value, lcVal: Value, rcVal: Value, sumVal: Value): Value =
     sumVal match {
-      case VInL(_, _, lVal) =>
+      case VInL(_, lVal) =>
         lcVal @@ lVal
-      case VInR(_, _, rVal) =>
+      case VInR(_, rVal) =>
         rcVal @@ rVal
       case VNeutral(n) =>
-        VNeutral(NSumElim(ltVal, rtVal, mVal, lcVal, rcVal, n))
+        VNeutral(NSumElim(etVal, mVal, lcVal, rcVal, n))
     }
 }
 
@@ -82,7 +81,7 @@ trait SumCheck extends FunCheck with SumAST {
       val k = checkUniverse(i, bType)
 
       VUniverse(math.max(j, k))
-    case InL(a, b, l) =>
+    case InL(Sum(a, b), l) =>
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
 
@@ -96,7 +95,7 @@ trait SumCheck extends FunCheck with SumAST {
       checkEqual(i, lType, aVal)
 
       VSum(aVal, bVal)
-    case InR(a, b, r) =>
+    case InR(Sum(a, b), r) =>
       val aVal = eval(a, named, List())
       val bVal = eval(b, named, List())
 
@@ -110,10 +109,11 @@ trait SumCheck extends FunCheck with SumAST {
       checkEqual(i, rType, bVal)
 
       VSum(aVal, bVal)
-    case SumElim(a, b, m, lc, rc, sum) =>
+    case SumElim(Sum(a, b), m, lc, rc, sum) =>
       val mVal = eval(m, named, List())
       val ltVal = eval(a, named, List())
       val rtVal = eval(b, named, List())
+      val etVal = VSum(ltVal, rtVal)
       val sumVal = eval(sum, named, List())
 
       val aType = iType(i, named, bound, a)
@@ -126,10 +126,10 @@ trait SumCheck extends FunCheck with SumAST {
       checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VUniverse(-1)}))
 
       val lcType = iType(i, named, bound, lc)
-      checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(ltVal, rtVal, lVal)}))
+      checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(etVal, lVal)}))
 
       val rcType = iType(i, named, bound, rc)
-      checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInR(ltVal, rtVal, rVal)}))
+      checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInR(etVal, rVal)}))
 
       val sumType = iType(i, named, bound, sum)
       checkEqual(i, sumType, VSum(ltVal, rtVal))
@@ -142,12 +142,12 @@ trait SumCheck extends FunCheck with SumAST {
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Sum(a, b) =>
       Sum(iSubst(i, r, a), iSubst(i, r, b))
-    case InL(a, b, x) =>
-      InL(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, x))
-    case InR(a, b, x) =>
-      InR(iSubst(i, r, a), iSubst(i, r, b), iSubst(i, r, x))
-    case SumElim(lt, rt, m, lc, rc, sum) =>
-      SumElim(iSubst(i, r, lt), iSubst(i, r, rt), iSubst(i, r, m), iSubst(i, r, lc), iSubst(i, r, rc), iSubst(i, r, sum))
+    case InL(et, x) =>
+      InL(iSubst(i, r, et), iSubst(i, r, x))
+    case InR(et, x) =>
+      InR(iSubst(i, r, et), iSubst(i, r, x))
+    case SumElim(et, m, lc, rc, sum) =>
+      SumElim(iSubst(i, r, et), iSubst(i, r, m), iSubst(i, r, lc), iSubst(i, r, rc), iSubst(i, r, sum))
     case _ =>
       super.iSubst(i, r, it)
   }
@@ -157,17 +157,17 @@ trait SumQuote extends CoreQuote with SumAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VSum(a, b) =>
       Sum(quote(ii, a), quote(ii, b))
-    case VInL(a, b, x) =>
-      InL(quote(ii, a), quote(ii, b), quote(ii, x))
-    case VInR(a, b, x) =>
-      InR(quote(ii, a), quote(ii, b), quote(ii, x))
+    case VInL(et, x) =>
+      InL(quote(ii, et), quote(ii, x))
+    case VInR(et, x) =>
+      InR(quote(ii, et), quote(ii, x))
     case _ =>
       super.quote(ii, v)
   }
 
   override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NSumElim(lt, rt, m, lc, rc, sum) =>
-      SumElim(quote(ii, lt), quote(ii, rt), quote(ii, m), quote(ii, lc), quote(ii, rc), neutralQuote(ii, sum))
+    case NSumElim(et, m, lc, rc, sum) =>
+      SumElim(quote(ii, et), quote(ii, m), quote(ii, lc), quote(ii, rc), neutralQuote(ii, sum))
     case _ => super.neutralQuote(ii, n)
   }
 }

@@ -8,7 +8,7 @@ trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
   case object PairLabel extends Label
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NProductElim(a, b, _, _, p) =>
+    case NProductElim(VProduct(a, b), _, _, p) =>
       p match {
         case NFree(n) =>
           val aType = quote0(a)
@@ -20,7 +20,7 @@ trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
           val yName = freshName(bType)
           val y = Free(yName)
 
-          val pairCase = ElimLabel(n, Pair(aType, bType, x, y), Map())
+          val pairCase = ElimLabel(n, Pair(Product(aType, bType), x, y), Map())
 
           ElimDStep(pairCase)
         case n =>
@@ -31,7 +31,7 @@ trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {
-    case Pair(a, b, x, y) =>
+    case Pair(Product(a, b), x, y) =>
       val Product(a1, b1) = c.tp
       DecomposeDStep(PairLabel, Conf(x, a), Conf(y, b))
     case _ =>
@@ -43,7 +43,7 @@ trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
 trait ProductResiduator extends BaseResiduator with ProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, ElimLabel(sel, Pair(a, b, Free(xN), Free(yN)), _)) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, Pair(Product(a, b), Free(xN), Free(yN)), _)) :: Nil =>
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =
@@ -52,10 +52,10 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
           fold(nodeS, env + (xN -> x) + (yN -> y), y :: x :: bound, recM)))
 
-        productElim(aVal, bVal, motive, pairCase, env(sel))
+        productElim(VProduct(aVal, bVal), motive, pairCase, env(sel))
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
-        val VProduct(aType, bType) = eval(node.conf.tp, env, bound)
-        VPair(aType, bType, fold(x, env, bound, recM), fold(y, env, bound, recM))
+        val et = eval(node.conf.tp, env, bound)
+        VPair(et, fold(x, env, bound, recM), fold(y, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -66,7 +66,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, ElimLabel(sel, Pair(a, b, Free(xN), Free(yN)), _)) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, Pair(Product(a, b), Free(xN), Free(yN)), _)) :: Nil =>
         val aVal = eval(a, env, bound)
         val bVal = eval(b, env, bound)
         val motive =
@@ -81,7 +81,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
             env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
             env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
 
-        productElim(aVal, bVal, motive, pairCase, env(sel))
+        productElim(VProduct(aVal, bVal), motive, pairCase, env(sel))
 
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val VProduct(a, b) = eval(node.conf.tp, env, bound)
@@ -94,7 +94,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
         val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
 
         'cong2 @@ a @@ b @@ VProduct(a, b) @@
-          VLam(a, x => VLam(b, y => VPair(a, b, x, y))) @@
+          VLam(a, x => VLam(b, y => VPair(VProduct(a, b), x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
 
