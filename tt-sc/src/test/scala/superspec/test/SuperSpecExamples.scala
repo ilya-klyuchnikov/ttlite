@@ -25,26 +25,8 @@ class SuperSpecExamples extends org.scalatest.FunSpec {
   }
 
   describe("Coverage Test") {
-    it ("dproduct") {
-      TTScREPL2.main(Array("examples/tests/dproduct.tt"))
-    }
-    it ("sum") {
-      TTScREPL2.main(Array("examples/tests/sum.tt"))
-    }
-    it ("eq") {
-      TTScREPL2.main(Array("examples/tests/eq.tt"))
-    }
-    it ("list") {
-      TTScREPL2.main(Array("examples/tests/list.tt"))
-    }
-    it ("nat") {
-      TTScREPL2.main(Array("examples/tests/nat.tt"))
-    }
-    it ("product") {
-      TTScREPL2.main(Array("examples/tests/product.tt"))
-    }
-    it ("fin") {
-      TTScREPL2.main(Array("examples/tests/fin.tt"))
+    it ("ids") {
+      TTScREPL2.main(Array("examples/tests/ids.tt"))
     }
   }
 }

@@ -1,7 +1,0 @@
-import "examples/core.tt";
-import "examples/sum.tt";
-import "examples/eq.tt";
-
-assume ($A :: Set) ($B :: Set) ($e :: Sum $A $B);
-
-let (_, _) = sc_with_proof (sum_id $A $B $e);

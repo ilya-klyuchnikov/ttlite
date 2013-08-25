@@ -1,6 +1,0 @@
-import "examples/eq.tt";
-import "examples/list.tt";
-
-assume ($A :: Set) ($xs :: List $A);
-
-let (_, _) = sc_with_proof (list_id $A $xs);

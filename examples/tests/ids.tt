@@ -1,0 +1,48 @@
+import "examples/core.tt";
+import "examples/dproduct.tt";
+import "examples/eq.tt";
+import "examples/fin.tt";
+import "examples/list.tt";
+import "examples/nat.tt";
+import "examples/product.tt";
+import "examples/sum.tt";
+
+assume ($A :: Set) ($B :: Set);
+assume ($F :: forall (_ :: $A) . Set);
+assume ($dp :: exists (x :: $A) . $F x);
+assume ($x :: $A) ($y :: $A) ($eq_x_y :: Eq $A $x $y);
+assume ($f1 :: Fin_1) ($f2 :: Fin_2);
+assume ($xs :: List $A);
+assume ($n :: Nat);
+assume ($p :: Product $A $B);
+assume ($s :: Sum $A $B);
+
+let (_, _) =
+    sc_with_proof (list_id $A $xs);
+
+let (_, _) =
+    sc_with_proof (dproduct_id $A $F $dp);
+
+let (_, _) =
+    sc_with_proof (eq_id $A $x $y $eq_x_y);
+
+let (_, _) =
+    sc_with_proof (Refl $A $x);
+
+let (_, _) =
+    sc_with_proof (fin1_id $f1);
+
+let (_, _) =
+    sc_with_proof (fin2_id $f2);
+
+let (_, _) =
+    sc_with_proof (list_id $A $xs);
+
+let (_, _) =
+    sc_with_proof (nat_id $n);
+
+let (_, _) =
+    sc_with_proof (product_id $A $B $p);
+
+let (_, _) =
+    sc_with_proof (sum_id $A $B $s);

@@ -1,6 +1,0 @@
-import "examples/eq.tt";
-import "examples/nat.tt";
-
-assume ($n :: Nat);
-
-let (_, _) = sc_with_proof (nat_id $n);
