@@ -4,11 +4,11 @@ trait EqAST extends CoreAST {
   case class Eq(A: Term, x: Term, y: Term) extends Term
   case class Refl(A: Term, x: Term) extends Term
   // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
-  case class EqElim(A: Term, prop: Term, propR: Term, x: Term, y: Term, eq: Term) extends Term
+  case class EqElim(et: Term, prop: Term, propR: Term, eq: Term) extends Term
 
   case class VEq(A: Value, x: Value, y: Value) extends Value
   case class VRefl(A: Value, x: Value) extends Value
-  case class NEqElim(A: Value, prop: Value, propR: Value, x: Value, y: Value, eq: Neutral) extends Neutral
+  case class NEqElim(et: Value, prop: Value, propR: Value, eq: Neutral) extends Neutral
 }
 
 trait EqMetaSyntax extends CoreMetaSyntax with EqAST {
@@ -17,8 +17,8 @@ trait EqMetaSyntax extends CoreMetaSyntax with EqAST {
       Eq(fromM(a), fromM(x), fromM(y))
     case MVar(Global("Refl")) @@ a @@ x =>
       Refl(fromM(a), fromM(x))
-    case MVar(Global("eqElim")) @@ a @@ p @@ pr @@ x @@ y @@ eq =>
-      EqElim(fromM(a), fromM(p), fromM(pr), fromM(x), fromM(y), fromM(eq))
+    case MVar(Global("elim")) @@ (MVar(Global("Eq")) @@ a @@ x @@ y) @@ p @@ pr @@ eq =>
+      EqElim(Eq(fromM(a), fromM(x), fromM(y)), fromM(p), fromM(pr), fromM(eq))
     case _ => super.fromM(m)
   }
 }
@@ -29,8 +29,8 @@ trait EqPrinter extends FunPrinter with EqAST {
       print(p, ii, 'Eq @@ a @@ x @@ y)
     case Refl(a, x) =>
       print(p, ii, 'Refl @@ a @@ x)
-    case EqElim(a, m, mr, x, y, eq) =>
-      print(p, ii, 'eqElim @@ a @@ m @@ mr @@ x @@ y @@ eq)
+    case EqElim(et, m, mr, eq) =>
+      print(p, ii, 'elim @@ et @@ m @@ mr @@ eq)
     case _ =>
       super.print(p, ii, t)
   }
@@ -42,22 +42,20 @@ trait EqEval extends FunEval with EqAST with CoreQuote {
       VEq(eval(a, named, bound), eval(x, named, bound), eval(y, named, bound))
     case Refl(a, x) =>
       VRefl(eval(a, named, bound), eval(x, named, bound))
-    case EqElim(a, prop, propR, x, y, eq) =>
-      val aVal = eval(a, named, bound)
+    case EqElim(et, prop, propR, eq) =>
+      val etVal = eval(et, named, bound)
       val propVal = eval(prop, named, bound)
       val propRVal = eval(propR, named, bound)
-      val xVal = eval(x, named, bound)
-      val yVal = eval(y, named, bound)
       val eqVal = eval(eq, named, bound)
-      eqElim(aVal, propVal, propRVal, xVal, yVal, eqVal)
+      eqElim(etVal, propVal, propRVal, eqVal)
     case _ => super.eval(t, named, bound)
   }
 
-  def eqElim(aVal: Value, propVal: Value, propRVal: Value, xVal: Value, yVal: Value, eqVal: Value) = eqVal match {
+  def eqElim(etVal: Value, propVal: Value, propRVal: Value, eqVal: Value) = eqVal match {
     case r@VRefl(a, z) =>
       propRVal @@ z
     case VNeutral(n) =>
-      VNeutral(NEqElim(aVal, propVal, propRVal, xVal, yVal, n))
+      VNeutral(NEqElim(etVal, propVal, propRVal, n))
   }
 }
 
@@ -88,21 +86,14 @@ trait EqCheck extends FunCheck with EqAST {
 
       VEq(aVal, zVal, zVal)
 
-    case EqElim(a, prop, propR, x, y, eq) =>
-      val aVal = eval(a, named, Nil)
+    case EqElim(et, prop, propR, eq) =>
+      val eType = iType(i, named, bound, et)
+      checkUniverse(i, eType)
+
+      val VEq(aVal, xVal, yVal) = eval(et, named, Nil)
+
       val propVal = eval(prop, named, Nil)
-      val xVal = eval(x, named, Nil)
-      val yVal = eval(y, named, Nil)
-      val eqVal = eval(y, named, Nil)
-
-      val aType = iType(i, named, bound, a)
-      checkUniverse(i, aType)
-
-      val xType = iType(i, named, bound, x)
-      checkEqual(i, xType, aVal)
-
-      val yType = iType(i, named, bound, y)
-      checkEqual(i, yType, aVal)
+      val eqVal = eval(eq, named, Nil)
 
       val propType = iType(i, named, bound, prop)
       checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VUniverse(-1)})})}))
@@ -125,8 +116,8 @@ trait EqCheck extends FunCheck with EqAST {
       Eq(iSubst(i, r, a), iSubst(i, r, x), iSubst(i, r, y))
     case Refl(a, x) =>
       Refl(iSubst(i, r, a), iSubst(i, r, x))
-    case EqElim(a, m, mr, x, y, eq) =>
-      EqElim(iSubst(i, r, a), iSubst(i, r, m), iSubst(i, r, mr), iSubst(i, r, x), iSubst(i, r, y), iSubst(i, r, eq))
+    case EqElim(et, m, mr, eq) =>
+      EqElim(iSubst(i, r, et), iSubst(i, r, m), iSubst(i, r, mr), iSubst(i, r, eq))
     case _ =>
       super.iSubst(i, r, it)
   }
@@ -141,8 +132,8 @@ trait EqQuote extends CoreQuote with EqAST {
     case _ => super.quote(ii, v)
   }
   override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NEqElim(a, m, mr, x, y, eq) =>
-      EqElim(quote(ii, a), quote(ii, m), quote(ii, mr), quote(ii, x), quote(ii, y), neutralQuote(ii, eq))
+    case NEqElim(et, m, mr, eq) =>
+      EqElim(quote(ii, et), quote(ii, m), quote(ii, mr), neutralQuote(ii, eq))
     case _ => super.neutralQuote(ii, n)
   }
 }
