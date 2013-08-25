@@ -2,14 +2,14 @@ package superspec.tt
 
 trait ListAST extends CoreAST {
   case class PiList(A: Term) extends Term
-  case class PiNil(A: Term) extends Term
-  case class PiCons(A: Term, head: Term, tail: Term) extends Term
-  case class PiListElim(A: Term, motive: Term, nilCase: Term, consCase: Term, l: Term) extends Term
+  case class PiNil(et: Term) extends Term
+  case class PiCons(et: Term, head: Term, tail: Term) extends Term
+  case class PiListElim(et: Term, motive: Term, nilCase: Term, consCase: Term, l: Term) extends Term
 
   case class VPiList(A: Value) extends Value
-  case class VPiNil(A: Value) extends Value
-  case class VPiCons(A: Value, head: Value, tail: Value) extends Value
-  case class NPiListElim(A: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
+  case class VPiNil(et: Value) extends Value
+  case class VPiCons(et: Value, head: Value, tail: Value) extends Value
+  case class NPiListElim(et: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
 trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
@@ -20,8 +20,8 @@ trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
       PiNil(fromM(a))
     case MVar(Global("Cons")) @@ a @@ h @@ t =>
       PiCons(fromM(a), fromM(h), fromM(t))
-    case MVar(Global("listElim")) @@ a @@ m @@ cN @@ cC @@ n =>
-      PiListElim(fromM(a), fromM(m), fromM(cN), fromM(cC), fromM(n))
+    case MVar(Global("elim")) @@ (MVar(Global("List")) @@ a) @@ m @@ cN @@ cC @@ n =>
+      PiListElim(PiList(fromM(a)), fromM(m), fromM(cN), fromM(cC), fromM(n))
     case _ => super.fromM(m)
   }
 }
@@ -35,7 +35,7 @@ trait ListPrinter extends FunPrinter with ListAST {
     case PiCons(a, x, xs) =>
       print(p, ii, 'Cons @@ a @@ x @@ xs)
     case PiListElim(a, m, mn, mc, xs) =>
-      print(p, ii, 'listElim @@ a @@ m @@ mn @@ mc @@ xs)
+      print(p, ii, 'elim @@ a @@ m @@ mn @@ mc @@ xs)
     case _ =>
       super.print(p, ii, t)
   }
@@ -45,28 +45,28 @@ trait ListEval extends FunEval with ListAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case PiList(a) =>
       VPiList(eval(a, named, bound))
-    case PiNil(a) =>
-      VPiNil(eval(a, named, bound))
-    case PiCons(a, head, tail) =>
-      VPiCons(eval(a, named, bound), eval(head, named, bound), eval(tail, named, bound))
-    case PiListElim(a, m, nilCase, consCase, ls) =>
-      val aVal = eval(a, named, bound)
+    case PiNil(et) =>
+      VPiNil(eval(et, named, bound))
+    case PiCons(et, head, tail) =>
+      VPiCons(eval(et, named, bound), eval(head, named, bound), eval(tail, named, bound))
+    case PiListElim(et, m, nilCase, consCase, ls) =>
+      val etVal = eval(et, named, bound)
       val mVal = eval(m, named, bound)
       val nilCaseVal = eval(nilCase, named, bound)
       val consCaseVal = eval(consCase, named, bound)
       val listVal = eval(ls, named, bound)
-      listElim(aVal, mVal, nilCaseVal, consCaseVal, listVal)
+      listElim(etVal, mVal, nilCaseVal, consCaseVal, listVal)
     case _ =>
       super.eval(t, named, bound)
   }
 
-  def listElim(aVal: Value, mVal: Value, nilCaseVal: Value, consCaseVal: Value, listVal: Value): Value = listVal match {
+  def listElim(etVal: Value, mVal: Value, nilCaseVal: Value, consCaseVal: Value, listVal: Value): Value = listVal match {
     case VPiNil(_) =>
       nilCaseVal
     case VPiCons(_, head, tail) =>
-      consCaseVal @@ head @@ tail @@ listElim(aVal, mVal, nilCaseVal, consCaseVal, tail)
+      consCaseVal @@ head @@ tail @@ listElim(etVal, mVal, nilCaseVal, consCaseVal, tail)
     case VNeutral(n) =>
-      VNeutral(NPiListElim(aVal, mVal, nilCaseVal, consCaseVal, n))
+      VNeutral(NPiListElim(etVal, mVal, nilCaseVal, consCaseVal, n))
   }
 }
 
@@ -76,18 +76,17 @@ trait ListCheck extends FunCheck with ListAST {
       val aType = iType(i, named, bound, a)
       val j = checkUniverse(i, aType)
       VUniverse(j)
-    case PiNil(a) =>
-      val aVal = eval(a, named, List())
+    case PiNil(et) =>
+      val eType = iType(i, named, bound, et)
+      checkUniverse(i, eType)
 
-      val aType = iType(i, named, bound, a)
-      checkUniverse(i, aType)
-
+      val VPiList(aVal) = eval(et, named, List())
       VPiList(aVal)
-    case PiCons(a, head, tail) =>
-      val aVal = eval(a, named, List())
+    case PiCons(et, head, tail) =>
+      val eType = iType(i, named, bound, et)
+      checkUniverse(i, eType)
 
-      val aType = iType(i, named, bound, a)
-      checkUniverse(i, aType)
+      val VPiList(aVal) = eval(et, named, List())
 
       val hType = iType(i, named, bound, head)
       checkEqual(i, hType, aVal)
@@ -96,13 +95,14 @@ trait ListCheck extends FunCheck with ListAST {
       checkEqual(i, tType, VPiList(aVal))
 
       VPiList(aVal)
-    case PiListElim(a, m, nilCase, consCase, xs) =>
-      val aVal = eval(a, named, List())
+    case PiListElim(et, m, nilCase, consCase, xs) =>
+      val eType = iType(i, named, bound, et)
+      checkUniverse(i, eType)
+
+      val VPiList(aVal) = eval(et, named, List())
+
       val mVal = eval(m, named, List())
       val xsVal = eval(xs, named, List())
-
-      val aType = iType(i, named, bound, a)
-      checkUniverse(i, aType)
 
       val mType = iType(i, named, bound, m)
       checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}))

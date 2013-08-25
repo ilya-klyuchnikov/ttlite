@@ -8,14 +8,14 @@ trait ListDriver extends CoreDriver with ListAST with ListEval {
   case object ConsLabel extends Label
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NPiListElim(a, m, nilCase, consCase, l) => l match {
+    case NPiListElim(VPiList(a), m, nilCase, consCase, l) => l match {
       case NFree(n) =>
         val aType = quote0(a)
-        val caseNil = ElimLabel(n, PiNil(aType), Map())
+        val caseNil = ElimLabel(n, PiNil(PiList(aType)), Map())
 
         val h1 = freshLocal(quote0(a))
         val t1 = freshLocal(quote0(VPiList(a)))
-        val caseCons = ElimLabel(n, PiCons(aType, h1, t1), Map(n -> t1))
+        val caseCons = ElimLabel(n, PiCons(PiList(aType), h1, t1), Map(n -> t1))
 
         ElimDStep(caseNil, caseCons)
       case n =>
@@ -26,7 +26,7 @@ trait ListDriver extends CoreDriver with ListAST with ListEval {
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {
-    case PiCons(a, h, t) =>
+    case PiCons(PiList(a), h, t) =>
       DecomposeDStep(ConsLabel, Conf(h, a), Conf(t, c.tp))
     case _ =>
       super.decompose(c)
@@ -38,7 +38,7 @@ trait ListResiduator extends BaseResiduator with ListDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, ElimLabel(sel, PiNil(a), _)) ::
+        TEdge(nodeZ, ElimLabel(sel, PiNil(PiList(a)), _)) ::
           TEdge(nodeS, ElimLabel(_, PiCons(_, Free(hN), Free(tN)), _)) ::
           Nil =>
 
@@ -52,9 +52,9 @@ trait ListResiduator extends BaseResiduator with ListDriver {
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, rec =>
             fold(nodeS, env + (hN -> h) + (tN -> t), rec :: t :: h :: bound, recM + (node.tPath -> rec)))))
 
-        listElim(aVal, motive, nilCase, consCase, env(sel))
+        listElim(VPiList(aVal), motive, nilCase, consCase, env(sel))
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
-        val VPiList(a) = eval(node.conf.tp, env, bound)
+        val a = eval(node.conf.tp, env, bound)
         VPiCons(a, fold(h, env, bound, recM), fold(t, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
@@ -67,7 +67,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, ElimLabel(sel, PiNil(a), _)) ::
+        TEdge(nodeZ, ElimLabel(sel, PiNil(PiList(a)), _)) ::
           TEdge(nodeS, ElimLabel(_, PiCons(_, Free(hN), Free(tN)), _)) ::
           Nil =>
 
@@ -98,7 +98,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
               rec :: t :: h :: bound2,
               recM2 + (node.tPath -> rec))})))
 
-        listElim(aVal, motive, nilCase, consCase, env(sel))
+        listElim(VPiList(aVal), motive, nilCase, consCase, env(sel))
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val VPiList(a) = eval(node.conf.tp, env, bound)
         val h1 = eval(h.conf.term, env, bound)
@@ -110,7 +110,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
         val eq_t1_t2 = proofFold(t, env, bound, recM, env2, bound2, recM2)
 
         'cong2 @@ a @@ VPiList(a) @@ VPiList(a) @@
-          VLam(a, x => VLam(VPiList(a), y => VPiCons(a, x, y))) @@
+          VLam(a, x => VLam(VPiList(a), y => VPiCons(VPiList(a), x, y))) @@
           h1 @@ h2 @@ eq_h1_h2 @@
           t1 @@ t2 @@ eq_t1_t2
       case _ =>
