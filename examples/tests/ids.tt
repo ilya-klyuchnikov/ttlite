@@ -7,41 +7,42 @@ import "examples/nat.tt";
 import "examples/product.tt";
 import "examples/sum.tt";
 
-assume ($A :: Set) ($B :: Set);
-assume ($F :: forall (_ :: $A) . Set);
-assume ($dp :: exists (x :: $A) . $F x);
-assume ($x :: $A) ($y :: $A) ($eq_x_y :: Eq $A $x $y);
-assume ($f1 :: Fin_1) ($f2 :: Fin_2);
-assume ($xs :: List $A);
-assume ($n :: Nat);
-assume ($p :: Product $A $B);
-assume ($s :: Sum $A $B);
+$A :: Set;
+$B :: Set;
+$F :: forall (_ :: $A) . Set;
+$dp :: exists (x :: $A) . $F x;
+$x :: $A; $y :: $A; $eq_x_y :: Eq $A $x $y;
+$f1 :: Fin_1; $f2 :: Fin_2;
+$xs :: List $A;
+$n :: Nat;
+$p :: Product $A $B;
+$s :: Sum $A $B;
 
-let (_, _) =
-    sc_with_proof (list_id $A $xs);
+(_, _) =
+    sc (list_id $A $xs);
 
-let (_, _) =
-    sc_with_proof (dproduct_id $A $F $dp);
+(_, _) =
+    sc (dproduct_id $A $F $dp);
 
-let (_, _) =
-    sc_with_proof (eq_id $A $x $y $eq_x_y);
+(_, _) =
+    sc (eq_id $A $x $y $eq_x_y);
 
-let (_, _) =
-    sc_with_proof (Refl $A $x);
+(_, _) =
+    sc (Refl $A $x);
 
-let (_, _) =
-    sc_with_proof (fin1_id $f1);
+(_, _) =
+    sc (fin1_id $f1);
 
-let (_, _) =
-    sc_with_proof (fin2_id $f2);
+(_, _) =
+    sc (fin2_id $f2);
 
-let (_, _) =
-    sc_with_proof (list_id $A $xs);
+(_, _) =
+    sc (list_id $A $xs);
 
-let (_, _) =
-    sc_with_proof (nat_id $n);
+(_, _) =
+    sc (nat_id $n);
 
-let (x1, x2) = sc_with_proof (product_id $A $B $p);
+(x1, x2) = sc (product_id $A $B $p);
 
-let (_, _) =
-    sc_with_proof (sum_id $A $B $s);
+(_, _) =
+    sc (sum_id $A $B $s);

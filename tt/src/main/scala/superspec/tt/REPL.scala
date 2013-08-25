@@ -16,7 +16,8 @@ trait REPL {
   def ieval(ne: NameEnv[V], i: T): V
   def icprint(c: T): String
   def itprint(t: V): String
-  def assume(s: State, x: (String, T)): State
+  def assume(s: State, n: String, t: T): State
+  def handleTypedLet(state: State, s: String, t: T, tp: T): State
   def fromM(m: MTerm): T
   val parser: MetaParser = MetaParser
   val name: String
@@ -43,12 +44,15 @@ trait REPL {
     stmt match {
       case Quit =>
         sys.exit()
-      case Assume(ass) =>
-        val ass1 = ass.map{case (n, m) => (n, fromM(m))}
-        ass1.foldLeft(state)(assume)
+      case Assume(n, i) =>
+        assume(state, n, fromM(i))
       case Let(x, e) =>
         val e1 = fromM(e)
         handleLet(state, x, e1)
+      case TypedLet(x, e, tp) =>
+        val e1 = fromM(e)
+        val tp1 = fromM(tp)
+        handleTypedLet(state, x, e1, tp1)
       case Eval(e) =>
         val e1 = fromM(e)
         handleLet(state, "it", e1)

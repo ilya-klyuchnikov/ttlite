@@ -1,6 +1,6 @@
 
 -- addition of natural numbers
-let plus =
+plus =
     \ (x :: Nat) (y :: Nat) ->
         elim Nat
             (\ (_ :: Nat) -> Nat )
@@ -8,7 +8,7 @@ let plus =
             ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
 
 -- predecessor, mapping 0 to 0
-let pred =
+pred =
     \ (n :: Nat) .
         elim Nat
             ( \ (_ :: Nat) . Nat )
@@ -18,16 +18,17 @@ let pred =
 
 -- a simpler elimination scheme for natural numbers:
 -- a result type doesn't depend on n
-let natFold =
-    ( \ (m :: Set) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
+natFold :: forall (m :: Set) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;
+natFold =
+    \ (m :: Set) (mz :: m) (ms :: forall (_ :: m) . m) (n :: Nat) ->
         elim Nat
             (\ (_ :: Nat) -> m )
              mz
              (\ (n1 :: Nat) (rec :: m) -> ms rec )
-             n )
-  :: forall (m :: Set) (_ :: m) (_ :: forall (_ :: m) . m) (_ :: Nat) . m;
+             n;
 
-let nat_id =
+
+nat_id =
     \ (n :: Nat) ->
         elim Nat
             (\ (_ :: Nat) -> Nat )

@@ -1,15 +1,16 @@
 -- generate a vector of given length from a specified element (replicate)
-let replicate =
-    (\ (n :: Nat) ->
+replicate :: forall (n :: Nat) . forall (a :: Set) (_ :: a) . Vec a n;
+replicate =
+    \ (n :: Nat) ->
         elim Nat
             (\ (n :: Nat) -> forall (a :: Set) (_ :: a) . Vec a n )
             (\ (a :: Set) (_ :: a) -> VNil a )
             (\ (n :: Nat) (rec :: forall (a :: Set) (_ :: a) . Vec a n) (a :: Set) (x :: a) -> VCons a n x (rec a x) )
-             n )
-  :: forall (n :: Nat) . forall (a :: Set) (_ :: a) . Vec a n;
+             n;
+
 
 -- generate a vector of given length n, containing the natural numbers smaller than n
-let fromto =
+fromto =
     \ (n :: Nat) ->
         elim Nat
             ( \ (n :: Nat) -> Vec Nat n )

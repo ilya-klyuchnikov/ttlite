@@ -4,25 +4,24 @@ import "examples/list.tt";
 
 -- map (comp f g) xs = (comp (map f)(map g)) xs
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYvhcM
--- we even do not need supercompilation here: normalization is enough
+$A :: Set;
+$B :: Set;
+$C :: Set;
+$f :: forall (_ :: $B). $C;
+$g :: forall (_ :: $A). $B;
+$xs :: List $A;
 
-assume
-    ($A :: Set)
-    ($B :: Set)
-    ($C :: Set)
-    ($f :: forall (_ :: $B). $C)
-    ($g :: forall (_ :: $A). $B)
-    ($xs :: List $A);
+e1 = map $A $C (comp $A $B $C $f $g) $xs;
+e2 = comp (List $A) (List $B) (List $C) (map $B $C $f) (map $A $B $g) $xs;
 
-let e1 = map $A $C (comp $A $B $C $f $g) $xs;
-let e2 = comp (List $A) (List $B) (List $C) (map $B $C $f) (map $A $B $g) $xs;
-
-let (res1, proof1) = sc_with_proof e1;
-let (res2, proof2) = sc_with_proof e2;
+(res1, proof1) = sc e1;
+(res2, proof2) = sc e2;
 
 -- check that t1 and t2 are supercompiled into the same expression
-let eq_res1_res2 = Refl (List $C) res1 :: Eq (List $C) res1 res2;
+eq_res1_res2 :: Eq (List $C) res1 res2;
+eq_res1_res2 = Refl (List $C) res1;
 -- deriving equality
-let eq_e1_e2 =
-    proof_by_sc (List $C) e1 e2 res1 proof1 proof2 :: Eq (List $C) e1 e2;
+eq_e1_e2 :: Eq (List $C) e1 e2;
+eq_e1_e2 =
+    proof_by_sc (List $C) e1 e2 res1 proof1 proof2;
 

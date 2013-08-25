@@ -129,10 +129,10 @@ case class LetSC[I](id1: String, id2: String, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
-  lexical.reserved += "sc_with_proof"
+  lexical.reserved += "sc"
   override def stmts = List(letScStmt) ++ super.stmts
   lazy val letScStmt: PackratParser[Stmt[MTerm]] =
-    ("let" ~ "(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc_with_proof" ~> term <~ ";") ^^ {
+    ("(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
       case id1 ~ id2 ~ t => LetSC(id1, id2, t(Nil))
     }
 }

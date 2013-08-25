@@ -1,41 +1,41 @@
 import "examples/core.tt";
 
-let Void = Fin_0;
+Void = Fin_0;
 -- unit type
-let Unit = Fin_1;
+Unit = Fin_1;
 -- constructor
-let U = finElem_1_1;
+U = finElem_1_1;
 
 -- booleans
-let Bool = Fin_2;
+Bool = Fin_2;
 -- constructors
-let False = finElem_1_2;
-let True  = finElem_2_2;
+False = finElem_1_2;
+True  = finElem_2_2;
 
-let abort =
+abort =
     \(m :: Set) (v :: Void) -> elim Fin_0 ( \(_ :: Void) -> m) v;
 
-let boolElim =
+boolElim =
     \ (m :: forall (_ :: Fin_2) . Set) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
         elim Fin_2 m c1 c2 b;
 
---let Prop = boolElim (\ (_ :: Bool) -> Set) Void Unit;
+--Prop = boolElim (\ (_ :: Bool) -> Set) Void Unit;
 
-let not = boolElim (\ (_ :: Bool) -> Bool) True False;
-let and = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (\ (_ :: Bool) -> False) (id Bool);
+not = boolElim (\ (_ :: Bool) -> Bool) True False;
+and = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (\ (_ :: Bool) -> False) (id Bool);
 
-let or  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) (\ (_ :: Bool) -> True);
-let xor = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) not;
-let if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
+or  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) (\ (_ :: Bool) -> True);
+xor = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) not;
+if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
 
-let fin1_id =
+fin1_id =
     \ (e :: Fin_1) ->
         elim Fin_1
             (\ (_ :: Fin_1) -> Fin_1)
             finElem_1_1
             e;
 
-let fin2_id =
+fin2_id =
     \ (e :: Fin_2) ->
         elim Fin_2
             (\ (_ :: Fin_2) -> Fin_2)

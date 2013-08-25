@@ -206,20 +206,19 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
     pretty(print(0, 0, c))
   override def itprint(t: Value): String =
     pretty(print(0, 0, quote0(t)))
-  def assume(state: State, x: (String, Term)): State = {
-    x._2 match {
-      case _ =>
-        itype(state.ne, state.ctx, x._2) match {
-          case Right(VUniverse(k)) =>
-            val v = ieval(state.ne, Ann(x._2, Universe(k)))
-            output(icprint(iquote(v)))
-            state.copy(ctx = state.ctx + (s2name(x._1) -> v))
-          case Left(_) =>
-            handleError("not a type")
-            state
-        }
+  def assume(state: State, x: String, t: Term): State = {
+    itype(state.ne, state.ctx, t) match {
+      case Right(VUniverse(k)) =>
+        val v = ieval(state.ne, Ann(t, Universe(k)))
+        output(icprint(iquote(v)))
+        state.copy(ctx = state.ctx + (s2name(x) -> v))
+      case Left(_) =>
+        handleError("not a type")
+        state
     }
   }
+  def handleTypedLet(state: State, s: String, t: T, tp: T): State =
+    handleLet(state, s, Ann(t, tp))
 
   def s2name(s: String): Name =
     if (s.startsWith("$")) Assumed(s) else Global(s)

@@ -18,12 +18,6 @@ class MetaParserSpec extends org.scalatest.FunSpec {
       assert(MetaParser.parseMTerm("$x $x $x") === MVar(Assumed("$x")) ~ MVar(Assumed("$x")) ~ MVar(Assumed("$x")))
     }
 
-    it("should parse annotated term") {
-      assert(MetaParser.parseMTerm("$x :: $x") === MAnn(MVar(Assumed("$x")),MVar(Assumed("$x"))))
-      assert(MetaParser.parseMTerm("(a :: a) :: a") == MAnn(MAnn(MVar(Global("a")), MVar(Global("a"))), MVar(Global("a"))))
-      assert(MetaParser.parseMTerm("a :: (a :: a)") == MAnn(MVar(Global("a")),MAnn(MVar(Global("a")),MVar(Global("a")))))
-    }
-
     it("should parse binder term") {
       assert(MetaParser.parseMTerm("forall (x :: a) . x") ==
         MBind("forall", MVar(Global("a")),MVar(Quote(0))))
