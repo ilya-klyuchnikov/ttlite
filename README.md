@@ -14,12 +14,14 @@ the supercompiler a proof of correctness is provided.
 
 SuperSpec depends on [MRSC](https://github.com/ilya-klyuchnikov/mrsc) 0.5, so you need to install MRSC first:
 
+    :::text
     $ git clone git@github.com:ilya-klyuchnikov/mrsc.git
     $ cd mrsc
     $ sbt publish-local
 
 Then you can build SuperSpec project:
 
+    :::text
     $ git clone git@bitbucket.org:lambdamix/superspec.git
     $ cd superspec
     $ sbt
@@ -31,6 +33,7 @@ Then you can build SuperSpec project:
 Building/testing SuperSpec with default sbt settings may fail due to `OutOfMemory` issues.
 I use following settings for SBT (file `~/.sbtconfig`):
 
+    :::text
     SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
 
 ## Quick Start
@@ -44,6 +47,7 @@ There are two sub-projects:
 
 To launch TT REPL, type in sbt console `tt/run`:
 
+    :::text
     > tt/run
 
 Load some definitions from examples:
