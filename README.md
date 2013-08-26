@@ -143,11 +143,11 @@ TT Supercompiler REPL introduces a new statement:
     (t1, t2) = sc t;
 
 The meaning of the new statement is that `t1` is a result of transformation of the `term` by the supercompiler,
-`t2` is a proof that transformation is correct (i.e. `t2 :: Eq a term t`).
+`t2` is a proof that transformation is correct (i.e. `t2 :: Eq a t t1` if `t :: a`).
 
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
-Here is an example of proving the equivalence of two expressions with assumed variables:
+Here is an example of proving the equivalence of two expressions with assumed variables (`examples/proofs/01.hs`):
 
     import "examples/nat.hs";
     import "examples/eq.hs";
@@ -173,7 +173,7 @@ Here is an example of proving the equivalence of two expressions with assumed va
     eq_e1_e2 =
         proof_by_sc Nat e1 e2 res1 proof1 proof2;
 
-`proof_by_sc` is a helper function defined in `examples/eq.hs`.
+`proof_by_sc` is a helper function defined in `examples/eq.hs`. In this example correctness is checked by type-checker!
 
 You can see input and output of supercompilation (as well as a proof):
 
@@ -233,5 +233,5 @@ in normalized form). An interested person is encourage to launch the supercompil
 
 In some sense, `sc` is just a function of the following type (type `A` is implicitly resolved from the context):
 
-    sc :: forall {A :: Set} (t :: A) . exists (t1 :: A) . Eq A t t1;
+    sc :: forall (A :: Set) (t :: A) . exists (t1 :: A) . Eq A t t1;
 
