@@ -72,7 +72,7 @@ trait REPL {
         if (s == "it"){
           output(icprint(iquote(v)) + "\n::\n" + itprint(tp) + ";")
         } else {
-          output(s"$s \n::\n ${itprint(tp)};")
+          output(s"$s\n::\n${itprint(tp)};")
         }
         State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
     }

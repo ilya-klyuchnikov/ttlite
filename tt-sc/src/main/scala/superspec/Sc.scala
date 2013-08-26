@@ -205,5 +205,5 @@ object TTScREPL2
   with ListREPL with ListDriver with ListResiduator with ListProofResiduator
   with ProductREPL with ProductDriver with ProductResiduator with ProductProofResiduator
   with FinREPL with FinDriver with FinResiduator with FinProofResiduator {
-  override val name = "SuperSpec"
+  override val name = "TT-SC"
 }
