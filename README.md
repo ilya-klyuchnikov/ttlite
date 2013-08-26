@@ -48,10 +48,12 @@ To launch TT REPL, type in sbt console `tt/run`:
 
 Load some definitions from examples:
 
+    :::text
     TT> import "examples/nat.hs";
 
 Try some simple computations:
 
+    :::text
     TT> plus Zero Zero;
     Zero
     ::
@@ -64,6 +66,7 @@ Try some simple computations:
 
 You can look into definitions by evaluating them:
 
+    :::text
     TT> plus;
     \ (a :: Nat) -> \ (b :: Nat) ->
         elim Nat (\ (c :: Nat) -> Nat) b (\ (c :: Nat) -> \ (d :: Nat) -> Succ d) a
@@ -72,6 +75,7 @@ You can look into definitions by evaluating them:
 
 You can introduce new definitions directly in REPL:
 
+    :::text
     TT> z = Zero;
     z
     ::
@@ -84,6 +88,7 @@ You can introduce new definitions directly in REPL:
 
 For definitions you can optionally specify a type (type checker will check it):
 
+    :::text
     TT> m :: Nat; m = Succ Zero;
     m
     ::
@@ -94,6 +99,7 @@ For definitions you can optionally specify a type (type checker will check it):
 You can _assume_ a variable of a certain type (we will call it _assumed_ variable)
 by specifying its type (a variable should start with `$`);
 
+    :::text
     TT> $n :: Nat;
     Nat
 
@@ -104,6 +110,7 @@ by specifying its type (a variable should start with `$`);
 
 Quitting REPL:
 
+    :::text
     TT> quit;
 
 ### Syntax and Semantics of TT
@@ -130,16 +137,19 @@ A program in TT Lite consists of the following statements:
 
 ### TT Supercompiler
 
-To launch TT REPL, type in sbt console `tt-sc/run`:
+To launch TT Supercompiler REPL, type in sbt console `tt-sc/run`:
 
+    :::text
     > tt-sc/run
 
 Launching examples:
 
+    :::text
     TT-SC> import "examples/proofs/01.hs";
 
 TT Supercompiler REPL introduces a new statement:
 
+    :::text
     (t1, t2) = sc t;
 
 The meaning of the new statement is that `t1` is a result of transformation of the `term` by the supercompiler,
@@ -149,6 +159,7 @@ The meaning of the new statement is that `t1` is a result of transformation of t
 
 Here is an example of proving the equivalence of two expressions with assumed variables (`examples/proofs/01.hs`):
 
+    :::text
     import "examples/nat.hs";
     import "examples/eq.hs";
 
@@ -177,6 +188,7 @@ Here is an example of proving the equivalence of two expressions with assumed va
 
 You can see input and output of supercompilation (as well as a proof):
 
+    :::text
     TT-SC> import "examples/proofs/01.hs";
 
     TT-SC> e2;
@@ -228,10 +240,11 @@ You can see input and output of supercompilation (as well as a proof):
         $x);
 
 The whole proof term is quite long (It is long since TT Lite performs normalization of terms and terms are printed
-in normalized form). An interested person is encourage to launch the supercompiler to see it.
+in normalized form). An interested person is encouraged to launch the supercompiler to see it.
 
 
 In some sense, `sc` is just a function of the following type (type `A` is implicitly resolved from the context):
 
+    :::text
     sc :: forall (A :: Set) (t :: A) . exists (t1 :: A) . Eq A t t1;
 
