@@ -6,11 +6,20 @@ import mrsc.core._
 trait FinDriver extends CoreDriver with FinAST with FinEval {
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NFinElim(n, m, cases, sel) =>
+    case NUnitElim(_, _, sel) =>
       sel match {
         case NFree(v) =>
-          val cases1 = (1 to n).toList.map(i => ElimLabel(v, FinElem(i, n), Map()))
-          ElimDStep(cases1:_*)
+          val c = ElimLabel(v, U, Map())
+          ElimDStep(c)
+        case n =>
+          driveNeutral(n)
+      }
+    case NBoolElim(_, _, _, sel) =>
+      sel match {
+        case NFree(v) =>
+          val c1 = ElimLabel(v, False, Map())
+          val c2 = ElimLabel(v, True, Map())
+          ElimDStep(c1, c2)
         case n =>
           driveNeutral(n)
       }
@@ -23,16 +32,15 @@ trait FinDriver extends CoreDriver with FinAST with FinEval {
 trait FinResiduator extends BaseResiduator with FinDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, ElimLabel(sel, FinElem(1, 1), _)) :: _ =>
-        val motive =
-          VLam(VFin(1), s => eval(node.conf.tp, env + (sel -> s), s :: bound))
-        val List(f) = node.outs.map(_.node).map(fold(_, env, bound, recM))
-        finElim1(motive, f, env(sel))
-      case TEdge(nodeL, ElimLabel(sel, FinElem(1, 2), _)) :: _ =>
-        val motive =
-          VLam(VFin(2), s => eval(node.conf.tp, env + (sel -> s), s :: bound))
-        val List(f1, f2) = node.outs.map(_.node).map(fold(_, env, bound, recM))
-        finElim2(motive, f1, f2, env(sel))
+      case TEdge(n, ElimLabel(sel, U, _)) :: _ =>
+        val m = VLam(VUnit, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
+        val f = fold(n, env, bound, recM)
+        unitElim(m, f, env(sel))
+      case TEdge(n1, ElimLabel(sel, False, _)) :: TEdge(n2, ElimLabel(_, True, _)) :: Nil =>
+        val m = VLam(VBool, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
+        val f1 = fold(n1, env, bound, recM)
+        val f2 = fold(n2, env, bound, recM)
+        boolElim(m, f1, f2, env(sel))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -43,26 +51,25 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, ElimLabel(sel, FinElem(1, 1), _)) :: _ =>
-        val motive =
-          VLam(VFin(1), n =>
+      case TEdge(n, ElimLabel(sel, U, _)) :: _ =>
+        val m =
+          VLam(VUnit, n =>
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))
-        val List(f) =
-          node.outs.map(_.node).map(proofFold(_, env, bound, recM, env2, bound2, recM2))
-        finElim1(motive, f, env(sel))
-      case TEdge(nodeL, ElimLabel(sel, FinElem(1, 2), _)) :: _ =>
+        val f = proofFold(n, env, bound, recM, env2, bound2, recM2)
+        unitElim(m, f, env(sel))
+      case TEdge(n1, ElimLabel(sel, False, _)) :: TEdge(n2, ElimLabel(_, True, _)) :: Nil =>
         val motive =
-          VLam(VFin(2), n =>
+          VLam(VBool, n =>
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))
-        val List(f1, f2) =
-          node.outs.map(_.node).map(proofFold(_, env, bound, recM, env2, bound2, recM2))
-        finElim2(motive, f1, f2, env(sel))
+        val f1 = proofFold(n1, env, bound, recM, env2, bound2, recM2)
+        val f2 = proofFold(n2, env, bound, recM, env2, bound2, recM2)
+        boolElim(motive, f1, f2, env(sel))
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }

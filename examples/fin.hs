@@ -1,23 +1,10 @@
 import "examples/core.hs";
 
-Void = Fin_0;
--- unit type
-Unit = Fin_1;
--- constructor
-U = finElem_1_1;
-
--- booleans
-Bool = Fin_2;
--- constructors
-False = finElem_1_2;
-True  = finElem_2_2;
-
 abort =
-    \(m :: Set) (v :: Void) -> elim Fin_0 ( \(_ :: Void) -> m) v;
+    \(m :: Set) (v :: Void) -> elim Void ( \(_ :: Void) -> m) v;
 
 boolElim =
-    \ (m :: forall (_ :: Fin_2) . Set) (c1 :: m False) (c2 :: m True) (b :: Fin_2) .
-        elim Fin_2 m c1 c2 b;
+    \ (m :: forall (_ :: Bool) . Set) (c1 :: m False) (c2 :: m True) (b :: Bool) . elim Bool m c1 c2 b;
 
 --Prop = boolElim (\ (_ :: Bool) -> Set) Void Unit;
 
@@ -28,18 +15,22 @@ or  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) (\ (_ :: B
 xor = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) (id Bool) not;
 if  = boolElim (\ (_ :: Bool) -> forall (_ :: Bool) . Bool) not (id Bool);
 
-fin1_id =
-    \ (e :: Fin_1) ->
-        elim Fin_1
-            (\ (_ :: Fin_1) -> Fin_1)
-            finElem_1_1
-            e;
 
-fin2_id =
-    \ (e :: Fin_2) ->
-        elim Fin_2
-            (\ (_ :: Fin_2) -> Fin_2)
-            finElem_1_2
-            finElem_2_2
-            e;
+unit_id =
+    \ (e :: Unit) ->
+        elim Unit (\ (_ :: Unit) -> Unit) U e;
+
+bool_id =
+    \ (e :: Bool) ->
+        elim Bool (\ (_ :: Bool) -> Bool) False True e;
+
+t1 :: Eq Unit (unit_id U) U;
+t1 = Refl Unit U;
+
+t2 :: Eq Bool (bool_id False) False;
+t2 = Refl Bool False;
+
+t3 :: Eq Bool (bool_id True) True;
+t3 = Refl Bool True;
+
 

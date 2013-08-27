@@ -12,7 +12,7 @@ $B :: Set;
 $F :: forall (_ :: $A) . Set;
 $dp :: exists (x :: $A) . $F x;
 $x :: $A; $y :: $A; $eq_x_y :: Eq $A $x $y;
-$f1 :: Fin_1; $f2 :: Fin_2;
+$f1 :: Unit; $f2 :: Bool;
 $xs :: List $A;
 $n1 :: Nat; $n2 :: Nat; $n3 :: Nat;
 $p :: Product $A $B;
@@ -31,10 +31,10 @@ eep = dpair (exists (x :: Nat) . Eq Nat x Zero) Zero (Refl Nat Zero);
 (refl_sc, refl_proof) = sc (Refl $A $x);
 
 
-(_, _) = sc (fin1_id $f1);
+(_, _) = sc (unit_id $f1);
 
-(_, _) = sc (fin2_id $f2);
-
+(_, _) = sc (bool_id $f2);
+{-
 (_, _) = sc (list_id $A $xs);
 
 (_, _) = sc (nat_id $n1);
@@ -65,3 +65,4 @@ $xs1 :: List $A1;
     sc (List (List Set));
 
 (pr_sc, pr_proof) = sc (Product (Product Set Nat) Set);
+-}

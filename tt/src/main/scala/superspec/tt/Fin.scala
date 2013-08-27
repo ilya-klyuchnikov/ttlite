@@ -1,54 +1,73 @@
 package superspec.tt
 
 trait FinAST extends CoreAST {
-  case class Fin(n: Int) extends Term
-  case class FinElem(i: Int, n: Int) extends Term
-  case class FinElim(n: Int, motive: Term, cases: List[Term], elem: Term) extends Term
 
-  case class VFin(n: Int) extends Value
-  case class VFinElem(i: Int, n: Int) extends Value
-  case class NFinElim(n: Int, motive: Value, cases: List[Value], elem: Neutral) extends Neutral
+  // Void, Empty Type
+  case object Void extends Term
+  case class VoidElim(m: Term, elem: Term) extends Term
+  case object VVoid extends Value
+  case class NVoidElim(m: Value, elem: Neutral) extends Neutral
+
+  // Unit Type
+  case object Unit extends Term
+  case object U extends Term
+  case class UnitElim(m: Term, f: Term, elem: Term) extends Term
+
+  case object VUnit extends Value
+  case object VU extends Value
+  case class NUnitElim(m: Value, v: Value, elem: Neutral) extends Neutral
+
+  // Bool type
+  // this is just syntactic sugar - really it can be implemented via sum
+  case object Bool extends Term
+  case object False extends Term
+  case object True extends Term
+  case class BoolElim(m: Term, v1: Term, v2: Term, elem: Term) extends Term
+
+  case object VBool extends Value
+  case object VFalse extends Value
+  case object VTrue extends Value
+  case class NBoolElim(m: Value, v1: Value, v2: Value, elem: Neutral) extends Neutral
 }
 
 trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
   override def fromM(m: MTerm): Term = m match {
-    case MVar(Global("Fin_0")) =>
-      Fin(0)
-    case MVar(Global("Fin_1")) =>
-      Fin(1)
-    case MVar(Global("Fin_2")) =>
-      Fin(2)
-    case MVar(Global("finElem_1_1")) =>
-      FinElem(1, 1)
-    case MVar(Global("finElem_1_2")) =>
-      FinElem(1, 2)
-    case MVar(Global("finElem_2_2")) =>
-      FinElem(2, 2)
-    case MVar(Global("elim")) @@ MVar(Global("Fin_0")) @@ m @@ el =>
-      FinElim(0, fromM(m), List(), fromM(el))
-    case MVar(Global("elim")) @@ MVar(Global("Fin_1")) @@ m @@ c1 @@ el =>
-      FinElim(1, fromM(m), List(fromM(c1)), fromM(el))
-    case MVar(Global("elim")) @@ MVar(Global("Fin_2")) @@ m @@ c1 @@ c2 @@ el =>
-      FinElim(2, fromM(m), List(fromM(c1), fromM(c2)), fromM(el))
+    case MVar(Global("Void")) => Void
+    case MVar(Global("Unit")) => Unit
+    case MVar(Global("Bool")) => Bool
+    case MVar(Global("U")) => U
+    case MVar(Global("False")) => False
+    case MVar(Global("True")) => True
+    case MVar(Global("elim")) @@ MVar(Global("Void")) @@ m @@ el =>
+      VoidElim(fromM(m), fromM(el))
+    case MVar(Global("elim")) @@ MVar(Global("Unit")) @@ m @@ v @@ el =>
+      UnitElim(fromM(m), fromM(v), fromM(el))
+    case MVar(Global("elim")) @@ MVar(Global("Bool")) @@ m @@ c1 @@ c2 @@ el =>
+      BoolElim(fromM(m), fromM(c1), fromM(c2), fromM(el))
     case _ => super.fromM(m)
   }
 }
 
 trait FinPrinter extends FunPrinter with FinAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
-    case Fin(n) =>
-      print(p, ii, s"Fin_$n")
-    case FinElem(i, n) =>
-      print(p, ii, s"finElem_${i}_${n}")
-    case FinElim(0, m, cases, elem) =>
-      val t = cases.foldLeft('elim @@ Fin(0) @@ m)(_ @@ _) @@ elem
-      print(p, ii, t)
-    case FinElim(1, m, cases, elem) =>
-      val t = cases.foldLeft('elim @@ Fin(1) @@ m)(_ @@ _) @@ elem
-      print(p, ii, t)
-    case FinElim(2, m, cases, elem) =>
-      val t = cases.foldLeft('elim @@ Fin(2) @@ m)(_ @@ _) @@ elem
-      print(p, ii, t)
+    case Void =>
+      print(p, ii, "Void")
+    case Unit =>
+      print(p, ii, "Unit")
+    case Bool =>
+      print(p, ii, "Bool")
+    case U =>
+      print(p, ii, "U")
+    case False =>
+      print(p, ii, "False")
+    case True =>
+      print(p, ii, "True")
+    case VoidElim(m, elem) =>
+      print(p, ii, 'elim @@ Void @@ elem)
+    case UnitElim(m, v, elem) =>
+      print(p, ii, 'elim @@ Unit @@ m @@ v @@ elem)
+    case BoolElim(m, v1, v2, elem) =>
+      print(p, ii, 'elim @@ Bool @@ m @@ v1 @@ v2 @@ elem)
     case _ =>
       super.print(p, ii, t)
   }
@@ -56,69 +75,98 @@ trait FinPrinter extends FunPrinter with FinAST {
 
 trait FinEval extends FunEval with FinAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
-    case Fin(n) =>
-      VFin(n)
-    case FinElem(i, n) =>
-      assert(i > 0 && i <= n)
-      VFinElem(i, n)
-    case FinElim(0, m, List(), elem) =>
+    case Void =>
+      VVoid
+    case Unit =>
+      VUnit
+    case Bool =>
+      VBool
+    case U =>
+      VU
+    case False =>
+      VFalse
+    case True =>
+      VTrue
+    case VoidElim(m, elem) =>
       val mVal = eval(m, named, bound)
       val elemVal = eval(elem, named, bound)
-      finElim0(mVal, elemVal)
-    case FinElim(1, m, List(f), elem) =>
+      voidElim(mVal, elemVal)
+    case UnitElim(m, f, elem) =>
       val mVal = eval(m, named, bound)
       val fVal = eval(f, named, bound)
       val elemVal = eval(elem, named, bound)
-      finElim1(mVal, fVal, elemVal)
-    case FinElim(2, m, List(f1, f2), elem) =>
+      unitElim(mVal, fVal, elemVal)
+    case BoolElim(m, f1, f2, elem) =>
       val mVal = eval(m, named, bound)
       val f1Val = eval(f1, named, bound)
       val f2Val = eval(f2, named, bound)
       val elemVal = eval(elem, named, bound)
-      finElim2(mVal, f1Val, f2Val, elemVal)
+      boolElim(mVal, f1Val, f2Val, elemVal)
     case _ =>
       super.eval(t, named, bound)
   }
 
-  def finElim0(m: Value, elem: Value) = elem match {
+  def voidElim(m: Value, elem: Value) = elem match {
     case VNeutral(n) =>
-      VNeutral(NFinElim(0, m, List(), n))
+      VNeutral(NVoidElim(m, n))
   }
 
-  def finElim1(m: Value, f: Value, elem: Value) = elem match {
-    case VFinElem(1, 1) =>
+  def unitElim(m: Value, f: Value, elem: Value) = elem match {
+    case VU =>
       f
     case VNeutral(n) =>
-      VNeutral(NFinElim(1, m, List(f), n))
+      VNeutral(NUnitElim(m, f, n))
   }
 
-  def finElim2(m: Value, f1: Value, f2: Value, elem: Value) = elem match {
-    case VFinElem(1, 2) =>
+  def boolElim(m: Value, f1: Value, f2: Value, elem: Value) = elem match {
+    case VFalse =>
       f1
-    case VFinElem(2, 2) =>
+    case VTrue =>
       f2
     case VNeutral(n) =>
-      VNeutral(NFinElim(2, m, List(f1, f2), n))
+      VNeutral(NBoolElim(m, f1, f2, n))
   }
 }
 
 trait FinCheck extends FunCheck with FinAST {
   override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
-    case Fin(n) =>
+    case Void | Unit | Bool =>
       VUniverse(0)
-    case FinElem(i, n) =>
-      VFin(n)
-    case FinElim(n, m, cases, elem) =>
+    case U =>
+      VUnit
+    case False | True =>
+      VBool
+    case VoidElim(m, elem) =>
+      val mType = iType(i, named, bound, m)
+      checkEqual(i, mType, VPi(VVoid, {_ => VUniverse(-1)}))
+
       val mVal = eval(m, named, List())
       val elemVal = eval(elem, named, List())
 
+      mVal @@ elemVal
+    case UnitElim(m, v, elem) =>
       val mType = iType(i, named, bound, m)
-      checkEqual(i, mType, VPi(VFin(n), {_ => VUniverse(-1)}))
+      checkEqual(i, mType, VPi(VUnit, {_ => VUniverse(-1)}))
 
-      val casesTypes = cases.map(iType(i, named, bound, _))
-      casesTypes.zipWithIndex.foreach { case (tp, in) =>
-        checkEqual(i, tp, mVal @@ VFinElem(in + 1, n))
-      }
+      val mVal = eval(m, named, List())
+      val elemVal = eval(elem, named, List())
+
+      val vType = iType(i, named, bound, v)
+      checkEqual(i, vType, mVal @@ VU)
+
+      mVal @@ elemVal
+    case BoolElim(m, v1, v2, elem) =>
+      val mType = iType(i, named, bound, m)
+      checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}))
+
+      val mVal = eval(m, named, List())
+      val elemVal = eval(elem, named, List())
+
+      val v1Type = iType(i, named, bound, v1)
+      checkEqual(i, v1Type, mVal @@ VFalse)
+
+      val v2Type = iType(i, named, bound, v2)
+      checkEqual(i, v2Type, mVal @@ VTrue)
 
       mVal @@ elemVal
     case _ =>
@@ -126,12 +174,18 @@ trait FinCheck extends FunCheck with FinAST {
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
-    case Fin(n) =>
-      Fin(n)
-    case FinElem(i, n) =>
-      FinElem(i, n)
-    case FinElim(n, m, cases, elem) =>
-      FinElim(n, iSubst(i, r, m), cases.map(iSubst(i, r, _)), iSubst(i, r, elem))
+    case Void => Void
+    case Unit => Unit
+    case Bool => Bool
+    case U => U
+    case False => False
+    case True => True
+    case VoidElim(m, elem) =>
+      VoidElim(iSubst(i, r, m), iSubst(i, r, elem))
+    case UnitElim(m, v, elem) =>
+      UnitElim(iSubst(i, r, m), iSubst(i, r, v), iSubst(i, r, elem))
+    case BoolElim(m, v1, v2, elem) =>
+      BoolElim(iSubst(i, r, m), iSubst(i, r, v1), iSubst(i, r, v2), iSubst(i, r, elem))
     case _ =>
       super.iSubst(i, r, it)
   }
@@ -139,14 +193,22 @@ trait FinCheck extends FunCheck with FinAST {
 
 trait FinQuote extends CoreQuote with FinAST {
   override def quote(ii: Int, v: Value): Term = v match {
-    case VFin(a) => Fin(a)
-    case VFinElem(i, n) => FinElem(i, n)
+    case VVoid => Void
+    case VUnit => Unit
+    case VBool => Bool
+    case VU => U
+    case VFalse => False
+    case VTrue => True
     case _ => super.quote(ii, v)
   }
 
   override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NFinElim(n, m, cases, elem) =>
-      FinElim(n, quote(ii, m), cases.map(quote(ii, _)), neutralQuote(ii, elem))
+    case NVoidElim(m, elem) =>
+      VoidElim(quote(ii, m), neutralQuote(ii, elem))
+    case NUnitElim(m, v, elem) =>
+      UnitElim(quote(ii, m), quote(ii, v), neutralQuote(ii, elem))
+    case NBoolElim(m, v1, v2, elem) =>
+      BoolElim(quote(ii, m), quote(ii, v1), quote(ii, v2), neutralQuote(ii, elem))
     case _ => super.neutralQuote(ii, n)
   }
 }
