@@ -167,20 +167,36 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               state
             case Some(t3) =>
               output(icprint(resTerm) + " :: " + icprint(iquote(t3)) + ";")
-              val proofVal = ieval(state.ne, iquote(proofResiduate(tGraph, state.ne)))
+
+
+              // this place is a bit unsafe:
+              // we normalize a proof without first type-checking it
+              // this is why we can use combinators cong1, cong2, ... as generic combinators -
+              // that are applicable for *any* type, not only for small types (Set0).
+              val rawProofVal = proofResiduate(tGraph, state.ne)
+              val rawProofTerm = iquote(rawProofVal)
+              val rawAnnProofTerm = Ann(rawProofTerm, Eq(resType, it, resTerm))
+
+              val proofVal = ieval(state.ne, iquote(rawProofVal))
               val proofTerm = iquote(ieval(state.ne, iquote(proofVal)))
               // to check that it really built correctly
               val annProofTerm = Ann(proofTerm, Eq(resType, it, resTerm))
               val proofTypeVal = iinfer(state.ne, state.ctx, annProofTerm)
+              output("raw proof:")
+              output(icprint(rawProofTerm))
               output("proof:")
               output(icprint(proofTerm))
+
+              // in general, this line will fail
+              //iinfer(state.ne, state.ctx, rawAnnProofTerm).get
+
               //output("expected type:")
               //output(icprint(Eq(cType, it, cTerm)))
               output("::")
               output(icprint(iquote(proofTypeVal.get)))
               State(
                 state.interactive,
-                state.ne + (Global(scId) -> resVal) + (Global(proofId) -> proofVal),
+                state.ne + (Global(scId) -> resVal) + (Global(proofId) -> proofVal) + (Global(s"${proofId}_raw") -> proofVal),
                 state.ctx + (Global(scId) -> inTpVal) + (Global(proofId) -> proofTypeVal.get),
                 state.modules)
           }

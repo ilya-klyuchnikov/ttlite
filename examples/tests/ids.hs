@@ -18,31 +18,42 @@ $n :: Nat;
 $p :: Product $A $B;
 $s :: Sum $A $B;
 
-(_, _) =
-    sc (list_id $A $xs);
+-- BUG??
+(dp_sc, dp_proof) = sc (dproduct_id $A $F $dp);
 
-(_, _) =
-    sc (dproduct_id $A $F $dp);
+eep = dpair (exists (x :: Nat) . Eq Nat x Zero) Zero (Refl Nat Zero);
 
-(_, _) =
-    sc (eq_id $A $x $y $eq_x_y);
+(dpair_sc, dpair_proof) = sc (eep);
 
-(_, _) =
-    sc (Refl $A $x);
+(_, _) = sc (eq_id $A $x $y $eq_x_y);
 
-(_, _) =
-    sc (fin1_id $f1);
 
-(_, _) =
-    sc (fin2_id $f2);
+(refl_sc, refl_proof) = sc (Refl $A $x);
 
-(_, _) =
-    sc (list_id $A $xs);
 
-(_, _) =
-    sc (nat_id $n);
+(_, _) = sc (fin1_id $f1);
 
-(x1, x2) = sc (product_id $A $B $p);
+(_, _) = sc (fin2_id $f2);
 
-(_, _) =
-    sc (sum_id $A $B $s);
+(_, _) = sc (list_id $A $xs);
+
+(_, _) = sc (nat_id $n);
+
+(_, _) = sc (product_id $A $B $p);
+
+(_, _) = sc (sum_id $A $B $s);
+
+list_id_1 =
+    \ (A :: Set1) (xs :: List A) ->
+        elim
+            (List A)
+            (\ (_ :: List A) -> List A)
+            (Nil (List A))
+            (\ (h :: A) (t :: List A) (rec :: List A) -> Cons (List A) h rec)
+            xs;
+
+$A1 :: Set1;
+$xs1 :: List $A1;
+
+(_, _) = sc (list_id_1 $A1 $xs1);
+

@@ -38,7 +38,10 @@ trait EqProofResiduator extends EqResiduator with ProofResiduator {
         'cong1 @@
           a @@
           eq @@
-          VLam(a, x => VRefl(a, x)) @@
+          // This is an interesting difference due to dependent types!!
+          // this is needed for typing purposes only!!
+          // VLam(a, x => VRefl(a, x)) @@
+          VLam(a, _ => VRefl(a, eval(x.conf.term, env, bound))) @@
           eval(x.conf.term, env, bound) @@
           fold(x, env, bound, recM) @@
           proofFold(x, env, bound, recM, env2, bound2, recM2)
