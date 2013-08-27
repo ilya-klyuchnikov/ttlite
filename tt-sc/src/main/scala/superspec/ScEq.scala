@@ -6,11 +6,14 @@ import mrsc.core._
 trait EqDriver extends CoreDriver with EqEval {
 
   case object ReflLabel extends Label
+  case object EqLabel extends Label
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
       val Eq(_, _, _) = c.tp
       DecomposeDStep(ReflLabel, Conf(x, a))
+    case Eq(a, x, y) =>
+      DecomposeDStep(EqLabel, Conf(x, a), Conf(y, a))
     case _ =>
       super.decompose(c)
   }
@@ -23,6 +26,9 @@ trait EqResiduator extends BaseResiduator with EqDriver { self =>
       case TEdge(x, ReflLabel) :: Nil =>
         val VEq(a, _, _) = eval(node.conf.tp, env, bound)
         VRefl(a, fold(x, env, bound, recM))
+      case TEdge(x, EqLabel) :: TEdge(y, EqLabel) :: Nil =>
+        val VEq(a, _, _) = eval(node.conf.term, env, bound)
+        VEq(a, fold(x, env, bound, recM), fold(y, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -45,6 +51,22 @@ trait EqProofResiduator extends EqResiduator with ProofResiduator {
           eval(x.conf.term, env, bound) @@
           fold(x, env, bound, recM) @@
           proofFold(x, env, bound, recM, env2, bound2, recM2)
+      case TEdge(x, EqLabel) :: TEdge(y, EqLabel) :: Nil =>
+        val tp = eval(node.conf.tp, env, bound)
+        val VEq(a, _, _) = eval(node.conf.term, env, bound)
+
+        val x1 = eval(x.conf.term, env, bound)
+        val x2 = fold(x, env, bound, recM)
+        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+
+        val y1 = eval(y.conf.term, env, bound)
+        val y2 = fold(y, env, bound, recM)
+        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+
+        'cong2 @@ a @@ a @@ tp @@
+          VLam(a, x => VLam(a, y => VEq(a, x, y))) @@
+          x1 @@ x2 @@ eq_x1_x2 @@
+          y1 @@ y2 @@ eq_y1_y2
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }

@@ -6,6 +6,7 @@ import mrsc.core._
 trait ListDriver extends CoreDriver with ListAST with ListEval {
 
   case object ConsLabel extends Label
+  case object ListLabel extends Label
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NPiListElim(VPiList(a), m, nilCase, consCase, l) => l match {
@@ -28,6 +29,8 @@ trait ListDriver extends CoreDriver with ListAST with ListEval {
   override def decompose(c: Conf): DriveStep = c.term match {
     case PiCons(PiList(a), h, t) =>
       DecomposeDStep(ConsLabel, Conf(h, a), Conf(t, c.tp))
+    case PiList(a) =>
+      DecomposeDStep(ListLabel, Conf(a, c.tp))
     case _ =>
       super.decompose(c)
   }
@@ -56,6 +59,8 @@ trait ListResiduator extends BaseResiduator with ListDriver {
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
         val a = eval(node.conf.tp, env, bound)
         VPiCons(a, fold(h, env, bound, recM), fold(t, env, bound, recM))
+      case TEdge(a, ListLabel) :: Nil =>
+        VPiList(fold(a, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -113,6 +118,15 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
           VLam(a, x => VLam(VPiList(a), y => VPiCons(VPiList(a), x, y))) @@
           h1 @@ h2 @@ eq_h1_h2 @@
           t1 @@ t2 @@ eq_t1_t2
+      case TEdge(n1, ListLabel) :: Nil =>
+        val tp = eval(node.conf.tp, env, bound)
+        'cong1 @@
+          tp @@
+          tp @@
+          VLam(tp, a => VPiList(a)) @@
+          eval(n1.conf.term, env, bound) @@
+          fold(n1, env, bound, recM) @@
+          proofFold(n1, env, bound, recM, env2, bound2, recM2)
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }

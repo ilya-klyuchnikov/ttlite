@@ -6,6 +6,7 @@ import mrsc.core._
 trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
 
   case object PairLabel extends Label
+  case object ProductLabel extends Label
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
     case NProductElim(VProduct(a, b), _, _, p) =>
@@ -34,6 +35,9 @@ trait ProductDriver extends CoreDriver with ProductAST with ProductEval {
     case Pair(Product(a, b), x, y) =>
       val Product(a1, b1) = c.tp
       DecomposeDStep(PairLabel, Conf(x, a), Conf(y, b))
+    case Product(lt, rt) =>
+      // TODO: get types of lt and rt from context
+      DecomposeDStep(ProductLabel, Conf(lt, Universe(-1)), Conf(rt, Universe(-1)))
     case _ =>
       super.decompose(c)
   }
@@ -56,6 +60,8 @@ trait ProductResiduator extends BaseResiduator with ProductDriver {
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
         val et = eval(node.conf.tp, env, bound)
         VPair(et, fold(x, env, bound, recM), fold(y, env, bound, recM))
+      case TEdge(x, ProductLabel) :: TEdge(y, ProductLabel) :: Nil =>
+        VProduct(fold(x, env, bound, recM), fold(y, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -97,7 +103,24 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator {
           VLam(a, x => VLam(b, y => VPair(VProduct(a, b), x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
+      case TEdge(x, ProductLabel) :: TEdge(y, ProductLabel) :: Nil =>
+        val tp = eval(node.conf.tp, env, bound)
 
+        val xtp = eval(x.conf.tp, env, bound)
+        val ytp = eval(y.conf.tp, env, bound)
+
+        val x1 = eval(x.conf.term, env, bound)
+        val x2 = fold(x, env, bound, recM)
+        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+
+        val y1 = eval(y.conf.term, env, bound)
+        val y2 = fold(y, env, bound, recM)
+        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+
+        'cong2 @@ xtp @@ ytp @@ tp @@
+          VLam(xtp, x => VLam(ytp, y => VProduct(x, y))) @@
+          x1 @@ x2 @@ eq_x1_x2 @@
+          y1 @@ y2 @@ eq_y1_y2
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }

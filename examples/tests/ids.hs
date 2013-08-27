@@ -14,7 +14,7 @@ $dp :: exists (x :: $A) . $F x;
 $x :: $A; $y :: $A; $eq_x_y :: Eq $A $x $y;
 $f1 :: Fin_1; $f2 :: Fin_2;
 $xs :: List $A;
-$n :: Nat;
+$n1 :: Nat; $n2 :: Nat; $n3 :: Nat;
 $p :: Product $A $B;
 $s :: Sum $A $B;
 
@@ -37,7 +37,7 @@ eep = dpair (exists (x :: Nat) . Eq Nat x Zero) Zero (Refl Nat Zero);
 
 (_, _) = sc (list_id $A $xs);
 
-(_, _) = sc (nat_id $n);
+(_, _) = sc (nat_id $n1);
 
 (_, _) = sc (product_id $A $B $p);
 
@@ -57,3 +57,11 @@ $xs1 :: List $A1;
 
 (_, _) = sc (list_id_1 $A1 $xs1);
 
+(sum_sc, sum_proof) = sc (Sum (Sum Nat Nat) Nat);
+
+(eq_sc, eq_proof) = sc (Eq Nat (plus (plus $n1 $n2) $n3) (plus $n1 (plus $n2 $n3)));
+
+(list_sc, list_proof) =
+    sc (List (List Set));
+
+(pr_sc, pr_proof) = sc (Product (Product Set Nat) Set);

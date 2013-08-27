@@ -5,6 +5,7 @@ import mrsc.core._
 
 trait SumDriver extends CoreDriver with SumAST with SumEval {
 
+  case object SumLabel extends Label
   case object InLLabel extends Label
   case object InRLabel extends Label
 
@@ -35,6 +36,9 @@ trait SumDriver extends CoreDriver with SumAST with SumEval {
     case InR(et@Sum(_, rType), r) =>
       val Sum(_, _) = c.tp
       DecomposeDStep(InRLabel, Conf(r, rType))
+    case Sum(lt, rt) =>
+      // TODO: get types of lt and rt from context
+      DecomposeDStep(SumLabel, Conf(lt, Universe(-1)), Conf(rt, Universe(-1)))
     case _ =>
       super.decompose(c)
   }
@@ -62,6 +66,8 @@ trait SumResiduator extends BaseResiduator with SumDriver {
       case TEdge(r, InRLabel) :: Nil =>
         val etVal = eval(node.conf.tp, env, bound)
         VInR(etVal, fold(r, env, bound, recM))
+      case TEdge(x, SumLabel) :: TEdge(y, SumLabel) :: Nil =>
+        VSum(fold(x, env, bound, recM), fold(y, env, bound, recM))
       case _ =>
         super.fold(node, env, bound, recM)
     }
@@ -116,6 +122,23 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
           eval(r.conf.term, env, bound) @@
           fold(r, env, bound, recM) @@
           proofFold(r, env, bound, recM, env2, bound2, recM2)
+      case TEdge(x, SumLabel) :: TEdge(y, SumLabel) :: Nil =>
+        val tp = eval(node.conf.tp, env, bound)
+        val xtp = eval(x.conf.tp, env, bound)
+        val ytp = eval(y.conf.tp, env, bound)
+
+        val x1 = eval(x.conf.term, env, bound)
+        val x2 = fold(x, env, bound, recM)
+        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+
+        val y1 = eval(y.conf.term, env, bound)
+        val y2 = fold(y, env, bound, recM)
+        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+
+        'cong2 @@ xtp @@ ytp @@ tp @@
+          VLam(xtp, x => VLam(ytp, y => VSum(x, y))) @@
+          x1 @@ x2 @@ eq_x1_x2 @@
+          y1 @@ y2 @@ eq_y1_y2
       case _ =>
         super.proofFold(node, env, bound, recM, env2, bound2, recM2)
     }
