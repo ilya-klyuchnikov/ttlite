@@ -187,7 +187,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
 
   val prompt: String = "TT"
 
-  override def itype(ne: NameEnv[Value], ctx: NameEnv[Value], i: Term): Result[Value] =
+  override def itype(ne: NameEnv[V], ctx: NameEnv[V], i: T): Result[V] =
     try {
       Right(iType0(ne, ctx, i))
     } catch {
@@ -195,17 +195,17 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
         e.printStackTrace()
         Left(e.getMessage)
     }
-  override def iquote(v: Value): Term =
+  override def iquote(v: V): Term =
     quote0(v)
-  override def ieval(ne: NameEnv[Value], i: Term): Value =
+  override def ieval(ne: NameEnv[V], i: T): V =
     eval(i, ne, List())
-  def typeInfo(t: Value): Value =
+  def typeInfo(t: V): V =
     t
-  override def icprint(c: Term): String =
+  override def icprint(c: T): String =
     pretty(print(0, 0, c))
-  override def itprint(t: Value): String =
+  override def itprint(t: V): String =
     pretty(print(0, 0, quote0(t)))
-  def assume(state: Context, x: String, t: Term): Context = {
+  def assume(state: Context[V], x: String, t: Term): Context[V] = {
     itype(state.vals, state.types, t) match {
       case Right(VUniverse(k)) =>
         val v = ieval(state.vals, Ann(t, Universe(k)))
@@ -219,7 +219,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
         state
     }
   }
-  def handleTypedLet(state: Context, s: String, t: T, tp: T): Context =
+  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))
 
   def s2name(s: String): Name =

@@ -1,12 +1,10 @@
 package superspec.tt
 
-import org.kiama.util.JLineConsole
-
 trait REPL {
 
   // TO OVERRIDE STARTS
   type T // term
-  type V // value
+  type V // value (normalized term)
   type Result[A] = Either[String, A]
 
   private var batch: Boolean = false
@@ -16,16 +14,14 @@ trait REPL {
   def ieval(ne: NameEnv[V], i: T): V
   def icprint(c: T): String
   def itprint(t: V): String
-  def assume(s: Context, n: String, t: T): Context
-  def handleTypedLet(state: Context, s: String, t: T, tp: T): Context
+  def assume(s: Context[V], n: String, t: T): Context[V]
+  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
   def fromM(m: MTerm): T
   val parser: MetaParser = MetaParser
   val name: String
   // TO OVERRIDE ENDS
 
   private var modules: Set[String] = _
-
-  case class Context(vals: NameEnv[V], types: NameEnv[V])
 
   def handleError(msg: String): Unit =
     if (batch) throw new Exception(msg)
@@ -42,7 +38,7 @@ trait REPL {
         None
     }
 
-  def handleStmt(state: Context, stmt: Stmt[MTerm]): Context =
+  def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =
     stmt match {
       case Quit =>
         sys.exit()
@@ -64,7 +60,7 @@ trait REPL {
         loadModule(f, state, reload = true)
     }
 
-  def handleLet(state: Context, s: String, it: T): Context =
+  def handleLet(state: Context[V], s: String, it: T): Context[V] =
     iinfer(state.vals, state.types, it) match {
       case None =>
         handleError(s"Not Inferred type for $it")
@@ -79,7 +75,7 @@ trait REPL {
         Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp))
     }
 
-  private def loadModule(f: String, state: Context, reload: Boolean): Context =
+  private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =
     if (modules(f) && !reload)
       return state
     else
@@ -102,7 +98,8 @@ trait REPL {
           state
       }
 
-  def loop(state: Context) {
+  def loop(state: Context[V]) {
+    import org.kiama.util.JLineConsole
     val in = JLineConsole.readLine(s"$name> ")
     parser.parseIO(parser.stmt, in) match {
       case Some(stm) =>
@@ -114,7 +111,7 @@ trait REPL {
   }
 
   def main(args: Array[String]) {
-    var state = Context(Map(), Map())
+    var state = Context[V](Map(), Map())
     modules = Set()
     args match {
       case Array() =>

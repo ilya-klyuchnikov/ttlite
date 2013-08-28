@@ -141,7 +141,7 @@ object ScParser extends ScParser
 
 trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   override val parser = ScParser
-  override def handleStmt(state: Context, stmt: Stmt[MTerm]): Context = stmt match {
+  override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
     case LetSC(scId, proofId, it0) =>
       val it = fromM(it0)
       iinfer(state.vals, state.types, it) match {

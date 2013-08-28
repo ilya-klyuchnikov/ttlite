@@ -124,6 +124,7 @@ case class TypeError(msg: String) extends Exception(msg)
 object `package` {
   implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
   type NameEnv[V] = Map[Name, V]
+  case class Context[V](vals: NameEnv[V], types: NameEnv[V])
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
   val vars = for {j <- suffs; i <- ids} yield s"$i$j"
