@@ -72,71 +72,71 @@ trait SumEval extends FunEval with SumAST {
 }
 
 trait SumCheck extends FunCheck with SumAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Sum(a, b) =>
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       val j = checkUniverse(i, aType)
 
-      val bType = iType(i, named, bound, b)
+      val bType = iType(i, ctx, b)
       val k = checkUniverse(i, bType)
 
       VUniverse(math.max(j, k))
     case InL(Sum(a, b), l) =>
-      val aVal = eval(a, named, List())
-      val bVal = eval(b, named, List())
+      val aVal = eval(a, ctx.vals, List())
+      val bVal = eval(b, ctx.vals, List())
 
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
 
-      val bType = iType(i, named, bound, b)
+      val bType = iType(i, ctx, b)
       checkUniverse(i, bType)
 
-      val lType = iType(i, named, bound, l)
+      val lType = iType(i, ctx, l)
       checkEqual(i, lType, aVal)
 
       VSum(aVal, bVal)
     case InR(Sum(a, b), r) =>
-      val aVal = eval(a, named, List())
-      val bVal = eval(b, named, List())
+      val aVal = eval(a, ctx.vals, List())
+      val bVal = eval(b, ctx.vals, List())
 
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
 
-      val bType = iType(i, named, bound, b)
+      val bType = iType(i, ctx, b)
       checkUniverse(i, bType)
 
-      val rType = iType(i, named, bound, r)
+      val rType = iType(i, ctx, r)
       checkEqual(i, rType, bVal)
 
       VSum(aVal, bVal)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      val mVal = eval(m, named, List())
-      val ltVal = eval(a, named, List())
-      val rtVal = eval(b, named, List())
+      val mVal = eval(m, ctx.vals, List())
+      val ltVal = eval(a, ctx.vals, List())
+      val rtVal = eval(b, ctx.vals, List())
       val etVal = VSum(ltVal, rtVal)
-      val sumVal = eval(sum, named, List())
+      val sumVal = eval(sum, ctx.vals, List())
 
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
 
-      val bType = iType(i, named, bound, b)
+      val bType = iType(i, ctx, b)
       checkUniverse(i, bType)
 
-      val mType = iType(i, named, bound, m)
+      val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VUniverse(-1)}))
 
-      val lcType = iType(i, named, bound, lc)
+      val lcType = iType(i, ctx, lc)
       checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(etVal, lVal)}))
 
-      val rcType = iType(i, named, bound, rc)
+      val rcType = iType(i, ctx, rc)
       checkEqual(i, rcType, VPi(rtVal, {rVal => mVal @@ VInR(etVal, rVal)}))
 
-      val sumType = iType(i, named, bound, sum)
+      val sumType = iType(i, ctx, sum)
       checkEqual(i, sumType, VSum(ltVal, rtVal))
 
       mVal @@ sumVal
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

@@ -86,26 +86,26 @@ trait DProductEval extends FunEval with DProductAST {
 }
 
 trait DProductCheck extends FunCheck with DProductAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Sigma(x, tp) =>
-      val xVal = eval(x, named, Nil)
+      val xVal = eval(x, ctx.vals, Nil)
 
-      val xType = iType(i, named, bound, x)
+      val xType = iType(i, ctx, x)
       val j = checkUniverse(i, xType)
 
-      val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
+      val tpType = iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType)
 
       VUniverse(math.max(j, k))
     case DPair(sigma, x, y) =>
-      eval(sigma, named, Nil) match {
+      eval(sigma, ctx.vals, Nil) match {
         case VSigma(a, f) =>
-          val xType = iType(i, named, bound, x)
+          val xType = iType(i, ctx, x)
           checkEqual(i, xType, a)
 
-          val xVal = eval(x, named, Nil)
+          val xVal = eval(x, ctx.vals, Nil)
 
-          val yType = iType(i, named, bound, y)
+          val yType = iType(i, ctx, y)
           checkEqual(i, yType, f(xVal))
 
           VSigma(a, f)
@@ -113,22 +113,22 @@ trait DProductCheck extends FunCheck with DProductAST {
           sys.error(s"illegal application: $t")
       }
     case SigmaElim(sigma, m, f, p) =>
-      val sigmaType = iType(i, named, bound, sigma)
+      val sigmaType = iType(i, ctx, sigma)
       checkUniverse(i, sigmaType)
-      eval(sigma, named, Nil) match {
+      eval(sigma, ctx.vals, Nil) match {
         case sigmaVal@VSigma(x1, x2) =>
 
-          val pType = iType(i, named, bound, p)
+          val pType = iType(i, ctx, p)
           checkEqual(i, pType, sigmaVal)
 
-          val pVal = eval(p, named, List())
+          val pVal = eval(p, ctx.vals, List())
 
-          val mType = iType(i, named, bound, m)
+          val mType = iType(i, ctx, m)
           checkEqual(i, mType, VPi(sigmaVal, {_ => VUniverse(-1)}))
 
-          val mVal = eval(m, named, List())
+          val mVal = eval(m, ctx.vals, List())
 
-          val fType = iType(i, named, bound, f)
+          val fType = iType(i, ctx, f)
           checkEqual(i, fType, VPi(x1, {x => VPi(x2(x), y => mVal @@ VDPair(sigmaVal, x, y))}))
 
           mVal @@ pVal
@@ -136,7 +136,7 @@ trait DProductCheck extends FunCheck with DProductAST {
           sys.error(s"illegal application: $t")
       }
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

@@ -90,37 +90,37 @@ trait FunEval extends CoreEval with FunAST {
 }
 
 trait FunCheck extends CoreCheck with FunAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Pi(x, tp) =>
-      val xVal = eval(x, named, Nil)
+      val xVal = eval(x, ctx.vals, Nil)
 
-      val xType = iType(i, named, bound, x)
+      val xType = iType(i, ctx, x)
       val j = checkUniverse(i, xType)
 
-      val tpType = iType(i + 1, named,  bound + (Local(i) -> xVal), iSubst(0, Free(Local(i)), tp))
+      val tpType = iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType)
 
       VUniverse(math.max(j, k))
     case Lam(t, e) =>
-      val tVal = eval(t, named, Nil)
-      val tType = iType(i, named, bound, t)
+      val tVal = eval(t, ctx.vals, Nil)
+      val tType = iType(i, ctx, t)
 
       checkUniverse(i, tType)
       // to force early error
-      iType(i + 1, named,  bound + (Local(i) -> tVal), iSubst(0, Free(Local(i)), e))
+      iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e))
 
-      VPi(tVal, v => iType(i + 1, named + (Local(i) -> v), bound + (Local(i) -> tVal) , iSubst(0, Free(Local(i)), e)))
+      VPi(tVal, v => iType(i + 1, Context(ctx.vals + (Local(i) -> v), ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e)))
     case (e1 :@: e2) =>
-      iType(i, named, bound, e1) match {
+      iType(i, ctx, e1) match {
         case VPi(x, f) =>
-          val e2Type = iType(i, named, bound, e2)
+          val e2Type = iType(i, ctx, e2)
           checkEqual(i, e2Type, x)
-          f(eval(e2, named, Nil))
+          f(eval(e2, ctx.vals, Nil))
         case _ =>
           sys.error(s"illegal application: $t")
       }
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

@@ -61,49 +61,49 @@ trait ProductEval extends FunEval with ProductAST {
 }
 
 trait ProductCheck extends FunCheck with ProductAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Product(a, b) =>
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       val j = checkUniverse(i, aType)
 
-      val bType = iType(i, named, bound, b)
+      val bType = iType(i, ctx, b)
       val k = checkUniverse(i, bType)
 
       VUniverse(math.max(j, k))
     case Pair(et, x, y) =>
-      val eType = iType(i, named, bound, et)
+      val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VProduct(aVal, bVal) = eval(et, named, List())
+      val VProduct(aVal, bVal) = eval(et, ctx.vals, List())
 
-      val xType = iType(i, named, bound, x)
+      val xType = iType(i, ctx, x)
       checkEqual(i, xType, aVal)
 
-      val yType = iType(i, named, bound, y)
+      val yType = iType(i, ctx, y)
       checkEqual(i, yType, bVal)
 
       VProduct(aVal, bVal)
     case ProductElim(et, m, f, p) =>
-      val eType = iType(i, named, bound, et)
+      val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VProduct(aVal, bVal) = eval(et, named, List())
+      val VProduct(aVal, bVal) = eval(et, ctx.vals, List())
 
-      val mVal = eval(m, named, List())
-      val pVal = eval(p, named, List())
+      val mVal = eval(m, ctx.vals, List())
+      val pVal = eval(p, ctx.vals, List())
 
-      val pType = iType(i, named, bound, p)
+      val pType = iType(i, ctx, p)
       checkEqual(i, pType, VProduct(aVal, bVal))
 
-      val mType = iType(i, named, bound, m)
+      val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VUniverse(-1)}))
 
-      val fType = iType(i, named, bound, f)
+      val fType = iType(i, ctx, f)
       checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(VProduct(aVal, bVal), a, b))))
 
       mVal @@ pVal
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

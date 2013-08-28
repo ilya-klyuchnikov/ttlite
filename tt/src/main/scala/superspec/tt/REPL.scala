@@ -9,7 +9,7 @@ trait REPL {
 
   private var batch: Boolean = false
   val prompt: String
-  def itype(ne: NameEnv[V], ctx: NameEnv[V], i: T): Result[V]
+  def itype(ctx: Context[V], i: T): Result[V]
   def iquote(v: V): T
   def ieval(ne: NameEnv[V], i: T): V
   def icprint(c: T): String
@@ -29,8 +29,8 @@ trait REPL {
   def output(x: Any): Unit =
     if (!batch) Console.println(s"$x\n")
 
-  def iinfer(ne: NameEnv[V], ctx: NameEnv[V], i: T): Option[V] =
-    itype(ne, ctx, i) match {
+  def iinfer(ctx: Context[V], i: T): Option[V] =
+    itype(ctx, i) match {
       case Right(t) =>
         Some(t)
       case Left(msg) =>
@@ -61,7 +61,7 @@ trait REPL {
     }
 
   def handleLet(state: Context[V], s: String, it: T): Context[V] =
-    iinfer(state.vals, state.types, it) match {
+    iinfer(state, it) match {
       case None =>
         handleError(s"Not Inferred type for $it")
         state

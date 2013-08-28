@@ -117,8 +117,8 @@ trait CoreEval extends CoreAST {
 }
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(named: NameEnv[Value], bound: NameEnv[Value], i: Term): Value =
-    iType(0, named, bound, i)
+  def iType0(ctx: Context[Value], i: Term): Value =
+    iType(0, ctx, i)
 
   def checkEqual(i: Int, inferred: Term, expected: Term) {
     if (inferred != expected) {
@@ -149,21 +149,21 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: Set(_)")
   }
 
-  def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
     case Ann(e, tp) =>
-      val tpVal = eval(tp, named, Nil)
+      val tpVal = eval(tp, ctx.vals, Nil)
 
-      val tpType = iType(i, named, bound, tp)
+      val tpType = iType(i, ctx, tp)
       checkUniverse(i, tpType)
 
-      val eType = iType(i, named, bound, e)
+      val eType = iType(i, ctx, e)
       checkEqual(i, eType, tpVal)
 
       tpVal
     case Free(x) =>
-      bound.get(x) match {
+      ctx.types.get(x) match {
         case Some(ty) => ty
         case None => sys.error(s"unknown id: $x")
       }
@@ -187,9 +187,9 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
 
   val prompt: String = "TT"
 
-  override def itype(ne: NameEnv[V], ctx: NameEnv[V], i: T): Result[V] =
+  override def itype(ctx: Context[V], i: T): Result[V] =
     try {
-      Right(iType0(ne, ctx, i))
+      Right(iType0(ctx, i))
     } catch {
       case e: Throwable =>
         e.printStackTrace()
@@ -206,7 +206,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
   override def itprint(t: V): String =
     pretty(print(0, 0, quote0(t)))
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
-    itype(state.vals, state.types, t) match {
+    itype(state, t) match {
       case Right(VUniverse(k)) =>
         val v = ieval(state.vals, Ann(t, Universe(k)))
         output(icprint(iquote(v)))

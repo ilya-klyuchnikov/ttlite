@@ -129,7 +129,7 @@ trait FinEval extends FunEval with FinAST {
 }
 
 trait FinCheck extends FunCheck with FinAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Void | Unit | Bool =>
       VUniverse(0)
     case U =>
@@ -137,40 +137,40 @@ trait FinCheck extends FunCheck with FinAST {
     case False | True =>
       VBool
     case VoidElim(m, elem) =>
-      val mType = iType(i, named, bound, m)
+      val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VVoid, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, named, List())
-      val elemVal = eval(elem, named, List())
+      val mVal = eval(m, ctx.vals, List())
+      val elemVal = eval(elem, ctx.vals, List())
 
       mVal @@ elemVal
     case UnitElim(m, v, elem) =>
-      val mType = iType(i, named, bound, m)
+      val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VUnit, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, named, List())
-      val elemVal = eval(elem, named, List())
+      val mVal = eval(m, ctx.vals, List())
+      val elemVal = eval(elem, ctx.vals, List())
 
-      val vType = iType(i, named, bound, v)
+      val vType = iType(i, ctx, v)
       checkEqual(i, vType, mVal @@ VU)
 
       mVal @@ elemVal
     case BoolElim(m, v1, v2, elem) =>
-      val mType = iType(i, named, bound, m)
+      val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, named, List())
-      val elemVal = eval(elem, named, List())
+      val mVal = eval(m, ctx.vals, List())
+      val elemVal = eval(elem, ctx.vals, List())
 
-      val v1Type = iType(i, named, bound, v1)
+      val v1Type = iType(i, ctx, v1)
       checkEqual(i, v1Type, mVal @@ VFalse)
 
-      val v2Type = iType(i, named, bound, v2)
+      val v2Type = iType(i, ctx, v2)
       checkEqual(i, v2Type, mVal @@ VTrue)
 
       mVal @@ elemVal
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

@@ -144,7 +144,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
     case LetSC(scId, proofId, it0) =>
       val it = fromM(it0)
-      iinfer(state.vals, state.types, it) match {
+      iinfer(state, it) match {
         case None =>
           handleError("")
           state
@@ -162,7 +162,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
 
           val iTerm = Ann(resTerm, resType)
 
-          val t2 = iinfer(state.vals, state.types, iTerm)
+          val t2 = iinfer(state, iTerm)
           t2 match {
             case None =>
               handleError("")
@@ -183,7 +183,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
               // to check that it really built correctly
               val annProofTerm = Ann(proofTerm, Eq(resType, it, resTerm))
-              val proofTypeVal = iinfer(state.vals, state.types, annProofTerm)
+              val proofTypeVal = iinfer(state, annProofTerm)
               output("raw proof:")
               output(icprint(rawProofTerm))
               output("proof:")

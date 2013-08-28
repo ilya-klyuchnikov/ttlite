@@ -60,55 +60,55 @@ trait EqEval extends FunEval with EqAST with CoreQuote {
 }
 
 trait EqCheck extends FunCheck with EqAST {
-  override def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
+  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Eq(a, x, y) =>
-      val aVal = eval(a, named, Nil)
+      val aVal = eval(a, ctx.vals, Nil)
 
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       val m = checkUniverse(i, aType)
 
-      val xType = iType(i, named, bound, x)
+      val xType = iType(i, ctx, x)
       checkEqual(i, xType, aVal)
 
-      val yType = iType(i, named, bound, y)
+      val yType = iType(i, ctx, y)
       checkEqual(i, yType, aVal)
 
       VUniverse(m)
     case Refl(a, z) =>
-      val aVal = eval(a, named, Nil)
-      val zVal = eval(z, named, Nil)
+      val aVal = eval(a, ctx.vals, Nil)
+      val zVal = eval(z, ctx.vals, Nil)
 
-      val aType = iType(i, named, bound, a)
+      val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
 
-      val zType = iType(i, named, bound, z)
+      val zType = iType(i, ctx, z)
       checkEqual(i, zType, aVal)
 
       VEq(aVal, zVal, zVal)
 
     case EqElim(et, prop, propR, eq) =>
-      val eType = iType(i, named, bound, et)
+      val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VEq(aVal, xVal, yVal) = eval(et, named, Nil)
+      val VEq(aVal, xVal, yVal) = eval(et, ctx.vals, Nil)
 
-      val propVal = eval(prop, named, Nil)
-      val eqVal = eval(eq, named, Nil)
+      val propVal = eval(prop, ctx.vals, Nil)
+      val eqVal = eval(eq, ctx.vals, Nil)
 
-      val propType = iType(i, named, bound, prop)
+      val propType = iType(i, ctx, prop)
       checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VUniverse(-1)})})}))
 
       // the main point is here: we check that prop x x (Refl A x) is well-typed
       // propR :: {a => x => prop x x (Refl a x)}
-      val propRType = iType(i, named, bound, propR)
+      val propRType = iType(i, ctx, propR)
       checkEqual(i, propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
 
-      val eqType = iType(i, named, bound, eq)
+      val eqType = iType(i, ctx, eq)
       checkEqual(i, eqType, VEq(aVal, xVal, yVal))
 
       propVal @@ xVal @@ yVal @@ eqVal
     case _ =>
-      super.iType(i, named, bound, t)
+      super.iType(i, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
