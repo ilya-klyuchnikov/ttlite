@@ -3,13 +3,15 @@ package superspec
 import mrsc.core._
 import superspec.tt._
 
-trait TTSc extends CoreSubst {
+trait TTSc extends CoreSubst with CoreCheck {
 
-  // todo: it should be a term + context
-  case class Conf(term: Term, tp: Term)
+  case class Conf(term: Term, ctx: Context[Value]) {
+    val tpVal = iType0(ctx, term)
+    val tp = quote0(tpVal)
+  }
 
   trait Label
-  case class ElimLabel(sel: Name, ptr: Term, sub: Subst) extends Label {
+  case class ElimLabel(sel: Name, ptr: Term, sub: Subst, types: NameEnv[Value]) extends Label {
     override def toString = s"$sel = $ptr"
   }
 
@@ -19,7 +21,9 @@ trait TTSc extends CoreSubst {
   }
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(cases.toList.map(b => b -> Conf(t.term / Map(b.sel -> b.ptr), t.tp / Map(b.sel -> b.ptr))))
+      VariantsStep(cases.toList.map { b =>
+        b -> Conf(t.term / Map(b.sel -> b.ptr), Context(t.ctx.vals, t.ctx.types ++ b.types))
+      })
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
     override def step(t: Conf) = DecomposeStep(label, args.toList)
@@ -56,7 +60,7 @@ trait TTSc extends CoreSubst {
       var node = g.current
       while (node.in != null) {
         node.in.driveInfo match {
-          case ElimLabel(_, _, sub) if node.in.node.conf.term / sub == term =>
+          case ElimLabel(_, _, sub, _) if node.in.node.conf.term / sub == term =>
             return Some(node.in.node)
           case _ =>
         }
@@ -151,7 +155,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
         case Some(inTpVal) =>
           // start configuration is a normalized one!
           // it is a self contained!
-          val conf = Conf(iquote(ieval(state.vals, it)), iquote(inTpVal))
+          val conf = Conf(iquote(ieval(state.vals, it)), state)
           val sGraph = GraphGenerator(Rules, conf).toList.head
           val tGraph = Transformations.transpose(sGraph)
 

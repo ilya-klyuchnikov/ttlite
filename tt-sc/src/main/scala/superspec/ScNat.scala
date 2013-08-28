@@ -11,9 +11,9 @@ trait NatDriver extends CoreDriver with NatAST with NatEval {
     case natElim: NNatElim =>
       natElim.n match {
         case NFree(n) =>
-          val caseZ = ElimLabel(n, Zero, Map())
-          val v1 = freshLocal(Nat)
-          val caseS = ElimLabel(n, Succ(v1), Map(n -> v1))
+          val caseZ = ElimLabel(n, Zero, Map(), Map())
+          val v1 = freshName
+          val caseS = ElimLabel(n, Succ(v1), Map(n -> v1), Map(v1 -> VNat))
           ElimDStep(caseZ, caseS)
         case n =>
           driveNeutral(n)
@@ -25,7 +25,7 @@ trait NatDriver extends CoreDriver with NatAST with NatEval {
   override def decompose(c: Conf): DriveStep = c.term match {
     case Succ(c1) =>
       val Nat = c.tp
-      DecomposeDStep(SuccLabel, Conf(c1, Nat))
+      DecomposeDStep(SuccLabel, Conf(c1, c.ctx))
     case _ =>
       super.decompose(c)
   }
@@ -36,8 +36,8 @@ trait NatResiduator extends BaseResiduator with NatDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, ElimLabel(sel, Zero, _)) ::
-          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _)) ::
+        TEdge(nodeZ, ElimLabel(sel, Zero, _, _)) ::
+          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _, _)) ::
           Nil =>
         val motive =
           VLam(VNat, n => eval(node.conf.tp, env + (sel -> n), n :: bound))
@@ -61,8 +61,8 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
-        TEdge(nodeZ, ElimLabel(sel, Zero, _)) ::
-          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _)) ::
+        TEdge(nodeZ, ElimLabel(sel, Zero, _, _)) ::
+          TEdge(nodeS, ElimLabel(_, Succ(Free(fresh)), _, _)) ::
           Nil =>
 
         val motive =

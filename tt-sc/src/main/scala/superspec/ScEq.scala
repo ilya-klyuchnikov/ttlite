@@ -10,10 +10,9 @@ trait EqDriver extends CoreDriver with EqEval {
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
-      val Eq(_, _, _) = c.tp
-      DecomposeDStep(ReflLabel, Conf(x, a))
+      DecomposeDStep(ReflLabel, Conf(x, c.ctx))
     case Eq(a, x, y) =>
-      DecomposeDStep(EqLabel, Conf(x, a), Conf(y, a))
+      DecomposeDStep(EqLabel, Conf(x, c.ctx), Conf(y, c.ctx))
     case _ =>
       super.decompose(c)
   }

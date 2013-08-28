@@ -8,19 +8,13 @@ trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
   case object DPairLabel extends Label
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NSigmaElim(sigma@VSigma(a, b), m, f, p) =>
+    case NSigmaElim(sigma@VSigma(a, b), _, _, p) =>
       p match {
         case NFree(n) =>
-
-          val sigmaT@Sigma(aType, bType) = quote0(sigma)
-          val xName = freshName(aType)
-          val x = Free(xName)
-
-          val bX = quote0(eval(bType @@ x, emptyNEnv, Nil))
-          val yName = freshName(bX)
-          val y = Free(yName)
-
-          val pairCase = ElimLabel(n, DPair(sigmaT, x, y), Map())
+          val sigmaT = quote0(sigma)
+          val x = freshName()
+          val y = freshName()
+          val pairCase = ElimLabel(n, DPair(sigmaT, x, y), Map(), Map(x -> a, y -> b(vfree(x))))
           ElimDStep(pairCase)
         case n =>
           driveNeutral(n)
@@ -31,10 +25,7 @@ trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
 
   override def decompose(c: Conf): DriveStep = c.term match {
     case DPair(sigma, x, y) =>
-      val Sigma(a, b) = c.tp
-      val VSigma(_, f) = eval(c.tp, emptyNEnv, Nil)
-      val bX = quote0(f (eval(x, emptyNEnv, Nil)))
-      DecomposeDStep(DPairLabel, Conf(x, a), Conf(y, bX))
+      DecomposeDStep(DPairLabel, Conf(x, c.ctx), Conf(y, c.ctx))
     case _ =>
       super.decompose(c)
   }
@@ -44,7 +35,7 @@ trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
 trait DProductResiduator extends CoreResiduator with DProductDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _)) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, p => eval(node.conf.tp, env + (sel -> p), p :: bound))
@@ -64,7 +55,7 @@ trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _)) :: Nil =>
+      case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, n =>

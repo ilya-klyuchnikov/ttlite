@@ -16,21 +16,12 @@ trait CoreSubst extends CoreEval with CoreQuote {
 
 trait CoreDriver extends TTSc with CoreCheck {
   var v = 100
-  def freshName(tp: Term): Name = {
-    v += 1;
-    val res = Local(v)
-    typeMap = typeMap + (res -> tp)
-    res
+  def freshName(): Name = {
+    v += 1
+    Local(v)
   }
 
-  def freshLocal(tp: Term): Term =
-    Free(freshName(tp))
-
   // current ad-hoc solution for mapping variables and types of new free variables
-
-  // knowledge about which variable has which type
-  // todo ; put bound here
-  var typeMap: Map[Name, Term] = Map()
 
   // logic
   override def driveTerm(c: Conf): DriveStep = eval0(c.term) match {
@@ -41,6 +32,7 @@ trait CoreDriver extends TTSc with CoreCheck {
   def driveNeutral(n: Neutral): DriveStep = StopDStep
   def decompose(c: Conf): DriveStep = StopDStep
 
+  implicit def name2Term(n: Name) = Free(n)
 }
 
 trait CoreResiduator extends BaseResiduator with CoreDriver {

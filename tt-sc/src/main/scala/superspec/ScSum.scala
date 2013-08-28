@@ -18,8 +18,11 @@ trait SumDriver extends CoreDriver with SumAST with SumEval {
           val rType = quote0(r)
           val et = Sum(lType, rType)
 
-          val lCase = ElimLabel(n, InL(et, freshLocal(lType)), Map())
-          val rCase = ElimLabel(n, InR(et, freshLocal(rType)), Map())
+          val v1 = freshName()
+          val v2 = freshName()
+
+          val lCase = ElimLabel(n, InL(et, v1), Map(), Map(v1 -> l))
+          val rCase = ElimLabel(n, InR(et, v2), Map(), Map(v2 -> r))
 
           ElimDStep(lCase, rCase)
         case n =>
@@ -32,13 +35,12 @@ trait SumDriver extends CoreDriver with SumAST with SumEval {
   override def decompose(c: Conf): DriveStep = c.term match {
     case InL(et@Sum(lType, _), l) =>
       val Sum(_, _) = c.tp
-      DecomposeDStep(InLLabel, Conf(l, lType))
+      DecomposeDStep(InLLabel, Conf(l, c.ctx))
     case InR(et@Sum(_, rType), r) =>
       val Sum(_, _) = c.tp
-      DecomposeDStep(InRLabel, Conf(r, rType))
+      DecomposeDStep(InRLabel, Conf(r, c.ctx))
     case Sum(lt, rt) =>
-      // TODO: get types of lt and rt from context
-      DecomposeDStep(SumLabel, Conf(lt, Universe(-1)), Conf(rt, Universe(-1)))
+      DecomposeDStep(SumLabel, Conf(lt, c.ctx), Conf(rt, c.ctx))
     case _ =>
       super.decompose(c)
   }
@@ -47,8 +49,8 @@ trait SumDriver extends CoreDriver with SumAST with SumEval {
 trait SumResiduator extends BaseResiduator with SumDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _)) ::
-        TEdge(nodeR, ElimLabel(_, InR(_, Free(rN)), _)) ::
+      case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _, _)) ::
+        TEdge(nodeR, ElimLabel(_, InR(_, Free(rN)), _, _)) ::
         Nil =>
 
         val etVal@VSum(aVal, bVal) =
@@ -78,8 +80,8 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _)) ::
-        TEdge(nodeR, ElimLabel(_, InR(_, Free(rN)), _)) ::
+      case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _, _)) ::
+        TEdge(nodeR, ElimLabel(_, InR(_, Free(rN)), _, _)) ::
         Nil =>
 
         val etVal@VSum(aVal, bVal) =

@@ -34,7 +34,7 @@ eep = dpair (exists (x :: Nat) . Eq Nat x Zero) Zero (Refl Nat Zero);
 (_, _) = sc (unit_id $f1);
 
 (_, _) = sc (bool_id $f2);
-{-
+
 (_, _) = sc (list_id $A $xs);
 
 (_, _) = sc (nat_id $n1);
@@ -57,6 +57,7 @@ $xs1 :: List $A1;
 
 (_, _) = sc (list_id_1 $A1 $xs1);
 
+
 (sum_sc, sum_proof) = sc (Sum (Sum Nat Nat) Nat);
 
 (eq_sc, eq_proof) = sc (Eq Nat (plus (plus $n1 $n2) $n3) (plus $n1 (plus $n2 $n3)));
@@ -65,4 +66,3 @@ $xs1 :: List $A1;
     sc (List (List Set));
 
 (pr_sc, pr_proof) = sc (Product (Product Set Nat) Set);
--}
