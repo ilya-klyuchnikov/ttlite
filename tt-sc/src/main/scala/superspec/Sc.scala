@@ -141,26 +141,28 @@ object ScParser extends ScParser
 
 trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   override val parser = ScParser
-  override def handleStmt(state: State, stmt: Stmt[MTerm]): State = stmt match {
+  override def handleStmt(state: Context, stmt: Stmt[MTerm]): Context = stmt match {
     case LetSC(scId, proofId, it0) =>
       val it = fromM(it0)
-      iinfer(state.ne, state.ctx, it) match {
+      iinfer(state.vals, state.types, it) match {
         case None =>
           handleError("")
           state
         case Some(inTpVal) =>
-          val conf = Conf(iquote(ieval(state.ne, it)), iquote(inTpVal))
+          // start configuration is a normalized one!
+          // it is a self contained!
+          val conf = Conf(iquote(ieval(state.vals, it)), iquote(inTpVal))
           val sGraph = GraphGenerator(Rules, conf).toList.head
           val tGraph = Transformations.transpose(sGraph)
 
           //output(tgToString(tGraph))
-          val resVal = ieval(state.ne, iquote(residuate(tGraph, state.ne)))
+          val resVal = ieval(state.vals, iquote(residuate(tGraph, state.vals)))
           val resTerm = iquote(resVal)
           val resType = iquote(inTpVal)
 
           val iTerm = Ann(resTerm, resType)
 
-          val t2 = iinfer(state.ne, state.ctx, iTerm)
+          val t2 = iinfer(state.vals, state.types, iTerm)
           t2 match {
             case None =>
               handleError("")
@@ -173,15 +175,15 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               // we normalize a proof without first type-checking it
               // this is why we can use combinators cong1, cong2, ... as generic combinators -
               // that are applicable for *any* type, not only for small types (Set0).
-              val rawProofVal = proofResiduate(tGraph, state.ne)
+              val rawProofVal = proofResiduate(tGraph, state.vals)
               val rawProofTerm = iquote(rawProofVal)
               val rawAnnProofTerm = Ann(rawProofTerm, Eq(resType, it, resTerm))
 
-              val proofVal = ieval(state.ne, iquote(rawProofVal))
-              val proofTerm = iquote(ieval(state.ne, iquote(proofVal)))
+              val proofVal = ieval(state.vals, iquote(rawProofVal))
+              val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
               // to check that it really built correctly
               val annProofTerm = Ann(proofTerm, Eq(resType, it, resTerm))
-              val proofTypeVal = iinfer(state.ne, state.ctx, annProofTerm)
+              val proofTypeVal = iinfer(state.vals, state.types, annProofTerm)
               output("raw proof:")
               output(icprint(rawProofTerm))
               output("proof:")
@@ -194,11 +196,9 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               //output(icprint(Eq(cType, it, cTerm)))
               output("::")
               output(icprint(iquote(proofTypeVal.get)))
-              State(
-                state.interactive,
-                state.ne + (Global(scId) -> resVal) + (Global(proofId) -> proofVal) + (Global(s"${proofId}_raw") -> proofVal),
-                state.ctx + (Global(scId) -> inTpVal) + (Global(proofId) -> proofTypeVal.get),
-                state.modules)
+              Context(
+                state.vals + (Global(scId) -> resVal) + (Global(proofId) -> proofVal) + (Global(s"${proofId}_raw") -> proofVal),
+                state.types + (Global(scId) -> inTpVal) + (Global(proofId) -> proofTypeVal.get))
           }
       }
     case _ =>
@@ -210,14 +210,14 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
   }
 }
 
-object TTScREPL2
+object TTScREPL
   extends ScREPL
   with CoreREPL with CoreDriver with CoreResiduator with CoreProofResiduator
   with FunREPL with FunDriver with FunResiduator with FunProofResiduator
   with DProductREPL with DProductDriver with DProductResiduator with DProductProofResiduator
   with SumREPL with SumDriver with SumResiduator with SumProofResiduator
   with EqREPL with EqDriver with EqResiduator with EqProofResiduator
-  with NatREPL2 with NatDriver with NatResiduator with NatProofResiduator
+  with NatREPL with NatDriver with NatResiduator with NatProofResiduator
   with ListREPL with ListDriver with ListResiduator with ListProofResiduator
   with ProductREPL with ProductDriver with ProductResiduator with ProductProofResiduator
   with FinREPL with FinDriver with FinResiduator with FinProofResiduator {

@@ -16,14 +16,16 @@ trait REPL {
   def ieval(ne: NameEnv[V], i: T): V
   def icprint(c: T): String
   def itprint(t: V): String
-  def assume(s: State, n: String, t: T): State
-  def handleTypedLet(state: State, s: String, t: T, tp: T): State
+  def assume(s: Context, n: String, t: T): Context
+  def handleTypedLet(state: Context, s: String, t: T, tp: T): Context
   def fromM(m: MTerm): T
   val parser: MetaParser = MetaParser
   val name: String
   // TO OVERRIDE ENDS
 
-  case class State(interactive: Boolean, ne: NameEnv[V], ctx: NameEnv[V], modules: Set[String])
+  private var modules: Set[String] = _
+
+  case class Context(vals: NameEnv[V], types: NameEnv[V])
 
   def handleError(msg: String): Unit =
     if (batch) throw new Exception(msg)
@@ -40,7 +42,7 @@ trait REPL {
         None
     }
 
-  def handleStmt(state: State, stmt: Stmt[MTerm]): State =
+  def handleStmt(state: Context, stmt: Stmt[MTerm]): Context =
     stmt match {
       case Quit =>
         sys.exit()
@@ -62,23 +64,23 @@ trait REPL {
         loadModule(f, state, reload = true)
     }
 
-  def handleLet(state: State, s: String, it: T): State =
-    iinfer(state.ne, state.ctx, it) match {
+  def handleLet(state: Context, s: String, it: T): Context =
+    iinfer(state.vals, state.types, it) match {
       case None =>
         handleError(s"Not Inferred type for $it")
         state
       case Some(tp) =>
-        val v = ieval(state.ne, it)
+        val v = ieval(state.vals, it)
         if (s == "it"){
           output(icprint(iquote(v)) + "\n::\n" + itprint(tp) + ";")
         } else {
           output(s"$s\n::\n${itprint(tp)};")
         }
-        State(state.interactive, state.ne + (Global(s) -> v),  state.ctx + (Global(s) -> tp), state.modules)
+        Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp))
     }
 
-  private def loadModule(f: String, state: State, reload: Boolean): State =
-    if (state.modules(f) && !reload)
+  private def loadModule(f: String, state: Context, reload: Boolean): Context =
+    if (modules(f) && !reload)
       return state
     else
       try {
@@ -87,7 +89,8 @@ trait REPL {
         parsed match {
           case Some(stmts) =>
             val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
-            s1.copy(modules = s1.modules + f)
+            modules = modules + f
+            s1
           case None =>
             handleError("cannot parse")
             state
@@ -99,7 +102,7 @@ trait REPL {
           state
       }
 
-  def loop(state: State) {
+  def loop(state: Context) {
     val in = JLineConsole.readLine(s"$name> ")
     parser.parseIO(parser.stmt, in) match {
       case Some(stm) =>
@@ -111,7 +114,8 @@ trait REPL {
   }
 
   def main(args: Array[String]) {
-    var state = State(true, Map(), Map(), Set())
+    var state = Context(Map(), Map())
+    modules = Set()
     args match {
       case Array() =>
         loop(state)
@@ -131,7 +135,7 @@ object TTREPL
   extends CoreREPL
   with FunREPL
   with DProductREPL
-  with NatREPL2
+  with NatREPL
   with VectorREPL
   with EqREPL
   with FinREPL

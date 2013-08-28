@@ -178,4 +178,4 @@ trait VectorQuote extends CoreQuote with VectorAST {
   }
 }
 
-trait VectorREPL extends NatREPL2 with VectorAST with VectorMetaSyntax with VectorPrinter with VectorCheck with VectorEval with VectorQuote
+trait VectorREPL extends NatREPL with VectorAST with VectorMetaSyntax with VectorPrinter with VectorCheck with VectorEval with VectorQuote

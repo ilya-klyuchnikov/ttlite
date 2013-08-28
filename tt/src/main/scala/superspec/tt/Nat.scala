@@ -129,4 +129,4 @@ trait NatCheck extends FunCheck with NatAST {
 
 }
 
-trait NatREPL2 extends CoreREPL with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote
+trait NatREPL extends CoreREPL with NatAST with MNat with NatPrinter with NatCheck with NatEval with NatQuote

@@ -149,7 +149,6 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: Set(_)")
   }
 
-  // todo: eval with bound - do we need it?? !!!
   def iType(i: Int, named: NameEnv[Value], bound: NameEnv[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
@@ -206,12 +205,12 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
     pretty(print(0, 0, c))
   override def itprint(t: Value): String =
     pretty(print(0, 0, quote0(t)))
-  def assume(state: State, x: String, t: Term): State = {
-    itype(state.ne, state.ctx, t) match {
+  def assume(state: Context, x: String, t: Term): Context = {
+    itype(state.vals, state.types, t) match {
       case Right(VUniverse(k)) =>
-        val v = ieval(state.ne, Ann(t, Universe(k)))
+        val v = ieval(state.vals, Ann(t, Universe(k)))
         output(icprint(iquote(v)))
-        state.copy(ctx = state.ctx + (s2name(x) -> v))
+        state.copy(types = state.types + (s2name(x) -> v))
       case Right(_) =>
         handleError("not a type")
         state
@@ -220,7 +219,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
         state
     }
   }
-  def handleTypedLet(state: State, s: String, t: T, tp: T): State =
+  def handleTypedLet(state: Context, s: String, t: T, tp: T): Context =
     handleLet(state, s, Ann(t, tp))
 
   def s2name(s: String): Name =
