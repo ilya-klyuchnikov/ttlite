@@ -223,7 +223,7 @@ object TTScREPL
   with EqREPL with EqDriver with EqResiduator with EqProofResiduator
   with NatREPL with NatDriver with NatResiduator with NatProofResiduator
   with ListREPL with ListDriver with ListResiduator with ListProofResiduator
-  with ProductREPL with ProductDriver with ProductResiduator with ProductProofResiduator
+  with PairREPL with PairDriver with PairResiduator with PairProofResiduator
   with FinREPL with FinDriver with FinResiduator with FinProofResiduator {
   override val name = "TT-SC"
 }

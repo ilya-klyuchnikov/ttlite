@@ -1,6 +1,6 @@
 package superspec.tt
 
-trait ProductAST extends CoreAST {
+trait PairAST extends CoreAST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(et: Term, a: Term, b: Term) extends Term
   case class ProductElim(et: Term, m: Term, f: Term, pair: Term) extends Term
@@ -10,7 +10,7 @@ trait ProductAST extends CoreAST {
   case class NProductElim(et: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait ProductMetaSyntax extends CoreMetaSyntax with ProductAST {
+trait PairMetaSyntax extends CoreMetaSyntax with PairAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
       Product(fromM(a), fromM(b))
@@ -22,7 +22,7 @@ trait ProductMetaSyntax extends CoreMetaSyntax with ProductAST {
   }
 }
 
-trait ProductPrinter extends FunPrinter with ProductAST {
+trait PairPrinter extends FunPrinter with PairAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       print(p, ii, 'Product @@ a @@ b)
@@ -35,7 +35,7 @@ trait ProductPrinter extends FunPrinter with ProductAST {
   }
 }
 
-trait ProductEval extends FunEval with ProductAST {
+trait PairEval extends FunEval with PairAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Product(a, b) =>
       VProduct(eval(a, named, bound), eval(b, named, bound))
@@ -60,7 +60,7 @@ trait ProductEval extends FunEval with ProductAST {
     }
 }
 
-trait ProductCheck extends FunCheck with ProductAST {
+trait PairCheck extends FunCheck with PairAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, ctx, a)
@@ -117,7 +117,7 @@ trait ProductCheck extends FunCheck with ProductAST {
   }
 }
 
-trait ProductQuote extends CoreQuote with ProductAST {
+trait PairQuote extends CoreQuote with PairAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VProduct(a, b) =>
       Product(quote(ii, a), quote(ii, b))
@@ -133,4 +133,4 @@ trait ProductQuote extends CoreQuote with ProductAST {
   }
 }
 
-trait ProductREPL extends CoreREPL with ProductAST with ProductMetaSyntax with ProductPrinter with ProductCheck with ProductEval with ProductQuote
+trait PairREPL extends CoreREPL with PairAST with PairMetaSyntax with PairPrinter with PairCheck with PairEval with PairQuote
