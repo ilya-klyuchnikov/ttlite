@@ -25,6 +25,9 @@ class SuperSpecExamples extends org.scalatest.FunSpec {
     it ("should prove: XXX") {
       TTScREPL.main(Array("examples/proofs/06.hs"))
     }
+    it ("should prove: commutativity of AND operation") {
+      TTScREPL.main(Array("examples/proofs/07.hs"))
+    }
   }
 
   describe("Coverage Test") {
