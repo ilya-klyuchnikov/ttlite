@@ -36,8 +36,8 @@ trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
     case MVar(Global("Unit")) => Unit
     case MVar(Global("Bool")) => Bool
     case MVar(Global("U")) => U
-    case MVar(Global("False")) => False
-    case MVar(Global("True")) => True
+    case MVar(Global("false")) => False
+    case MVar(Global("true")) => True
     case MVar(Global("elim")) @@ MVar(Global("Void")) @@ m @@ el =>
       VoidElim(fromM(m), fromM(el))
     case MVar(Global("elim")) @@ MVar(Global("Unit")) @@ m @@ v @@ el =>
@@ -59,9 +59,9 @@ trait FinPrinter extends FunPrinter with FinAST {
     case U =>
       print(p, ii, "U")
     case False =>
-      print(p, ii, "False")
+      print(p, ii, "false")
     case True =>
-      print(p, ii, "True")
+      print(p, ii, "true")
     case VoidElim(m, elem) =>
       print(p, ii, 'elim @@ Void @@ elem)
     case UnitElim(m, v, elem) =>
