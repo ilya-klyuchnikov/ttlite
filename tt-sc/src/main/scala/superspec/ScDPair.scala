@@ -3,7 +3,7 @@ package superspec
 import superspec.tt._
 import mrsc.core._
 
-trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
+trait DPairDriver extends CoreDriver with DPairAST with DPairEval {
 
   case object DPairLabel extends Label
 
@@ -32,7 +32,7 @@ trait DProductDriver extends CoreDriver with DProductAST with DProductEval {
 
 }
 
-trait DProductResiduator extends CoreResiduator with DProductDriver {
+trait DPairResiduator extends CoreResiduator with DPairDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -50,7 +50,7 @@ trait DProductResiduator extends CoreResiduator with DProductDriver {
     }
 }
 
-trait DProductProofResiduator extends DProductResiduator with ProofResiduator {
+trait DPairProofResiduator extends DPairResiduator with ProofResiduator {
   override def proofFold(node: N,
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

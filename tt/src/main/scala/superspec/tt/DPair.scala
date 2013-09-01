@@ -1,6 +1,6 @@
 package superspec.tt
 
-trait DProductAST extends CoreAST {
+trait DPairAST extends CoreAST {
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term
   case class SigmaElim(sigma: Term, m: Term, f: Term, pair: Term) extends Term
@@ -10,7 +10,7 @@ trait DProductAST extends CoreAST {
   case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait DProductMetaSyntax extends CoreMetaSyntax with DProductAST {
+trait DPairMetaSyntax extends CoreMetaSyntax with DPairAST {
   override def fromM(m: MTerm): Term = m match {
     case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
       SigmaElim(fromM(sigma), fromM(m), fromM(f), fromM(p))
@@ -22,7 +22,7 @@ trait DProductMetaSyntax extends CoreMetaSyntax with DProductAST {
   }
 }
 
-trait DProductPrinter extends FunPrinter with DProductAST {
+trait DPairPrinter extends FunPrinter with DPairAST {
 
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, Sigma(d1, r)) =>
@@ -47,7 +47,7 @@ trait DProductPrinter extends FunPrinter with DProductAST {
   }
 }
 
-trait DProductQuote extends CoreQuote with DProductAST {
+trait DPairQuote extends CoreQuote with DPairAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VSigma(v, f) =>
       Sigma(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
@@ -63,7 +63,7 @@ trait DProductQuote extends CoreQuote with DProductAST {
   }
 }
 
-trait DProductEval extends FunEval with DProductAST {
+trait DPairEval extends FunEval with DPairAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
     case Sigma(ty, ty1) =>
       VSigma(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
@@ -85,7 +85,7 @@ trait DProductEval extends FunEval with DProductAST {
   }
 }
 
-trait DProductCheck extends FunCheck with DProductAST {
+trait DPairCheck extends FunCheck with DPairAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Sigma(x, tp) =>
       val xVal = eval(x, ctx.vals, Nil)
@@ -151,11 +151,11 @@ trait DProductCheck extends FunCheck with DProductAST {
 
 }
 
-trait DProductREPL
+trait DPairREPL
   extends CoreREPL
-  with DProductAST
-  with DProductMetaSyntax
-  with DProductPrinter
-  with DProductCheck
-  with DProductEval
-  with DProductQuote
+  with DPairAST
+  with DPairMetaSyntax
+  with DPairPrinter
+  with DPairCheck
+  with DPairEval
+  with DPairQuote

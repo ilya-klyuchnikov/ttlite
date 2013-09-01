@@ -218,7 +218,7 @@ object TTScREPL
   extends ScREPL
   with CoreREPL with CoreDriver with CoreResiduator with CoreProofResiduator
   with FunREPL with FunDriver with FunResiduator with FunProofResiduator
-  with DProductREPL with DProductDriver with DProductResiduator with DProductProofResiduator
+  with DPairREPL with DPairDriver with DPairResiduator with DPairProofResiduator
   with SumREPL with SumDriver with SumResiduator with SumProofResiduator
   with EqREPL with EqDriver with EqResiduator with EqProofResiduator
   with NatREPL with NatDriver with NatResiduator with NatProofResiduator

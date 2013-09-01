@@ -131,7 +131,7 @@ trait REPL {
 object TTREPL
   extends CoreREPL
   with FunREPL
-  with DProductREPL
+  with DPairREPL
   with NatREPL
   with VectorREPL
   with EqREPL

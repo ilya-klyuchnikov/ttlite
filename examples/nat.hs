@@ -1,5 +1,6 @@
 
 -- addition of natural numbers
+plus :: forall (x :: Nat) (y :: Nat). Nat;
 plus =
     \ (x :: Nat) (y :: Nat) ->
         elim Nat
