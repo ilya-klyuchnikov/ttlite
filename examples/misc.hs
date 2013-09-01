@@ -30,10 +30,10 @@ pr2 =
             (Pair (Product B C) (snd A B (fst (Product A B) C p)) (snd (Product A B) C p)));
 
 
-even    = natFold Bool true not;
-odd     = natFold Bool false not;
-isZero  = natFold Bool true (\  (_ :: Bool) -> false);
-isSucc  = natFold Bool false (\ (_ :: Bool) -> true);
+even    = natFold Bool True not;
+odd     = natFold Bool False not;
+isZero  = natFold Bool True (\  (_ :: Bool) -> False);
+isSucc  = natFold Bool False (\ (_ :: Bool) -> True);
 
 length :: forall (A :: Set) (xs :: List A). Nat;
 length =
@@ -47,7 +47,7 @@ length =
 isTrue :: forall (b :: Bool). Set;
 isTrue =
     \ (b :: Bool) ->
-        elim Bool (\ (_ :: Bool) -> Set) Void Unit b;
+        elim Bool (\ (_ :: Bool) -> Set) Falsity Truth b;
 
 
 --less :: forall (x :: Nat) (y :: Nat) . Bool;
@@ -60,15 +60,15 @@ less =
                 elim
                     Nat
                     ( \ (_ :: Nat) -> Bool)
-                    false
-                    (\ (_ :: Nat) (_ :: Bool) -> true )
+                    False
+                    (\ (_ :: Nat) (_ :: Bool) -> True )
                     y)
             (\ (x1 :: Nat) (rec :: forall (_ :: Nat) . Bool) ->
                 (\ (y:: Nat) ->
                     elim
                         Nat
                         ( \ (_ :: Nat) -> Bool)
-                        false
+                        False
                         (\ (y1 :: Nat) (_ :: Bool) -> rec y1)
                         y))
             x;
@@ -76,18 +76,18 @@ less =
 n1 = Succ Zero;
 n2 = Succ n1;
 
-p1 :: Eq Bool (less n1 n2) true;
-p1 = Refl Bool true;
+p1 :: Eq Bool (less n1 n2) True;
+p1 = Refl Bool True;
 
-p2 :: Eq Bool (less n2 n1) false;
-p2 = Refl Bool false;
+p2 :: Eq Bool (less n2 n1) False;
+p2 = Refl Bool False;
 
 --$lookup :: forall (A :: Set) (xs :: List A) (n :: Nat) (_ :: isTrue (less n (length A xs))) . A;
 
-abort :: forall (A :: Set) (v :: Void) . A;
+abort :: forall (A :: Set) (v :: Falsity) . A;
 abort =
-    \ (A :: Set) (v :: Void) ->
-        elim Void (\ (_ :: Void) -> A) v;
+    \ (A :: Set) (v :: Falsity) ->
+        elim Falsity (\ (_ :: Falsity) -> A) v;
 
 
 nonEmpty :: forall (A :: Set) (xs :: List A). Set;
@@ -99,10 +99,10 @@ first =
         elim
             (List A)
             (\ (xs :: List A) -> forall (_ :: nonEmpty A xs) . A)
-            (\ (v :: Void) -> abort A v)
-            (\ (h :: A) (t :: List A) (_ :: forall (_ :: nonEmpty A t) . A) (_ :: Unit) -> h)
+            (abort A)
+            (\ (h :: A) (t :: List A) (_ :: forall (_ :: nonEmpty A t) . A) (_ :: Truth) -> h)
             xs
             contract;
 
-first Nat (Cons (List Nat) Zero (Nil (List Nat))) U;
+first Nat (Cons (List Nat) Zero (Nil (List Nat))) Triv;
 

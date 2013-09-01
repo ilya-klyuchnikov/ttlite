@@ -12,7 +12,7 @@ $B :: Set;
 $F :: forall (_ :: $A) . Set;
 $dp :: exists (x :: $A) . $F x;
 $x :: $A; $y :: $A; $eq_x_y :: Eq $A $x $y;
-$f1 :: Unit; $f2 :: Bool;
+$f1 :: Truth; $f2 :: Bool;
 $xs :: List $A;
 $n1 :: Nat; $n2 :: Nat; $n3 :: Nat;
 $p :: Product $A $B;

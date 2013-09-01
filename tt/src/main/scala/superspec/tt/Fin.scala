@@ -2,20 +2,20 @@ package superspec.tt
 
 trait FinAST extends CoreAST {
 
-  // Void, Empty Type
-  case object Void extends Term
-  case class VoidElim(m: Term, elem: Term) extends Term
-  case object VVoid extends Value
-  case class NVoidElim(m: Value, elem: Neutral) extends Neutral
+  // ⊥, Void, empty type
+  case object Falsity extends Term
+  case class FalsityElim(m: Term, elem: Term) extends Term
+  case object VFalsity extends Value
+  case class NFalsityElim(m: Value, elem: Neutral) extends Neutral
 
-  // Unit Type
-  case object Unit extends Term
-  case object U extends Term
-  case class UnitElim(m: Term, f: Term, elem: Term) extends Term
+  // ⊤, Truth Type, unit type, single-element type
+  case object Truth extends Term
+  case object Triv extends Term
+  case class TruthElim(m: Term, f: Term, elem: Term) extends Term
 
-  case object VUnit extends Value
-  case object VU extends Value
-  case class NUnitElim(m: Value, v: Value, elem: Neutral) extends Neutral
+  case object VUnitTruth extends Value
+  case object VTriv extends Value
+  case class NTruthElim(m: Value, v: Value, elem: Neutral) extends Neutral
 
   // Bool type
   // this is just syntactic sugar - really it can be implemented via sum
@@ -32,16 +32,16 @@ trait FinAST extends CoreAST {
 
 trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
   override def fromM(m: MTerm): Term = m match {
-    case MVar(Global("Void")) => Void
-    case MVar(Global("Unit")) => Unit
+    case MVar(Global("Falsity")) => Falsity
+    case MVar(Global("Truth")) => Truth
     case MVar(Global("Bool")) => Bool
-    case MVar(Global("U")) => U
-    case MVar(Global("false")) => False
-    case MVar(Global("true")) => True
-    case MVar(Global("elim")) @@ MVar(Global("Void")) @@ m @@ el =>
-      VoidElim(fromM(m), fromM(el))
-    case MVar(Global("elim")) @@ MVar(Global("Unit")) @@ m @@ v @@ el =>
-      UnitElim(fromM(m), fromM(v), fromM(el))
+    case MVar(Global("Triv")) => Triv
+    case MVar(Global("False")) => False
+    case MVar(Global("True")) => True
+    case MVar(Global("elim")) @@ MVar(Global("Falsity")) @@ m @@ el =>
+      FalsityElim(fromM(m), fromM(el))
+    case MVar(Global("elim")) @@ MVar(Global("Truth")) @@ m @@ v @@ el =>
+      TruthElim(fromM(m), fromM(v), fromM(el))
     case MVar(Global("elim")) @@ MVar(Global("Bool")) @@ m @@ c1 @@ c2 @@ el =>
       BoolElim(fromM(m), fromM(c1), fromM(c2), fromM(el))
     case _ => super.fromM(m)
@@ -50,22 +50,22 @@ trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
 
 trait FinPrinter extends FunPrinter with FinAST {
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
-    case Void =>
-      print(p, ii, "Void")
-    case Unit =>
-      print(p, ii, "Unit")
+    case Falsity =>
+      print(p, ii, "Falsity")
+    case Truth =>
+      print(p, ii, "Truth")
     case Bool =>
       print(p, ii, "Bool")
-    case U =>
-      print(p, ii, "U")
+    case Triv =>
+      print(p, ii, "Triv")
     case False =>
-      print(p, ii, "false")
+      print(p, ii, "False")
     case True =>
-      print(p, ii, "true")
-    case VoidElim(m, elem) =>
-      print(p, ii, 'elim @@ Void @@ elem)
-    case UnitElim(m, v, elem) =>
-      print(p, ii, 'elim @@ Unit @@ m @@ v @@ elem)
+      print(p, ii, "True")
+    case FalsityElim(m, elem) =>
+      print(p, ii, 'elim @@ Falsity @@ elem)
+    case TruthElim(m, v, elem) =>
+      print(p, ii, 'elim @@ Truth @@ m @@ v @@ elem)
     case BoolElim(m, v1, v2, elem) =>
       print(p, ii, 'elim @@ Bool @@ m @@ v1 @@ v2 @@ elem)
     case _ =>
@@ -75,23 +75,23 @@ trait FinPrinter extends FunPrinter with FinAST {
 
 trait FinEval extends FunEval with FinAST {
   override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
-    case Void =>
-      VVoid
-    case Unit =>
-      VUnit
+    case Falsity =>
+      VFalsity
+    case Truth =>
+      VUnitTruth
     case Bool =>
       VBool
-    case U =>
-      VU
+    case Triv =>
+      VTriv
     case False =>
       VFalse
     case True =>
       VTrue
-    case VoidElim(m, elem) =>
+    case FalsityElim(m, elem) =>
       val mVal = eval(m, named, bound)
       val elemVal = eval(elem, named, bound)
       voidElim(mVal, elemVal)
-    case UnitElim(m, f, elem) =>
+    case TruthElim(m, f, elem) =>
       val mVal = eval(m, named, bound)
       val fVal = eval(f, named, bound)
       val elemVal = eval(elem, named, bound)
@@ -108,14 +108,14 @@ trait FinEval extends FunEval with FinAST {
 
   def voidElim(m: Value, elem: Value) = elem match {
     case VNeutral(n) =>
-      VNeutral(NVoidElim(m, n))
+      VNeutral(NFalsityElim(m, n))
   }
 
   def unitElim(m: Value, f: Value, elem: Value) = elem match {
-    case VU =>
+    case VTriv =>
       f
     case VNeutral(n) =>
-      VNeutral(NUnitElim(m, f, n))
+      VNeutral(NTruthElim(m, f, n))
   }
 
   def boolElim(m: Value, f1: Value, f2: Value, elem: Value) = elem match {
@@ -130,29 +130,29 @@ trait FinEval extends FunEval with FinAST {
 
 trait FinCheck extends FunCheck with FinAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
-    case Void | Unit | Bool =>
+    case Falsity | Truth | Bool =>
       VUniverse(0)
-    case U =>
-      VUnit
+    case Triv =>
+      VUnitTruth
     case False | True =>
       VBool
-    case VoidElim(m, elem) =>
+    case FalsityElim(m, elem) =>
       val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VVoid, {_ => VUniverse(-1)}))
+      checkEqual(i, mType, VPi(VFalsity, {_ => VUniverse(-1)}))
 
       val mVal = eval(m, ctx.vals, List())
       val elemVal = eval(elem, ctx.vals, List())
 
       mVal @@ elemVal
-    case UnitElim(m, v, elem) =>
+    case TruthElim(m, v, elem) =>
       val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VUnit, {_ => VUniverse(-1)}))
+      checkEqual(i, mType, VPi(VUnitTruth, {_ => VUniverse(-1)}))
 
       val mVal = eval(m, ctx.vals, List())
       val elemVal = eval(elem, ctx.vals, List())
 
       val vType = iType(i, ctx, v)
-      checkEqual(i, vType, mVal @@ VU)
+      checkEqual(i, vType, mVal @@ VTriv)
 
       mVal @@ elemVal
     case BoolElim(m, v1, v2, elem) =>
@@ -174,16 +174,16 @@ trait FinCheck extends FunCheck with FinAST {
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
-    case Void => Void
-    case Unit => Unit
+    case Falsity => Falsity
+    case Truth => Truth
     case Bool => Bool
-    case U => U
+    case Triv => Triv
     case False => False
     case True => True
-    case VoidElim(m, elem) =>
-      VoidElim(iSubst(i, r, m), iSubst(i, r, elem))
-    case UnitElim(m, v, elem) =>
-      UnitElim(iSubst(i, r, m), iSubst(i, r, v), iSubst(i, r, elem))
+    case FalsityElim(m, elem) =>
+      FalsityElim(iSubst(i, r, m), iSubst(i, r, elem))
+    case TruthElim(m, v, elem) =>
+      TruthElim(iSubst(i, r, m), iSubst(i, r, v), iSubst(i, r, elem))
     case BoolElim(m, v1, v2, elem) =>
       BoolElim(iSubst(i, r, m), iSubst(i, r, v1), iSubst(i, r, v2), iSubst(i, r, elem))
     case _ =>
@@ -193,20 +193,20 @@ trait FinCheck extends FunCheck with FinAST {
 
 trait FinQuote extends CoreQuote with FinAST {
   override def quote(ii: Int, v: Value): Term = v match {
-    case VVoid => Void
-    case VUnit => Unit
+    case VFalsity => Falsity
+    case VUnitTruth => Truth
     case VBool => Bool
-    case VU => U
+    case VTriv => Triv
     case VFalse => False
     case VTrue => True
     case _ => super.quote(ii, v)
   }
 
   override def neutralQuote(ii: Int, n: Neutral): Term = n match {
-    case NVoidElim(m, elem) =>
-      VoidElim(quote(ii, m), neutralQuote(ii, elem))
-    case NUnitElim(m, v, elem) =>
-      UnitElim(quote(ii, m), quote(ii, v), neutralQuote(ii, elem))
+    case NFalsityElim(m, elem) =>
+      FalsityElim(quote(ii, m), neutralQuote(ii, elem))
+    case NTruthElim(m, v, elem) =>
+      TruthElim(quote(ii, m), quote(ii, v), neutralQuote(ii, elem))
     case NBoolElim(m, v1, v2, elem) =>
       BoolElim(quote(ii, m), quote(ii, v1), quote(ii, v2), neutralQuote(ii, elem))
     case _ => super.neutralQuote(ii, n)

@@ -6,10 +6,10 @@ import mrsc.core._
 trait FinDriver extends CoreDriver with FinAST with FinEval {
 
   override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NUnitElim(_, _, sel) =>
+    case NTruthElim(_, _, sel) =>
       sel match {
         case NFree(v) =>
-          val c = ElimLabel(v, U, Map(), Map())
+          val c = ElimLabel(v, Triv, Map(), Map())
           ElimDStep(c)
         case n =>
           driveNeutral(n)
@@ -32,8 +32,8 @@ trait FinDriver extends CoreDriver with FinAST with FinEval {
 trait FinResiduator extends BaseResiduator with FinDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(n, ElimLabel(sel, U, _, _)) :: _ =>
-        val m = VLam(VUnit, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
+      case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
+        val m = VLam(VUnitTruth, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
         val f = fold(n, env, bound, recM)
         unitElim(m, f, env(sel))
       case TEdge(n1, ElimLabel(sel, False, _, _)) :: TEdge(n2, ElimLabel(_, True, _, _)) :: Nil =>
@@ -51,9 +51,9 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
                          env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
-      case TEdge(n, ElimLabel(sel, U, _, _)) :: _ =>
+      case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
         val m =
-          VLam(VUnit, n =>
+          VLam(VUnitTruth, n =>
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
