@@ -46,11 +46,11 @@ trait TTSc extends CoreSubst with CoreCheck {
     override val graphStep = CompleteCurrentNodeStep[Conf, Label]()
   }
 
-  // the only concern is driving neutral terms!!
-  // everything else we get from evaluation!!
-  def driveTerm(c: Conf): DriveStep
+  def singleDrive(c: Conf): DriveStep
 
-  trait PiRules extends MRSCRules[Conf, Label] {
+  def multiDrive(c: Conf): List[DriveStep]
+
+  trait BaseRules extends MRSCRules[Conf, Label] {
     type Signal = Option[N]
 
     // we check elimBranch for subst
@@ -69,25 +69,33 @@ trait TTSc extends CoreSubst with CoreCheck {
       None
     }
   }
-  trait Folding extends PiRules {
+
+  trait Folding extends BaseRules {
     override def fold(signal: Signal, g: G): List[S] =
       signal.map(n => FoldStep(n.sPath): S).toList
   }
-  trait NoRebuildings extends PiRules {
+  trait NoRebuildings extends BaseRules {
     override def rebuild(signal: Signal, g: G) = List()
   }
   // The simplest termination strategy
-  trait Termination extends PiRules {
+  trait Termination extends BaseRules {
     val maxDepth: Int
     override def steps(g: G): List[S] =
       if (g.depth > maxDepth) List(StopStep.graphStep) else super.steps(g)
   }
-  trait Driving extends PiRules {
+
+  trait SingleDriving extends BaseRules {
     override def drive(signal: Signal, g: G): List[S] = {
-      if (signal.isDefined) return List()
       val t = g.current.conf
-      val piStep = driveTerm(t).step(t)
+      val piStep = singleDrive(t).step(t)
       piStep.graphStep :: Nil
+    }
+  }
+
+  trait MultiDriving extends BaseRules {
+    override def drive(signal: Signal, g: G): List[S] = {
+      val t = g.current.conf
+      multiDrive(t).map(_.step(t).graphStep)
     }
   }
 }
@@ -129,64 +137,66 @@ trait ProofResiduator extends BaseResiduator with EqAST {
     }
 }
 
-case class LetSC[I](id1: String, id2: String, e: I) extends Stmt[I]
+case class SC[I](id1: String, id2: String, e: I) extends Stmt[I]
+case class MRSC[I](id: String, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
-  lexical.reserved += "sc"
-  override def stmts = List(letScStmt) ++ super.stmts
-  lazy val letScStmt: PackratParser[Stmt[MTerm]] =
+  lexical.reserved += ("sc", "mrsc")
+  override def stmts = List(mrscStmt, scStmt) ++ super.stmts
+  lazy val scStmt: PackratParser[Stmt[MTerm]] =
     ("(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
-      case id1 ~ id2 ~ t => LetSC(id1, id2, t(Nil))
+      case id1 ~ id2 ~ t => SC(id1, id2, t(Nil))
+    }
+
+  lazy val mrscStmt: PackratParser[Stmt[MTerm]] =
+     ident ~ ("=" ~ "mrsc" ~> term <~ ";") ^^ {
+      case id ~ t => MRSC(id, t(Nil))
     }
 }
 
 object ScParser extends ScParser
 
-trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
+trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 { self: NatAST =>
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
-    case LetSC(scId, proofId, it0) =>
-      val it = fromM(it0)
-      iinfer(state, it) match {
+    case SC(scId, proofId, mTerm) =>
+      val inputTerm = fromM(mTerm)
+      iinfer(state, inputTerm) match {
         case None =>
           handleError("")
           state
         case Some(inTpVal) =>
           // start configuration is a normalized one!
           // it is a self contained!
-          val conf = Conf(iquote(ieval(state.vals, it)), state)
-          val sGraph = GraphGenerator(Rules, conf).toList.head
+          val conf = Conf(iquote(ieval(state.vals, inputTerm)), state)
+          val sGraph = GraphGenerator(SingleRules, conf).toList.head
           val tGraph = Transformations.transpose(sGraph)
 
           //output(tgToString(tGraph))
           val resVal = ieval(state.vals, iquote(residuate(tGraph, state.vals)))
           val resTerm = iquote(resVal)
-          val resType = iquote(inTpVal)
+          val inType = iquote(inTpVal)
 
-          val iTerm = Ann(resTerm, resType)
-
-          val t2 = iinfer(state, iTerm)
-          t2 match {
+          val resTermAnn = Ann(resTerm, inType)
+          iinfer(state, resTermAnn) match {
             case None =>
               handleError("")
               state
             case Some(t3) =>
               output(icprint(resTerm) + " :: " + icprint(iquote(t3)) + ";")
-
-
               // this place is a bit unsafe:
               // we normalize a proof without first type-checking it
               // this is why we can use combinators cong1, cong2, ... as generic combinators -
               // that are applicable for *any* type, not only for small types (Set0).
               val rawProofVal = proofResiduate(tGraph, state.vals)
               val rawProofTerm = iquote(rawProofVal)
-              val rawAnnProofTerm = Ann(rawProofTerm, Eq(resType, it, resTerm))
+              val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
 
               val proofVal = ieval(state.vals, iquote(rawProofVal))
               val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
               // to check that it really built correctly
-              val annProofTerm = Ann(proofTerm, Eq(resType, it, resTerm))
+              val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
               val proofTypeVal = iinfer(state, annProofTerm)
               output("raw proof:")
               output(icprint(rawProofTerm))
@@ -201,16 +211,101 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               output("::")
               output(icprint(iquote(proofTypeVal.get)))
               Context(
-                state.vals + (Global(scId) -> resVal) + (Global(proofId) -> proofVal) + (Global(s"${proofId}_raw") -> proofVal),
-                state.types + (Global(scId) -> inTpVal) + (Global(proofId) -> proofTypeVal.get))
+                state.vals +
+                  (Global(scId) -> resVal) +
+                  (Global(proofId) -> proofVal) +
+                  (Global(s"${proofId}_raw") -> proofVal),
+                state.types +
+                  (Global(scId) -> inTpVal) +
+                  (Global(proofId) -> proofTypeVal.get)
+              )
           }
+      }
+    case MRSC(res, mTerm) =>
+      val inputTerm = fromM(mTerm)
+      iinfer(state, inputTerm) match {
+        case None =>
+          handleError("")
+          state
+        case Some(inTpVal) =>
+          // start configuration is a normalized one!
+          // it is a self contained!
+          val conf = Conf(iquote(ieval(state.vals, inputTerm)), state)
+          val sGraphs = GraphGenerator(MultiRules, conf).toList
+          val tGraphs = sGraphs.map(Transformations.transpose)
+
+          var s = state
+          var i = 0
+
+          for (tGraph <- tGraphs) {
+            i += 1
+            //output(tgToString(tGraph))
+            val resVal = ieval(state.vals, iquote(residuate(tGraph, state.vals)))
+            val resTerm = iquote(resVal)
+            val inType = iquote(inTpVal)
+
+            val resTermAnn = Ann(resTerm, inType)
+            iinfer(state, resTermAnn) match {
+              case None =>
+                handleError("")
+                state
+              case Some(t3) =>
+                output(s"res #$i")
+                output(icprint(resTerm) + " :: " + icprint(iquote(t3)) + ";")
+                // this place is a bit unsafe:
+                // we normalize a proof without first type-checking it
+                // this is why we can use combinators cong1, cong2, ... as generic combinators -
+                // that are applicable for *any* type, not only for small types (Set0).
+                val rawProofVal = proofResiduate(tGraph, state.vals)
+                val rawProofTerm = iquote(rawProofVal)
+                val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
+
+                val proofVal = ieval(state.vals, iquote(rawProofVal))
+                val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
+                // to check that it really built correctly
+                val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
+                val proofTypeVal = iinfer(state, annProofTerm)
+                //output("raw proof:")
+                //output(icprint(rawProofTerm))
+                //output(s"proof #$i:")
+                //output(icprint(proofTerm))
+
+                // in general, this line will fail
+                //iinfer(state.ne, state.ctx, rawAnnProofTerm).get
+
+                //output("expected type:")
+                //output(icprint(Eq(cType, it, cTerm)))
+                output("::")
+                output(icprint(iquote(proofTypeVal.get)))
+                s = Context(
+                  s.vals +
+                    (Global(s"${res}_${i}") -> resVal) +
+                    (Global(s"${res}_${i}_proof") -> proofVal),
+                  s.types +
+                    (Global(s"${res}_${i}") ->  inTpVal) +
+                    (Global(s"${res}_${i}_proof") -> proofTypeVal.get)
+                )
+            }
+          }
+          s = Context(
+            s.vals + (Global(s"${res}_count") -> intToVNat(i)),
+            s.types + (Global(s"${res}_count") ->  VNat)
+          )
+          s
       }
     case _ =>
       super.handleStmt(state, stmt)
   }
 
-  object Rules extends PiRules with Driving with Folding with Termination with NoRebuildings {
+  def intToVNat(i: Int): Value =
+    (1 to i).foldLeft(VZero: Value){(v: Value, _: Int) => VSucc(v)}
+
+  object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
     val maxDepth = 10
+  }
+
+  object MultiRules extends BaseRules with MultiDriving with Folding with Termination with NoRebuildings {
+    val maxDepth = 20
   }
 }
 

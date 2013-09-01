@@ -21,10 +21,8 @@ trait CoreDriver extends TTSc with CoreCheck {
     Local(v)
   }
 
-  // current ad-hoc solution for mapping variables and types of new free variables
-
   // logic
-  override def driveTerm(c: Conf): DriveStep = eval0(c.term) match {
+  override def singleDrive(c: Conf): DriveStep = eval0(c.term) match {
     case VNeutral(n) =>
       nv(n) match {
         case Some(n) =>
@@ -35,9 +33,20 @@ trait CoreDriver extends TTSc with CoreCheck {
     case _ => decompose(c)
   }
 
+  override def multiDrive(c: Conf): List[DriveStep] =
+    (decompose(c) +: freeVars(c.term).map(n => elimVar(n, iType0(c.ctx, Free(n))))).distinct
+
   // neutral variable of a value
   def nv(n: Neutral): Option[Name] =
     None
+
+  // freeVars of an expression
+  def freeVars(t: Any): List[Name] = t match {
+    case Free(n: Local)   => List(n)
+    case Free(n: Assumed) => List(n)
+    case p: scala.Product => p.productIterator.flatMap(freeVars).toList.distinct
+    case _                => List()
+  }
 
   def elimVar(n: Name, nt: Value): DriveStep = nt match {
     case _ => StopDStep
