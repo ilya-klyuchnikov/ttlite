@@ -8,24 +8,25 @@ trait PairDriver extends CoreDriver with PairAST with PairEval {
   case object PairLabel extends Label
   case object ProductLabel extends Label
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NProductElim(VProduct(a, b), _, _, p) =>
-      p match {
-        case NFree(n) =>
-          val aType = quote0(a)
-          val bType = quote0(b)
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NProductElim(_, _, _, NFree(n)) => Some(n)
+    case NProductElim(_, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
 
-          val x = freshName()
-          val y = freshName()
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VProduct(a, b) =>
+      val aType = quote0(a)
+      val bType = quote0(b)
 
-          val pairCase = ElimLabel(n, Pair(Product(aType, bType), x, y), Map(), Map(x -> a, y -> b))
+      val x = freshName()
+      val y = freshName()
 
-          ElimDStep(pairCase)
-        case n =>
-          driveNeutral(n)
-      }
+      val pairCase = ElimLabel(n, Pair(Product(aType, bType), x, y), Map(), Map(x -> a, y -> b))
+
+      ElimDStep(pairCase)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {

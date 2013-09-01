@@ -25,11 +25,24 @@ trait CoreDriver extends TTSc with CoreCheck {
 
   // logic
   override def driveTerm(c: Conf): DriveStep = eval0(c.term) match {
-    case VNeutral(n) => driveNeutral(n)
+    case VNeutral(n) =>
+      nv(n) match {
+        case Some(n) =>
+          elimVar(n, iType0(c.ctx, Free(n)))
+        case None =>
+          StopDStep
+      }
     case _ => decompose(c)
   }
 
-  def driveNeutral(n: Neutral): DriveStep = StopDStep
+  // neutral variable of a value
+  def nv(n: Neutral): Option[Name] =
+    None
+
+  def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case _ => StopDStep
+  }
+
   def decompose(c: Conf): DriveStep = StopDStep
 
   implicit def name2Term(n: Name) = Free(n)

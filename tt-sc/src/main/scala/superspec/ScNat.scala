@@ -7,19 +7,20 @@ trait NatDriver extends CoreDriver with NatAST with NatEval {
 
   case object SuccLabel extends Label
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case natElim: NNatElim =>
-      natElim.n match {
-        case NFree(n) =>
-          val caseZ = ElimLabel(n, Zero, Map(), Map())
-          val v1 = freshName
-          val caseS = ElimLabel(n, Succ(v1), Map(n -> v1), Map(v1 -> VNat))
-          ElimDStep(caseZ, caseS)
-        case n =>
-          driveNeutral(n)
-      }
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NNatElim(_, _, _, NFree(n)) => Some(n)
+    case NNatElim(_, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
+
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VNat =>
+      val caseZ = ElimLabel(n, Zero, Map(), Map())
+      val v1 = freshName
+      val caseS = ElimLabel(n, Succ(v1), Map(n -> v1), Map(v1 -> VNat))
+      ElimDStep(caseZ, caseS)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {

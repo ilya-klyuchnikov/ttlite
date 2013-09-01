@@ -13,7 +13,7 @@ trait FinAST extends CoreAST {
   case object Triv extends Term
   case class TruthElim(m: Term, f: Term, elem: Term) extends Term
 
-  case object VUnitTruth extends Value
+  case object VTruth extends Value
   case object VTriv extends Value
   case class NTruthElim(m: Value, v: Value, elem: Neutral) extends Neutral
 
@@ -78,7 +78,7 @@ trait FinEval extends FunEval with FinAST {
     case Falsity =>
       VFalsity
     case Truth =>
-      VUnitTruth
+      VTruth
     case Bool =>
       VBool
     case Triv =>
@@ -133,7 +133,7 @@ trait FinCheck extends FunCheck with FinAST {
     case Falsity | Truth | Bool =>
       VUniverse(0)
     case Triv =>
-      VUnitTruth
+      VTruth
     case False | True =>
       VBool
     case FalsityElim(m, elem) =>
@@ -146,7 +146,7 @@ trait FinCheck extends FunCheck with FinAST {
       mVal @@ elemVal
     case TruthElim(m, v, elem) =>
       val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VUnitTruth, {_ => VUniverse(-1)}))
+      checkEqual(i, mType, VPi(VTruth, {_ => VUniverse(-1)}))
 
       val mVal = eval(m, ctx.vals, List())
       val elemVal = eval(elem, ctx.vals, List())
@@ -194,7 +194,7 @@ trait FinCheck extends FunCheck with FinAST {
 trait FinQuote extends CoreQuote with FinAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VFalsity => Falsity
-    case VUnitTruth => Truth
+    case VTruth => Truth
     case VBool => Bool
     case VTriv => Triv
     case VFalse => False

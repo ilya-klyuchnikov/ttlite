@@ -5,26 +5,22 @@ import mrsc.core._
 
 trait FinDriver extends CoreDriver with FinAST with FinEval {
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NTruthElim(_, _, sel) =>
-      sel match {
-        case NFree(v) =>
-          val c = ElimLabel(v, Triv, Map(), Map())
-          ElimDStep(c)
-        case n =>
-          driveNeutral(n)
-      }
-    case NBoolElim(_, _, _, sel) =>
-      sel match {
-        case NFree(v) =>
-          val c1 = ElimLabel(v, False, Map(), Map())
-          val c2 = ElimLabel(v, True, Map(), Map())
-          ElimDStep(c1, c2)
-        case n =>
-          driveNeutral(n)
-      }
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NTruthElim(_, _, NFree(n)) => Some(n)
+    case NBoolElim(_, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
+
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VTruth =>
+      val c = ElimLabel(n, Triv, Map(), Map())
+      ElimDStep(c)
+    case VBool =>
+      val c1 = ElimLabel(n, False, Map(), Map())
+      val c2 = ElimLabel(n, True, Map(), Map())
+      ElimDStep(c1, c2)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
 }
@@ -33,7 +29,7 @@ trait FinResiduator extends BaseResiduator with FinDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
-        val m = VLam(VUnitTruth, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
+        val m = VLam(VTruth, s => eval(node.conf.tp, env + (sel -> s), s :: bound))
         val f = fold(n, env, bound, recM)
         unitElim(m, f, env(sel))
       case TEdge(n1, ElimLabel(sel, False, _, _)) :: TEdge(n2, ElimLabel(_, True, _, _)) :: Nil =>
@@ -53,7 +49,7 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
     node.outs match {
       case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
         val m =
-          VLam(VUnitTruth, n =>
+          VLam(VTruth, n =>
             VEq(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),

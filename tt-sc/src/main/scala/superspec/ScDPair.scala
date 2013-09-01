@@ -7,20 +7,21 @@ trait DPairDriver extends CoreDriver with DPairAST with DPairEval {
 
   case object DPairLabel extends Label
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NSigmaElim(sigma@VSigma(a, b), _, _, p) =>
-      p match {
-        case NFree(n) =>
-          val sigmaT = quote0(sigma)
-          val x = freshName()
-          val y = freshName()
-          val pairCase = ElimLabel(n, DPair(sigmaT, x, y), Map(), Map(x -> a, y -> b(vfree(x))))
-          ElimDStep(pairCase)
-        case n =>
-          driveNeutral(n)
-      }
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NSigmaElim(_, _, _, NFree(n)) => Some(n)
+    case NSigmaElim(_, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
+
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VSigma(a, b) =>
+      val sigmaT = quote0(nt)
+      val x = freshName()
+      val y = freshName()
+      val pairCase = ElimLabel(n, DPair(sigmaT, x, y), Map(), Map(x -> a, y -> b(vfree(x))))
+      ElimDStep(pairCase)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {

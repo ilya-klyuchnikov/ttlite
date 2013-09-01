@@ -8,6 +8,12 @@ trait EqDriver extends CoreDriver with EqEval {
   case object ReflLabel extends Label
   case object EqLabel extends Label
 
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NEqElim(_, _, _, NFree(n)) => Some(n)
+    case NEqElim(_, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
+
   override def decompose(c: Conf): DriveStep = c.term match {
     case Refl(a, x) =>
       DecomposeDStep(ReflLabel, Conf(x, c.ctx))

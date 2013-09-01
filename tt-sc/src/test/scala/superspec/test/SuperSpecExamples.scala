@@ -22,6 +22,9 @@ class SuperSpecExamples extends org.scalatest.FunSpec {
     it ("should prove: map f (append xs ys) = append (map f xs) (map f ys)") {
       TTScREPL.main(Array("examples/proofs/05.hs"))
     }
+    it ("should prove: XXX") {
+      TTScREPL.main(Array("examples/proofs/06.hs"))
+    }
   }
 
   describe("Coverage Test") {

@@ -9,27 +9,27 @@ trait SumDriver extends CoreDriver with SumAST with SumEval {
   case object InLLabel extends Label
   case object InRLabel extends Label
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NSumElim(etVal, _, _, _, s) =>
-      val VSum(l, r) = etVal
-      s match {
-        case NFree(n) =>
-          val lType = quote0(l)
-          val rType = quote0(r)
-          val et = Sum(lType, rType)
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NSumElim(_, _, _, _, NFree(n)) => Some(n)
+    case NSumElim(_, _, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
 
-          val v1 = freshName()
-          val v2 = freshName()
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VSum(l, r) =>
+      val lType = quote0(l)
+      val rType = quote0(r)
+      val et = Sum(lType, rType)
 
-          val lCase = ElimLabel(n, InL(et, v1), Map(), Map(v1 -> l))
-          val rCase = ElimLabel(n, InR(et, v2), Map(), Map(v2 -> r))
+      val v1 = freshName()
+      val v2 = freshName()
 
-          ElimDStep(lCase, rCase)
-        case n =>
-          driveNeutral(n)
-      }
+      val lCase = ElimLabel(n, InL(et, v1), Map(), Map(v1 -> l))
+      val rCase = ElimLabel(n, InR(et, v2), Map(), Map(v2 -> r))
+
+      ElimDStep(lCase, rCase)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {

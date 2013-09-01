@@ -8,22 +8,24 @@ trait ListDriver extends CoreDriver with ListAST with ListEval {
   case object ConsLabel extends Label
   case object ListLabel extends Label
 
-  override def driveNeutral(n: Neutral): DriveStep = n match {
-    case NPiListElim(VPiList(a), m, nilCase, consCase, l) => l match {
-      case NFree(n) =>
-        val aType = quote0(a)
-        val caseNil = ElimLabel(n, PiNil(PiList(aType)), Map(), Map())
+  override def nv(t: Neutral): Option[Name] = t match {
+    case NPiListElim(_, _, _, _, NFree(n)) => Some(n)
+    case NPiListElim(_, _, _, _, n) => nv(n)
+    case _ => super.nv(t)
+  }
 
-        val h1 = freshName()
-        val t1 = freshName()
-        val caseCons = ElimLabel(n, PiCons(PiList(aType), h1, t1), Map(n -> t1), Map(h1 -> a, t1 -> VPiList(a)))
+  override def elimVar(n: Name, nt: Value): DriveStep = nt match {
+    case VPiList(a) =>
+      val aType = quote0(a)
+      val caseNil = ElimLabel(n, PiNil(PiList(aType)), Map(), Map())
 
-        ElimDStep(caseNil, caseCons)
-      case n =>
-        driveNeutral(n)
-    }
+      val h1 = freshName()
+      val t1 = freshName()
+      val caseCons = ElimLabel(n, PiCons(PiList(aType), h1, t1), Map(n -> t1), Map(h1 -> a, t1 -> VPiList(a)))
+
+      ElimDStep(caseNil, caseCons)
     case _ =>
-      super.driveNeutral(n)
+      super.elimVar(n, nt)
   }
 
   override def decompose(c: Conf): DriveStep = c.term match {
