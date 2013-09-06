@@ -28,6 +28,18 @@ class SuperSpecExamples extends org.scalatest.FunSpec {
     it ("should prove: commutativity of AND operation") {
       TTScREPL.main(Array("examples/proofs/07.hs"))
     }
+
+    it ("should process preprint.hs") {
+      TTScREPL.main(Array("examples/preprint.hs"))
+    }
+
+    it ("should process slides.hs") {
+      TTScREPL.main(Array("examples/slides.hs"))
+    }
+
+    it ("should process power.hs") {
+      TTScREPL.main(Array("examples/power.hs"))
+    }
   }
 
   describe("Coverage Test") {

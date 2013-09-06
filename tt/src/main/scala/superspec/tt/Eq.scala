@@ -3,7 +3,6 @@ package superspec.tt
 trait EqAST extends CoreAST {
   case class Eq(A: Term, x: Term, y: Term) extends Term
   case class Refl(A: Term, x: Term) extends Term
-  // See Simon Thompson. "Type Theory & Functional Programming", pp 110,111 for a good explanation.
   case class EqElim(et: Term, prop: Term, propR: Term, eq: Term) extends Term
 
   case class VEq(A: Value, x: Value, y: Value) extends Value

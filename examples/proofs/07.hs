@@ -28,7 +28,7 @@ proof1 = Refl Bool t1_sc_1;
 and :: forall (b1 :: Bool) (b2 :: Bool) . Bool;
 and =
     \ (b1 :: Bool) (b2 :: Bool) ->
-        elim Bool (\ (_ :: Bool) -> Bool) b1 b2 b1;
+        elim Bool (\ (_ :: Bool) -> Bool) False b2 b1;
 
 e1 = and $b1 $b2;
 e2 = and $b2 $b1;
