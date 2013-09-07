@@ -106,3 +106,13 @@ first =
 
 first Nat (Cons (List Nat) Zero (Nil (List Nat))) Triv;
 
+import "examples/eq.hs";
+
+apply :: forall (A :: Set) (B :: Set) (eq :: Eq Set A B) (_ :: B) . A;
+apply =
+    \ (A :: Set) (B :: Set) (eq :: Eq Set A B) .
+        elim
+            (Eq Set A B)
+            (\ (A :: Set) (B :: Set) (eq :: Eq Set A B) -> forall (_ :: B) . A)
+            (\ (A :: Set) -> \ (x :: A) -> x)
+            eq;
