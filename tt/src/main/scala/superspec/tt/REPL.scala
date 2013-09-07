@@ -138,6 +138,7 @@ object TTREPL
   with FinREPL
   with ListREPL
   with PairREPL
-  with SumREPL {
+  with SumREPL
+  with WREPL {
   override val name = "TT"
 }
