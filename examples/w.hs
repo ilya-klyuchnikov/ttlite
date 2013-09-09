@@ -14,8 +14,9 @@ pred_children = Truth;
 abort =
     \(m :: Set) (v :: Falsity) -> elim Falsity ( \(_ :: Falsity) -> m) v;
 
+zzNat = \ (x :: z_or_succ) . elim Bool (\ (x :: z_or_succ) -> Set) z_children pred_children x;
 WNat =
-    W (x :: z_or_succ) . elim Bool (\ (x :: z_or_succ) -> Set) z_children pred_children x;
+    W (x :: z_or_succ) . zzNat x;
 
 zeroCon :: WNat;
 zeroCon =
@@ -68,19 +69,7 @@ tree1 :: BinTree;
 tree1 = nodeCon leafCon leafCon;
 
 
---nrofnodes(leaf) = 1 | nrofnodes(node(t0, t00)) = nrofnodes(t0) + nrofnodes(t00)
---In type theory this function could be defined by
 --nrofnodes(x) = wrec(x, (y, z, u)case(y, 1, u(left) + u(right)))
-
-$y :: leaf_node_enum;
-$u :: forall (_ :: zzz True) . Nat;
-
-xx = $u left;
-
-
--- seems that we need to propagate y somehow!
--- it should be written in a bit different way!
-
 import "examples/nat.hs";
 
 nofNodes = \ (t :: BinTree) ->
@@ -96,13 +85,30 @@ nofNodes = \ (t :: BinTree) ->
 
 tt = nofNodes tree1;
 
-{-
-nofNodes = \ (t :: BinTree) ->
+-- the same, but zzz True, False are unfolded
+nofNodes1 = \ (t :: BinTree) ->
     Rec BinTree
         (\ (_ :: BinTree) -> Nat)
-        (\ (y :: leaf_node_enum)
-           (z :: forall (_ :: zzz y) . BinTree)
-           (u :: forall (_ :: zzz y) . Nat) ->
-              elim Bool (\ (_ :: Bool) -> Nat) (Succ Zero) (u left) y)
+        (\ (y :: leaf_node_enum) ->
+           elim Bool
+                (\ (y :: leaf_node_enum) -> forall (_ :: forall (_ :: zzz y) . BinTree) (_ :: forall (_ :: zzz y) . Nat) . Nat )
+                (\ (z :: forall (_ :: Falsity) . BinTree) (u :: forall (_ :: Falsity) . Nat) -> Succ Zero)
+                (\ (z :: forall (_ :: Bool) . BinTree) (u :: forall (_ :: Bool) . Nat) -> plus (u left) (u right))
+                y)
         t;
--}
+
+wplus = \ (n1 :: WNat) (n2 :: WNat) ->
+    Rec WNat
+        (\ (_ :: WNat) -> WNat)
+        (\ (y :: z_or_succ) ->
+            elim Bool
+                (\ (y :: z_or_succ) -> forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . WNat) . WNat )
+                (\ (z :: forall (_ :: zzNat zero) . WNat) (u :: forall (_ :: zzNat zero) . WNat) -> n2)
+                (\ (z :: forall (_ :: zzNat succ) . WNat) (u :: forall (_ :: zzNat succ) . WNat) -> succCon (u pred))
+                y)
+        n1;
+
+one_plus_one = wplus (succCon zeroCon) (succCon zeroCon);
+
+check :: Eq WNat one_plus_one two;
+check = Refl WNat two;
