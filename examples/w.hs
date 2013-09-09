@@ -77,9 +77,9 @@ nofNodes = \ (t :: BinTree) ->
         (\ (_ :: BinTree) -> Nat)
         (\ (y :: leaf_node_enum) ->
            elim Bool
-                (\ (y :: Bool) -> forall (_ :: forall (_ :: zzz y) . BinTree) (_ :: forall (_ :: zzz y) . Nat) . Nat )
-                (\ (z :: forall (_ :: zzz False) . BinTree) (u :: forall (_ :: zzz False) . Nat) -> Succ Zero)
-                (\ (z :: forall (_ :: zzz True) . BinTree) (u :: forall (_ :: zzz True) . Nat) -> plus (u left) (u right))
+                (\ (y :: leaf_node_enum) -> forall (_ :: forall (_ :: zzz y) . BinTree) (_ :: forall (_ :: zzz y) . Nat) . Nat )
+                (\ (z :: forall (_ :: zzz leaf) . BinTree) (u :: forall (_ :: zzz leaf) . Nat) -> Succ Zero)
+                (\ (z :: forall (_ :: zzz node) . BinTree) (u :: forall (_ :: zzz node) . Nat) -> plus (u left) (u right))
                 y)
         t;
 
@@ -112,3 +112,29 @@ one_plus_one = wplus (succCon zeroCon) (succCon zeroCon);
 
 check :: Eq WNat one_plus_one two;
 check = Refl WNat two;
+
+-- monomorphic simple nat fold
+simpleNatFold =
+    \ (A :: Set) (zCase :: A) (sCase :: forall (_ :: A) . A) (n :: WNat) ->
+        Rec WNat
+        (\ (_ :: WNat) -> A)
+        (\ (y :: z_or_succ) ->
+            elim Bool
+                (\ (y :: z_or_succ) -> forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . A) . A)
+                (\ (z :: forall (_ :: zzNat zero) . WNat) (u :: forall (_ :: zzNat zero) . A) -> zCase)
+                (\ (z :: forall (_ :: zzNat succ) . WNat) (u :: forall (_ :: zzNat succ) . A) -> sCase (u pred))
+                y)
+                n;
+
+-- monomorphic nat fold
+natFold =
+    \ (A :: Set) (zCase :: A) (sCase :: forall (_ :: WNat) (_ :: A) . A) (n :: WNat) ->
+        Rec WNat
+        (\ (_ :: WNat) -> A)
+        (\ (y :: z_or_succ) ->
+            elim Bool
+                (\ (y :: z_or_succ) -> forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . A) . A)
+                (\ (z :: forall (_ :: zzNat zero) . WNat) (u :: forall (_ :: zzNat zero) . A) -> zCase)
+                (\ (z :: forall (_ :: zzNat succ) . WNat) (u :: forall (_ :: zzNat succ) . A) -> sCase (z pred) (u pred))
+                y)
+                n;
