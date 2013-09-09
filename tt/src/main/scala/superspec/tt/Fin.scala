@@ -63,7 +63,7 @@ trait FinPrinter extends FunPrinter with FinAST {
     case True =>
       print(p, ii, "True")
     case FalsityElim(m, elem) =>
-      print(p, ii, 'elim @@ Falsity @@ elem)
+      print(p, ii, 'elim @@ Falsity @@ m @@ elem)
     case TruthElim(m, v, elem) =>
       print(p, ii, 'elim @@ Truth @@ m @@ v @@ elem)
     case BoolElim(m, v1, v2, elem) =>
