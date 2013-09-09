@@ -127,6 +127,8 @@ simpleNatFold =
                 n;
 
 -- monomorphic nat fold
+natFold ::
+    forall (A :: Set) (zCase :: A) (sCase :: forall (_ :: WNat) (_ :: A) . A) (n :: WNat) . A;
 natFold =
     \ (A :: Set) (zCase :: A) (sCase :: forall (_ :: WNat) (_ :: A) . A) (n :: WNat) ->
         Rec WNat
@@ -138,3 +140,110 @@ natFold =
                 (\ (z :: forall (_ :: zzNat succ) . WNat) (u :: forall (_ :: zzNat succ) . A) -> sCase (z pred) (u pred))
                 y)
                 n;
+---
+f = False;
+t = True;
+f_or_t = Bool;
+
+f_children = Falsity;
+t_children = Falsity;
+
+-- returns a type of labels
+zzBool :: forall (a :: Bool) . Set0;
+zzBool = \ (x :: f_or_t) . elim Bool (\ (x :: f_or_t) -> Set) f_children t_children x;
+WBool =
+    W (x :: f_or_t) . zzBool x;
+
+boolFold =
+    \ (A :: Set) (fCase :: A) (tCase :: A) (b :: WBool) ->
+        Rec WBool
+        (\ (_ :: WBool) -> A)
+        (\ (y :: f_or_t) ->
+            elim Bool
+                (\ (y :: f_or_t) -> forall (_ :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . A) . A)
+                (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (_ :: zzBool f) . A) -> fCase)
+                (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (_ :: zzBool t) . A) -> tCase)
+                y) b;
+
+$A :: Set;
+vv = \ (y :: f_or_t) -> forall (_ :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . $A) . $A;
+vv1 = \ (y :: z_or_succ) -> forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . $A) . $A;
+
+-- just to gen Set
+boolFold1 =
+    \ (A :: Set1) (fCase :: A) (tCase :: A) (b :: WBool) ->
+        Rec WBool
+        (\ (_ :: WBool) -> A)
+        (\ (y :: f_or_t) ->
+            elim Bool
+                (\ (y :: f_or_t) -> forall (_ :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . A) . A)
+                (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (_ :: zzBool f) . A) -> fCase)
+                (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (_ :: zzBool t) . A) -> tCase)
+                y)
+                b;
+
+fCon :: WBool;
+fCon = Sup WBool f (abort WBool);
+tCon :: WBool;
+tCon = Sup WBool t (abort WBool);
+
+wBoolId =
+    \ (b :: WBool) ->
+        Rec WBool
+        (\ (_ :: WBool) -> WBool)
+        (\ (y :: f_or_t) ->
+            elim Bool
+                (\ (y :: f_or_t) -> forall (_ :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . WBool) . WBool)
+                (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (_ :: zzBool f) . WBool) -> fCon)
+                (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (_ :: zzBool t) . WBool) -> tCon)
+                y)
+                b;
+
+-- reconstructs wNat
+wNatId =
+    \ (n :: WNat) ->
+        Rec WNat
+        (\ (_ :: WNat) -> WNat)
+        (\ (y :: z_or_succ) ->
+            elim Bool
+                (\ (y :: z_or_succ) -> forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . WNat) . WNat)
+                (\ (z :: forall (_ :: zzNat zero) . WNat) (u :: forall (_ :: zzNat zero) . WNat) -> zeroCon)
+                (\ (z :: forall (_ :: zzNat succ) . WNat) (u :: forall (_ :: zzNat succ) . WNat) -> succCon (u pred))
+                y)
+                n;
+
+$m :: forall (_ :: WBool) . Set;
+$fC :: $m fCon;
+$tC :: $m tCon;
+--$A :: Set;
+--ff = (\ (y :: z_or_succ) -> {-- pattern matching here!!! --} forall (_ :: forall (_ :: zzNat y) . WNat) (_ :: forall (_ :: zzNat y) . $A) . $A);
+
+wboolMotive = forall (m :: forall (_ :: WBool) . Set) (y :: f_or_t) . Set;
+wboolMotive = \ (m :: forall (_ :: WBool) . Set) (y :: f_or_t) ->
+    elim Bool (\ (b :: Bool) -> Set )
+        (forall (z :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . WBool) . m fCon)
+        (forall (_ :: forall (_ :: zzBool y) . WBool) (_ :: forall (_ :: zzBool y) . WBool) . m tCon)
+        y;
+
+bool2WBool :: forall (_ :: Bool) . WBool;
+bool2WBool = \ (b :: Bool) -> elim Bool (\ (_ :: Bool) -> WBool) fCon tCon b;
+
+
+test = \ (y :: f_or_t) ->
+            elim Bool
+                (\ (x :: f_or_t) -> wboolMotive $m x)
+                (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (_ :: zzBool f) . WBool) -> $fC)
+                (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (_ :: zzBool t) . WBool) -> $tC)
+                y;
+
+$ss :: forall (a :: Bool) (z :: forall (b :: zzBool a) . WBool) (u :: forall (c :: zzBool a) . $m (z c)) . $m (Sup WBool a z);
+
+wboolCase = \ (b :: WBool) ->
+    Rec WBool
+        (\ (b :: WBool) -> $m b)
+        (\ (y :: f_or_t) ->
+            elim Bool
+                (\ (a :: Bool) -> forall (z :: forall (b :: zzBool a) . WBool) (u :: forall (c :: zzBool a) . $m (z c)) . $m (Sup WBool a z))
+                (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (c :: zzBool f) . $m (z c)) -> $fC)
+                (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (c :: zzBool t) . $m (z c)) -> $tC)
+                y) b;
