@@ -77,22 +77,22 @@ trait FunQuote extends CoreQuote with FunAST {
 }
 
 trait FunEval extends CoreEval with FunAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Pi(ty, ty1) =>
-      VPi(eval(ty, named, bound), x => eval(ty1, named, x :: bound))
+      VPi(eval(ty, ctx, bound), x => eval(ty1, ctx, x :: bound))
     case Lam(t, e) =>
-      VLam(eval(t, named, bound), x => eval(e, named, x :: bound))
+      VLam(eval(t, ctx, bound), x => eval(e, ctx, x :: bound))
     case e1 :@: e2 =>
-      eval(e1, named, bound) @@ eval(e2, named, bound)
+      eval(e1, ctx, bound) @@ eval(e2, ctx, bound)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 }
 
 trait FunCheck extends CoreCheck with FunAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Pi(x, tp) =>
-      val xVal = eval(x, ctx.vals, Nil)
+      val xVal = eval(x, ctx, Nil)
 
       val xType = iType(i, ctx, x)
       val j = checkUniverse(i, xType)
@@ -102,7 +102,7 @@ trait FunCheck extends CoreCheck with FunAST {
 
       VUniverse(math.max(j, k))
     case Lam(t, e) =>
-      val tVal = eval(t, ctx.vals, Nil)
+      val tVal = eval(t, ctx, Nil)
       val tType = iType(i, ctx, t)
 
       checkUniverse(i, tType)
@@ -115,7 +115,7 @@ trait FunCheck extends CoreCheck with FunAST {
         case VPi(x, f) =>
           val e2Type = iType(i, ctx, e2)
           checkEqual(i, e2Type, x)
-          f(eval(e2, ctx.vals, Nil))
+          f(eval(e2, ctx, Nil))
         case _ =>
           sys.error(s"illegal application: $t")
       }

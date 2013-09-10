@@ -169,12 +169,12 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
         case Some(inTpVal) =>
           // start configuration is a normalized one!
           // it is a self contained!
-          val conf = Conf(iquote(ieval(state.vals, inputTerm)), state)
+          val conf = Conf(iquote(ieval(state, inputTerm)), state)
           val sGraph = GraphGenerator(SingleRules, conf).toList.head
           val tGraph = Transformations.transpose(sGraph)
 
           //output(tgToString(tGraph))
-          val resVal = ieval(state.vals, iquote(residuate(tGraph, state.vals)))
+          val resVal = ieval(state, iquote(residuate(tGraph, state.vals)))
           val resTerm = iquote(resVal)
           val inType = iquote(inTpVal)
 
@@ -193,8 +193,8 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               val rawProofTerm = iquote(rawProofVal)
               val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
 
-              val proofVal = ieval(state.vals, iquote(rawProofVal))
-              val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
+              val proofVal = ieval(state, iquote(rawProofVal))
+              val proofTerm = iquote(ieval(state, iquote(proofVal)))
               // to check that it really built correctly
               val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
               val proofTypeVal = iinfer(state, annProofTerm)
@@ -230,7 +230,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
         case Some(inTpVal) =>
           // start configuration is a normalized one!
           // it is a self contained!
-          val conf = Conf(iquote(ieval(state.vals, inputTerm)), state)
+          val conf = Conf(iquote(ieval(state, inputTerm)), state)
           val sGraphs = GraphGenerator(MultiRules, conf).toList
           val tGraphs = sGraphs.map(Transformations.transpose)
 
@@ -240,7 +240,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
           for (tGraph <- tGraphs) {
             i += 1
             //output(tgToString(tGraph))
-            val resVal = ieval(state.vals, iquote(residuate(tGraph, state.vals)))
+            val resVal = ieval(state, iquote(residuate(tGraph, state.vals)))
             val resTerm = iquote(resVal)
             val inType = iquote(inTpVal)
 
@@ -260,8 +260,8 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
                 val rawProofTerm = iquote(rawProofVal)
                 val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
 
-                val proofVal = ieval(state.vals, iquote(rawProofVal))
-                val proofTerm = iquote(ieval(state.vals, iquote(proofVal)))
+                val proofVal = ieval(state, iquote(rawProofVal))
+                val proofTerm = iquote(ieval(state, iquote(proofVal)))
                 // to check that it really built correctly
                 val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
                 val proofTypeVal = iinfer(state, annProofTerm)

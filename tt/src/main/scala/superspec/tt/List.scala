@@ -42,22 +42,22 @@ trait ListPrinter extends FunPrinter with ListAST {
 }
 
 trait ListEval extends FunEval with ListAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case PiList(a) =>
-      VPiList(eval(a, named, bound))
+      VPiList(eval(a, ctx, bound))
     case PiNil(et) =>
-      VPiNil(eval(et, named, bound))
+      VPiNil(eval(et, ctx, bound))
     case PiCons(et, head, tail) =>
-      VPiCons(eval(et, named, bound), eval(head, named, bound), eval(tail, named, bound))
+      VPiCons(eval(et, ctx, bound), eval(head, ctx, bound), eval(tail, ctx, bound))
     case PiListElim(et, m, nilCase, consCase, ls) =>
-      val etVal = eval(et, named, bound)
-      val mVal = eval(m, named, bound)
-      val nilCaseVal = eval(nilCase, named, bound)
-      val consCaseVal = eval(consCase, named, bound)
-      val listVal = eval(ls, named, bound)
+      val etVal = eval(et, ctx, bound)
+      val mVal = eval(m, ctx, bound)
+      val nilCaseVal = eval(nilCase, ctx, bound)
+      val consCaseVal = eval(consCase, ctx, bound)
+      val listVal = eval(ls, ctx, bound)
       listElim(etVal, mVal, nilCaseVal, consCaseVal, listVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
   def listElim(etVal: Value, mVal: Value, nilCaseVal: Value, consCaseVal: Value, listVal: Value): Value = listVal match {
@@ -80,13 +80,13 @@ trait ListCheck extends FunCheck with ListAST {
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VPiList(aVal) = eval(et, ctx.vals, List())
+      val VPiList(aVal) = eval(et, ctx, List())
       VPiList(aVal)
     case PiCons(et, head, tail) =>
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VPiList(aVal) = eval(et, ctx.vals, List())
+      val VPiList(aVal) = eval(et, ctx, List())
 
       val hType = iType(i, ctx, head)
       checkEqual(i, hType, aVal)
@@ -99,10 +99,10 @@ trait ListCheck extends FunCheck with ListAST {
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VPiList(aVal) = eval(et, ctx.vals, List())
+      val VPiList(aVal) = eval(et, ctx, List())
 
-      val mVal = eval(m, ctx.vals, List())
-      val xsVal = eval(xs, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val xsVal = eval(xs, ctx, List())
 
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}))

@@ -126,6 +126,8 @@ object `package` {
   type NameEnv[V] = Map[Name, V]
   // todo: helper methods: bindVal, bindType
   case class Context[V](vals: NameEnv[V], types: NameEnv[V])
+  def emptyEnv[V] = Map[Name, V]()
+  def emptyContext[V] = Context(emptyEnv[V], emptyEnv[V])
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
   val vars = for {j <- suffs; i <- ids} yield s"$i$j"

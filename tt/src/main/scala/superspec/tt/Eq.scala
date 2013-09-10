@@ -36,18 +36,18 @@ trait EqPrinter extends FunPrinter with EqAST {
 }
 
 trait EqEval extends FunEval with EqAST with CoreQuote {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Eq(a, x, y) =>
-      VEq(eval(a, named, bound), eval(x, named, bound), eval(y, named, bound))
+      VEq(eval(a, ctx, bound), eval(x, ctx, bound), eval(y, ctx, bound))
     case Refl(a, x) =>
-      VRefl(eval(a, named, bound), eval(x, named, bound))
+      VRefl(eval(a, ctx, bound), eval(x, ctx, bound))
     case EqElim(et, prop, propR, eq) =>
-      val etVal = eval(et, named, bound)
-      val propVal = eval(prop, named, bound)
-      val propRVal = eval(propR, named, bound)
-      val eqVal = eval(eq, named, bound)
+      val etVal = eval(et, ctx, bound)
+      val propVal = eval(prop, ctx, bound)
+      val propRVal = eval(propR, ctx, bound)
+      val eqVal = eval(eq, ctx, bound)
       eqElim(etVal, propVal, propRVal, eqVal)
-    case _ => super.eval(t, named, bound)
+    case _ => super.eval(t, ctx, bound)
   }
 
   def eqElim(etVal: Value, propVal: Value, propRVal: Value, eqVal: Value) = eqVal match {
@@ -61,7 +61,7 @@ trait EqEval extends FunEval with EqAST with CoreQuote {
 trait EqCheck extends FunCheck with EqAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Eq(a, x, y) =>
-      val aVal = eval(a, ctx.vals, Nil)
+      val aVal = eval(a, ctx, Nil)
 
       val aType = iType(i, ctx, a)
       val m = checkUniverse(i, aType)
@@ -74,8 +74,8 @@ trait EqCheck extends FunCheck with EqAST {
 
       VUniverse(m)
     case Refl(a, z) =>
-      val aVal = eval(a, ctx.vals, Nil)
-      val zVal = eval(z, ctx.vals, Nil)
+      val aVal = eval(a, ctx, Nil)
+      val zVal = eval(z, ctx, Nil)
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
@@ -89,10 +89,10 @@ trait EqCheck extends FunCheck with EqAST {
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VEq(aVal, xVal, yVal) = eval(et, ctx.vals, Nil)
+      val VEq(aVal, xVal, yVal) = eval(et, ctx, Nil)
 
-      val propVal = eval(prop, ctx.vals, Nil)
-      val eqVal = eval(eq, ctx.vals, Nil)
+      val propVal = eval(prop, ctx, Nil)
+      val eqVal = eval(eq, ctx, Nil)
 
       val propType = iType(i, ctx, prop)
       checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VEq(aVal, x, y), {_ => VUniverse(-1)})})}))

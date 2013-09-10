@@ -74,7 +74,7 @@ trait FinPrinter extends FunPrinter with FinAST {
 }
 
 trait FinEval extends FunEval with FinAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Falsity =>
       VFalsity
     case Truth =>
@@ -88,22 +88,22 @@ trait FinEval extends FunEval with FinAST {
     case True =>
       VTrue
     case FalsityElim(m, elem) =>
-      val mVal = eval(m, named, bound)
-      val elemVal = eval(elem, named, bound)
+      val mVal = eval(m, ctx, bound)
+      val elemVal = eval(elem, ctx, bound)
       voidElim(mVal, elemVal)
     case TruthElim(m, f, elem) =>
-      val mVal = eval(m, named, bound)
-      val fVal = eval(f, named, bound)
-      val elemVal = eval(elem, named, bound)
+      val mVal = eval(m, ctx, bound)
+      val fVal = eval(f, ctx, bound)
+      val elemVal = eval(elem, ctx, bound)
       unitElim(mVal, fVal, elemVal)
     case BoolElim(m, f1, f2, elem) =>
-      val mVal = eval(m, named, bound)
-      val f1Val = eval(f1, named, bound)
-      val f2Val = eval(f2, named, bound)
-      val elemVal = eval(elem, named, bound)
+      val mVal = eval(m, ctx, bound)
+      val f1Val = eval(f1, ctx, bound)
+      val f2Val = eval(f2, ctx, bound)
+      val elemVal = eval(elem, ctx, bound)
       boolElim(mVal, f1Val, f2Val, elemVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
   def voidElim(m: Value, elem: Value) = elem match {
@@ -140,16 +140,16 @@ trait FinCheck extends FunCheck with FinAST {
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VFalsity, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, ctx.vals, List())
-      val elemVal = eval(elem, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val elemVal = eval(elem, ctx, List())
 
       mVal @@ elemVal
     case TruthElim(m, v, elem) =>
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VTruth, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, ctx.vals, List())
-      val elemVal = eval(elem, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val elemVal = eval(elem, ctx, List())
 
       val vType = iType(i, ctx, v)
       checkEqual(i, vType, mVal @@ VTriv)
@@ -159,8 +159,8 @@ trait FinCheck extends FunCheck with FinAST {
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}))
 
-      val mVal = eval(m, ctx.vals, List())
-      val elemVal = eval(elem, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val elemVal = eval(elem, ctx, List())
 
       val v1Type = iType(i, ctx, v1)
       checkEqual(i, v1Type, mVal @@ VFalse)

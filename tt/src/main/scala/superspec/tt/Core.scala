@@ -103,14 +103,17 @@ trait CoreQuote extends CoreAST {
 }
 
 trait CoreEval extends CoreAST {
-  def eval0(c: Term): Value = eval(c, emptyNEnv, Nil)
-  def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  def eval0(c: Term): Value = eval(c, emptyContext[Value], Nil)
+  @deprecated
+  def eval(t: Term, named: NameEnv[Value], bound: Env): Value =
+    eval(t, Context(named, emptyEnv), bound)
+  def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Ann(e, _) =>
-      eval(e, named, bound)
+      eval(e, ctx, bound)
     case Universe(i) =>
       VUniverse(i)
     case Free(x) =>
-      named.getOrElse(x, vfree(x))
+      ctx.vals.getOrElse(x, vfree(x))
     case Bound(ii) =>
       if (ii < bound.length) bound(ii) else vfree(Quote(ii))
   }
@@ -153,7 +156,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     case Universe(i) =>
       VUniverse(i + 1)
     case Ann(e, tp) =>
-      val tpVal = eval(tp, ctx.vals, Nil)
+      val tpVal = eval(tp, ctx, Nil)
 
       val tpType = iType(i, ctx, tp)
       checkUniverse(i, tpType)
@@ -197,8 +200,8 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
     }
   override def iquote(v: V): Term =
     quote0(v)
-  override def ieval(ne: NameEnv[V], i: T): V =
-    eval(i, ne, List())
+  override def ieval(ctx: Context[V], i: T): V =
+    eval(i, ctx, List())
   def typeInfo(t: V): V =
     t
   override def icprint(c: T): String =
@@ -208,7 +211,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
     itype(state, t) match {
       case Right(VUniverse(k)) =>
-        val v = ieval(state.vals, Ann(t, Universe(k)))
+        val v = ieval(state, Ann(t, Universe(k)))
         output(icprint(iquote(v)))
         state.copy(types = state.types + (s2name(x) -> v))
       case Right(_) =>

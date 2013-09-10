@@ -36,19 +36,19 @@ trait PairPrinter extends FunPrinter with PairAST {
 }
 
 trait PairEval extends FunEval with PairAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Product(a, b) =>
-      VProduct(eval(a, named, bound), eval(b, named, bound))
+      VProduct(eval(a, ctx, bound), eval(b, ctx, bound))
     case Pair(et, x, y) =>
-      VPair(eval(et, named, bound), eval(x, named, bound), eval(y, named, bound))
+      VPair(eval(et, ctx, bound), eval(x, ctx, bound), eval(y, ctx, bound))
     case ProductElim(et, m, f, pair) =>
-      val etVal = eval(et, named, bound)
-      val mVal = eval(m, named, bound)
-      val fVal = eval(f, named, bound)
-      val pVal = eval(pair, named, bound)
+      val etVal = eval(et, ctx, bound)
+      val mVal = eval(m, ctx, bound)
+      val fVal = eval(f, ctx, bound)
+      val pVal = eval(pair, ctx, bound)
       productElim(etVal, mVal, fVal, pVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
   def productElim(etVal: Value, mVal: Value, fVal: Value, pVal: Value) =
@@ -74,7 +74,7 @@ trait PairCheck extends FunCheck with PairAST {
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VProduct(aVal, bVal) = eval(et, ctx.vals, List())
+      val VProduct(aVal, bVal) = eval(et, ctx, List())
 
       val xType = iType(i, ctx, x)
       checkEqual(i, xType, aVal)
@@ -87,10 +87,10 @@ trait PairCheck extends FunCheck with PairAST {
       val eType = iType(i, ctx, et)
       checkUniverse(i, eType)
 
-      val VProduct(aVal, bVal) = eval(et, ctx.vals, List())
+      val VProduct(aVal, bVal) = eval(et, ctx, List())
 
-      val mVal = eval(m, ctx.vals, List())
-      val pVal = eval(p, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val pVal = eval(p, ctx, List())
 
       val pType = iType(i, ctx, p)
       checkEqual(i, pType, VProduct(aVal, bVal))

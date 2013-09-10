@@ -56,21 +56,21 @@ trait NatQuote extends CoreQuote with NatAST {
 }
 
 trait NatEval extends FunEval with NatAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Zero =>
       VZero
     case Succ(n) =>
-      VSucc(eval(n, named, bound))
+      VSucc(eval(n, ctx, bound))
     case Nat =>
       VNat
     case NatElim(m, mz, ms, n) =>
-      val mVal = eval(m, named, bound)
-      val mzVal = eval(mz, named, bound)
-      val msVal = eval(ms, named, bound)
-      val nVal = eval(n, named, bound)
+      val mVal = eval(m, ctx, bound)
+      val mzVal = eval(mz, ctx, bound)
+      val msVal = eval(ms, ctx, bound)
+      val nVal = eval(n, ctx, bound)
       natElim(mVal, mzVal, msVal, nVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
   def natElim(mVal: Value, czVal: Value, csVal: Value, nVal: Value): Value = nVal match {
@@ -88,8 +88,8 @@ trait NatCheck extends FunCheck with NatAST {
     case Nat =>
       VUniverse(0)
     case NatElim(m, mz, ms, n) =>
-      val mVal = eval(m, ctx.vals, Nil)
-      val nVal = eval(n, ctx.vals, Nil)
+      val mVal = eval(m, ctx, Nil)
+      val nVal = eval(n, ctx, Nil)
 
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, Pi(Nat, Universe(-1)))

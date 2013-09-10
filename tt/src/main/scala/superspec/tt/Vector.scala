@@ -42,27 +42,27 @@ trait VectorPrinter extends FunPrinter with VectorAST {
 }
 
 trait VectorEval extends FunEval with VectorAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
-      VVec(eval(a, named, bound), eval(n, named, bound))
+      VVec(eval(a, ctx, bound), eval(n, ctx, bound))
     case VecNil(a) =>
-      VVecNil(eval(a, named, bound))
+      VVecNil(eval(a, ctx, bound))
     case VecCons(a, n, head, tail) =>
-      VVecCons(eval(a, named, bound), eval(n, named, bound), eval(head, named, bound), eval(tail, named, bound))
+      VVecCons(eval(a, ctx, bound), eval(n, ctx, bound), eval(head, ctx, bound), eval(tail, ctx, bound))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      val nilCaseVal = eval(nilCase, named, bound)
-      val consCaseVal = eval(consCase, named, bound)
+      val nilCaseVal = eval(nilCase, ctx, bound)
+      val consCaseVal = eval(consCase, ctx, bound)
       def rec(nVal: Value, vecVal: Value): Value = vecVal match {
         case VVecNil(_) =>
           nilCaseVal
         case VVecCons(_, n, head, tail) =>
           consCaseVal @@ n @@ head @@ tail @@ rec(n, tail)
         case VNeutral(n) =>
-          VNeutral(NVecElim(eval(a, named, bound), eval(m, named, bound), nilCaseVal, consCaseVal, nVal, n))
+          VNeutral(NVecElim(eval(a, ctx, bound), eval(m, ctx, bound), nilCaseVal, consCaseVal, nVal, n))
       }
-      rec(eval(n, named, bound), eval(vec, named, bound))
+      rec(eval(n, ctx, bound), eval(vec, ctx, bound))
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 }
 
@@ -77,15 +77,15 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
 
       VUniverse(j)
     case VecNil(a) =>
-      val aVal = eval(a, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
 
       VVec(aVal, VZero)
     case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
-      val aVal = eval(a, ctx.vals, List())
-      val nVal = eval(n, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
+      val nVal = eval(n, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
@@ -101,10 +101,10 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
 
       VVec(aVal, VSucc(nVal))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      val aVal = eval(a, ctx.vals, List())
-      val mVal = eval(m, ctx.vals, List())
-      val nVal = eval(n, ctx.vals, List())
-      val vecVal = eval(vec, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
+      val mVal = eval(m, ctx, List())
+      val nVal = eval(n, ctx, List())
+      val vecVal = eval(vec, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)

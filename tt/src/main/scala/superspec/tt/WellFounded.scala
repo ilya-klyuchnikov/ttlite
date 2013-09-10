@@ -53,19 +53,19 @@ trait WQuote extends CoreQuote with WAST {
 }
 
 trait WEval extends FunEval with WAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case W(t1, t2) =>
-      VW(eval(t1, named, bound), x => eval(t2, named, x :: bound))
+      VW(eval(t1, ctx, bound), x => eval(t2, ctx, x :: bound))
     case Sup(w, e1, e2) =>
-      VSup(eval(w, named, bound), eval(e1, named, bound), eval(e2, named, bound))
+      VSup(eval(w, ctx, bound), eval(e1, ctx, bound), eval(e2, ctx, bound))
     case Rec(w, m, b, a) =>
-      val wVal = eval(w, named, bound)
-      val mVal = eval(m, named, bound)
-      val aVal = eval(a, named, bound)
-      val bVal = eval(b, named, bound)
+      val wVal = eval(w, ctx, bound)
+      val mVal = eval(m, ctx, bound)
+      val aVal = eval(a, ctx, bound)
+      val bVal = eval(b, ctx, bound)
       rec(wVal, mVal, bVal, aVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
 
@@ -83,7 +83,7 @@ trait WEval extends FunEval with WAST {
 trait WCheck extends FunCheck with WAST {
   override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case W(x, tp) =>
-      val xVal = eval(x, ctx.vals, Nil)
+      val xVal = eval(x, ctx, Nil)
 
       val xType = iType(i, ctx, x)
       val j = checkUniverse(i, xType)
@@ -93,13 +93,13 @@ trait WCheck extends FunCheck with WAST {
 
       VUniverse(math.max(j, k))
     case Sup(w, a, f) =>
-      eval(w, ctx.vals, Nil) match {
+      eval(w, ctx, Nil) match {
         case VW(a1, f1) =>
 
           val aType = iType(i, ctx, a)
           checkEqual(i, aType, a1)
 
-          val aVal = eval(a, ctx.vals, Nil)
+          val aVal = eval(a, ctx, Nil)
 
           val fType = iType(i, ctx, f)
           checkEqual(i, fType, VPi(f1(aVal), _ => VW(a1, f1)))
@@ -111,16 +111,16 @@ trait WCheck extends FunCheck with WAST {
     case Rec(w, m, b, a) =>
       val wType = iType(i, ctx, w)
       checkUniverse(i, wType)
-      val VW(t1, t2) = eval(w, ctx.vals, List())
+      val VW(t1, t2) = eval(w, ctx, List())
 
-      val mVal = eval(m, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
 
       val mType = iType(i, ctx, m)
       checkEqual(i, mType, VPi(VW(t1, t2), {_ => VUniverse(-1)}))
 
       val aType = iType(i, ctx, a)
       checkEqual(i, aType, VW(t1, t2))
-      val aVal = eval(a, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
 
       val bType = iType(i, ctx, b)
       checkEqual(i, bType,

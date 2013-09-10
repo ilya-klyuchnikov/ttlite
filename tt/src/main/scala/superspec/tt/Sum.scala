@@ -42,22 +42,22 @@ trait SumPrinter extends FunPrinter with SumAST {
 }
 
 trait SumEval extends FunEval with SumAST {
-  override def eval(t: Term, named: NameEnv[Value], bound: Env): Value = t match {
+  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Sum(lt, rt) =>
-      VSum(eval(lt, named, bound), eval(rt, named, bound))
+      VSum(eval(lt, ctx, bound), eval(rt, ctx, bound))
     case InL(et, l) =>
-      VInL(eval(et, named, bound), eval(l, named, bound))
+      VInL(eval(et, ctx, bound), eval(l, ctx, bound))
     case InR(et, r) =>
-      VInR(eval(et, named, bound), eval(r, named, bound))
+      VInR(eval(et, ctx, bound), eval(r, ctx, bound))
     case SumElim(et@Sum(lt, rt), m, lc, rc, sum) =>
-      val etVal = eval(et, named, bound)
-      val mVal = eval(m, named, bound)
-      val lcVal = eval(lc, named, bound)
-      val rcVal = eval(rc, named, bound)
-      val sumVal = eval(sum, named, bound)
+      val etVal = eval(et, ctx, bound)
+      val mVal = eval(m, ctx, bound)
+      val lcVal = eval(lc, ctx, bound)
+      val rcVal = eval(rc, ctx, bound)
+      val sumVal = eval(sum, ctx, bound)
       sumElim(etVal, mVal, lcVal, rcVal, sumVal)
     case _ =>
-      super.eval(t, named, bound)
+      super.eval(t, ctx, bound)
   }
 
   def sumElim(etVal: Value, mVal: Value, lcVal: Value, rcVal: Value, sumVal: Value): Value =
@@ -82,8 +82,8 @@ trait SumCheck extends FunCheck with SumAST {
 
       VUniverse(math.max(j, k))
     case InL(Sum(a, b), l) =>
-      val aVal = eval(a, ctx.vals, List())
-      val bVal = eval(b, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
+      val bVal = eval(b, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
@@ -96,8 +96,8 @@ trait SumCheck extends FunCheck with SumAST {
 
       VSum(aVal, bVal)
     case InR(Sum(a, b), r) =>
-      val aVal = eval(a, ctx.vals, List())
-      val bVal = eval(b, ctx.vals, List())
+      val aVal = eval(a, ctx, List())
+      val bVal = eval(b, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)
@@ -110,11 +110,11 @@ trait SumCheck extends FunCheck with SumAST {
 
       VSum(aVal, bVal)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      val mVal = eval(m, ctx.vals, List())
-      val ltVal = eval(a, ctx.vals, List())
-      val rtVal = eval(b, ctx.vals, List())
+      val mVal = eval(m, ctx, List())
+      val ltVal = eval(a, ctx, List())
+      val rtVal = eval(b, ctx, List())
       val etVal = VSum(ltVal, rtVal)
-      val sumVal = eval(sum, ctx.vals, List())
+      val sumVal = eval(sum, ctx, List())
 
       val aType = iType(i, ctx, a)
       checkUniverse(i, aType)

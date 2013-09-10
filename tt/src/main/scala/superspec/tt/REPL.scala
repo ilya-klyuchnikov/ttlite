@@ -11,7 +11,7 @@ trait REPL {
   val prompt: String
   def itype(ctx: Context[V], i: T): Result[V]
   def iquote(v: V): T
-  def ieval(ne: NameEnv[V], i: T): V
+  def ieval(ctx: Context[V], i: T): V
   def icprint(c: T): String
   def itprint(t: V): String
   def assume(s: Context[V], n: String, t: T): Context[V]
@@ -66,7 +66,7 @@ trait REPL {
         handleError(s"Not Inferred type for $it")
         state
       case Some(tp) =>
-        val v = ieval(state.vals, it)
+        val v = ieval(state, it)
         if (s == "it"){
           output(icprint(iquote(v)) + "\n::\n" + itprint(tp) + ";")
         } else {
