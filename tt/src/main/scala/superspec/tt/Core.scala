@@ -122,14 +122,14 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def checkEqual(i: Int, inferred: Term, expected: Term) {
     if (inferred != expected) {
-      throw new TypeError(s"inferred: ${pprint(inferred)}, expected: ${pprint(expected)}")
+      throw new TypeError(s"inferred: ${pprint(inferred)},\n expected: ${pprint(expected)}")
     }
   }
 
   def checkEqual(i: Int, inferred: Value, expected: Term) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: ${pprint(expected)}")
+      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expected)}")
     }
   }
 
@@ -137,7 +137,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: ${pprint(expTerm)}")
+      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expTerm)}")
     }
   }
 
@@ -146,7 +146,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       k
     case _ =>
       val infTerm = quote(i, inferred)
-      throw new TypeError(s"inferred: ${pprint(infTerm)}, expected: Set(_)")
+      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: Set(_)")
   }
 
   def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
