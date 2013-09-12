@@ -12,6 +12,7 @@ u_parts = Falsity;
 
 -- selector family, represents the parts of a tree formed by ctr.
 unit_sels :: forall (ctr :: unit_ctrs) . Set;
+--unit_sels = \ (ctr :: unit_ctrs) . Falsity;
 unit_sels = \ (ctr :: unit_ctrs) . elim Truth (\ (_ :: unit_ctrs) . Set) u_parts ctr;
 
 WUnit = W (x :: unit_ctrs) . unit_sels x;
@@ -69,7 +70,23 @@ wunitCase1Dummy = \ (x :: WUnit) ->
         $rec1
         x;
 
---wunitCase1 :: forall (x :: WUnit) . $m x;
+wunitCase0 :: forall (x :: WUnit) . $A;
+wunitCase0 = \ (x :: WUnit) ->
+    Rec WUnit
+        (\ (x :: WUnit) -> $A)
+        (\ (ctr :: unit_ctrs) (b :: forall (b :: unit_sels ctr) . WUnit) (c :: forall (c :: unit_sels ctr) . $A) -> $a)
+        x;
+
+
+$m :: forall (_ :: WUnit) . Set;
+$mu :: $m fU;
+
+$sel :: forall (part :: unit_sels u) . WUnit;
+xx = $m (Sup WUnit u $sel);
+
+
+{-
+wunitCase1 :: forall (x :: WUnit) . $m x;
 wunitCase1 = \ (x :: WUnit) ->
     Rec WUnit
         (\ (x :: WUnit) -> $m x)
@@ -77,12 +94,13 @@ wunitCase1 = \ (x :: WUnit) ->
             elim Truth
                 (\ (_ :: unit_ctrs) ->
                     forall
-                        (sel :: forall (part :: unit_sels u) . WUnit)
-                        (rec :: forall (part :: unit_sels u) . $m (sel part)) .
-                        $m (Sup WUnit u sel)
+                        (sel :: forall (part :: unit_sels u) . WUnit) -- (sel :: forall (part :: Falsity) . WUnit)
+                        (rec :: forall (part :: unit_sels u) . $m (sel part)) . -- (rec :: forall (part :: Falsity) . $m (sel part))
+                        $m (Sup WUnit u sel) --
                 )
                 (\  (sel :: forall (part :: unit_sels u) . WUnit)
                     (rec :: forall (part :: unit_sels u) . $m (sel part)) -> $mu)
                 y
         )
         x;
+-}

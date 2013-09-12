@@ -238,12 +238,16 @@ test = \ (y :: f_or_t) ->
 
 $ss :: forall (a :: Bool) (z :: forall (b :: zzBool a) . WBool) (u :: forall (c :: zzBool a) . $m (z c)) . $m (Sup WBool a z);
 
+{-
+-- this is a general pattern recursion
+-- it doesn't work without extensional equality
 wboolCase = \ (b :: WBool) ->
     Rec WBool
         (\ (b :: WBool) -> $m b)
         (\ (y :: f_or_t) ->
             elim Bool
-                (\ (a :: Bool) -> forall (z :: forall (b :: zzBool a) . WBool) (u :: forall (c :: zzBool a) . $m (z c)) . $m (Sup WBool a z))
+                (\ (a :: Bool) -> forall (z :: forall (_ :: zzBool a) . WBool) (u :: forall (c :: zzBool a) . $m (z c)) . $m (Sup WBool a z))
                 (\ (z :: forall (_ :: zzBool f) . WBool) (u :: forall (c :: zzBool f) . $m (z c)) -> $fC)
                 (\ (z :: forall (_ :: zzBool t) . WBool) (u :: forall (c :: zzBool t) . $m (z c)) -> $tC)
                 y) b;
+-}
