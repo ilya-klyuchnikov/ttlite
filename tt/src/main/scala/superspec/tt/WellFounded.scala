@@ -74,7 +74,7 @@ trait WEval extends FunEval with WAST {
       // wrec(sup(d, e), b) = b(d, e, (x)wrec(e(x), b))
       val VW(t1, t2) = wVal
       bVal @@ d @@ e @@
-        VLam(VPi(t2(d), y => mVal @@ (e @@ y)), x => rec(wVal, mVal, bVal, e @@ x))
+        VLam(t2(d), x => rec(wVal, mVal, bVal, e @@ x))
     case VNeutral(n) =>
       VNeutral(NRec(wVal, mVal, bVal, n))
   }
