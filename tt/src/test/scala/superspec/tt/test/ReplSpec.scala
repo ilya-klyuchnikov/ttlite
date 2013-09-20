@@ -32,6 +32,15 @@ class ReplSpec extends org.scalatest.FunSpec {
     it("fin") {
       TTREPL.main(Array("examples/fin.hs"))
     }
+    it("wnat") {
+      TTREPL.main(Array("examples/wnat.hs"))
+    }
+    it("wlist") {
+      TTREPL.main(Array("examples/wlist.hs"))
+    }
+    it("logic") {
+      TTREPL.main(Array("examples/logic.hs"))
+    }
     it("misc") {
       TTREPL.main(Array("examples/misc.hs"))
     }
