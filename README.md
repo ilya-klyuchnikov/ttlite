@@ -43,7 +43,11 @@ If you have an old SBT launcher and do not want to update it for some reasons, t
 
     sbt.version=0.12.4
 
+The symptom that you have an old SBT launcher is an exception like this:
 
+    [ERROR] Terminal initialization failed; falling back to unsupported
+        java.lang.IncompatibleClassChangeError:
+        Found class jline.Terminal, but interface was expected
 
 ## Quick Start
 
