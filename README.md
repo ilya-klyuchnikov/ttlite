@@ -36,6 +36,15 @@ I use following settings for SBT (file `~/.sbtconfig`):
     :::text
     SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
 
+### SBT launcher
+This project is build by SBT 0.13, so it requires that you have SBT launcher 0.13 (try `sbt --version` to know it).
+If you have an old SBT launcher and do not want to update it for some reasons, then you can try to change
+`project/build.properties` to:
+
+    sbt.version=0.12.4
+
+
+
 ## Quick Start
 
 There are two sub-projects:
