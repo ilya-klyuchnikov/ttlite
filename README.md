@@ -170,7 +170,7 @@ TT Supercompiler REPL introduces a new statement:
     (t1, t2) = sc t;
 
 The meaning of the new statement is that `t1` is a result of transformation of the `term` by the supercompiler,
-`t2` is a proof that transformation is correct (i.e. `t2 :: Eq a t t1` if `t :: a`).
+`t2` is a proof that transformation is correct (i.e. `t2 :: Id a t t1` if `t :: a`).
 
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
@@ -230,7 +230,7 @@ You can see input and output of supercompilation (as well as a proof):
 
     TT-SC> proof2;
     elim Nat
-    (\ (a :: Nat) -> Eq Nat
+    (\ (a :: Nat) -> Id Nat
             (elim Nat (\ (b :: Nat) -> Nat) $z
                 (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
                 (elim Nat (\ (b :: Nat) -> Nat) $y
@@ -244,7 +244,7 @@ You can see input and output of supercompilation (as well as a proof):
                 a))
     ...
     ::
-    Eq Nat
+    Id Nat
     (elim Nat (\ (a :: Nat) -> Nat) $z (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
         (elim Nat (\ (a :: Nat) -> Nat) $y
             (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
@@ -263,5 +263,5 @@ in normalized form). An interested person is encouraged to launch the supercompi
 In some sense, `sc` is just a function of the following type (type `A` is implicitly resolved from the context):
 
     :::text
-    sc :: forall (A :: Set) (t :: A) . exists (t1 :: A) . Eq A t t1;
+    sc :: forall (A :: Set) (t :: A) . exists (t1 :: A) . Id A t t1;
 
