@@ -4,6 +4,5 @@ target/
 .ensime_lucene/
 .ensime
 *~
-tt-I/
-tt-II/
-tt-III/
+.classpath
+.project
