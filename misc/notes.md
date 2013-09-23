@@ -1,4 +1,5 @@
 [test](01_eq.md)
+[test/01.md](test/01.md)
 
 # SuperSpec project
 
