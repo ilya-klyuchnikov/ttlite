@@ -1,14 +1,14 @@
 import sbt._
 import Keys._
 
-object SuperSpecBuild extends Build {
+object TTLiteBuild extends Build {
 
   override lazy val settings = super.settings ++ Seq(scalaVersion := "2.10.2")
 
-  lazy val TTProject = Project("tt", file("tt"),
+  lazy val CoreProject = Project("ttlite-core", file("ttlite-core"),
     settings = Project.defaultSettings ++ Seq(
-      organization := "mrsc",
-      name := "tt",
+      organization := "ttlite",
+      name := "core",
       version := "0.1",
       libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
@@ -17,17 +17,17 @@ object SuperSpecBuild extends Build {
     ) //++ ScctPlugin.instrumentSettings
   )
 
-  lazy val SuperSpecProject = Project("tt-sc", file("tt-sc"),
+  lazy val ScProject = Project("ttlite-sc", file("ttlite-sc"),
     settings = Project.defaultSettings ++ Seq(
-      organization := "mrsc",
-      name := "tt-sc",
+      organization := "ttlite",
+      name := "sc",
       version := "0.1",
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD")
     ) //++ ScctPlugin.instrumentSettings
-  ) dependsOn(TTProject)
+  ) dependsOn(CoreProject)
 
-  lazy val root = Project(id = "superspec", base = file(".")) aggregate(TTProject, SuperSpecProject)
+  lazy val root = Project(id = "ttlite", base = file(".")) aggregate(CoreProject, ScProject)
 }

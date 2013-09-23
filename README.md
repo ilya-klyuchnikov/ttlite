@@ -3,7 +3,7 @@
 SuperSpec v1.0 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 It is structures into two sub-projects:
 
-* TT Lite - lightweight and modular implementation of Martin-Löf Type Theory
+* TT Lite Core - lightweight and modular implementation of Martin-Löf Type Theory
 (TT-Lite was designed with supercompilation in mind)
 * TT Lite Supercompiler - very simple supercompiler for TT Lite.
 
@@ -53,15 +53,15 @@ The symptom that you have an old SBT launcher is an exception like this:
 
 There are two sub-projects:
 
-* `tt` - TT Lite.
-* `tt-sc` - a simple supercompiler for TT Lite (as an extension of REPL).
+* `ttlite-core` - TT Lite Core
+* `tt-sc` - a simple supercompiler for TT Lite Core (as an extension of REPL).
 
 ### TT Lite (REPL)
 
-To launch TT REPL, type in sbt console `tt/run`:
+To launch TT REPL, type in sbt console `ttlite-core/run`:
 
     :::text
-    > tt/run
+    > ttlite-core/run
 
 Load some definitions from examples:
 
@@ -157,7 +157,7 @@ A program in TT Lite consists of the following statements:
 To launch TT Supercompiler REPL, type in sbt console `tt-sc/run`:
 
     :::text
-    > tt-sc/run
+    > ttlite-sc/run
 
 Launching examples:
 
