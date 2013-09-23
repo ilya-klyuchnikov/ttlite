@@ -1,10 +1,10 @@
-import "examples/eq.hs";
+import "examples/id.hs";
 
 m :: forall (_ :: Nat). Set;
 m =
   \(n :: Nat).
       elim Nat
-        (\(n:: Nat). Set) (Eq Nat Zero Zero) (\(_:: Nat)(_:: Set). Nat) n;
+        (\(n:: Nat). Set) (Id Nat Zero Zero) (\(_:: Nat)(_:: Set). Nat) n;
 
 predOrRefl :: forall (n :: Nat). m n;
 predOrRefl =
@@ -22,12 +22,12 @@ plus =
             y
             ( \(x1 :: Nat) (rec :: Nat) -> Succ rec ) x;
 
-proof :: forall (n :: Nat) . Eq Nat (plus n Zero) (plus Zero n);
+proof :: forall (n :: Nat) . Id Nat (plus n Zero) (plus Zero n);
 proof = \(n :: Nat) ->
     elim Nat
-        (\(n :: Nat) -> Eq Nat (plus n Zero) (plus Zero n))
+        (\(n :: Nat) -> Id Nat (plus n Zero) (plus Zero n))
         (Refl Nat Zero)
-        (\(n :: Nat)(r :: Eq Nat (plus n Zero) (plus Zero n)) ->
+        (\(n :: Nat)(r :: Id Nat (plus n Zero) (plus Zero n)) ->
             cong1
                 Nat
                 Nat

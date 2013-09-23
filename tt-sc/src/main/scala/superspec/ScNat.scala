@@ -68,7 +68,7 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
 
         val motive =
           VLam(VNat, n =>
-            VEq(
+            VId(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))

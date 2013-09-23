@@ -7,10 +7,10 @@ import "examples/core.hs";
 --    a = b
 --   -------
 --    b = a
-symm :: forall (a :: Set) (x :: a) (y :: a) (_ :: Eq a x y) . Eq a y x;
-symm = (\ (a :: Set) (x :: a) (y :: a) (eq :: Eq a x y) ->
-        elim (Eq a x y)
-            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq a y x)
+symm :: forall (a :: Set) (x :: a) (y :: a) (_ :: Id a x y) . Id a y x;
+symm = (\ (a :: Set) (x :: a) (y :: a) (eq :: Id a x y) ->
+        elim (Id a x y)
+            (\ (x :: a) (y :: a) (eq_x_y :: Id a x y) -> Id a y x)
             (\ (x :: a) -> Refl a x)
             eq);
 
@@ -24,19 +24,19 @@ tran :: forall
              (x :: a)
              (y :: a)
              (z :: a)
-             (_ :: Eq a x y)
-             (_ :: Eq a y z) .
-                 Eq a x z;
+             (_ :: Id a x y)
+             (_ :: Id a y z) .
+                 Id a x z;
 tran =
   ( \ (a :: Set)
       (x :: a)
       (y :: a)
       (z :: a)
-      (eq_x_y :: Eq a x y) ->
+      (eq_x_y :: Id a x y) ->
         elim
-            (Eq a x y)
-            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> forall (z :: a) (_ :: Eq a y z) . Eq a x z)
-            (\ (x :: a) (z :: a) (eq_x_z :: Eq a x z) -> eq_x_z)
+            (Id a x y)
+            (\ (x :: a) (y :: a) (eq_x_y :: Id a x y) -> forall (z :: a) (_ :: Id a y z) . Id a x z)
+            (\ (x :: a) (z :: a) (eq_x_z :: Id a x z) -> eq_x_z)
              eq_x_y
              z);
 
@@ -51,13 +51,13 @@ cong1 :: forall
               (f :: forall (_ :: a) . b)
               (x :: a)
               (y :: a)
-              (_ :: Eq a x y) .
-                  Eq b (f x) (f y);
+              (_ :: Id a x y) .
+                  Id b (f x) (f y);
 cong1 =
-  ( \ (a :: Set) (b :: Set) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Eq a x y) ->
+  ( \ (a :: Set) (b :: Set) (f :: forall (_ :: a) . b) (x :: a) (y :: a) (eq :: Id a x y) ->
         elim
-            (Eq a x y)
-            (\ (x :: a) (y :: a) (eq_x_y :: Eq a x y) -> Eq b (f x) (f y))
+            (Id a x y)
+            (\ (x :: a) (y :: a) (eq_x_y :: Id a x y) -> Id b (f x) (f y))
             (\ (x :: a) -> Refl b (f x))
             eq);
 
@@ -73,13 +73,13 @@ fcong1 :: forall
                (x :: a)
                (f :: forall (_ :: a) . b)
                (g :: forall (_ :: a) . b)
-               (_ :: Eq (forall (_ :: a) . b) f g) .
-               Eq b (f x) (g x);
+               (_ :: Id (forall (_ :: a) . b) f g) .
+               Id b (f x) (g x);
 fcong1 =
-  ( \ (a :: Set) (b :: Set) (x :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq :: Eq (forall (_ :: a) . b) f g) ->
+  ( \ (a :: Set) (b :: Set) (x :: a) (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq :: Id (forall (_ :: a) . b) f g) ->
         elim
-            (Eq (forall (_ :: a) . b) f g)
-            (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Eq (forall (_ :: a) . b) f g) -> Eq b (f x) (g x))
+            (Id (forall (_ :: a) . b) f g)
+            (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Id (forall (_ :: a) . b) f g) -> Id b (f x) (g x))
             (\ (f :: forall (_ :: a) . b) -> Refl b (f x))
             eq);
 
@@ -95,9 +95,9 @@ fargCong :: forall
                  (y :: a)
                  (f :: forall (_ :: a) . b)
                  (g :: forall (_ :: a) . b)
-                 (_ :: Eq a x y)
-                 (_ :: Eq (forall (_ :: a) . b) f g) .
-                 Eq b (f x) (g y);
+                 (_ :: Id a x y)
+                 (_ :: Id (forall (_ :: a) . b) f g) .
+                 Id b (f x) (g y);
 
 fargCong =
     ( \
@@ -107,11 +107,11 @@ fargCong =
         (y :: a)
         (f :: forall (_ :: a) . b)
         (g :: forall (_ :: a) . b)
-        (eq_x_y :: Eq a x y)
-        (eq_f_g :: Eq (forall (_ :: a) . b) f g)  ->
+        (eq_x_y :: Id a x y)
+        (eq_f_g :: Id (forall (_ :: a) . b) f g)  ->
             elim
-                (Eq (forall (_ :: a) . b) f g)
-                (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Eq (forall (_ :: a) . b) f g) ->  Eq b (f x) (g y))
+                (Id (forall (_ :: a) . b) f g)
+                (\ (f :: forall (_ :: a) . b) (g :: forall (_ :: a) . b) (eq_f_g :: Id (forall (_ :: a) . b) f g) ->  Id b (f x) (g y))
                 (\ (f :: forall (_ :: a) . b) -> cong1 a b f x y eq_x_y)
                 eq_f_g);
 
@@ -127,11 +127,11 @@ cong2 :: forall
                      (f :: forall (_ :: a) (_ :: b) . c)
                      (x1 :: a)
                      (x2 :: a)
-                     (eq_xs :: Eq a x1 x2)
+                     (eq_xs :: Id a x1 x2)
                      (y1 :: b)
                      (y2 :: b)
-                     (eq_ys :: Eq b y1 y2) .
-                     Eq c (f x1 y1) (f x2 y2);
+                     (eq_ys :: Id b y1 y2) .
+                     Id c (f x1 y1) (f x2 y2);
 cong2 =
     (\
         (a :: Set)
@@ -140,10 +140,10 @@ cong2 =
         (f :: forall (_ :: a) (_ :: b) . c)
         (x1 :: a)
         (x2 :: a)
-        (eq_xs :: Eq a x1 x2)
+        (eq_xs :: Id a x1 x2)
         (y1 :: b)
         (y2 :: b)
-        (eq_ys :: Eq b y1 y2) ->
+        (eq_ys :: Id b y1 y2) ->
             fargCong b c y1 y2 (f x1) (f x2) eq_ys (cong1 a (forall (_ :: b) . c) f x1 x2 eq_xs)
     );
 
@@ -156,22 +156,22 @@ proof_by_sc ::
         (e1 :: A)
         (e2 :: A)
         (res :: A)
-        (eq_e1_res :: Eq A e1 res)
-        (eq_e2_res :: Eq A e2 res) .
-        Eq A e1 e2;
+        (eq_e1_res :: Id A e1 res)
+        (eq_e2_res :: Id A e2 res) .
+        Id A e1 e2;
 proof_by_sc =
     \ (A :: Set)
       (e1 :: A)
       (e2 :: A)
       (res :: A)
-      (eq_e1_res :: Eq A e1 res)
-      (eq_e2_res :: Eq A e2 res) ->
+      (eq_e1_res :: Id A e1 res)
+      (eq_e2_res :: Id A e2 res) ->
         tran A e1 res e2 eq_e1_res (symm A e2 res eq_e2_res);
 
 eq_id =
-    \ (A :: Set) (x :: A) (y :: A) (eq_x_y :: Eq A x y) ->
+    \ (A :: Set) (x :: A) (y :: A) (eq_x_y :: Id A x y) ->
         elim
-            (Eq A x y)
-            (\ (x :: A) (y :: A) (eq_x_y :: Eq A x y) -> Eq A x y)
+            (Id A x y)
+            (\ (x :: A) (y :: A) (eq_x_y :: Id A x y) -> Id A x y)
             (\ (x :: A) -> Refl A x)
             eq_x_y;

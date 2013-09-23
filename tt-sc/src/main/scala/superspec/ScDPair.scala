@@ -60,7 +60,7 @@ trait DPairProofResiduator extends DPairResiduator with ProofResiduator {
         val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
         val motive =
           VLam(sigmaVal, n =>
-            VEq(
+            VId(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))

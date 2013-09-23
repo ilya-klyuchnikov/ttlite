@@ -110,7 +110,7 @@ wplus = \ (n1 :: WNat) (n2 :: WNat) ->
 
 one_plus_one = wplus (succCon zeroCon) (succCon zeroCon);
 
-check :: Eq WNat one_plus_one two;
+check :: Id WNat one_plus_one two;
 check = Refl WNat two;
 
 -- monomorphic simple nat fold

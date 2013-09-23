@@ -117,7 +117,7 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
     }
 }
 
-trait ProofResiduator extends BaseResiduator with EqAST {
+trait ProofResiduator extends BaseResiduator with IdAST {
   def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
     val env = nEnv.withDefault(vfree)
     proofFold(g.root, env, Nil, Map(), env, Nil, Map())
@@ -191,12 +191,12 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
               // that are applicable for *any* type, not only for small types (Set0).
               val rawProofVal = proofResiduate(tGraph, state.vals)
               val rawProofTerm = iquote(rawProofVal)
-              val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
+              val rawAnnProofTerm = Ann(rawProofTerm, Id(inType, inputTerm, resTerm))
 
               val proofVal = ieval(state, iquote(rawProofVal))
               val proofTerm = iquote(ieval(state, iquote(proofVal)))
               // to check that it really built correctly
-              val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
+              val annProofTerm = Ann(proofTerm, Id(inType, inputTerm, resTerm))
               val proofTypeVal = iinfer(state, annProofTerm)
               output("raw proof:")
               output(icprint(rawProofTerm))
@@ -258,12 +258,12 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
                 // that are applicable for *any* type, not only for small types (Set0).
                 val rawProofVal = proofResiduate(tGraph, state.vals)
                 val rawProofTerm = iquote(rawProofVal)
-                val rawAnnProofTerm = Ann(rawProofTerm, Eq(inType, inputTerm, resTerm))
+                val rawAnnProofTerm = Ann(rawProofTerm, Id(inType, inputTerm, resTerm))
 
                 val proofVal = ieval(state, iquote(rawProofVal))
                 val proofTerm = iquote(ieval(state, iquote(proofVal)))
                 // to check that it really built correctly
-                val annProofTerm = Ann(proofTerm, Eq(inType, inputTerm, resTerm))
+                val annProofTerm = Ann(proofTerm, Id(inType, inputTerm, resTerm))
                 val proofTypeVal = iinfer(state, annProofTerm)
                 //output("raw proof:")
                 //output(icprint(rawProofTerm))
@@ -315,7 +315,7 @@ object TTScREPL
   with FunREPL with FunDriver with FunResiduator with FunProofResiduator
   with DPairREPL with DPairDriver with DPairResiduator with DPairProofResiduator
   with SumREPL with SumDriver with SumResiduator with SumProofResiduator
-  with EqREPL with EqDriver with EqResiduator with EqProofResiduator
+  with IdREPL with IdDriver with IdResiduator with IdProofResiduator
   with NatREPL with NatDriver with NatResiduator with NatProofResiduator
   with ListREPL with ListDriver with ListResiduator with ListProofResiduator
   with PairREPL with PairDriver with PairResiduator with PairProofResiduator

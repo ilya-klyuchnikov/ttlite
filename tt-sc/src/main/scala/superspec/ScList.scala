@@ -82,7 +82,7 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
 
         val motive =
           VLam(VPiList(aVal), n =>
-            VEq(
+            VId(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))

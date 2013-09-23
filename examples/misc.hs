@@ -76,10 +76,10 @@ less =
 n1 = Succ Zero;
 n2 = Succ n1;
 
-p1 :: Eq Bool (less n1 n2) True;
+p1 :: Id Bool (less n1 n2) True;
 p1 = Refl Bool True;
 
-p2 :: Eq Bool (less n2 n1) False;
+p2 :: Id Bool (less n2 n1) False;
 p2 = Refl Bool False;
 
 --$lookup :: forall (A :: Set) (xs :: List A) (n :: Nat) (_ :: isTrue (less n (length A xs))) . A;
@@ -106,13 +106,13 @@ first =
 
 first Nat (Cons (List Nat) Zero (Nil (List Nat))) Triv;
 
-import "examples/eq.hs";
+import "examples/id.hs";
 
-apply :: forall (A :: Set) (B :: Set) (eq :: Eq Set A B) (_ :: B) . A;
+apply :: forall (A :: Set) (B :: Set) (eq :: Id Set A B) (_ :: B) . A;
 apply =
-    \ (A :: Set) (B :: Set) (eq :: Eq Set A B) .
+    \ (A :: Set) (B :: Set) (eq :: Id Set A B) .
         elim
-            (Eq Set A B)
-            (\ (A :: Set) (B :: Set) (eq :: Eq Set A B) -> forall (_ :: B) . A)
+            (Id Set A B)
+            (\ (A :: Set) (B :: Set) (eq :: Id Set A B) -> forall (_ :: B) . A)
             (\ (A :: Set) -> \ (x :: A) -> x)
             eq;

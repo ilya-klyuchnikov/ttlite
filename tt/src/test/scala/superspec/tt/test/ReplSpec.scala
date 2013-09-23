@@ -23,8 +23,8 @@ class ReplSpec extends org.scalatest.FunSpec {
     it("list") {
       TTREPL.main(Array("examples/list.hs"))
     }
-    it("eq") {
-      TTREPL.main(Array("examples/eq.hs"))
+    it("id") {
+      TTREPL.main(Array("examples/id.hs"))
     }
     it("vec") {
       TTREPL.main(Array("examples/vec.hs"))

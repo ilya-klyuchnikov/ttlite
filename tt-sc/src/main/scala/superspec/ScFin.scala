@@ -50,7 +50,7 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
       case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
         val m =
           VLam(VTruth, n =>
-            VEq(
+            VId(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))
@@ -59,7 +59,7 @@ trait FinProofResiduator extends FinResiduator with ProofResiduator {
       case TEdge(n1, ElimLabel(sel, False, _, _)) :: TEdge(n2, ElimLabel(_, True, _, _)) :: Nil =>
         val motive =
           VLam(VBool, n =>
-            VEq(
+            VId(
               eval(node.conf.tp, env + (sel -> n), n :: bound),
               eval(node.conf.term, env + (sel -> n), n :: bound),
               fold(node, env + (sel -> n), n :: bound, recM)))

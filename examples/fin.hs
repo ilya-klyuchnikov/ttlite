@@ -24,13 +24,13 @@ bool_id =
     \ (e :: Bool) ->
         elim Bool (\ (_ :: Bool) -> Bool) False True e;
 
-t1 :: Eq Truth (unit_id Triv) Triv;
+t1 :: Id Truth (unit_id Triv) Triv;
 t1 = Refl Truth Triv;
 
-t2 :: Eq Bool (bool_id False) False;
+t2 :: Id Bool (bool_id False) False;
 t2 = Refl Bool False;
 
-t3 :: Eq Bool (bool_id True) True;
+t3 :: Id Bool (bool_id True) True;
 t3 = Refl Bool True;
 
 

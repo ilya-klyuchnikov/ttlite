@@ -134,7 +134,7 @@ object TTREPL
   with DPairREPL
   with NatREPL
   with VectorREPL
-  with EqREPL
+  with IdREPL
   with FinREPL
   with ListREPL
   with PairREPL

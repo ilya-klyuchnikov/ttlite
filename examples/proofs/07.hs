@@ -21,7 +21,7 @@ t1_sc = mrsc t1;
 t2_sc = mrsc t2;
 
 -- this a point where t1 and t2 are normalized to the same term!!
-proof1 :: Eq Bool t1_sc_1 t2_sc_2;
+proof1 :: Id Bool t1_sc_1 t2_sc_2;
 proof1 = Refl Bool t1_sc_1;
 
 -- non-bottom case
@@ -44,5 +44,5 @@ e2_sc2 = mrsc e1_sc2_4;
 e1_sc2_9;
 e2_sc2_2;
 
-proof :: Eq Bool e1_sc2_9 e2_sc2_2;
+proof :: Id Bool e1_sc2_9 e2_sc2_2;
 proof = Refl Bool e1_sc2_9;
