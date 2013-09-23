@@ -54,7 +54,7 @@ The symptom that you have an old SBT launcher is an exception like this:
 There are two sub-projects:
 
 * `ttlite-core` - TT Lite Core
-* `tt-sc` - a simple supercompiler for TT Lite Core (as an extension of REPL).
+* `ttlite-sc` - a simple supercompiler for TT Lite Core (as an extension of REPL).
 
 ### TT Lite (REPL)
 
@@ -154,7 +154,7 @@ A program in TT Lite consists of the following statements:
 
 ### TT Supercompiler
 
-To launch TT Supercompiler REPL, type in sbt console `tt-sc/run`:
+To launch TT Supercompiler REPL, type in sbt console `ttlite-sc/run`:
 
     :::text
     > ttlite-sc/run
