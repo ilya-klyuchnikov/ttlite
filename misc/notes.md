@@ -1,3 +1,5 @@
+[test](01_eq.md)
+
 # SuperSpec project
 
 The big goal of SuperSpec projec is to repeat [HipSpec](https://github.com/danr/hipspec) with following modifications:
