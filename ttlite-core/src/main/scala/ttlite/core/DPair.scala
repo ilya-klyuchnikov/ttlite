@@ -28,7 +28,7 @@ trait DPairPrinter extends FunPrinter with DPairAST {
     case Sigma(d, Sigma(d1, r)) =>
       parens(nestedExists(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Sigma(d, r) =>
-      parensIf(p > 0, sep(Seq("exists " <> parens(vars(ii) <> " :: " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
+      parensIf(p > 0, sep(Seq("exists " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case DPair(s, a, b) =>
       print(p, ii, 'dpair @@ s @@ a @@ b)
     case SigmaElim(s, m, f, dp) =>
@@ -41,7 +41,7 @@ trait DPairPrinter extends FunPrinter with DPairAST {
     case Sigma(d, r) =>
       nestedExists(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " :: " <> nest(print(0, n, d)))}.toSeq
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
       val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
       nest(sep((text("exists") +: fors1).toSeq ++ Seq(print(0, i , x))))
   }

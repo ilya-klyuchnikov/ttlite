@@ -98,7 +98,7 @@ trait IdCheck extends FunCheck with IdAST {
       checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VId(aVal, x, y), {_ => VUniverse(-1)})})}))
 
       // the main point is here: we check that prop x x (Refl A x) is well-typed
-      // propR :: {a => x => prop x x (Refl a x)}
+      // propR : {a => x => prop x x (Refl a x)}
       val propRType = iType(i, ctx, propR)
       checkEqual(i, propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}))
 

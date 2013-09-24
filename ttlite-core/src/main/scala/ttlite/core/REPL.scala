@@ -68,9 +68,9 @@ trait REPL {
       case Some(tp) =>
         val v = ieval(state, it)
         if (s == "it"){
-          output(icprint(iquote(v)) + "\n::\n" + itprint(tp) + ";")
+          output(icprint(iquote(v)) + "\n:\n" + itprint(tp) + ";")
         } else {
-          output(s"$s\n::\n${itprint(tp)};")
+          output(s"$s\n:\n${itprint(tp)};")
         }
         Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp))
     }

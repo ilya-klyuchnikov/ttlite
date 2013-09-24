@@ -55,7 +55,7 @@ class MetaLexical extends lexical.StdLexical {
 trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
   override val lexical = new MetaLexical
   lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload")
-  lexical.delimiters += ("(", ")", "::", ".", "=", "->", ";")
+  lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
   type C = List[String]
   type Res = C => MTerm
   lazy val term: PackratParser[Res] = untyped
@@ -75,11 +75,11 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     }
   lazy val untyped: PackratParser[Res] = bind | app
   //lazy val optTyped: PackratParser[Res] =
-  //  untyped ~ ("::" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
+  //  untyped ~ (":" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
   val arg: PackratParser[(String, Res)] =
-    "(" ~> (ident ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
+    "(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
   val arg1: PackratParser[(String, Res)] =
-    "(" ~> (assumed ~ ("::" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
+    "(" ~> (assumed ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => (i, x)}
 
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
 
@@ -88,12 +88,12 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
     ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
   lazy val letStmt1: PackratParser[Stmt[MTerm]] =
-    (global ~ ("::" ~> term) <~ ";") >> {
+    (global ~ (":" ~> term) <~ ";") >> {
       case x ~ tp =>
         (ident ^?({case `x` => x}, _ => s"no implementation for $x")) ~ ("=" ~> term <~ ";") ^^ {case x ~ y => TypedLet(x, y(Nil), tp(Nil))}
     }
   lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
-    (assumed ~ ("::" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y(Nil))}
+    (assumed ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y(Nil))}
   lazy val importStmt: PackratParser[Stmt[MTerm]] =
     "import" ~> stringLit <~ ";" ^^ Import
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =

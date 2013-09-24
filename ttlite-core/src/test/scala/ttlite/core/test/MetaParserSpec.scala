@@ -19,15 +19,15 @@ class MetaParserSpec extends org.scalatest.FunSpec {
     }
 
     it("should parse binder term") {
-      assert(MetaParser.parseMTerm("forall (x :: a) . x") ==
+      assert(MetaParser.parseMTerm("forall (x : a) . x") ==
         MBind("forall", MVar(Global("a")),MVar(Quote(0))))
-      assert(MetaParser.parseMTerm("forall (x :: a) (y :: x). x") ==
+      assert(MetaParser.parseMTerm("forall (x : a) (y : x). x") ==
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
-      assert(MetaParser.parseMTerm("forall (x :: a) (y :: x). y") ==
+      assert(MetaParser.parseMTerm("forall (x : a) (y : x). y") ==
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(0)))))
-      assert(MetaParser.parseMTerm("forall (x :: a) . forall (y :: x) . x") ==
+      assert(MetaParser.parseMTerm("forall (x : a) . forall (y : x) . x") ==
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
-      assert(MetaParser.parseMTerm("forall (x :: a) . exists (y :: x) . f x") ===
+      assert(MetaParser.parseMTerm("forall (x : a) . exists (y : x) . f x") ===
         MBind("forall", MVar(Global("a")), MBind("exists",MVar(Quote(0)), MVar(Global("f")) ~ MVar(Quote(1)))))
     }
 

@@ -7,21 +7,21 @@ import "examples/nat.hs";
 import "examples/product.hs";
 import "examples/sum.hs";
 
-$A :: Set;
-$B :: Set;
-$F :: forall (_ :: $A) . Set;
-$dp :: exists (x :: $A) . $F x;
-$x :: $A; $y :: $A; $eq_x_y :: Id $A $x $y;
-$f1 :: Truth; $f2 :: Bool;
-$xs :: List $A;
-$n1 :: Nat; $n2 :: Nat; $n3 :: Nat;
-$p :: Product $A $B;
-$s :: Sum $A $B;
+$A : Set;
+$B : Set;
+$F : forall (_ : $A) . Set;
+$dp : exists (x : $A) . $F x;
+$x : $A; $y : $A; $eq_x_y : Id $A $x $y;
+$f1 : Truth; $f2 : Bool;
+$xs : List $A;
+$n1 : Nat; $n2 : Nat; $n3 : Nat;
+$p : Product $A $B;
+$s : Sum $A $B;
 
 -- BUG??
 (dp_sc, dp_proof) = sc (dproduct_id $A $F $dp);
 
-eep = dpair (exists (x :: Nat) . Id Nat x Zero) Zero (Refl Nat Zero);
+eep = dpair (exists (x : Nat) . Id Nat x Zero) Zero (Refl Nat Zero);
 
 (dpair_sc, dpair_proof) = sc (eep);
 
@@ -44,16 +44,16 @@ eep = dpair (exists (x :: Nat) . Id Nat x Zero) Zero (Refl Nat Zero);
 (_, _) = sc (sum_id $A $B $s);
 
 list_id_1 =
-    \ (A :: Set1) (xs :: List A) ->
+    \ (A : Set1) (xs : List A) ->
         elim
             (List A)
-            (\ (_ :: List A) -> List A)
+            (\ (_ : List A) -> List A)
             (Nil (List A))
-            (\ (h :: A) (t :: List A) (rec :: List A) -> Cons (List A) h rec)
+            (\ (h : A) (t : List A) (rec : List A) -> Cons (List A) h rec)
             xs;
 
-$A1 :: Set1;
-$xs1 :: List $A1;
+$A1 : Set1;
+$xs1 : List $A1;
 
 (_, _) = sc (list_id_1 $A1 $xs1);
 

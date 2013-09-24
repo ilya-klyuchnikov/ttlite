@@ -64,7 +64,7 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
 
   def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Ann(c, ty) =>
-      parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " :: " , nest(print(0, ii, ty))))))
+      parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " : " , nest(print(0, ii, ty))))))
     case Universe(i) =>
       s"Set$i"
     case Bound(k) if ii - k - 1 >= 0 =>
