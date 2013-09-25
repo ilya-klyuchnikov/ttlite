@@ -51,8 +51,6 @@ trait CoreMetaSyntax extends CoreAST {
       Free(n)
     case MAnn(t1, t2) =>
       Ann(fromM(t1), fromM(t2))
-    case MVar(Global("elim")) @@ tp =>
-      sys.error(s"incorrect eliminator: $m")
   }
 }
 
@@ -165,6 +163,8 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       checkEqual(i, eType, tpVal)
 
       tpVal
+    case Free(Global("elim")) =>
+      sys.error("incorrect eliminator (missing arg(s) or wrong type of data being eliminated)")
     case Free(x) =>
       ctx.types.get(x) match {
         case Some(ty) => ty
