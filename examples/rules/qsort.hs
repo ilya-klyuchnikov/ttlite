@@ -77,3 +77,30 @@ qsort1 =
                                            )
                         xs)
             n;
+
+lemma : forall (p : forall (_ : Nat) . Bool) (x : Nat) (xs : List Nat) .
+    Id Nat
+        (length Nat (filter Nat p (cons Nat x xs)))
+        (elim Bool (\ (b : Bool) -> Nat )
+                (length Nat (filter Nat p xs))
+                (Succ (length Nat (filter Nat p xs)))
+            (p x));
+
+lemma =
+    \ (p : forall (_ : Nat) . Bool) (x : Nat) (xs : List Nat) ->
+        elim Bool
+            (\ (b : Bool) -> Id Nat
+                                     (length Nat
+                                         (elim Bool
+                                             (\ (b : Bool) -> List Nat)
+                                             (filter Nat p xs)
+                                             (cons Nat x ((filter Nat p xs)))
+                                             b))
+                                     (elim Bool (\ (b : Bool) -> Nat )
+                                         (length Nat (filter Nat p xs))
+                                         (Succ (length Nat (filter Nat p xs)))
+                                         b))
+            (Refl Nat (length Nat (filter Nat p xs)))
+            (Refl Nat (Succ (length Nat (filter Nat p xs))))
+            (p x);
+
