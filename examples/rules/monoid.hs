@@ -1,6 +1,10 @@
 import "examples/rules/arrays.hs";
 import "examples/rules/sugar.hs";
 
+-- this is a proof of the following statement for monoid:
+-- in Haskell terms:
+-- foldr f z (xs ++ ys) = f (foldr f z xs) (foldr f z ys)
+
 $A : Set;
 $f : forall (_ : $A) (_ : $A) . $A;
 
@@ -14,7 +18,9 @@ $ys : List $A;
 
 conj =
     \ (xs : List $A) .
-        Id $A (foldr $A $A $z $f (append $A xs $ys)) ($f (foldr $A $A $z $f xs) (foldr $A $A $z $f $ys));
+        Id $A
+            (foldr $A $A $z $f (append $A xs $ys))
+            ($f (foldr $A $A $z $f xs) (foldr $A $A $z $f $ys));
 
 
 -- base case xs == nil
