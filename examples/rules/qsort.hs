@@ -55,8 +55,8 @@ qsort1 =
             (\ (k : Nat) -> forall (xs : List Nat) (_ : lte_prop (length Nat xs) k) . List Nat )
             (\ (xs : List Nat) ->
                 elim (List Nat)
-                    (\ (xs : List Nat) -> forall (prop : lte_prop (length Nat xs) Zero) . List Nat)
-                    (\ (prop : lte_prop (length Nat (nil Nat)) Zero) -> nil Nat)
+                    (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) Zero) . List Nat)
+                    (\ (_ : lte_prop (length Nat (nil Nat)) Zero) -> nil Nat)
                     (\ (v : Nat) (vs : List Nat)
                         (_ : forall (_ : lte_prop (length Nat vs) Zero) . List Nat)
                         (prop : lte_prop (length Nat (cons Nat v vs)) Zero) ->
@@ -65,7 +65,15 @@ qsort1 =
                 )
             (\ (n1 : Nat)
                (rec : forall (xs : List Nat) (_ : lte_prop (length Nat xs) n1) . List Nat)
-               (xs : List Nat)
-               (_ : lte_prop (length Nat xs) (Succ n1)) ->
-               nil Nat)
+               (xs : List Nat) ->
+                    elim (List Nat)
+                        (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) (Succ n1)) . List Nat)
+                        (\ (_ : lte_prop (length Nat (nil Nat)) (Succ n1)) -> nil Nat)
+                        (\ (v : Nat)
+                            (vs : List Nat)
+                            (_ : forall (_ : lte_prop (length Nat vs) (Succ n1)) . List Nat)
+                            (prop : lte_prop (length Nat (cons Nat v vs)) (Succ n1)) ->
+                                           nil Nat
+                                           )
+                        xs)
             n;
