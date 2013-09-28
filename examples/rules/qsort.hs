@@ -42,40 +42,6 @@ gt_prop  = \ (x : Nat) (y : Nat) -> bool_to_prop (gt  x y);
 --$qsort1 : (∀n:N).(∀l:[N]).((#l ≤ n) ⇒ [N])
 $qsort1 : forall (n : Nat) (xs : List Nat) (_ : lte_prop (length Nat xs) n) . List Nat;
 
-qsort1 =
-    \ (n : Nat) ->
-        elim Nat
-            (\ (k : Nat) -> forall (xs : List Nat) (_ : lte_prop (length Nat xs) k) . List Nat )
-            -- n = 0
-            (\ (xs : List Nat) ->
-                elim (List Nat)
-                    (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) Zero) . List Nat)
-                    -- xs == [] , the result is []
-                    (\ (_ : lte_prop (length Nat (nil Nat)) Zero) -> nil Nat)
-                    -- xs = v : vs , impossible case, the result is via abort
-                    (\ (v : Nat) (vs : List Nat)
-                        (_ : forall (_ : lte_prop (length Nat vs) Zero) . List Nat)
-                        (prop : lte_prop (length Nat (cons Nat v vs)) Zero) -> abort (List Nat) prop)
-                    xs
-                )
-            -- n = 1 + n1
-            (\ (n1 : Nat)
-               (rec : forall (xs : List Nat) (_ : lte_prop (length Nat xs) n1) . List Nat)
-               (xs : List Nat) ->
-                    elim (List Nat)
-                        (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) (Succ n1)) . List Nat)
-                        -- xs == [] , the result is []
-                        (\ (_ : lte_prop (length Nat (nil Nat)) (Succ n1)) -> nil Nat)
-                        -- xs = v : vs
-                        (\ (v : Nat)
-                            (vs : List Nat)
-                            (_ : forall (_ : lte_prop (length Nat vs) (Succ n1)) . List Nat)
-                            -- len_prop : lte_prop (length Nat vs) n1
-                            (len_prop : lte_prop (length Nat (cons Nat v vs)) (Succ n1)) ->
-                                nil Nat) -- TODO
-                        xs)
-            n;
-
 $v : Nat;
 $vs : List Nat;
 $p : forall (_ : Nat) . Bool;
@@ -151,3 +117,44 @@ filter_lemma2 =
                 qq
                 (p v))
         xs;
+
+qsort1 =
+    \ (n : Nat) ->
+        elim Nat
+            (\ (k : Nat) -> forall (xs : List Nat) (_ : lte_prop (length Nat xs) k) . List Nat )
+            -- n = 0
+            (\ (xs : List Nat) ->
+                elim (List Nat)
+                    (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) Zero) . List Nat)
+                    -- xs == [] , the result is []
+                    (\ (_ : lte_prop (length Nat (nil Nat)) Zero) -> nil Nat)
+                    -- xs = v : vs , impossible case, the result is via abort
+                    (\ (v : Nat) (vs : List Nat)
+                        (_ : forall (_ : lte_prop (length Nat vs) Zero) . List Nat)
+                        (prop : lte_prop (length Nat (cons Nat v vs)) Zero) -> abort (List Nat) prop)
+                    xs
+                )
+            -- n = 1 + n1
+            (\ (n1 : Nat)
+               (rec : forall (xs : List Nat) (_ : lte_prop (length Nat xs) n1) . List Nat)
+               (xs : List Nat) ->
+                    elim (List Nat)
+                        (\ (xs : List Nat) -> forall (_ : lte_prop (length Nat xs) (Succ n1)) . List Nat)
+                        -- xs == [] , the result is []
+                        (\ (_ : lte_prop (length Nat (nil Nat)) (Succ n1)) -> nil Nat)
+                        -- xs = v : vs
+                        (\ (v : Nat)
+                            (vs : List Nat)
+                            (_ : forall (_ : lte_prop (length Nat vs) (Succ n1)) . List Nat)
+                            -- len_prop : lte_prop (length Nat vs) n1
+                            (len_prop : lte_prop (length Nat (cons Nat v vs)) (Succ n1)) ->
+                                rec
+                                    (filter Nat $p vs)
+                                    (lte_tran
+                                        (length Nat (filter Nat $p vs))
+                                        (length Nat vs)
+                                        n1
+                                        (filter_lemma2 $p vs)
+                                        len_prop))
+                        xs)
+            n;
