@@ -1,14 +1,5 @@
 import "examples/fin.hs";
 
-plus : forall (x : Nat) (y : Nat). Nat;
-plus =
-    \ (x : Nat) (y : Nat) ->
-        elim Nat
-            (\ (_ : Nat) -> Nat )
-            y
-            ( \(x1 : Nat) (rec : Nat) -> Succ rec ) x;
-
-
 lte = \ (x : Nat) ->
     elim Nat
         (\ (_ : Nat) -> forall (_ : Nat) . Bool)
@@ -18,7 +9,6 @@ lte = \ (x : Nat) ->
         x;
 
 bool_to_prop = \ (x : Bool) -> elim Bool (\ (_ : Bool) -> Set) Falsity Truth x;
-
 lte_prop = \ (x : Nat) (y : Nat) -> bool_to_prop (lte x y);
 
 --    y <= 0  x <= y
@@ -98,11 +88,11 @@ lemma4 =
                (l2 : lte_prop (Succ x) Zero) -> abort (lte_prop (Succ x) (Succ z)) l2)
             x;
 
-lte_tran :
+lte_tran_aux :
     forall (z : Nat)
            (y : Nat) (_ : lte_prop y z)
            (x : Nat) (_ : lte_prop x y) . lte_prop x z;
-lte_tran =
+lte_tran_aux =
     \ (z : Nat) ->
         elim Nat
             (\ (z : Nat) -> forall (y : Nat) (_ : lte_prop y z) (x : Nat) (_ : lte_prop x y) . lte_prop x z)
@@ -134,3 +124,18 @@ lte_tran =
                         y
                )
             z;
+
+lte_tran :
+    forall (x : Nat) (y : Nat) (z : Nat) (_ : lte_prop x y) (_ : lte_prop y z) . lte_prop x z;
+lte_tran =
+    \ (x : Nat) (y : Nat) (z : Nat) (lte_xy : lte_prop x y) (lte_yz : lte_prop y z) ->
+        lte_tran_aux z y lte_yz x lte_xy;
+
+lte_lemma5 : forall (x : Nat) . lte_prop x (Succ x);
+lte_lemma5 =
+    \ (x : Nat) ->
+        elim Nat
+            (\ (x : Nat) -> lte_prop x (Succ x))
+            Triv
+            ( \ (x1 : Nat) (rec : lte_prop x1 (Succ x1)) -> rec)
+            x;
