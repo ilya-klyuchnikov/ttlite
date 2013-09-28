@@ -94,25 +94,18 @@ test : Id (List Nat) e1 e2;
 test = Refl (List Nat) e1;
 
 f =
-    \ (v : Nat) (vs : List Nat) (b : Bool) ->
+    \ (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) (b : Bool) ->
         elim Bool
             (\ (_ : Bool) -> List Nat)
-            (filter Nat $p vs)
-            (cons Nat v (filter Nat $p vs))
+            (filter Nat p vs)
+            (cons Nat v (filter Nat p vs))
             b;
 
 x1 = filter Nat $p (cons Nat $v $vs);
-x2 = f $v $vs ($p $v);
+x2 = f $p $v $vs ($p $v);
 
 test1 : Id (List Nat) x1 x2;
 test1 = Refl (List Nat) x1;
-
-xxx = lte_prop (length Nat $vs) (length Nat (cons Nat $v $vs));
-xxx = lte_lemma5 (length Nat $vs);
-
-
-$fl1 : forall (v : Nat) (vs : List Nat) .
-    lte_prop (length Nat (filter Nat $p (cons Nat v vs) )) (length Nat (cons Nat v (filter Nat $p vs)));
 
 -- such an trivial lemma!
 lte1 : forall (x : Nat) . lte_prop x x;
@@ -123,39 +116,38 @@ lte1 = \ (x : Nat) ->
         ( \ (x : Nat) (rec : lte_prop x x) -> rec)
         x;
 
-filter_lemma1 : forall (v : Nat) (vs : List Nat) .
-            lte_prop (length Nat (filter Nat $p (cons Nat v vs))) (length Nat (cons Nat v (filter Nat $p vs)));
+filter_lemma1 : forall (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) .
+            lte_prop (length Nat (filter Nat p (cons Nat v vs))) (length Nat (cons Nat v (filter Nat p vs)));
 
 filter_lemma1 =
-    \ (v : Nat) (vs : List Nat) ->
+    \ (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) ->
         elim Bool
-            (\ (b : Bool) -> lte_prop (length Nat (f v vs b)) (length Nat (cons Nat v (filter Nat $p vs))) )
-            (lte_lemma5 (length Nat (filter Nat $p vs)))
-            (lte1 (length Nat (filter Nat $p vs)))
-            ($p v);
+            (\ (b : Bool) -> lte_prop (length Nat (f p v vs b)) (length Nat (cons Nat v (filter Nat p vs))) )
+            (lte_lemma5 (length Nat (filter Nat p vs)))
+            (lte1 (length Nat (filter Nat p vs)))
+            (p v);
 
-filter_len :
-    forall (xs : List Nat) .
-        lte_prop (length Nat (filter Nat $p xs)) (length Nat xs);
+filter_lemma2 :
+    forall (p : forall (_ : Nat) . Bool) (xs : List Nat) .
+        lte_prop (length Nat (filter Nat p xs)) (length Nat xs);
 
-filter_len =
-    \ (xs : List Nat) ->
+filter_lemma2 =
+    \ (p : forall (_ : Nat) . Bool) (xs : List Nat) ->
     elim (List Nat)
-        (\ (xs : List Nat) -> lte_prop (length Nat (filter Nat $p xs)) (length Nat xs))
+        (\ (xs : List Nat) -> lte_prop (length Nat (filter Nat p xs)) (length Nat xs))
         -- xs = []
         Triv
         -- xs = v:vs
         (\ (v : Nat) (vs : List Nat)
-            (qq : lte_prop (length Nat (filter Nat $p vs)) (length Nat vs)) ->
+            (qq : lte_prop (length Nat (filter Nat p vs)) (length Nat vs)) ->
             elim Bool
-                (\ (b : Bool) -> lte_prop (length Nat (f v vs b)) (length Nat (cons Nat v vs)))
+                (\ (b : Bool) -> lte_prop (length Nat (f p v vs b)) (length Nat (cons Nat v vs)))
                 (lte_tran
-                    (length Nat (filter Nat $p vs))
+                    (length Nat (filter Nat p vs))
                     (length Nat vs)
                     (length Nat (cons Nat v vs))
                     qq
                     (lte_lemma5 (length Nat vs)))
                 qq
-                ($p v))
+                (p v))
         xs;
-
