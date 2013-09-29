@@ -280,7 +280,7 @@ mem =
 perm : forall (_ : List Nat) (_ : List Nat) . Set;
 perm = \ (xs : List Nat) (ys : List Nat) -> forall (a : Nat) . Id Nat (occs a xs) (occs a ys);
 
---1. (∀x,y:N).(lesseqxy=True⇒x≤y)
+--1. (∀x,y:N).(lesseq x y = True ⇒ x ≤ y)
 --
 prop1 : forall (x : Nat) (y : Nat) (_ : Id Bool (lte x y) True) . lte_prop x y;
 prop1 =
@@ -291,11 +291,8 @@ prop1 =
             (\ (z : Id Bool True True) -> Triv)
             (lte x y);
 
--- 2. (∀x,y:N).(lesseq x y = True ∨ greater x y = True)
-
-$prop2 : forall (x : Nat) (y : Nat) . Sum (Id Bool (lte x y) True) (Id Bool (gt x y) True);
-
-{-
+-- 2. (∀ x, y:N).(lesseq x y = True ∨ greater x y = True)
+prop2 : forall (x : Nat) (y : Nat) . Sum (Id Bool (lte x y) True) (Id Bool (gt x y) True);
 prop2 =
     \ (x : Nat) ->
         elim Nat
@@ -305,8 +302,18 @@ prop2 =
                 InL
                     (Sum (Id Bool (lte n0 y) True) (Id Bool (gt n0 y) True))
                     (Refl Bool True) )
-            n0
-            --(\ (x1 : Nat) (rec : forall (y : Nat) . Sum (Id Bool (lte x1 y) True) (Id Bool (gt x1 y) True))
-            --    (y : Nat) -> n0)
+            -- x == S x1
+            (\ (x1 : Nat)
+               (rec : forall (y : Nat) . Sum (Id Bool (lte x1 y) True) (Id Bool (gt x1 y) True))
+               (y : Nat) ->
+                    elim Nat
+                        ( \ (y: Nat) -> Sum (Id Bool (lte (Succ x1) y) True) (Id Bool (gt (Succ x1) y) True) )
+                        -- y = 0
+                        (InR
+                            (Sum (Id Bool (lte (Succ x1) n0) True) (Id Bool (gt (Succ x1) n0) True))
+                            (Refl Bool True) )
+                        -- y == S y1
+                        (\ (y1 : Nat) (_ : Sum (Id Bool (lte (Succ x1) y1) True) (Id Bool (gt (Succ x1) y1) True)) ->
+                            rec y1)
+                        y)
             x;
--}
