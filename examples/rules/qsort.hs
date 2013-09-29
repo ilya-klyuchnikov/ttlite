@@ -2,6 +2,7 @@ import "examples/rules/arrays.hs";
 import "examples/rules/sugar.hs";
 import "examples/rules/lte.hs";
 import "examples/fin.hs";
+import "examples/logic.hs";
 
 filter : forall (A : Set) (f : forall (_ : A) . Bool) (_ : List A) . List A;
 filter = \ (A : Set) (f : forall (_ : A) . Bool) (xs : List A) ->
@@ -74,8 +75,8 @@ test1 : Id (List Nat) x1 x2;
 test1 = Refl (List Nat) x1;
 
 -- such an trivial lemma!
-lte1 : forall (x : Nat) . lte_prop x x;
-lte1 = \ (x : Nat) ->
+lte_refl : forall (x : Nat) . lte_prop x x;
+lte_refl = \ (x : Nat) ->
     elim Nat
         (\ (x : Nat) -> lte_prop x x)
         Triv
@@ -90,7 +91,7 @@ filter_lemma1 =
         elim Bool
             (\ (b : Bool) -> lte_prop (length Nat (f p v vs b)) (length Nat (cons Nat v (filter Nat p vs))) )
             (lte_lemma5 (length Nat (filter Nat p vs)))
-            (lte1 (length Nat (filter Nat p vs)))
+            (lte_refl (length Nat (filter Nat p vs)))
             (p v);
 
 filter_lemma2 :
@@ -180,7 +181,7 @@ qsort_aux =
             n;
 
 qsort : forall (_ : List Nat) . List Nat;
-qsort = \ (xs : List Nat) -> qsort_aux (length Nat xs) xs (lte1 (length Nat xs));
+qsort = \ (xs : List Nat) -> qsort_aux (length Nat xs) xs (lte_refl (length Nat xs));
 
 
 t1     = qsort (cons Nat n3 (cons Nat n2 (cons Nat n1 (nil Nat))));
@@ -194,3 +195,118 @@ t2_ans = (cons Nat n2 (cons Nat n3 (cons Nat n3 (nil Nat))));
 
 qsort_test2 : Id (List Nat) t2 t2_ans;
 qsort_test2 = Refl (List Nat) t2_ans;
+
+---- AND NOW THE PROOF ----
+-- if List is sorted then
+-- sorted = Product Truth (Product Truth ...)
+-- otherwise sorted has at least one Falsity.
+sorted : forall (_ : List Nat) . Set;
+sorted =
+    \ (xs : List Nat) ->
+        elim (List Nat)
+            (\ (_ : List Nat) -> Set)
+            Truth
+            (\ (v : Nat) (vs : List Nat) (rec : Set) ->
+                elim (List Nat)
+                    (\ (_ : List Nat) -> Set)
+                    Truth
+                    (\ (v1 : Nat) (vs1 : List Nat) (_ : Set) -> Product (lte_prop v v1) rec)
+                    vs)
+            xs;
+
+xxx = sorted t1_ans;
+yyy = sorted (cons Nat n3 (cons Nat n2 (cons Nat n0 (nil Nat))));
+
+-- equality over natural numbers
+eqn : forall (_ : Nat) (_ : Nat) . Bool;
+eqn =
+    \ (x : Nat) ->
+        elim Nat (\ (_ : Nat) -> forall (_ : Nat) . Bool)
+            -- x == 0
+            (\ (y : Nat) ->
+                elim Nat (\ (_ : Nat) -> Bool) True (\ (_ : Nat) (_ : Bool) -> False) y )
+            -- x == S x1
+            ( \ (x1 : Nat) (rec : forall (_ : Nat) . Bool) (y : Nat) ->
+                elim Nat (\ (_ : Nat) -> Bool) False (\ (y1 : Nat) (_ : Bool) -> rec y1) y )
+            x;
+
+eqn_test1 : Id Bool True (eqn n1 n1);
+eqn_test1 = Refl Bool True;
+
+eqn_test2 : Id Bool False (eqn n1 n0);
+eqn_test2 = Refl Bool False;
+
+eqn_test3 : Id Bool False (eqn n0 n1);
+eqn_test3 = Refl Bool False;
+
+-- bool2n False = 0
+-- bool2n True  = 1
+bool2n = \ (b : Bool) -> elim Bool (\ (_ : Bool) -> Nat) n0 n1 b;
+
+-- counts the occurrences of element in a given list
+occs : forall (a : Nat) (xs : List Nat) . Nat;
+occs =
+    \ (a : Nat) (xs : List Nat) ->
+        elim (List Nat)
+            (\ (_ : List Nat) -> Nat)
+            n0
+            (\ (v : Nat) (_ : List Nat) (rec : Nat) -> plus (bool2n (eqn a v) ) rec )
+            xs;
+
+occs_test1 : Id Nat n0 (occs n0 (nil Nat));
+occs_test1 = Refl Nat n0;
+
+occs_test2 : Id Nat n1 (occs n0 (cons Nat n0 (nil Nat)));
+occs_test2 = Refl Nat n1;
+
+occs_test3 : Id Nat n2 (occs n0 (cons Nat n0 (cons Nat n0 (nil Nat))));
+occs_test3 = Refl Nat n2;
+
+occs_test4 : Id Nat n1 (occs n0 (cons Nat n1 (cons Nat n0 (nil Nat))));
+occs_test4 = Refl Nat n1;
+
+-- intensional member
+mem : forall (_ : Nat) (xs : List Nat) . Set;
+mem =
+    \ (a : Nat) (xs : List Nat) ->
+        elim (List Nat)
+            (\ (_ : List Nat) -> Set)
+            Falsity
+            (\ (v : Nat) (_ : List Nat) (rec : Set) -> Sum (Id Nat a v) rec)
+            xs;
+
+-- permll′≡df (∀a:N).(occsal=N occsal′)
+
+perm : forall (_ : List Nat) (_ : List Nat) . Set;
+perm = \ (xs : List Nat) (ys : List Nat) -> forall (a : Nat) . Id Nat (occs a xs) (occs a ys);
+
+--1. (∀x,y:N).(lesseqxy=True⇒x≤y)
+--
+prop1 : forall (x : Nat) (y : Nat) (_ : Id Bool (lte x y) True) . lte_prop x y;
+prop1 =
+    \ (x : Nat) (y : Nat) ->
+        elim Bool
+            ( \ (b : Bool) -> forall (_ : Id Bool b True) . (bool_to_prop b))
+            neq_f_t
+            (\ (z : Id Bool True True) -> Triv)
+            (lte x y);
+
+-- 2. (∀x,y:N).(lesseq x y = True ∨ greater x y = True)
+
+$prop2 : forall (x : Nat) (y : Nat) . Sum (Id Bool (lte x y) True) (Id Bool (gt x y) True);
+
+{-
+prop2 =
+    \ (x : Nat) ->
+        elim Nat
+            (\ (x : Nat) -> forall (y : Nat) . Sum (Id Bool (lte x y) True) (Id Bool (gt x y) True) )
+            -- x == 0
+            (\ (y : Nat) ->
+                InL
+                    (Sum (Id Bool (lte n0 y) True) (Id Bool (gt n0 y) True))
+                    (Refl Bool True) )
+            n0
+            --(\ (x1 : Nat) (rec : forall (y : Nat) . Sum (Id Bool (lte x1 y) True) (Id Bool (gt x1 y) True))
+            --    (y : Nat) -> n0)
+            x;
+-}
