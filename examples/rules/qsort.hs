@@ -118,7 +118,11 @@ filter_lemma2 =
                 (p v))
         xs;
 
-qsort1 =
+lte_p = \ (n : Nat) (m : Nat) -> lte m n;
+gt_p = \ (n : Nat) (m : Nat) -> gt m n;
+
+qsort_aux : forall (n : Nat) (xs : List Nat) (_ : lte_prop (length Nat xs) n) . List Nat;
+qsort_aux =
     \ (n : Nat) ->
         elim Nat
             (\ (k : Nat) -> forall (xs : List Nat) (_ : lte_prop (length Nat xs) k) . List Nat )
@@ -146,15 +150,47 @@ qsort1 =
                         (\ (v : Nat)
                             (vs : List Nat)
                             (_ : forall (_ : lte_prop (length Nat vs) (Succ n1)) . List Nat)
-                            -- len_prop : lte_prop (length Nat vs) n1
                             (len_prop : lte_prop (length Nat (cons Nat v vs)) (Succ n1)) ->
-                                rec
-                                    (filter Nat $p vs)
-                                    (lte_tran
-                                        (length Nat (filter Nat $p vs))
-                                        (length Nat vs)
-                                        n1
-                                        (filter_lemma2 $p vs)
-                                        len_prop))
+
+                                append Nat
+                                    -- qsort′ n (filter (lesseq a) x)
+                                    (rec
+                                        (filter Nat (lte_p v) vs)
+                                        (lte_tran
+                                            (length Nat (filter Nat (lte_p v) vs))
+                                            (length Nat vs)
+                                            n1
+                                            (filter_lemma2 (lte_p v) vs)
+                                            len_prop))
+
+                                    (cons Nat v
+
+                                    -- qsort′ n (filter (greater a) x) p2
+                                    (rec
+                                        (filter Nat (gt_p v) vs)
+                                        (lte_tran
+                                            (length Nat (filter Nat (gt_p v) vs))
+                                            (length Nat vs)
+                                            n1
+                                            (filter_lemma2 (gt_p v) vs)
+                                            len_prop))
+
+                                    ))
                         xs)
             n;
+
+qsort : forall (_ : List Nat) . List Nat;
+qsort = \ (xs : List Nat) -> qsort_aux (length Nat xs) xs (lte1 (length Nat xs));
+
+
+t1     = qsort (cons Nat n3 (cons Nat n2 (cons Nat n1 (nil Nat))));
+t1_ans = (cons Nat n1 (cons Nat n2 (cons Nat n3 (nil Nat))));
+
+qsort_test1 : Id (List Nat) t1 t1_ans;
+qsort_test1 = Refl (List Nat) t1_ans;
+
+t2 = qsort (cons Nat n3 (cons Nat n2 (cons Nat n3 (nil Nat))));
+t2_ans = (cons Nat n2 (cons Nat n3 (cons Nat n3 (nil Nat))));
+
+qsort_test2 : Id (List Nat) t2 t2_ans;
+qsort_test2 = Refl (List Nat) t2_ans;
