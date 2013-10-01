@@ -40,9 +40,9 @@ eqBool = \(b1: Bool) (b2: Bool) -> if Bool b1 b2 (if Bool b2 False True);
 isSublist_test1 : Id Bool (isSublist Bool eqBool listTTF listTTTF) True;
 isSublist_test1 = Refl Bool True;
 
-{-
+
 $l: List Bool;
 
-t = mrsc (isSublist Bool eqBool listTTF $l);
--}     
+in1 = isSublist Bool eqBool listTTF $l;
+(out1, proof1) = sc (isSublist Bool eqBool listTTF $l);
    
