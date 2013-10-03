@@ -3,6 +3,7 @@ import "examples/rules/sugar.hs";
 import "examples/rules/lte.hs";
 import "examples/fin.hs";
 import "examples/logic.hs";
+import "examples/product.hs";
 
 filter : forall (A : Set) (f : forall (_ : A) . Bool) (_ : List A) . List A;
 filter = \ (A : Set) (f : forall (_ : A) . Bool) (xs : List A) ->
@@ -154,7 +155,7 @@ qsort_aux =
                             (len_prop : lte_prop (length Nat (cons Nat v vs)) (Succ n1)) ->
 
                                 append Nat
-                                    -- qsort′ n (filter (lesseq a) x)
+                                    -- qsort n (filter (lesseq a) x)
                                     (rec
                                         (filter Nat (lte_p v) vs)
                                         (lte_tran
@@ -166,7 +167,7 @@ qsort_aux =
 
                                     (cons Nat v
 
-                                    -- qsort′ n (filter (greater a) x) p2
+                                    -- qsort n (filter (greater a) x) p2
                                     (rec
                                         (filter Nat (gt_p v) vs)
                                         (lte_tran
@@ -275,12 +276,12 @@ mem =
             (\ (v : Nat) (_ : List Nat) (rec : Set) -> Sum (Id Nat a v) rec)
             xs;
 
--- permll′≡df (∀a:N).(occsal=N occsal′)
+
 
 perm : forall (_ : List Nat) (_ : List Nat) . Set;
 perm = \ (xs : List Nat) (ys : List Nat) -> forall (a : Nat) . Id Nat (occs a xs) (occs a ys);
 
---1. (∀x,y:N).(lesseq x y = True ⇒ x ≤ y)
+
 --
 prop1 : forall (x : Nat) (y : Nat) (_ : Id Bool (lte x y) True) . lte_prop x y;
 prop1 =
@@ -291,7 +292,7 @@ prop1 =
             (\ (z : Id Bool True True) -> Triv)
             (lte x y);
 
--- 2. (∀ x, y:N).(lesseq x y = True ∨ greater x y = True)
+
 prop2 : forall (x : Nat) (y : Nat) . Sum (Id Bool (lte x y) True) (Id Bool (gt x y) True);
 prop2 =
     \ (x : Nat) ->
@@ -317,3 +318,39 @@ prop2 =
                             rec y1)
                         y)
             x;
+
+
+$prop3 : forall (x : Nat) (y : Nat) .
+    NOT (
+        Product
+            (Id Bool (lte x y) True)
+            (Id Bool (gt  x y) True));
+
+{-
+prop3 =
+    \ (x : Nat) ->
+        elim Nat
+            (\ (x : Nat) -> forall (y : Nat) . NOT (Product (Id Bool (lte x y) True) (Id Bool (gt  x y) True)) )
+            -- x == 0
+            (\ (y : Nat)
+               (a : Product (Id Bool (lte n0 y) True) (Id Bool False True)) ->
+                  neq_f_t (snd (Id Bool (lte n0 y) True) (Id Bool False True) a))
+            -- x == S x1
+            (\ (x1 : Nat)
+               (rec : forall (y : Nat) . NOT (Product (Id Bool (lte x1 y) True) (Id Bool (gt x1 y) True)))
+               (y : Nat) ->
+                    elim Nat
+                        (\ (y : Nat) -> NOT (Product (Id Bool (lte x1 y) True) (Id Bool (gt x1 y) True)))
+                        -- y == 0
+                        ( \ (a : Product (Id Bool (lte x1 n0) True) (Id Bool (gt x1 n0) True)) ->
+
+                            )
+
+            )
+
+
+
+            x;
+-}
+
+
