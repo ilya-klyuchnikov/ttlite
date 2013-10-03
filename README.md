@@ -1,10 +1,10 @@
-## SuperSpec v1.0 - SuperCompiler for Martin-Löf Type Theory
+## TT Lite v1.0 - SuperCompiler for Martin-Löf Type Theory
 
-SuperSpec v1.0 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
+TT Lite v1.0 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 It is structures into two sub-projects:
 
 * TT Lite Core - lightweight and modular implementation of Martin-Löf Type Theory
-(TT-Lite was designed with supercompilation in mind)
+(TT Lite was designed with supercompilation in mind)
 * TT Lite Supercompiler - very simple supercompiler for TT Lite.
 
 The main feature of the supercompiler is that for any transformation performed by
@@ -12,14 +12,14 @@ the supercompiler a proof of correctness is provided.
 
 ## How to build
 
-SuperSpec depends on [MRSC](https://github.com/ilya-klyuchnikov/mrsc) 0.5, so you need to install MRSC first:
+TT Lite depends on [MRSC](https://github.com/ilya-klyuchnikov/mrsc) 0.5, so you need to install MRSC first:
 
     :::text
     $ git clone git@github.com:ilya-klyuchnikov/mrsc.git
     $ cd mrsc
     $ sbt publish-local
 
-Then you can build SuperSpec project:
+Then you can build TT Lite project:
 
     :::text
     $ git clone git@bitbucket.org:lambdamix/superspec.git
@@ -30,7 +30,7 @@ Then you can build SuperSpec project:
     > gen-idea
 
 ### SBT settings
-Building/testing SuperSpec with default sbt settings may fail due to `OutOfMemory` issues.
+Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.
 I use following settings for SBT (file `~/.sbtconfig`):
 
     :::text
