@@ -7,6 +7,8 @@ trait FinDriver extends CoreDriver with FinAST with FinEval {
 
   override def nv(t: Neutral): Option[Name] = t match {
     case NTruthElim(_, _, NFree(n)) => Some(n)
+    case NTruthElim(_, _, n) => nv(n)
+    case NBoolElim(_, _, _, NFree(n)) => Some(n)
     case NBoolElim(_, _, _, n) => nv(n)
     case _ => super.nv(t)
   }
