@@ -3,7 +3,7 @@ import Keys._
 
 object TTLiteBuild extends Build {
 
-  override lazy val settings = super.settings ++ Seq(scalaVersion := "2.10.2")
+  override lazy val settings = super.settings ++ Seq(scalaVersion := "2.10.3")
 
   lazy val CoreProject = Project("ttlite-core", file("ttlite-core"),
     settings = Project.defaultSettings ++ Seq(
@@ -14,7 +14,7 @@ object TTLiteBuild extends Build {
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD")
-    ) //++ ScctPlugin.instrumentSettings
+    )
   )
 
   lazy val ScProject = Project("ttlite-sc", file("ttlite-sc"),
@@ -26,8 +26,8 @@ object TTLiteBuild extends Build {
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD")
-    ) //++ ScctPlugin.instrumentSettings
-  ) dependsOn(CoreProject)
+    )
+  ) dependsOn CoreProject
 
   lazy val root = Project(id = "ttlite", base = file(".")) aggregate(CoreProject, ScProject)
 }
