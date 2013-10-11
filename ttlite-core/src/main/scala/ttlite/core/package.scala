@@ -49,7 +49,7 @@ class MetaLexical extends lexical.StdLexical {
     '-' ~ '}'  ^^ { case _ => ' '  }
       | chrExcept(EofCh) ~ comment
     )
-  override def identChar = letter | elem('_') | elem('$') | elem('\\')
+  override def identChar = letter | elem('_') | elem('$') | elem('\'') | elem('\\')
 }
 
 trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
