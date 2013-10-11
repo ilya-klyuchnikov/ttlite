@@ -25,7 +25,8 @@ object TTLiteBuild extends Build {
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
-      testOptions in Test += Tests.Argument("-oD")
+      testOptions in Test += Tests.Argument("-oD"),
+      resolvers += "lambdamix-bintray" at "http://dl.bintray.com/lambdamix/maven/"
     )
   ) dependsOn CoreProject
 

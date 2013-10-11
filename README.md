@@ -1,6 +1,6 @@
-## TT Lite v1.0 - SuperCompiler for Martin-Löf Type Theory
+## TT Lite - SuperCompiler for Martin-Löf Type Theory
 
-TT Lite v1.0 is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
+TT Lite is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 It is structures into two sub-projects:
 
 * TT Lite Core - lightweight and modular implementation of Martin-Löf Type Theory
@@ -12,18 +12,10 @@ the supercompiler a proof of correctness is provided.
 
 ## How to build
 
-TT Lite depends on [MRSC](https://github.com/ilya-klyuchnikov/mrsc) 0.5, so you need to install MRSC first:
+TT Lite is built using SBT. You need to install SBT first from [here](http://www.scala-sbt.org).
 
-    :::text
-    $ git clone git@github.com:ilya-klyuchnikov/mrsc.git
-    $ cd mrsc
-    $ sbt publish-local
-
-Then you can build TT Lite project:
-
-    :::text
-    $ git clone git@bitbucket.org:lambdamix/superspec.git
-    $ cd superspec
+    $ git clone git@github.com:ilya-klyuchnikov/ttlite.git
+    $ cd ttlite
     $ sbt
     > test
     > eclipse
@@ -33,7 +25,6 @@ Then you can build TT Lite project:
 Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.
 I use following settings for SBT (file `~/.sbtconfig`):
 
-    :::text
     SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
 
 ### SBT launcher
@@ -60,55 +51,49 @@ There are two sub-projects:
 
 To launch TT REPL, type in sbt console `ttlite-core/run`:
 
-    :::text
     > ttlite-core/run
 
 Load some definitions from examples:
 
-    :::text
     TT> import "examples/nat.hs";
 
 Try some simple computations:
 
-    :::text
     TT> plus Zero Zero;
     Zero
-    ::
+    :
     Nat;
 
     TT> plus Zero (Succ Zero);
     Succ Zero
-    ::
+    :
     Nat;
 
 You can look into definitions by evaluating them:
 
-    :::text
     TT> plus;
-    \ (a :: Nat) -> \ (b :: Nat) ->
-        elim Nat (\ (c :: Nat) -> Nat) b (\ (c :: Nat) -> \ (d :: Nat) -> Succ d) a
-    ::
-    forall (a :: Nat) (b :: Nat) . Nat;
+    \ (a : Nat) -> \ (b : Nat) ->
+        elim Nat (\ (c : Nat) -> Nat) b (\ (c : Nat) -> \ (d : Nat) -> Succ d) a
+    :
+    forall (a : Nat) (b : Nat) . Nat;
 
 You can introduce new definitions directly in REPL:
 
-    :::text
     TT> z = Zero;
     z
-    ::
+    :
     Nat;
 
     TT> z;
     Zero
-    ::
+    :
     Nat;
 
 For definitions you can optionally specify a type (type checker will check it):
 
-    :::text
-    TT> m :: Nat; m = Succ Zero;
+    TT> m : Nat; m = Succ Zero;
     m
-    ::
+    :
     Nat;
 
 (In REPL declaration with definition should fit the single line);
@@ -116,18 +101,17 @@ For definitions you can optionally specify a type (type checker will check it):
 You can _assume_ a variable of a certain type (we will call it _assumed_ variable)
 by specifying its type (a variable should start with `$`);
 
-    :::text
-    TT> $n :: Nat;
+    ::text
+    TT> $n : Nat;
     Nat
 
     TT> plus $n $n;
-    elim Nat (\ (a :: Nat) -> Nat) $n (\ (a :: Nat) -> \ (b :: Nat) -> Succ b) $n
-    ::
+    elim Nat (\ (a : Nat) -> Nat) $n (\ (a : Nat) -> \ (b : Nat) -> Succ b) $n
+    :
     Nat;
 
 Quitting REPL:
 
-    :::text
     TT> quit;
 
 ### Syntax and Semantics of TT
@@ -147,45 +131,41 @@ Tutorial is on the way.
 A program in TT Lite consists of the following statements:
 
 * `id = term;` - definition
-* `id :: term; id = term;` - typed definition;
+* `id : term; id = term;` - typed definition;
 * `import "file";` - loading of definitions from file
-* `$id :: term;` - assumption of a variable of a certain type
+* `$id : term;` - assumption of a variable of a certain type
 * `term;` - just evaluating of a term;
 
 ### TT Supercompiler
 
 To launch TT Supercompiler REPL, type in sbt console `ttlite-sc/run`:
 
-    :::text
     > ttlite-sc/run
 
 Launching examples:
 
-    :::text
     TT-SC> import "examples/proofs/01.hs";
 
 TT Supercompiler REPL introduces a new statement:
 
-    :::text
     (t1, t2) = sc t;
 
 The meaning of the new statement is that `t1` is a result of transformation of the `term` by the supercompiler,
-`t2` is a proof that transformation is correct (i.e. `t2 :: Id a t t1` if `t :: a`).
+`t2` is a proof that transformation is correct (i.e. `t2 : Id a t t1` if `t : a`).
 
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
 Here is an example of proving the equivalence of two expressions with assumed variables (`examples/proofs/01.hs`):
 
-    :::text
     import "examples/nat.hs";
     import "examples/id.hs";
 
     -- proof of the associativity of addition
     -- plus x (plus y z) = plus (plus x y) z
 
-    $x :: Nat;
-    $y :: Nat;
-    $z :: Nat;
+    $x : Nat;
+    $y : Nat;
+    $z : Nat;
 
     e1 = (plus $x (plus $y $z));
     e2 = (plus (plus $x $y) $z);
@@ -194,10 +174,10 @@ Here is an example of proving the equivalence of two expressions with assumed va
 
     -- associativity of addition using combinators
     -- check that t1 and t2 are supercompiled into the same expression
-    eq_res1_res2 :: Id Nat res1 res2;
+    eq_res1_res2 : Id Nat res1 res2;
     eq_res1_res2 = Refl Nat res1;
     -- deriving equality
-    eq_e1_e2 :: Id Nat e1 e2;
+    eq_e1_e2 : Id Nat e1 e2;
     eq_e1_e2 =
         proof_by_sc Nat e1 e2 res1 proof1 proof2;
 
@@ -205,55 +185,54 @@ Here is an example of proving the equivalence of two expressions with assumed va
 
 You can see input and output of supercompilation (as well as a proof):
 
-    :::text
     TT-SC> import "examples/proofs/01.hs";
 
     TT-SC> e2;
     elim
         Nat
-        (\ (a :: Nat) -> Nat)
+        (\ (a : Nat) -> Nat)
         $z
-        (\ (a :: Nat) (b :: Nat) -> Succ b)
-        (elim Nat (\ (a :: Nat) -> Nat) $y (\ (a :: Nat) (b :: Nat) -> Succ b) $x)
-    ::
+        (\ (a : Nat) (b : Nat) -> Succ b)
+        (elim Nat (\ (a : Nat) -> Nat) $y (\ (a : Nat) (b : Nat) -> Succ b) $x)
+    :
     Nat;
 
     TT-SC> res2;
     elim
         Nat
-        (\ (a :: Nat) -> Nat)
-        (elim Nat (\ (a :: Nat) -> Nat) $z (\ (a :: Nat)  (b :: Nat) -> Succ b) $y)
-        (\ (a :: Nat) (b :: Nat) -> Succ b)
+        (\ (a : Nat) -> Nat)
+        (elim Nat (\ (a : Nat) -> Nat) $z (\ (a : Nat)  (b : Nat) -> Succ b) $y)
+        (\ (a : Nat) (b : Nat) -> Succ b)
         $x
-    ::
+    :
     Nat;
 
     TT-SC> proof2;
     elim Nat
-    (\ (a :: Nat) -> Id Nat
-            (elim Nat (\ (b :: Nat) -> Nat) $z
-                (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
-                (elim Nat (\ (b :: Nat) -> Nat) $y
-                    (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+    (\ (a : Nat) -> Id Nat
+            (elim Nat (\ (b : Nat) -> Nat) $z
+                (\ (b : Nat) -> \ (c : Nat) -> Succ c)
+                (elim Nat (\ (b : Nat) -> Nat) $y
+                    (\ (b : Nat) -> \ (c : Nat) -> Succ c)
                     a))
-            (elim Nat (\ (b :: Nat) -> Nat)
-                (elim Nat (\ (b :: Nat) -> Nat) $z
-                    (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+            (elim Nat (\ (b : Nat) -> Nat)
+                (elim Nat (\ (b : Nat) -> Nat) $z
+                    (\ (b : Nat) -> \ (c : Nat) -> Succ c)
                     $y)
-                (\ (b :: Nat) -> \ (c :: Nat) -> Succ c)
+                (\ (b : Nat) -> \ (c : Nat) -> Succ c)
                 a))
     ...
-    ::
+    :
     Id Nat
-    (elim Nat (\ (a :: Nat) -> Nat) $z (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
-        (elim Nat (\ (a :: Nat) -> Nat) $y
-            (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
+    (elim Nat (\ (a : Nat) -> Nat) $z (\ (a : Nat) -> \ (b : Nat) -> Succ b)
+        (elim Nat (\ (a : Nat) -> Nat) $y
+            (\ (a : Nat) -> \ (b : Nat) -> Succ b)
             $x))
-    (elim Nat (\ (a :: Nat) -> Nat)
-        (elim Nat (\ (a :: Nat) -> Nat) $z
-            (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
+    (elim Nat (\ (a : Nat) -> Nat)
+        (elim Nat (\ (a : Nat) -> Nat) $z
+            (\ (a : Nat) -> \ (b : Nat) -> Succ b)
             $y)
-        (\ (a :: Nat) -> \ (b :: Nat) -> Succ b)
+        (\ (a : Nat) -> \ (b : Nat) -> Succ b)
         $x);
 
 The whole proof term is quite long (It is long since TT Lite performs normalization of terms and terms are printed
@@ -262,6 +241,5 @@ in normalized form). An interested person is encouraged to launch the supercompi
 
 In some sense, `sc` is just a function of the following type (type `A` is implicitly resolved from the context):
 
-    :::text
-    sc :: forall (A :: Set) (t :: A) . exists (t1 :: A) . Id A t t1;
+    sc : forall (A : Set) (t : A) . exists (t1 : A) . Id A t t1;
 
