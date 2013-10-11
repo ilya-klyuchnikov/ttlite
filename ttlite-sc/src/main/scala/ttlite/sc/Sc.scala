@@ -85,11 +85,13 @@ trait TTSc extends CoreSubst with CoreCheck {
   }
 
   trait SingleDriving extends BaseRules {
-    override def drive(signal: Signal, g: G): List[S] = {
-      val t = g.current.conf
-      val piStep = singleDrive(t).step(t)
-      piStep.graphStep :: Nil
-    }
+    override def drive(signal: Signal, g: G): List[S] =
+      if (signal.isEmpty) {
+        val t = g.current.conf
+        val piStep = singleDrive(t).step(t)
+        piStep.graphStep :: Nil
+      } else
+        Nil
   }
 
   trait MultiDriving extends BaseRules {
