@@ -26,7 +26,9 @@ object TTLiteBuild extends Build {
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD"),
-      resolvers += "lambdamix-bintray" at "http://dl.bintray.com/lambdamix/maven/"
+      resolvers += "lambdamix-bintray" at "http://dl.bintray.com/lambdamix/maven/",
+      // vargen is not thread-safe
+      parallelExecution in Test := false
     )
   ) dependsOn CoreProject
 
