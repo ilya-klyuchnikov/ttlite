@@ -26,7 +26,7 @@ trait REPL {
   def handleError(msg: String): Unit =
     if (batch) throw new Exception(msg)
 
-  def output(x: Any): Unit =
+  def output(x: => Any): Unit =
     if (!batch) Console.println(s"$x\n")
 
   def iinfer(ctx: Context[V], i: T): Option[V] =
