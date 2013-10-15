@@ -1,9 +1,9 @@
 ## TT Lite [![Build Status](https://travis-ci.org/ilya-klyuchnikov/ttlite.png)](https://travis-ci.org/ilya-klyuchnikov/ttlite)
 
-TT Lite is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
+TT Lite is an interpreter, type-checker and supercompiler for Martin-Löf's Type Theory (TT).
 It is structures into two sub-projects:
 
-* TT Lite Core - lightweight and modular implementation of Martin-Löf Type Theory
+* TT Lite Core - lightweight and modular implementation of Martin-Löf's Type Theory
 (TT Lite was designed with supercompilation in mind)
 * TT Lite Supercompiler - very simple supercompiler for TT Lite.
 
