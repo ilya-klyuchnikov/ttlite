@@ -1,4 +1,4 @@
-import "examples/fin.hs";
+import examples/fin;
 
 -- The general form of these types is that each node is built from a certain collection of predecessors of the same type.
 

@@ -1,5 +1,5 @@
-import "examples/nat.hs";
-import "examples/id.hs";
+import examples/nat;
+import examples/id;
 
 iter =
     \(f : forall (_ : Nat). Nat) (n : Nat) ->

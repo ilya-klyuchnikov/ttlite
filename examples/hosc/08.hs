@@ -1,5 +1,5 @@
-import "examples/id.hs";
-import "examples/hosc/defs.hs";
+import examples/id;
+import examples/hosc/defs;
 
 -- map (fp (P f g)) (zip (P x y)) = zip (fp (P (map f) (map g)) (P x y))
 

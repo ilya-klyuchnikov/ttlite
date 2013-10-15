@@ -1,5 +1,5 @@
-import "examples/id.hs";
-import "examples/hosc/defs.hs";
+import examples/id;
+import examples/hosc/defs;
 
 -- map (comp f g) xs = (comp (map f)(map g)) xs
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYvhcM

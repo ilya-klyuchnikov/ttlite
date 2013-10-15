@@ -1,6 +1,6 @@
-import "examples/product.hs";
-import "examples/nat.hs";
-import "examples/fin.hs";
+import examples/product;
+import examples/nat;
+import examples/fin;
 
 pr1 : forall (A : Set) (B : Set) (_ : Product A B) . Product B A;
 pr1 = (\ (A : Set) (B : Set) (p : Product A B) -> Pair (Product B A) (snd A B p) (fst A B p));
@@ -106,7 +106,7 @@ first =
 
 first Nat (Cons (List Nat) Zero (Nil (List Nat))) Triv;
 
-import "examples/id.hs";
+import examples/id;
 
 apply : forall (A : Set) (B : Set) (eq : Id Set A B) (_ : B) . A;
 apply =

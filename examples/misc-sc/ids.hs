@@ -1,11 +1,11 @@
-import "examples/core.hs";
-import "examples/dproduct.hs";
-import "examples/id.hs";
-import "examples/fin.hs";
-import "examples/list.hs";
-import "examples/nat.hs";
-import "examples/product.hs";
-import "examples/sum.hs";
+import examples/core;
+import examples/dproduct;
+import examples/id;
+import examples/fin;
+import examples/list;
+import examples/nat;
+import examples/product;
+import examples/sum;
 
 $A : Set;
 $B : Set;

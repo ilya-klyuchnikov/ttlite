@@ -1,4 +1,4 @@
-import "examples/rules/arrays.hs";
+import examples/rules/arrays;
 
 -- checking the following rule
 -- case NestedArraySegments(Def(RepArray(l, vs))) =>

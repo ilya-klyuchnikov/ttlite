@@ -1,4 +1,4 @@
-import "examples/id.hs";
+import examples/id;
 
 apply : forall (A : Set) (B : Set) (eq : Id Set A B) (_ : B) . A;
 apply =

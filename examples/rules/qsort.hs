@@ -1,9 +1,9 @@
-import "examples/rules/arrays.hs";
-import "examples/rules/sugar.hs";
-import "examples/rules/lte.hs";
-import "examples/fin.hs";
-import "examples/misc/logic.hs";
-import "examples/product.hs";
+import examples/rules/arrays;
+import examples/rules/sugar;
+import examples/rules/lte;
+import examples/fin;
+import examples/misc/logic;
+import examples/product;
 
 filter : forall (A : Set) (f : forall (_ : A) . Bool) (_ : List A) . List A;
 filter = \ (A : Set) (f : forall (_ : A) . Bool) (xs : List A) ->

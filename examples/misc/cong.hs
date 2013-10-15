@@ -1,7 +1,7 @@
 -- cong2' is a fused version of cong2
 -- cong2' is cited in the preprint
 
-import "examples/id.hs";
+import examples/id;
 
 cong2_type =
     forall

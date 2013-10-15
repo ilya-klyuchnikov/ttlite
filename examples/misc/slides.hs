@@ -1,4 +1,4 @@
-import "examples/id.hs";
+import examples/id;
 
 m : forall (_ : Nat). Set;
 m =

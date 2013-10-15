@@ -70,7 +70,7 @@ tree1 = nodeCon leafCon leafCon;
 
 
 --nrofnodes(x) = wrec(x, (y, z, u)case(y, 1, u(left) + u(right)))
-import "examples/nat.hs";
+import examples/nat;
 
 nofNodes = \ (t : BinTree) ->
     Rec BinTree

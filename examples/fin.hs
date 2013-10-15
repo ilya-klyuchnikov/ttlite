@@ -1,4 +1,4 @@
-import "examples/core.hs";
+import examples/core;
 
 abort =
     \(m : Set) (v : Falsity) -> elim Falsity ( \(_ : Falsity) -> m) v;

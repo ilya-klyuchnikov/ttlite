@@ -1,5 +1,5 @@
-import "examples/id.hs";
-import "examples/product.hs";
+import examples/id;
+import examples/product;
 
 -- shortcuts
 nil = Nil (List Bool);

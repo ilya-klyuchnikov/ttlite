@@ -1,6 +1,6 @@
 -- example from the preprint
 
-import "examples/id.hs";
+import examples/id;
 
 -- proof of the associativity of addition
 -- plus x (plus y z) = plus (plus x y) z

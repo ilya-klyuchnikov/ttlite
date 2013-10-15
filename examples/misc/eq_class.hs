@@ -1,8 +1,8 @@
 -- it was an attempt to make some interesting example with type classes
 
-import "examples/fin.hs";
-import "examples/product.hs";
-import "examples/dproduct.hs";
+import examples/fin;
+import examples/product;
+import examples/dproduct;
 
 eq = \ (A : Set) . forall (x : A) (y : A) . Bool;
 neq = \ (A : Set) . forall (x : A) (y : A) . Bool;

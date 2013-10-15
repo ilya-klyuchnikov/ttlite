@@ -1,6 +1,6 @@
-import "examples/nat.hs";
-import "examples/list.hs";
-import "examples/id.hs";
+import examples/nat;
+import examples/list;
+import examples/id;
 
 -- monomorphic eliminator of an array
 -- = list recursor

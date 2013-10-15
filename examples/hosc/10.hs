@@ -1,5 +1,5 @@
-import "examples/nat.hs";
-import "examples/id.hs";
+import examples/nat;
+import examples/id;
 
 -- proof of the associativity of addition
 -- plus x (plus y z) = plus (plus x y) z

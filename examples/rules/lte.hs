@@ -1,4 +1,4 @@
-import "examples/fin.hs";
+import examples/fin;
 
 lte = \ (x : Nat) ->
     elim Nat

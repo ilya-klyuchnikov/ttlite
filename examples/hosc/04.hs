@@ -1,5 +1,5 @@
-import "examples/id.hs";
-import "examples/hosc/defs.hs";
+import examples/id;
+import examples/hosc/defs;
 
 -- `filter p (map f xs) = map f (filter (compose p f) xs)`
 

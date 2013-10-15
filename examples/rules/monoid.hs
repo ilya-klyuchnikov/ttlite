@@ -1,5 +1,5 @@
-import "examples/rules/arrays.hs";
-import "examples/rules/sugar.hs";
+import examples/rules/arrays;
+import examples/rules/sugar;
 
 -- this is a proof of the following statement for monoid:
 -- in Haskell terms:

@@ -1,5 +1,5 @@
-import "examples/nat.hs";
-import "examples/id.hs";
+import examples/nat;
+import examples/id;
 
 -- unchurch (churchPlus (church x) (church y)) = nat_id (plus x y)
 

@@ -1,4 +1,4 @@
-import "examples/fin.hs";
+import examples/fin;
 
 -- generate a vector of given length from a specified element (replicate)
 replicate : forall (n : Nat) . forall (a : Set) (_ : a) . Vec a n;

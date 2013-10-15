@@ -1,4 +1,4 @@
-import "examples/id.hs";
+import examples/id;
 
 if = \(T: Set) (b: Bool) (t: T) (f: T) ->
   elim Bool (\(_: Bool) -> T) f t b;

@@ -46,7 +46,7 @@ class TTLiteSCExamples extends org.scalatest.FunSpec {
       TTScREPL.main(Array("examples/hosc/11.hs"))
     }
     it ("12. unchurch (churchPlus (church x) (church y)) = nat_id (plus x y)") {
-      TTScREPL.main(Array("examples/hosc/12.church_plus.hs"))
+      TTScREPL.main(Array("examples/hosc/12.hs"))
     }
   }
 

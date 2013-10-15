@@ -49,7 +49,7 @@ class MetaLexical extends lexical.StdLexical {
     '-' ~ '}'  ^^ { case _ => ' '  }
       | chrExcept(EofCh) ~ comment
     )
-  override def identChar = letter | elem('_') | elem('$') | elem('\'') | elem('\\')
+  override def identChar = letter | elem('_') | elem('$') | elem('/') | elem('\'') | elem('\\')
 }
 
 trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
@@ -95,9 +95,9 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
     (assumed ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y(Nil))}
   lazy val importStmt: PackratParser[Stmt[MTerm]] =
-    "import" ~> stringLit <~ ";" ^^ Import
+    "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
-    "reload" ~> stringLit <~ ";" ^^ Reload
+    "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
     term <~ ";" ^^ {t => Eval(t(Nil))}
   lazy val quitStmt: PackratParser[Stmt[MTerm]] =

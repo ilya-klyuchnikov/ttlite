@@ -1,5 +1,5 @@
-import "examples/hosc/defs.hs";
-import "examples/id.hs";
+import examples/hosc/defs;
+import examples/id;
 
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuRcM
 -- Associativity of list concatenation

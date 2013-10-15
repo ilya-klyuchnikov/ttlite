@@ -1,5 +1,5 @@
-import "examples/id.hs";
-import "examples/hosc/defs.hs";
+import examples/id;
+import examples/hosc/defs;
 
 $A : Set;
 $r : List $A;
