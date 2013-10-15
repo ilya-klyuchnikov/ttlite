@@ -11,9 +11,6 @@ predOrRefl =
   \(n : Nat).
       elim Nat m (Refl Nat Zero) (\(n1 : Nat)(_ : m n1). n1) n;
 
-
-
-
 plus : forall (x : Nat) (y : Nat). Nat;
 plus =
     \ (x : Nat) (y : Nat) ->

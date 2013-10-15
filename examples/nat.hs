@@ -28,7 +28,6 @@ natFold =
              (\ (n1 : Nat) (rec : m) -> ms rec )
              n;
 
-
 nat_id =
     \ (n : Nat) ->
         elim Nat

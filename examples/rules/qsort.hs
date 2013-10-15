@@ -2,7 +2,7 @@ import "examples/rules/arrays.hs";
 import "examples/rules/sugar.hs";
 import "examples/rules/lte.hs";
 import "examples/fin.hs";
-import "examples/logic.hs";
+import "examples/misc/logic.hs";
 import "examples/product.hs";
 
 filter : forall (A : Set) (f : forall (_ : A) . Bool) (_ : List A) . List A;

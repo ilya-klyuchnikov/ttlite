@@ -1,4 +1,6 @@
-if = \(T: Set) (b: Bool) (t: T) (f: T) -> 
+import "examples/id.hs";
+
+if = \(T: Set) (b: Bool) (t: T) (f: T) ->
   elim Bool (\(_: Bool) -> T) f t b;
 
 {- 
@@ -31,6 +33,8 @@ isSublist_aux2 = \ (T: Set) (T_eq: forall (_: T) (_: T). Bool) (pp: List T) (ss:
 isSublist = \(T: Set) (T_eq: forall (_: T) (_: T). Bool) (p: List T) (s: List T) -> 
   isSublist_aux2 T T_eq p s p s;
               
+listT = Cons (List Bool) True (Nil (List Bool));
+listTT = Cons (List Bool) True (Cons (List Bool) True (Nil (List Bool)));
 listTTF = Cons (List Bool) True (Cons (List Bool) True (Cons (List Bool) False (Nil (List Bool))));
 
 listTTTF = Cons (List Bool) True listTTF;
@@ -43,6 +47,6 @@ isSublist_test1 = Refl Bool True;
 
 $l: List Bool;
 
-in1 = isSublist Bool eqBool listTTF $l;
-(out1, proof1) = sc (isSublist Bool eqBool listTTF $l);
+in1 = isSublist Bool eqBool listTT $l;
+(out1, proof1) = sc in1;
    

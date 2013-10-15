@@ -72,16 +72,24 @@ The definitions given in the paper are:
                       		
 The following equivalences are proved in the paper:
 
-1. `compose (map f) unit x = compose unit f x`
-2. `compose (map f) join xs = compose join (map (map f)) xs`
-3. `append (map f xs) (map f ys) = map f (append xs ys)`
-4. `filter p (map f xs) = map f (filter (compose p f) xs)`
-5. `map (compose f g) xs = (compose (map f)(map g)) xs`
-6. `rep (append xs ys) zs = (compose (rep xs) (rep ys)) zs`
-7. `(compose abs rep) xs = idList xs`
-8. `map (fp (P f g)) (zip (P x y)) = zip (fp (P (map f) (map g)) (P x y))`
-9. `append r (Cons p ps) = case (append r (Cons p Nil)) of {Nil -> ps; Cons v vs -> Cons v (append vs ps)}`
+* 01.hs `compose (map f) unit x = compose unit f x`
+* 02.hs `compose (map f) join xs = compose join (map (map f)) xs`
+* 03.hs `append (map f xs) (map f ys) = map f (append xs ys)`
+* 04.hs `filter p (map f xs) = map f (filter (compose p f) xs)`
+* 05.hs `map (compose f g) xs = (compose (map f)(map g)) xs`
+* 06.hs `rep (append xs ys) zs = (compose (rep xs) (rep ys)) zs`
+* 07.hs `(compose abs rep) xs = idList xs`
+* 08.hs `map (fp (P f g)) (zip (P x y)) = zip (fp (P (map f) (map g)) (P x y))`
+* 09.hs `append r (Cons p ps) = case (append r (Cons p Nil)) of {Nil -> ps; Cons v vs -> Cons v (append vs ps)}`
 
 TT Lite is able to prove all of them except 4 and 8. 4 is not proved since it requires generalization:
 during supercompilation the term `case (p x) of ...` is encountered, and HOSC extracts in this case `p x`.
 8 requires more folding on renaming and corresponding code generator.
+
+There are other interestin proved equivalences:
+
+* 10.hs `plus x (plus y z) = plus (plus x y) z`
+* 11.hs `append x (append y z) = append (append x y) z`
+* 12.hs `unchurch (churchPlus (church x) (church y)) = nat_id (plus x y)`
+
+

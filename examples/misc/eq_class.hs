@@ -1,3 +1,5 @@
+-- it was an attempt to make some interesting example with type classes
+
 import "examples/fin.hs";
 import "examples/product.hs";
 import "examples/dproduct.hs";

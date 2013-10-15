@@ -9,11 +9,12 @@ object TTLiteBuild extends Build {
     settings = Project.defaultSettings ++ Seq(
       organization := "ttlite",
       name := "core",
-      version := "0.1",
+      version := "0.5-SNAPSHOT",
       libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),
-      testOptions in Test += Tests.Argument("-oD")
+      testOptions in Test += Tests.Argument("-oD"),
+      parallelExecution in Test := false
     )
   )
 
@@ -21,7 +22,7 @@ object TTLiteBuild extends Build {
     settings = Project.defaultSettings ++ Seq(
       organization := "ttlite",
       name := "sc",
-      version := "0.1",
+      version := "0.5-SNAPSHOT",
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
       libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
       baseDirectory in run := file("."),

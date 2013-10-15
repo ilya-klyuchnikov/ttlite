@@ -1,4 +1,4 @@
-import "examples/list.hs";
+import "examples/hosc/defs.hs";
 import "examples/id.hs";
 
 -- http://hosc.appspot.com/test?key=agRob3NjcjELEgZBdXRob3IiGmlseWEua2x5dWNobmlrb3ZAZ21haWwuY29tDAsSBFRlc3QYuRcM
