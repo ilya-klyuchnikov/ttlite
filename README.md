@@ -116,13 +116,14 @@ Quitting REPL:
 
 ### Syntax and Semantics of TT
 
-Technical details of the implementation are described in the preprint "A supercompiler for type-theory".
+Technical details of the implementation are described in the preprint
+[TT Lite: a supercompiler for Martin-Löf's type theory](http://pat.keldysh.ru/~ilya/ttlite.pdf).
 However, the preprint just translates code of the current implementation into mathematical notation.
 
 The proposed solution for understanding this project is:
 
 * Sketch the preprint for grasping syntax and semantics (without details).
-* Look into examples of how functions are defined (dir `examples`)
+* Look into examples of how functions are defined (dir [`examples`](examples/))
 * Sketch some modules (`Function.scala`, `Nat.scala`, `DProduct.scala`)
 for getting an idea how syntax and semantics are implemented.
 
