@@ -1,4 +1,4 @@
-## TT Lite - SuperCompiler for Martin-Löf Type Theory
+## TT Lite [![Build Status](https://travis-ci.org/ilya-klyuchnikov/ttlite.png)](https://travis-ci.org/ilya-klyuchnikov/ttlite)
 
 TT Lite is an interpreter, type-checker and supercompiler for Martin-Löf Type Theory (TT).
 It is structures into two sub-projects:
@@ -18,8 +18,6 @@ TT Lite is built using SBT. You need to install SBT first from [here](http://www
     $ cd ttlite
     $ sbt
     > test
-    > eclipse
-    > gen-idea
 
 ### SBT settings
 Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.
@@ -47,9 +45,9 @@ There are two sub-projects:
 * `ttlite-core` - TT Lite Core
 * `ttlite-sc` - a simple supercompiler for TT Lite Core (as an extension of REPL).
 
-### TT Lite (REPL)
+### TTLite Core
 
-To launch TT REPL, type in sbt console `ttlite-core/run`:
+To launch TT Core REPL, type in sbt console `ttlite-core/run`:
 
     > ttlite-core/run
 
@@ -101,7 +99,6 @@ For definitions you can optionally specify a type (type checker will check it):
 You can _assume_ a variable of a certain type (we will call it _assumed_ variable)
 by specifying its type (a variable should start with `$`);
 
-    ::text
     TT> $n : Nat;
     Nat
 
@@ -137,15 +134,15 @@ A program in TT Lite consists of the following statements:
 * `$id : term;` - assumption of a variable of a certain type
 * `term;` - just evaluating of a term;
 
-### TT Supercompiler
+### TT Lite Supercompiler
 
-To launch TT Supercompiler REPL, type in sbt console `ttlite-sc/run`:
+To launch TT Lite Supercompiler REPL, type in sbt console `ttlite-sc/run`:
 
     > ttlite-sc/run
 
 Launching examples:
 
-    TT-SC> import "examples/proofs/01.hs";
+    TT-SC> import "examples/hosc/10.hs";
 
 TT Supercompiler REPL introduces a new statement:
 
@@ -156,7 +153,7 @@ The meaning of the new statement is that `t1` is a result of transformation of t
 
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
-Here is an example of proving the equivalence of two expressions with assumed variables (`examples/proofs/01.hs`):
+Here is an example of proving the equivalence of two expressions with assumed variables (`examples/hosc/10.hs`):
 
     import "examples/nat.hs";
     import "examples/id.hs";
@@ -179,14 +176,13 @@ Here is an example of proving the equivalence of two expressions with assumed va
     eq_res1_res2 = Refl Nat res1;
     -- deriving equality
     eq_e1_e2 : Id Nat e1 e2;
-    eq_e1_e2 =
-        proof_by_sc Nat e1 e2 res1 proof1 proof2;
+    eq_e1_e2 = proof_by_sc Nat e1 e2 res1 proof1 proof2;
 
 `proof_by_sc` is a helper function defined in `examples/id.hs`. In this example correctness is checked by type-checker!
 
 You can see input and output of supercompilation (as well as a proof):
 
-    TT-SC> import "examples/proofs/01.hs";
+    TT-SC> import "examples/hosc/10.hs";
 
     TT-SC> e2;
     elim
@@ -238,9 +234,4 @@ You can see input and output of supercompilation (as well as a proof):
 
 The whole proof term is quite long (It is long since TT Lite performs normalization of terms and terms are printed
 in normalized form). An interested person is encouraged to launch the supercompiler to see it.
-
-
-In some sense, `sc` is just a function of the following type (type `A` is implicitly resolved from the context):
-
-    sc : forall (A : Set) (t : A) . exists (t1 : A) . Id A t t1;
 
