@@ -172,7 +172,9 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
           // start configuration is a normalized one!
           // it is a self contained!
           val conf = Conf(iquote(ieval(state, inputTerm)), state)
-          val sGraph = GraphGenerator(SingleRules, conf).toList.head
+          val sGraphs = GraphGenerator(SingleRules, conf).toList
+          assert(sGraphs.size == 1)
+          val sGraph = sGraphs.head
           val tGraph = Transformations.transpose(sGraph)
 
           //output(tgToString(tGraph))
@@ -303,11 +305,11 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
     (1 to i).foldLeft(VZero: Value){(v: Value, _: Int) => VSucc(v)}
 
   object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
-    val maxDepth = 10
+    val maxDepth = 4
   }
 
   object MultiRules extends BaseRules with MultiDriving with Folding with Termination with NoRebuildings {
-    val maxDepth = 20
+    val maxDepth = 5
   }
 }
 
