@@ -235,3 +235,21 @@ You can see input and output of supercompilation (as well as a proof):
 The whole proof term is quite long (It is long since TT Lite performs normalization of terms and terms are printed
 in normalized form). An interested person is encouraged to launch the supercompiler to see it.
 
+### Interactive development
+
+There is no editor or IDE plugin for TT Lite yet. So the only possibility of speedup development is to make
+change in a file and reload this file in REPL. For this purpose there is a special statement:
+
+    reload file;
+
+Examples:
+
+    reload example.id;
+
+For now, this statemenent reloads a specified file, but **do not** reload its dependencies.
+
+### Why `*.hs` ?
+
+If you look into examples, you will notice that all of TT Lite examples are in files with extension `.hs`.
+There is a very simple reason for this: syntax of TT Lite is quite close to Haskell and GitHub performs makes quite
+good syntax coloring fot TT Lite files if they have extension `.hs`. That's it :)
