@@ -51,6 +51,7 @@ trait CoreMetaSyntax extends CoreAST {
       Free(n)
     case MAnn(t1, t2) =>
       Ann(fromM(t1), fromM(t2))
+    case _ => throw TranslationError(m, s"cannot translate `${m.origin}`")
   }
 }
 
@@ -190,35 +191,25 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
 
   val prompt: String = "TT"
 
-  override def itype(ctx: Context[V], i: T): Result[V] =
-    try {
-      Right(iType0(ctx, i))
-    } catch {
-      case e: Throwable =>
-        e.printStackTrace()
-        Left(e.getMessage)
-    }
+  override def itype(ctx: Context[V], i: T): V =
+    iType0(ctx, i)
   override def iquote(v: V): Term =
     quote0(v)
   override def ieval(ctx: Context[V], i: T): V =
     eval(i, ctx, List())
   def typeInfo(t: V): V =
     t
-  override def icprint(c: T): String =
+  override def tPrint(c: T): String =
     pretty(print(0, 0, c))
-  override def itprint(t: V): String =
-    pretty(print(0, 0, quote0(t)))
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
-    itype(state, t) match {
-      case Right(VUniverse(k)) =>
+    val tp = itype(state, t)
+    tp match {
+      case VUniverse(k) =>
         val v = ieval(state, Ann(t, Universe(k)))
-        output(icprint(iquote(v)))
+        output(tPrint(iquote(v)))
         state.copy(types = state.types + (s2name(x) -> v))
-      case Right(_) =>
+      case _ =>
         handleError("not a type")
-        state
-      case Left(_) =>
-        handleError("type error")
         state
     }
   }
