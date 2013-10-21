@@ -1,8 +1,9 @@
 package ttlite.core.test
 
 import ttlite.core._
+import org.scalatest.matchers.MustMatchers
 
-class TTLiteSpec extends org.scalatest.FunSpec {
+class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
   describe("Meta Parser") {
     it("should parse global variable") {
       assert(MetaParser.parseMTerm("x") === MVar(Global("x")))
@@ -28,6 +29,24 @@ class TTLiteSpec extends org.scalatest.FunSpec {
         MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
       assert(MetaParser.parseMTerm("forall (x : a) . exists (y : x) . f x") ===
         MBind("forall", MVar(Global("a")), MBind("exists",MVar(Quote(0)), MVar(Global("f")) ~ MVar(Quote(1)))))
+    }
+  }
+
+  describe("Error handling") {
+    it("should report correct file where translation error happened") {
+      val thrown1 = evaluating { TTREPL.main(Array("examples/test/01.hs")) } must produce [TranslationError]
+      thrown1.file must equal ("examples/test/01.hs")
+
+      val thrown2 = evaluating { TTREPL.main(Array("examples/test/02.hs")) } must produce [TranslationError]
+      thrown2.file must equal ("examples/test/01.hs")
+    }
+
+    it("should report correct file where type error happened") {
+      val thrown1 = evaluating { TTREPL.main(Array("examples/test/03.hs")) } must produce [TypeError]
+      thrown1.file must equal ("examples/test/03.hs")
+
+      val thrown2 = evaluating { TTREPL.main(Array("examples/test/04.hs")) } must produce [TTLiteError]
+      thrown2.file must equal ("examples/test/03.hs")
     }
   }
 

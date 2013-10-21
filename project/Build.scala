@@ -11,7 +11,7 @@ object TTLiteBuild extends Build {
       name := "core",
       version := "0.5-SNAPSHOT",
       libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1",
-      libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
+      libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.2" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD"),
       parallelExecution in Test := false
@@ -24,7 +24,7 @@ object TTLiteBuild extends Build {
       name := "sc",
       version := "0.5-SNAPSHOT",
       libraryDependencies += "mrsc" %% "mrsc" % "0.5",
-      libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.1" % "test",
+      libraryDependencies += "org.scalatest" %% "scalatest" % "1.9.2" % "test",
       baseDirectory in run := file("."),
       testOptions in Test += Tests.Argument("-oD"),
       resolvers += "lambdamix-bintray" at "http://dl.bintray.com/lambdamix/maven/",

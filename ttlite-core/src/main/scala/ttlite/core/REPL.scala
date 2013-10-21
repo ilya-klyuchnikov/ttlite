@@ -6,6 +6,7 @@ trait REPL {
   type T // term
   type V // value (normalized term)
 
+  // if batch, we do not output info into console.
   private var batch: Boolean = false
   val prompt: String
   def itype(ctx: Context[V], i: T): V
@@ -13,18 +14,15 @@ trait REPL {
   def ieval(ctx: Context[V], i: T): V
   // pretty printing of terms
   def tPrint(c: T): String
-  
-  def vPrint(v: V): String =
-    tPrint(iquote(v))
   def assume(s: Context[V], n: String, t: T): Context[V]
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
-
   def fromM(m: MTerm): T
 
   val parser: MetaParser = MetaParser
   val name: String
   // TO OVERRIDE ENDS
 
+  def vPrint(v: V): String = tPrint(iquote(v))
   private var modules: Set[String] = _
 
   def handleError(msg: String): Unit =
@@ -37,38 +35,27 @@ trait REPL {
     itype(ctx, i)
 
   def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =
-    try {
-      stmt match {
-        case Quit =>
-          sys.exit()
-        case Assume(n, i) =>
-          assume(state, n, fromM(i))
-        case Let(x, e) =>
-          val e1 = fromM(e)
-          handleLet(state, x, e1)
-        case TypedLet(x, e, tp) =>
-          val e1 = fromM(e)
-          val tp1 = fromM(tp)
-          handleTypedLet(state, x, e1, tp1)
-        case Eval(e) =>
-          val e1 = fromM(e)
-          handleLet(state, "it", e1)
-        case Import(f) =>
-          loadModule(f, state, reload = false)
-        case Reload(f) =>
-          loadModule(f, state, reload = true)
-      }
-    } catch {
-      case TranslationError(mt, msg) =>
-        output(mt.startPos)
-        output(msg)
-        state
-      case e : Throwable =>
-        output(e.getMessage)
-        state
+    stmt match {
+      case Quit =>
+        sys.exit()
+      case Assume(n, i) =>
+        assume(state, n, fromM(i))
+      case Let(x, e) =>
+        val e1 = fromM(e)
+        handleLet(state, x, e1)
+      case TypedLet(x, e, tp) =>
+        val e1 = fromM(e)
+        val tp1 = fromM(tp)
+        handleTypedLet(state, x, e1, tp1)
+      case Eval(e) =>
+        val e1 = fromM(e)
+        handleLet(state, "it", e1)
+      case Import(f) =>
+        loadModule(f, state, reload = false)
+      case Reload(f) =>
+        loadModule(f, state, reload = true)
     }
 
-  // TODO: remove error handling from here
   def handleLet(state: Context[V], s: String, it: T): Context[V] = {
     val tp = iinfer(state, it)
     val v = ieval(state, it)
@@ -97,10 +84,8 @@ trait REPL {
             state
         }
       } catch {
-        case io: java.io.IOException =>
-          Console.println(s"Error: ${io.getMessage}")
-          handleError("cannot open file")
-          state
+        case ttError : TTLiteError =>
+          throw ttError.setFile(f)
       }
 
   def loop(state: Context[V]) {
@@ -130,7 +115,6 @@ trait REPL {
         }
     }
   }
-
 }
 
 object TTREPL

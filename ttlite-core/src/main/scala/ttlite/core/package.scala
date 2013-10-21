@@ -33,19 +33,13 @@ trait RichPositional {
 }
 
 // NAMES
-sealed trait Name
-case class Global(n: String) extends Name {
-  override def toString = n
+sealed class Name (s : String) {
+  override def toString = s
 }
-case class Assumed(n: String) extends Name {
-  override def toString = n
-}
-case class Local(i: Int) extends Name {
-  override def toString = s"<$i>"
-}
-case class Quote(i: Int) extends Name {
-  override def toString = s"[$i]"
-}
+case class Global(n: String) extends Name(n)
+case class Assumed(n: String) extends Name(n)
+case class Local(i: Int) extends Name(s"<$i>")
+case class Quote(i: Int) extends Name(s"[$i]")
 // META-SYNTAX
 sealed trait MTerm extends RichPositional {
   def ~(t1: MTerm) = @@(this, t1)
@@ -87,7 +81,6 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload")
   lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
   type C = List[String]
-
   case class Res(private val f : C => MTerm) extends RichPositional {
     def p(c : C = Nil): MTerm = f(c).setPs(startPos, endPos)
   }
@@ -113,20 +106,13 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
       mkBind(args, ctx)
     } })
   lazy val untyped: PackratParser[Res] = bind | app
-  //lazy val optTyped: PackratParser[Res] =
-  //  untyped ~ (":" ~> untyped) ^^ {case e ~ t => ctx: C => MAnn(e(ctx), t(ctx))} | untyped
   val arg: PackratParser[P] =
     p("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => P(i, x)})
-
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-
   def stmts = List(quitStmt, assumeStmt, letStmt1, letStmt, importStmt, reloadStmt, evalStmt)
-
-  def p[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in =>
-    p(in) match {
-      case Success(t, in1) => Success(t.setPs(in.pos, in1.pos), in1) case n => n
-    }
-  }
+  def p[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in => p(in) match {
+    case Success(t, in1) => Success(t.setPs(in.pos, in1.pos), in1) case n => n
+  }}
 
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
     ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y.p(Nil))}
@@ -165,15 +151,23 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
 object MetaParser extends MetaParser
 
-class TTLiteError(msg: String) extends Exception(msg)
+class TTLiteError(msg: String) extends Exception(msg) {
+  var file : String = "_$_"
+  def setFile(f : String) : this.type = {
+    if (file == "_$_")
+      file = f
+    this
+  }
+}
 case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg)
 case class TypeError(msg: String) extends TTLiteError(msg)
 
 object `package` {
-  implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
+  //implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
   type NameEnv[V] = Map[Name, V]
   // todo: helper methods: bindVal, bindType
   case class Context[V](vals: NameEnv[V], types: NameEnv[V])
+
   def emptyEnv[V] = Map[Name, V]()
   def emptyContext[V] = Context(emptyEnv[V], emptyEnv[V])
   val ids = "abcdefghijklmnopqrstuvwxyz"
