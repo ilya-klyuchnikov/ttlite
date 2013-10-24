@@ -1,1 +1,4 @@
-t = (\ (x : Nat) -> x) Set;
+x : Nat;
+x = Set;
+
+t = (\ (x : Nat) -> x) True;

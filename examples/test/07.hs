@@ -1,0 +1,1 @@
+k = elim Nat;

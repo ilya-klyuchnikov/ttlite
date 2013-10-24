@@ -45,13 +45,16 @@ trait CoreMetaSyntax extends CoreAST {
       Universe(1)
     case MVar(Global("Set2")) =>
       Universe(2)
+    case MVar(Global("elim")) =>
+      throw TranslationError(m, s"incorrect eliminator")
     case MVar(Quote(i)) =>
       Bound(i)
     case MVar(n) =>
       Free(n)
     case MAnn(t1, t2) =>
       Ann(fromM(t1), fromM(t2))
-    case _ => throw TranslationError(m, s"cannot translate `${m.origin}`")
+    case _ =>
+      throw TranslationError(m, s"incorrect syntax `${m.origin}`")
   }
 }
 
@@ -154,6 +157,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
+    // TODO: remove ann
     case Ann(e, tp) =>
       val tpVal = eval(tp, ctx, Nil)
 
@@ -164,12 +168,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       checkEqual(i, eType, tpVal)
 
       tpVal
-    case Free(Global("elim")) =>
-      sys.error("incorrect eliminator (missing arg(s) or wrong type of data being eliminated)")
     case Free(x) =>
       ctx.types.get(x) match {
         case Some(ty) => ty
-        case None => sys.error(s"unknown id: $x")
+        case None => throw TypeError(s"unknown id: $x")
       }
   }
 
@@ -209,7 +211,8 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
         output(tPrint(iquote(v)))
         state.copy(types = state.types + (s2name(x) -> v))
       case _ =>
-        handleError("not a type")
+        // TODO
+        //handleError("not a type")
         state
     }
   }

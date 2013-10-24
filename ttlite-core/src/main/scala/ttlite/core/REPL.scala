@@ -25,8 +25,22 @@ trait REPL {
   def vPrint(v: V): String = tPrint(iquote(v))
   private var modules: Set[String] = _
 
-  def handleError(msg: String): Unit =
-    if (batch) throw new Exception(msg)
+  def handleError(tte: TTLiteError): Unit = {
+    import Console._
+    //Console.println(RED + BOLD + "ERROR in " + tte.file + RESET)
+    Console.println(s"\n${RED}${BOLD}Error in ${tte.location}$RESET")
+    Console.println(tte.getMessage)
+    Console.println()
+    Console.println(tte.details)
+
+    //tte.printStackTrace()
+  }
+
+  def handleGeneralError(t : Throwable): Unit = {
+    Console.println(Console.RED + Console.BOLD + "ERROR" + Console.RESET)
+    Console.println(t.getMessage)
+  }
+
 
   def output(x: => Any): Unit =
     if (!batch) Console.println(s"$x")
@@ -37,7 +51,7 @@ trait REPL {
   def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =
     stmt match {
       case Quit =>
-        sys.exit()
+        throw TTLiteExit
       case Assume(n, i) =>
         assume(state, n, fromM(i))
       case Let(x, e) =>
@@ -73,30 +87,53 @@ trait REPL {
     else
       try {
         val input = scala.io.Source.fromFile(f).mkString
-        val parsed = parser.parseIO(parser.stmt+, input)
-        parsed match {
-          case Some(stmts) =>
-            val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
-            modules = modules + f
-            s1
-          case None =>
-            handleError("cannot parse")
-            state
-        }
+        val stmts = parser.parseIO(parser.stmt+, input)
+        val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
+        modules = modules + f
+        s1
       } catch {
-        case ttError : TTLiteError =>
-          throw ttError.setFile(f)
+        case ttError : TTLiteError => throw ttError.setFile(f)
       }
 
-  def loop(state: Context[V]) {
-    import org.kiama.util.JLineConsole
-    val in = JLineConsole.readLine(s"$name> ")
-    parser.parseIO(parser.stmt, in) match {
-      case Some(stm) =>
-        val state1 = handleStmt(state, stm)
-        loop(state1)
-      case None =>
-        loop(state)
+  def loop(state : Context[V], console : org.kiama.util.Console) : Unit = {
+    val st1 = try {
+      step(state, console)
+    } catch {
+      case TTLiteExit =>
+        sys.exit()
+      case t : TTLiteError =>
+        handleError(t)
+        state
+      case t : Throwable =>
+        handleGeneralError(t)
+        state
+    }
+    loop(st1, console)
+  }
+
+  private def loadModuleI(f: String, state: Context[V]): Context[V] = {
+    try {
+      loadModule(f, state, reload = false)
+    } catch {
+      case TTLiteExit =>
+        sys.exit()
+      case t : TTLiteError =>
+        handleError(t)
+        state
+      case t : Throwable =>
+        handleGeneralError(t)
+        state
+    }
+  }
+
+  def step(state: Context[V], console : org.kiama.util.Console): Context[V] = {
+    //import org.kiama.util.JLineConsole
+    val in = console.readLine(s"${Console.BOLD}$name> ${Console.RESET}")
+    try {
+      val stm = parser.parseIO(parser.stmt, in)
+      handleStmt(state, stm)
+    } catch {
+      case ttError : TTLiteError => throw ttError.setFile("repl input")
     }
   }
 
@@ -105,9 +142,12 @@ trait REPL {
     modules = Set()
     args match {
       case Array() =>
-        loop(state)
+        loop(state, org.kiama.util.JLineConsole)
       case Array("-i", f) =>
-        state = loadModule(f, state, reload = false)
+        state = loadModuleI(f, state)
+        loop(state, org.kiama.util.JLineConsole)
+      case Array("-t", f) =>
+        state = loadModuleI(f, state)
       case _ =>
         batch = true
         args.foreach { f =>

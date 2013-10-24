@@ -30,6 +30,18 @@ trait RichPositional {
     source.subSequence(
       index(startPos.line -1) + startPos.column - 1,
       index(endPos.line - 1) + endPos.column - 1).toString
+
+  def originPrefix: String =
+    source.subSequence(
+      index(startPos.line -1),
+      index(startPos.line -1) + startPos.column - 1
+    ).toString
+
+  def originSuffix: String =
+    source.subSequence(
+      index(endPos.line - 1) + endPos.column - 1,
+      index(endPos.line)
+    ).toString
 }
 
 // NAMES
@@ -139,30 +151,57 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   def global: PackratParser[String] =
     ident ^? {case s: String if !s.startsWith("$") => s}
   def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
-  def parseIO[A](p: Parser[A], in: String): Option[A] = phrase(p)(new lexical.Scanner(in)) match {
+  def parseIO[A](p: Parser[A], in: String): A = phrase(p)(new lexical.Scanner(in)) match {
     case t if t.successful =>
-      Some(t.get)
-    case t              =>
-      Console.println(s"cannot parse: $t")
-      None
+      t.get
+    case f@Failure(msg, next) =>
+      throw ParsingError(msg, next.pos.line, next.pos.column, next.pos.longString)
+    case Error(msg, next) =>
+      throw ParsingError(msg, next.pos.line, next.pos.column, next.pos.longString)
   }
-  def parseMTerm(in: String) = parseIO(term, in).map(_.p(Nil)).get
+
+  def parseMTerm(in: String) = parseIO(term, in).p(Nil)
 }
 
 object MetaParser extends MetaParser
 
-class TTLiteError(msg: String) extends Exception(msg) {
+class TTLiteError(msg: String, line : Int, column : Int) extends Exception(msg) {
   var file : String = "_$_"
   def setFile(f : String) : this.type = {
     if (file == "_$_")
       file = f
     this
   }
+  //override def getMessage(): String = "XXX"
+  def details: String = ""
+  def location: String = s"$file[$line:$column]"
 }
-case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg)
-case class TypeError(msg: String) extends TTLiteError(msg)
+object TTLiteExit extends TTLiteError("EXIT", 0, 0)
+case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError(msg, line, column) {
+  override def details: String = longString.replace("\n\n", "\n")
+}
+case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg, mt.startPos.line, mt.startPos.column) {
+  override def details: String =
+    mt.originPrefix + Console.RED + Console.BOLD + mt.origin + Console.RESET + mt.originSuffix
+}
+case class TypeError(msg : String) extends TTLiteError(msg,0, 0)
+//case class RawTypingError(msg: String) extends TTLiteError(msg, 0, 0)
 
 object `package` {
+  sealed trait PathElem
+  object L extends PathElem
+  object R extends PathElem
+  type Path = List[PathElem]
+  def p(i : Int, n : Int) : Path = (i, n) match {
+    case (1, 2) => List(L)
+    case (2, 2) => List(R)
+    case (i, n) if i == n => List(R)
+    case (i, n) => L :: p(i, n - 1)
+  }
+  implicit class PathWrapper(path : Path) {
+    def /(i: Int, n: Int) = path ++ p(i, n)
+  }
+
   //implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
   type NameEnv[V] = Map[Name, V]
   // todo: helper methods: bindVal, bindType
