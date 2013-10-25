@@ -1,5 +1,7 @@
 package ttlite.core
 
+import org.fusesource.jansi.AnsiConsole
+
 trait REPL {
 
   // TO OVERRIDE STARTS
@@ -26,9 +28,7 @@ trait REPL {
   private var modules: Set[String] = _
 
   def handleError(tte: TTLiteError): Unit = {
-    import Console._
-    //Console.println(RED + BOLD + "ERROR in " + tte.file + RESET)
-    Console.println(s"\n${RED}${BOLD}Error in ${tte.location}$RESET")
+    Console.println(ansi(s"@|bold,red Error in ${tte.location}|@"))
     Console.println(tte.getMessage)
     Console.println()
     Console.println(tte.details)
@@ -37,7 +37,7 @@ trait REPL {
   }
 
   def handleGeneralError(t : Throwable): Unit = {
-    Console.println(Console.RED + Console.BOLD + "ERROR" + Console.RESET)
+    Console.println(ansi(s"@|bold,red Error:|@"))
     Console.println(t.getMessage)
   }
 
@@ -52,18 +52,34 @@ trait REPL {
     stmt match {
       case Quit =>
         throw TTLiteExit
-      case Assume(n, i) =>
-        assume(state, n, fromM(i))
-      case Let(x, e) =>
-        val e1 = fromM(e)
-        handleLet(state, x, e1)
-      case TypedLet(x, e, tp) =>
-        val e1 = fromM(e)
-        val tp1 = fromM(tp)
-        handleTypedLet(state, x, e1, tp1)
-      case Eval(e) =>
-        val e1 = fromM(e)
-        handleLet(state, "it", e1)
+      case Assume(n, mt) =>
+        try {
+          assume(state, n, fromM(mt))
+        } catch {
+          case t : TypeError => throw t.setMTerm(mt)
+        }
+      case Let(x, mt) =>
+        val e = fromM(mt)
+        try {
+          handleLet(state, x, e)
+        } catch {
+          case t : TypeError => throw t.setMTerm(mt)
+        }
+      case TypedLet(x, mt1, mt2) =>
+        val e = fromM(mt1)
+        val tp = fromM(mt2)
+        try {
+          handleTypedLet(state, x, e, tp)
+        } catch {
+          case t : TypeError => throw t.setMTerm(MAnn(mt1, mt2))
+        }
+      case Eval(mt) =>
+        val e = fromM(mt)
+        try {
+          handleLet(state, "it", e)
+        } catch {
+          case t : TypeError => throw t.setMTerm(mt)
+        }
       case Import(f) =>
         loadModule(f, state, reload = false)
       case Reload(f) =>
@@ -127,8 +143,7 @@ trait REPL {
   }
 
   def step(state: Context[V], console : org.kiama.util.Console): Context[V] = {
-    //import org.kiama.util.JLineConsole
-    val in = console.readLine(s"${Console.BOLD}$name> ${Console.RESET}")
+    val in = console.readLine(ansi(s"@|bold $name> |@"))
     try {
       val stm = parser.parseIO(parser.stmt, in)
       handleStmt(state, stm)
@@ -138,6 +153,8 @@ trait REPL {
   }
 
   def main(args: Array[String]) {
+    AnsiConsole.systemInstall()
+
     var state = Context[V](Map(), Map())
     modules = Set()
     args match {

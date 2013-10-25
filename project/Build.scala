@@ -17,7 +17,8 @@ object TTLiteBuild extends Build {
   lazy val CoreProject = Project("ttlite-core", file("ttlite-core"),
     settings = Project.defaultSettings ++ Seq(
       name := "core",
-      libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1"
+      libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.5.1",
+      libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11"
     )
   )
 

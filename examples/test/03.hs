@@ -1,4 +1,6 @@
-x : Nat;
-x = Set;
+x : Set;
+x = Zero;
 
-t = (\ (x : Nat) -> x) True;
+
+--t = (\ (x : Nat) -> x) True;
+

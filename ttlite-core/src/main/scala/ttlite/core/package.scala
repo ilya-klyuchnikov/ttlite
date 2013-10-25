@@ -55,13 +55,39 @@ case class Quote(i: Int) extends Name(s"[$i]")
 // META-SYNTAX
 sealed trait MTerm extends RichPositional {
   def ~(t1: MTerm) = @@(this, t1)
+  def subTerm(path : Path) : MTerm
 }
-case class MVar(n: Name) extends MTerm
+case class MVar(n: Name) extends MTerm {
+  def subTerm(path : Path) : MTerm = path match {
+    case Nil => this
+    case _ => sys.error("??")
+  }
+}
 case class @@(t1: MTerm, t2: MTerm) extends MTerm {
   override def toString = s"$t1 ~ $t2"
+  def subTerm(path : Path) : MTerm = path match {
+    case Nil => this
+    case L :: p => t1.subTerm(p)
+    case R :: p => t2.subTerm(p)
+    case _ => sys.error("??")
+  }
 }
-case class MAnn(t1: MTerm, t2: MTerm) extends MTerm
-case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm
+case class MAnn(t1: MTerm, t2: MTerm) extends MTerm {
+  def subTerm(path : Path) : MTerm = path match {
+    case Nil => this
+    case L :: p => t1.subTerm(p)
+    case R :: p => t2.subTerm(p)
+    case _ => sys.error("??")
+  }
+}
+case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm {
+  def subTerm(path : Path) : MTerm = path match {
+    case Nil => this
+    case L :: p => tp.subTerm(p)
+    case R :: p => body.subTerm(p)
+    case _ => sys.error("??")
+  }
+}
 
 trait Stmt[+I]
 case class Let[I](n: String, i: I) extends Stmt[I]
@@ -165,7 +191,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
 object MetaParser extends MetaParser
 
-class TTLiteError(msg: String, line : Int, column : Int) extends Exception(msg) {
+abstract class TTLiteError(msg: String) extends Exception(msg) {
   var file : String = "_$_"
   def setFile(f : String) : this.type = {
     if (file == "_$_")
@@ -174,17 +200,39 @@ class TTLiteError(msg: String, line : Int, column : Int) extends Exception(msg) 
   }
   //override def getMessage(): String = "XXX"
   def details: String = ""
-  def location: String = s"$file[$line:$column]"
+  def location: String = s"$file[${line}:${column}]"
+  def line : Int
+  def column : Int
 }
-object TTLiteExit extends TTLiteError("EXIT", 0, 0)
-case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError(msg, line, column) {
+object TTLiteExit extends TTLiteError("EXIT") {
+  val line : Int = 0
+  val column : Int = 0
+}
+case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError(msg) {
   override def details: String = longString.replace("\n\n", "\n")
 }
-case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg, mt.startPos.line, mt.startPos.column) {
-  override def details: String =
-    mt.originPrefix + Console.RED + Console.BOLD + mt.origin + Console.RESET + mt.originSuffix
+case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg) {
+  override def details =
+    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
+  val line = mt.startPos.line
+  val column = mt.startPos.column
 }
-case class TypeError(msg : String) extends TTLiteError(msg,0, 0)
+case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
+  var mterm : MTerm = null
+  def setMTerm(mt : MTerm): TypeError = {
+    if (mterm == null) {
+      mterm = mt
+    }
+    this
+  }
+  override def details = {
+    val mt = mterm.subTerm(path)
+    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
+  }
+
+  def line = mterm.subTerm(path).startPos.line
+  def column = mterm.subTerm(path).startPos.column
+}
 //case class RawTypingError(msg: String) extends TTLiteError(msg, 0, 0)
 
 object `package` {
@@ -201,7 +249,15 @@ object `package` {
   implicit class PathWrapper(path : Path) {
     def /(i: Int, n: Int) = path ++ p(i, n)
   }
+  import org.fusesource.jansi._
+  def ansi(s : String) : String =
+    Ansi.ansi.render(s).toString
 
+  def isAscii(): Boolean =
+    !AnsiConsole.wrapOutputStream(null).isInstanceOf[AnsiOutputStream]
+
+  lazy val lm: String = if (isAscii()) "" else "▶"
+  lazy val rm: String = ""//if (isAscii()) "" else "◀"
   //implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
   type NameEnv[V] = Map[Name, V]
   // todo: helper methods: bindVal, bindType

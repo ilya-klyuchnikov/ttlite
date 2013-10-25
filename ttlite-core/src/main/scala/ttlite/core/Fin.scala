@@ -129,7 +129,7 @@ trait FinEval extends FunEval with FinAST {
 }
 
 trait FinCheck extends FunCheck with FinAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Falsity | Truth | Bool =>
       VUniverse(0)
     case Triv =>
@@ -137,40 +137,49 @@ trait FinCheck extends FunCheck with FinAST {
     case False | True =>
       VBool
     case FalsityElim(m, elem) =>
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VFalsity, {_ => VUniverse(-1)}))
+      val mType = iType(i, path/(3, 4), ctx, m)
+      checkEqual(i, mType, VPi(VFalsity, {_ => VUniverse(-1)}), path/(3, 4))
+
+      val elemType = iType(i, path/(4, 4), ctx, elem)
+      checkEqual(i, elemType, Falsity, path/(4, 4))
 
       val mVal = eval(m, ctx, List())
       val elemVal = eval(elem, ctx, List())
 
       mVal @@ elemVal
     case TruthElim(m, v, elem) =>
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VTruth, {_ => VUniverse(-1)}))
+      val mType = iType(i, path/(3, 5), ctx, m)
+      checkEqual(i, mType, VPi(VTruth, {_ => VUniverse(-1)}), path/(3, 5))
 
       val mVal = eval(m, ctx, List())
       val elemVal = eval(elem, ctx, List())
 
-      val vType = iType(i, ctx, v)
-      checkEqual(i, vType, mVal @@ VTriv)
+      val vType = iType(i, path/(4, 5), ctx, v)
+      checkEqual(i, vType, mVal @@ VTriv, path/(4, 5))
+
+      val elemType = iType(i, path/(5, 5), ctx, elem)
+      checkEqual(i, elemType, Truth, path/(5, 5))
 
       mVal @@ elemVal
     case BoolElim(m, v1, v2, elem) =>
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}))
+      val mType = iType(i, path/(3, 6), ctx, m)
+      checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}), path/(3, 6))
 
       val mVal = eval(m, ctx, List())
       val elemVal = eval(elem, ctx, List())
 
-      val v1Type = iType(i, ctx, v1)
-      checkEqual(i, v1Type, mVal @@ VFalse)
+      val v1Type = iType(i, path/(4, 6), ctx, v1)
+      checkEqual(i, v1Type, mVal @@ VFalse, path/(4, 6))
 
-      val v2Type = iType(i, ctx, v2)
-      checkEqual(i, v2Type, mVal @@ VTrue)
+      val v2Type = iType(i, path/(5, 6), ctx, v2)
+      checkEqual(i, v2Type, mVal @@ VTrue, path/(5, 6))
+
+      val elemType = iType(i, path/(6, 6), ctx, elem)
+      checkEqual(i, elemType, Bool, path/(6, 6))
 
       mVal @@ elemVal
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

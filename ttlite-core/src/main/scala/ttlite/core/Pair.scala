@@ -61,49 +61,50 @@ trait PairEval extends FunEval with PairAST {
 }
 
 trait PairCheck extends FunCheck with PairAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Product(a, b) =>
-      val aType = iType(i, ctx, a)
-      val j = checkUniverse(i, aType)
+      val aType = iType(i, path/(2, 3), ctx, a)
+      val j = checkUniverse(i, aType, path/(2, 3))
 
-      val bType = iType(i, ctx, b)
-      val k = checkUniverse(i, bType)
+      val bType = iType(i, path/(3, 3), ctx, b)
+      val k = checkUniverse(i, bType, path/(3, 3))
 
       VUniverse(math.max(j, k))
     case Pair(et, x, y) =>
-      val eType = iType(i, ctx, et)
-      checkUniverse(i, eType)
+      val eType = iType(i, path/(2, 4), ctx, et)
+      checkUniverse(i, eType, path/(2, 4))
 
+      // todo: error
       val VProduct(aVal, bVal) = eval(et, ctx, List())
 
-      val xType = iType(i, ctx, x)
-      checkEqual(i, xType, aVal)
+      val xType = iType(i, path/(3, 4), ctx, x)
+      checkEqual(i, xType, aVal, path/(3, 4))
 
-      val yType = iType(i, ctx, y)
-      checkEqual(i, yType, bVal)
+      val yType = iType(i, path/(4, 4), ctx, y)
+      checkEqual(i, yType, bVal, path/(4, 4))
 
       VProduct(aVal, bVal)
     case ProductElim(et, m, f, p) =>
-      val eType = iType(i, ctx, et)
-      checkUniverse(i, eType)
+      val eType = iType(i, path/(2, 5), ctx, et)
+      checkUniverse(i, eType, path/(2, 5))
 
       val VProduct(aVal, bVal) = eval(et, ctx, List())
 
       val mVal = eval(m, ctx, List())
       val pVal = eval(p, ctx, List())
 
-      val pType = iType(i, ctx, p)
-      checkEqual(i, pType, VProduct(aVal, bVal))
+      val mType = iType(i, path/(3, 5), ctx, m)
+      checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VUniverse(-1)}), path/(3, 5))
 
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VUniverse(-1)}))
+      val fType = iType(i, path/(4, 5), ctx, f)
+      checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(VProduct(aVal, bVal), a, b))), path/(4, 5))
 
-      val fType = iType(i, ctx, f)
-      checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(VProduct(aVal, bVal), a, b))))
+      val pType = iType(i, path/(5, 5), ctx, p)
+      checkEqual(i, pType, VProduct(aVal, bVal), path/(5, 5))
 
       mVal @@ pVal
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

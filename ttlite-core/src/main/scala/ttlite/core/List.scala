@@ -71,56 +71,57 @@ trait ListEval extends FunEval with ListAST {
 }
 
 trait ListCheck extends FunCheck with ListAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case PiList(a) =>
-      val aType = iType(i, ctx, a)
-      val j = checkUniverse(i, aType)
+      val aType = iType(i, path/(2, 2), ctx, a)
+      val j = checkUniverse(i, aType, path/(2, 2))
       VUniverse(j)
     case PiNil(et) =>
-      val eType = iType(i, ctx, et)
-      checkUniverse(i, eType)
+      val eType = iType(i, path/(2, 2), ctx, et)
+      checkUniverse(i, eType, path/(2, 2))
 
       val VPiList(aVal) = eval(et, ctx, List())
       VPiList(aVal)
     case PiCons(et, head, tail) =>
-      val eType = iType(i, ctx, et)
-      checkUniverse(i, eType)
+      val eType = iType(i, path/(2, 4), ctx, et)
+      checkUniverse(i, eType, path/(2, 4))
 
       val VPiList(aVal) = eval(et, ctx, List())
 
-      val hType = iType(i, ctx, head)
-      checkEqual(i, hType, aVal)
+      val hType = iType(i, path/(3, 4), ctx, head)
+      checkEqual(i, hType, aVal, path/(3, 4))
 
-      val tType = iType(i, ctx, tail)
-      checkEqual(i, tType, VPiList(aVal))
+      val tType = iType(i, path/(4, 4), ctx, tail)
+      checkEqual(i, tType, VPiList(aVal), path/(4, 4))
 
       VPiList(aVal)
     case PiListElim(et, m, nilCase, consCase, xs) =>
-      val eType = iType(i, ctx, et)
-      checkUniverse(i, eType)
+      val eType = iType(i, path/(2, 6), ctx, et)
+      checkUniverse(i, eType, path/(2, 6))
 
-      val VPiList(aVal) = eval(et, ctx, List())
+      val etVal@VPiList(aVal) = eval(et, ctx, List())
 
       val mVal = eval(m, ctx, List())
       val xsVal = eval(xs, ctx, List())
 
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}))
+      val mType = iType(i, path/(3, 6), ctx, m)
+      checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}), path/(3, 6))
 
-      val nilCaseType = iType(i, ctx, nilCase)
-      checkEqual(i, nilCaseType, mVal @@ VPiNil(aVal))
+      val nilCaseType = iType(i, path/(4, 6), ctx, nilCase)
+      checkEqual(i, nilCaseType, mVal @@ VPiNil(etVal), path/(4, 6))
 
-      val consCaseType = iType(i, ctx, consCase)
+      val consCaseType = iType(i, path/(5, 6), ctx, consCase)
       checkEqual(i, consCaseType,
-        VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(aVal, y, ys) }) }) })
+        VPi(aVal, {y => VPi(VPiList(aVal), {ys => VPi(mVal @@ ys, {_ => mVal @@ VPiCons(etVal, y, ys) }) }) }),
+        path/(5, 6)
       )
 
-      val xsType = iType(i, ctx, xs)
-      checkEqual(i, xsType, VPiList(aVal))
+      val xsType = iType(i, path/(6, 6), ctx, xs)
+      checkEqual(i, xsType, VPiList(aVal), path/(6, 6))
 
       mVal @@ xsVal
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
