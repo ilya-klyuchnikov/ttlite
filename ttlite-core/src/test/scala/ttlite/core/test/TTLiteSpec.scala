@@ -93,6 +93,9 @@ class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
     it("lf.hs") {
       TTREPL.main(Array("examples/misc/lf.hs"))
     }
+    it("list_gen_rec.hs") {
+      TTREPL.main(Array("examples/misc/list_gen_rec.hs"))
+    }
     it("logic.hs") {
       TTREPL.main(Array("examples/misc/logic.hs"))
     }
