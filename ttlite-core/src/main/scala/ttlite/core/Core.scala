@@ -45,12 +45,16 @@ trait CoreMetaSyntax extends CoreAST {
       Universe(1)
     case MVar(Global("Set2")) =>
       Universe(2)
+    case MVar(Global("elim")) =>
+      throw TranslationError(m, s"incorrect eliminator")
     case MVar(Quote(i)) =>
       Bound(i)
     case MVar(n) =>
       Free(n)
     case MAnn(t1, t2) =>
       Ann(fromM(t1), fromM(t2))
+    case _ =>
+      throw TranslationError(m, s"incorrect syntax `${m.origin}`")
   }
 }
 
@@ -63,6 +67,8 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
   def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " : " , nest(print(0, ii, ty))))))
+    case Universe(-1) =>
+      "Set*"
     case Universe(i) =>
       s"Set$i"
     case Bound(k) if ii - k - 1 >= 0 =>
@@ -119,56 +125,54 @@ trait CoreEval extends CoreAST {
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iType0(ctx: Context[Value], i: Term): Value =
-    iType(0, ctx, i)
+    iType(0, Nil, ctx, i)
 
-  def checkEqual(i: Int, inferred: Term, expected: Term) {
+  def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
     if (inferred != expected) {
-      throw new TypeError(s"inferred: ${pprint(inferred)},\n expected: ${pprint(expected)}")
+      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(inferred)}", path)
     }
   }
 
-  def checkEqual(i: Int, inferred: Value, expected: Term) {
+  def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expected)}")
+      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(infTerm)}}", path)
     }
   }
 
-  def checkEqual(i: Int, inferred: Value, expected: Value) {
+  def checkEqual(i: Int, inferred: Value, expected: Value, path : Path) {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expTerm)}")
+      throw new TypeError(s"expected: ${pprint(expTerm)},\ninferred: ${pprint(infTerm)}", path)
     }
   }
 
-  def checkUniverse(i: Int, inferred: Value): Int = inferred match {
+  def checkUniverse(i: Int, inferred: Value, path : Path): Int = inferred match {
     case VUniverse(k) =>
       k
     case _ =>
       val infTerm = quote(i, inferred)
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: Set(_)")
+      throw new TypeError(s"expected: Set*,\ninferred: ${pprint(infTerm)}", path)
   }
 
-  def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
     case Ann(e, tp) =>
       val tpVal = eval(tp, ctx, Nil)
 
-      val tpType = iType(i, ctx, tp)
-      checkUniverse(i, tpType)
+      val tpType = iType(i, path/(2, 2), ctx, tp)
+      checkUniverse(i, tpType, path/(2, 2))
 
-      val eType = iType(i, ctx, e)
-      checkEqual(i, eType, tpVal)
+      val eType = iType(i, path/(1, 2), ctx, e)
+      checkEqual(i, eType, tpVal, path/(1, 2))
 
       tpVal
-    case Free(Global("elim")) =>
-      sys.error("incorrect eliminator (missing arg(s) or wrong type of data being eliminated)")
     case Free(x) =>
       ctx.types.get(x) match {
         case Some(ty) => ty
-        case None => sys.error(s"unknown id: $x")
+        case None => throw TypeError(s"unknown id: $x", path)
       }
   }
 
@@ -190,37 +194,22 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
 
   val prompt: String = "TT"
 
-  override def itype(ctx: Context[V], i: T): Result[V] =
-    try {
-      Right(iType0(ctx, i))
-    } catch {
-      case e: Throwable =>
-        e.printStackTrace()
-        Left(e.getMessage)
-    }
+  override def itype(ctx: Context[V], i: T): V =
+    iType0(ctx, i)
   override def iquote(v: V): Term =
     quote0(v)
   override def ieval(ctx: Context[V], i: T): V =
     eval(i, ctx, List())
   def typeInfo(t: V): V =
     t
-  override def icprint(c: T): String =
+  override def tPrint(c: T): String =
     pretty(print(0, 0, c))
-  override def itprint(t: V): String =
-    pretty(print(0, 0, quote0(t)))
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
-    itype(state, t) match {
-      case Right(VUniverse(k)) =>
-        val v = ieval(state, Ann(t, Universe(k)))
-        output(icprint(iquote(v)))
-        state.copy(types = state.types + (s2name(x) -> v))
-      case Right(_) =>
-        handleError("not a type")
-        state
-      case Left(_) =>
-        handleError("type error")
-        state
-    }
+    val tp = itype(state, t)
+    checkEqual(0, tp, VUniverse(-1), Nil)
+    val v = ieval(state, t)
+    output(tPrint(iquote(v)))
+    state.copy(types = state.types + (s2name(x) -> v))
   }
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))

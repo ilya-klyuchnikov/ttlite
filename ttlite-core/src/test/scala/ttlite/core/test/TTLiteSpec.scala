@@ -1,8 +1,9 @@
 package ttlite.core.test
 
 import ttlite.core._
+import org.scalatest.matchers.MustMatchers
 
-class TTLiteSpec extends org.scalatest.FunSpec {
+class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
   describe("Meta Parser") {
     it("should parse global variable") {
       assert(MetaParser.parseMTerm("x") === MVar(Global("x")))
@@ -73,6 +74,9 @@ class TTLiteSpec extends org.scalatest.FunSpec {
     }
     it("lf.hs") {
       TTREPL.main(Array("examples/misc/lf.hs"))
+    }
+    it("list_gen_rec.hs") {
+      TTREPL.main(Array("examples/misc/list_gen_rec.hs"))
     }
     it("logic.hs") {
       TTREPL.main(Array("examples/misc/logic.hs"))

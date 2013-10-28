@@ -81,58 +81,60 @@ trait WEval extends FunEval with WAST {
 }
 
 trait WCheck extends FunCheck with WAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+    // this is a bind, so arity = 2
     case W(x, tp) =>
       val xVal = eval(x, ctx, Nil)
 
-      val xType = iType(i, ctx, x)
-      val j = checkUniverse(i, xType)
+      val xType = iType(i, path/(1, 2), ctx, x)
+      val j = checkUniverse(i, xType, path/(1, 2))
 
-      val tpType = iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
-      val k = checkUniverse(i, tpType)
+      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
+      val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
     case Sup(w, a, f) =>
       eval(w, ctx, Nil) match {
         case VW(a1, f1) =>
 
-          val aType = iType(i, ctx, a)
-          checkEqual(i, aType, a1)
+          val aType = iType(i, path/(3, 4), ctx, a)
+          checkEqual(i, aType, a1, path/(3, 4))
 
           val aVal = eval(a, ctx, Nil)
 
-          val fType = iType(i, ctx, f)
-          checkEqual(i, fType, VPi(f1(aVal), _ => VW(a1, f1)))
+          val fType = iType(i, path/(4, 4), ctx, f)
+          checkEqual(i, fType, VPi(f1(aVal), _ => VW(a1, f1)), path/(4, 4))
 
           VW(a1, f1)
         case _ =>
-          sys.error(s"illegal application: $t")
+          throw TypeError(s"illegal application: $t", path)
       }
     case Rec(w, m, b, a) =>
-      val wType = iType(i, ctx, w)
-      checkUniverse(i, wType)
+      val wType = iType(i, path/(2, 5), ctx, w)
+      checkUniverse(i, wType, path/(2, 5))
       val VW(t1, t2) = eval(w, ctx, List())
 
       val mVal = eval(m, ctx, List())
 
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VW(t1, t2), {_ => VUniverse(-1)}))
+      val mType = iType(i, path/(3, 5), ctx, m)
+      checkEqual(i, mType, VPi(VW(t1, t2), {_ => VUniverse(-1)}), path/(3, 5))
 
-      val aType = iType(i, ctx, a)
-      checkEqual(i, aType, VW(t1, t2))
-      val aVal = eval(a, ctx, List())
-
-      val bType = iType(i, ctx, b)
+      val bType = iType(i, path/(4, 5), ctx, b)
       checkEqual(i, bType,
         VPi(t1, a1 =>
           VPi(VPi(t2(a1), _ => VW(t1, t2)), f =>
             VPi(VPi(t2(a1), y => mVal @@ (f @@ y)), _ =>
-              mVal @@ VSup(VW(t1, t2), a1, f))))
+              mVal @@ VSup(VW(t1, t2), a1, f)))),
+        path/(4, 5)
       )
+
+      val aType = iType(i, path/(5, 5), ctx, a)
+      checkEqual(i, aType, VW(t1, t2), path/(5, 5))
+      val aVal = eval(a, ctx, List())
 
       mVal @@ aVal
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

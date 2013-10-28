@@ -84,35 +84,35 @@ trait NatEval extends FunEval with NatAST {
 }
 
 trait NatCheck extends FunCheck with NatAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Nat =>
       VUniverse(0)
     case NatElim(m, mz, ms, n) =>
       val mVal = eval(m, ctx, Nil)
       val nVal = eval(n, ctx, Nil)
 
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, Pi(Nat, Universe(-1)))
+      val mType = iType(i, path/(3, 6), ctx, m)
+      checkEqual(i, mType, Pi(Nat, Universe(-1)), path/(3, 6))
 
-      val mzType = iType(i, ctx, mz)
-      checkEqual(i, mzType, mVal @@ VZero)
+      val mzType = iType(i, path/(4, 6), ctx, mz)
+      checkEqual(i, mzType, mVal @@ VZero, path/(4, 6))
 
-      val msType = iType(i, ctx, ms)
-      checkEqual(i, msType, VPi(VNat, k => VPi(mVal @@ k, x => mVal @@ VSucc(k))))
+      val msType = iType(i, path/(5, 6), ctx, ms)
+      checkEqual(i, msType, VPi(VNat, k => VPi(mVal @@ k, x => mVal @@ VSucc(k))), path/(5, 6))
 
-      val nType = iType(i, ctx, n)
-      checkEqual(i, nType, Nat)
+      val nType = iType(i, path/(6, 6), ctx, n)
+      checkEqual(i, nType, Nat, path/(6, 6))
 
       mVal @@ nVal
     case Zero =>
       VNat
     case Succ(k) =>
-      val kType = iType(i, ctx, k)
-      checkEqual(i, kType, Nat)
+      val kType = iType(i, path/(2, 2), ctx, k)
+      checkEqual(i, kType, Nat, path/(2, 2))
 
       VNat
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

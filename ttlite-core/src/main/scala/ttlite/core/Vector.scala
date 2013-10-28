@@ -67,37 +67,37 @@ trait VectorEval extends FunEval with VectorAST {
 }
 
 trait VectorCheck extends FunCheck with VectorAST with NatAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Vec(a, n) =>
-      val aType = iType(i, ctx, a)
-      val j = checkUniverse(i, aType)
+      val aType = iType(i, path/(2, 3), ctx, a)
+      val j = checkUniverse(i, aType, path/(2, 3))
 
-      val nType = iType(i, ctx, n)
-      checkEqual(i, nType, VNat)
+      val nType = iType(i, path/(3, 3), ctx, n)
+      checkEqual(i, nType, VNat, path/(3, 3))
 
       VUniverse(j)
     case VecNil(a) =>
       val aVal = eval(a, ctx, List())
 
-      val aType = iType(i, ctx, a)
-      checkUniverse(i, aType)
+      val aType = iType(i, path/(1, 2), ctx, a)
+      checkUniverse(i, aType, path/(1, 2))
 
       VVec(aVal, VZero)
     case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
       val aVal = eval(a, ctx, List())
       val nVal = eval(n, ctx, List())
 
-      val aType = iType(i, ctx, a)
-      checkUniverse(i, aType)
+      val aType = iType(i, path/(2, 5), ctx, a)
+      checkUniverse(i, aType, path/(2, 5))
 
-      val nType = iType(i, ctx, n)
-      checkEqual(i, nType, VNat)
+      val nType = iType(i, path/(3, 5), ctx, n)
+      checkEqual(i, nType, VNat, path/(3, 5))
 
-      val hType = iType(i, ctx, head)
-      checkEqual(i, hType, aVal)
+      val hType = iType(i, path/(4, 5), ctx, head)
+      checkEqual(i, hType, aVal, path/(4, 5))
 
-      val tType = iType(i, ctx, tail)
-      checkEqual(i, tType, VVec(aVal, nVal))
+      val tType = iType(i, path/(5, 5), ctx, tail)
+      checkEqual(i, tType, VVec(aVal, nVal), path/(5, 5))
 
       VVec(aVal, VSucc(nVal))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
@@ -106,31 +106,33 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
       val nVal = eval(n, ctx, List())
       val vecVal = eval(vec, ctx, List())
 
-      val aType = iType(i, ctx, a)
-      checkUniverse(i, aType)
+      val aType = iType(i, path/(2, 7), ctx, a)
+      checkUniverse(i, aType, path/(2, 7))
 
-      val mType = iType(i, ctx, m)
-      checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VUniverse(-1)})}))
+      val mType = iType(i, path/(3, 7), ctx, m)
+      checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VUniverse(-1)})}), path/(3, 7))
 
-      val nilCaseType = iType(i, ctx, nilCase)
-      checkEqual(i, nilCaseType, mVal @@ VZero @@ VVecNil(aVal))
+      val nilCaseType = iType(i, path/(4, 7), ctx, nilCase)
+      checkEqual(i, nilCaseType, mVal @@ VZero @@ VVecNil(aVal), path/(4, 7))
 
-      val consCaseType = iType(i, ctx, consCase)
-      checkEqual(i, consCaseType, VPi(VNat, {n =>
-        VPi(aVal, {y =>
-          VPi(VVec(aVal, n), {ys =>
-            VPi(mVal @@ n @@ ys, {_ =>
-              mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)})})})}))
+      val consCaseType = iType(i, path/(5, 7), ctx, consCase)
+      checkEqual(i, consCaseType,
+        VPi(VNat, {n =>
+          VPi(aVal, {y =>
+            VPi(VVec(aVal, n), {ys =>
+              VPi(mVal @@ n @@ ys, {_ =>
+                mVal @@ VSucc(n) @@ VVecCons(aVal, n, y, ys)})})})}),
+        path/(5, 7))
 
-      val nType = iType(i, ctx, n)
-      checkEqual(i, nType, VNat)
+      val nType = iType(i, path/(6, 7), ctx, n)
+      checkEqual(i, nType, VNat, path/(6, 7))
 
-      val vecType = iType(i, ctx, vec)
-      checkEqual(i, vecType, VVec(aVal, nVal))
+      val vecType = iType(i, path/(7, 7), ctx, vec)
+      checkEqual(i, vecType, VVec(aVal, nVal), path/(7, 7))
 
       mVal @@ nVal @@ vecVal
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {

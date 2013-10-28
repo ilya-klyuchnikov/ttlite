@@ -90,37 +90,38 @@ trait FunEval extends CoreEval with FunAST {
 }
 
 trait FunCheck extends CoreCheck with FunAST {
-  override def iType(i: Int, ctx: Context[Value], t: Term): Value = t match {
+  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+    // Pi is a bind, so arity is 2
     case Pi(x, tp) =>
       val xVal = eval(x, ctx, Nil)
 
-      val xType = iType(i, ctx, x)
-      val j = checkUniverse(i, xType)
+      val xType = iType(i, path/(1, 2), ctx, x)
+      val j = checkUniverse(i, xType, path/(1, 2))
 
-      val tpType = iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
-      val k = checkUniverse(i, tpType)
+      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
+      val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
     case Lam(t, e) =>
       val tVal = eval(t, ctx, Nil)
-      val tType = iType(i, ctx, t)
+      val tType = iType(i, path/(1, 2), ctx, t)
 
-      checkUniverse(i, tType)
+      checkUniverse(i, tType, path/(1, 2))
       // to force early error
-      iType(i + 1, Context(ctx.vals, ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e))
+      iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e))
 
-      VPi(tVal, v => iType(i + 1, Context(ctx.vals + (Local(i) -> v), ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e)))
+      VPi(tVal, v => iType(i + 1, path/(2, 2), Context(ctx.vals + (Local(i) -> v), ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e)))
     case (e1 :@: e2) =>
-      iType(i, ctx, e1) match {
+      iType(i, path/(1, 2), ctx, e1) match {
         case VPi(x, f) =>
-          val e2Type = iType(i, ctx, e2)
-          checkEqual(i, e2Type, x)
+          val e2Type = iType(i, path/(2, 2), ctx, e2)
+          checkEqual(i, e2Type, x, path/(2, 2))
           f(eval(e2, ctx, Nil))
         case _ =>
-          sys.error(s"illegal application: $t")
+          throw TypeError(s"illegal application: $t", path)
       }
     case _ =>
-      super.iType(i, ctx, t)
+      super.iType(i, path, ctx, t)
   }
 
   override def iSubst(i: Int, r: Term, it: Term): Term = it match {
