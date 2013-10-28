@@ -216,6 +216,7 @@ case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg) {
     ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
   val line = mt.startPos.line
   val column = mt.startPos.column
+  def origin = mt.origin
 }
 case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
   var mterm : MTerm = null
@@ -232,6 +233,7 @@ case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
 
   def line = mterm.subTerm(path).startPos.line
   def column = mterm.subTerm(path).startPos.column
+  def origin = mterm.subTerm(path).origin
 }
 //case class RawTypingError(msg: String) extends TTLiteError(msg, 0, 0)
 

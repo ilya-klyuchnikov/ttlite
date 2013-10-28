@@ -32,24 +32,6 @@ class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
     }
   }
 
-  describe("Error handling") {
-    it("should report correct file where translation error happened") {
-      val thrown1 = evaluating { TTREPL.main(Array("examples/test/01.hs")) } must produce [TranslationError]
-      thrown1.file must equal ("examples/test/01.hs")
-
-      val thrown2 = evaluating { TTREPL.main(Array("examples/test/02.hs")) } must produce [TranslationError]
-      thrown2.file must equal ("examples/test/01.hs")
-    }
-
-    it("should report correct file where type error happened") {
-      val thrown1 = evaluating { TTREPL.main(Array("examples/test/03.hs")) } must produce [TypeError]
-      thrown1.file must equal ("examples/test/03.hs")
-
-      val thrown2 = evaluating { TTREPL.main(Array("examples/test/04.hs")) } must produce [TTLiteError]
-      thrown2.file must equal ("examples/test/03.hs")
-    }
-  }
-
   describe("Basic examples") {
     it("01. core") {
       TTREPL.main(Array("examples/core.hs"))

@@ -68,7 +68,7 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
     case Ann(c, ty) =>
       parensIf(p > 1, nest(sep(Seq(print(2, ii, c) <> " : " , nest(print(0, ii, ty))))))
     case Universe(-1) =>
-      "Set?"
+      "Set*"
     case Universe(i) =>
       s"Set$i"
     case Bound(k) if ii - k - 1 >= 0 =>
@@ -129,14 +129,14 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
     if (inferred != expected) {
-      throw new TypeError(s"inferred: ${pprint(inferred)},\n expected: ${pprint(expected)}", path)
+      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(inferred)}", path)
     }
   }
 
   def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expected)}", path)
+      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(infTerm)}}", path)
     }
   }
 
@@ -144,7 +144,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: ${pprint(expTerm)}", path)
+      throw new TypeError(s"expected: ${pprint(expTerm)},\ninferred: ${pprint(infTerm)}", path)
     }
   }
 
@@ -153,13 +153,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       k
     case _ =>
       val infTerm = quote(i, inferred)
-      throw new TypeError(s"inferred: ${pprint(infTerm)},\n expected: Set(_)", path)
+      throw new TypeError(s"expected: Set*,\ninferred: ${pprint(infTerm)}", path)
   }
 
   def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
-    // TODO: remove ann
     case Ann(e, tp) =>
       val tpVal = eval(tp, ctx, Nil)
 
