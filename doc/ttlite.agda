@@ -134,11 +134,11 @@ elimList A m f₁ f₂ (cons₀ a as) = f₂ a as (elimList A m f₁ f₂ as)
 -- Identity
 ------------------------------------------
 
-data Id {i} (A : Set i) : A → A → Set i where
-  refl₀ : (a : A) -> Id A a a
+data Id {i} (A : Set i) (a : A) : A → Set i where
+  refl₀ : Id A a a
 
 refl : ∀ {i} (A : Set i) (a : A) → Id A a a
-refl A a = refl₀ a
+refl A a = refl₀
 
 elimId : ∀ {i k}
            (A : Set i)
@@ -146,7 +146,7 @@ elimId : ∀ {i k}
            (m : (a₁ a₂ : A) (id : Id A a₁ a₂) → Set k)
            (f₁ : (a : A) → m a a (refl A a))
            (e : Id A a₁ a₂) → m a₁ a₂ e
-elimId A .a .a m f (refl₀ a) = f a
+elimId A a .a m f refl₀ = f a
 
 ------------------------------------------
 -- Extra stuff (missed in preprint)
