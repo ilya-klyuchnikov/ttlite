@@ -1,11 +1,11 @@
 ## TT Lite [![Build Status](https://travis-ci.org/ilya-klyuchnikov/ttlite.png)](https://travis-ci.org/ilya-klyuchnikov/ttlite)
 
 TT Lite is an interpreter, type-checker and supercompiler for Martin-Löf's Type Theory (TT).
-It is structures into two sub-projects:
+It is structured into two sub-projects:
 
 * TT Lite Core - lightweight and modular implementation of Martin-Löf's Type Theory
 (TT Lite was designed with supercompilation in mind)
-* TT Lite Supercompiler - very simple supercompiler for TT Lite.
+* TT Lite Supercompiler - a very simple supercompiler for TT Lite.
 
 The main feature of the supercompiler is that for any transformation performed by
 the supercompiler a proof of correctness is provided.
@@ -26,7 +26,7 @@ I use following settings for SBT (file `~/.sbtconfig`):
     SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
 
 ### SBT launcher
-This project is build by SBT 0.13, so it requires that you have SBT launcher 0.13 (try `sbt --version` to know it).
+This project is built with SBT 0.13, so it requires that you have SBT launcher 0.13 (try `sbt --version` to know it).
 If you have an old SBT launcher and do not want to update it for some reasons, then you can try to change
 `project/build.properties` to:
 
@@ -43,7 +43,7 @@ The symptom that you have an old SBT launcher is an exception like this:
 There are two sub-projects:
 
 * `ttlite-core` - TT Lite Core
-* `ttlite-sc` - a simple supercompiler for TT Lite Core (as an extension of REPL).
+* `ttlite-sc` - TT Lite SC
 
 ### TTLite Core
 
@@ -53,7 +53,7 @@ To launch TT Core REPL, type in sbt console `ttlite-core/run`:
 
 Load some definitions from examples:
 
-    TT> import "examples/nat.hs";
+    TT> import examples/nat;
 
 Try some simple computations:
 
@@ -94,10 +94,10 @@ For definitions you can optionally specify a type (type checker will check it):
     :
     Nat;
 
-(In REPL declaration with definition should fit the single line);
+(In REPL a declaration with a definition should fit a single line);
 
 You can _assume_ a variable of a certain type (we will call it _assumed_ variable)
-by specifying its type (a variable should start with `$`);
+just by specifying its type (a variable should start with `$`);
 
     TT> $n : Nat;
     Nat
@@ -113,15 +113,17 @@ Quitting REPL:
 
 ### Syntax and Semantics of TT
 
-Technical details of the implementation are described in the preprint
+Technical details of this implementation are described in the preprint
 [TT Lite: a supercompiler for Martin-Löf's type theory](http://pat.keldysh.ru/~ilya/ttlite.pdf).
 However, the preprint just translates code of the current implementation into mathematical notation.
 
-The proposed solution for understanding this project is:
+The proposed way to get into this project is:
 
 * Sketch the preprint for grasping syntax and semantics (without details).
 * Look into examples of how functions are defined (dir [`examples`](examples/))
-* Sketch some modules (`Function.scala`, `Nat.scala`, `DProduct.scala`)
+* Sketch some modules ([`Function.scala`](ttlite-core/src/main/scala/ttlite/core/Function.scala), 
+[`Nat.scala`](ttlite-core/src/main/scala/ttlite/core/Nat.scala), 
+[`DProduct.scala`](ttlite-core/src/main/scala/ttlite/core/DProduct.scala))
 for getting an idea how syntax and semantics are implemented.
 
 Tutorial is on the way.
@@ -134,29 +136,29 @@ A program in TT Lite consists of the following statements:
 * `$id : term;` - assumption of a variable of a certain type
 * `term;` - just evaluating of a term;
 
-### TT Lite Supercompiler
+### TT Lite SC (supercompiler)
 
-To launch TT Lite Supercompiler REPL, type in sbt console `ttlite-sc/run`:
+To launch TT Lite SC REPL, type in sbt console `ttlite-sc/run`:
 
     > ttlite-sc/run
 
 Launching examples:
 
-    TT-SC> import "examples/hosc/10.hs";
+    TT-SC> import examples/hosc/10;
 
-TT Supercompiler REPL introduces a new statement:
+TT Lite SC REPL introduces a new statement:
 
     (t1, t2) = sc t;
 
-The meaning of the new statement is that `t1` is a result of transformation of the `term` by the supercompiler,
-`t2` is a proof that transformation is correct (i.e. `t2 : Id a t t1` if `t : a`).
+The meaning of the new statement is that `t1` is a result of transformation of a term `t` by the supercompiler,
+`t2` is a proof that transformation is correct (i.e. `t2 : Id A t t1` if `t : A`).
 
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
 Here is an example of proving the equivalence of two expressions with assumed variables (`examples/hosc/10.hs`):
-
-    import "examples/nat.hs";
-    import "examples/id.hs";
+    
+    import examples/nat;
+    import examples/id;
 
     -- proof of the associativity of addition
     -- plus x (plus y z) = plus (plus x y) z
@@ -182,7 +184,7 @@ Here is an example of proving the equivalence of two expressions with assumed va
 
 You can see input and output of supercompilation (as well as a proof):
 
-    TT-SC> import "examples/hosc/10.hs";
+    TT-SC> import examples/hosc/10;
 
     TT-SC> e2;
     elim
@@ -232,24 +234,24 @@ You can see input and output of supercompilation (as well as a proof):
         (\ (a : Nat) -> \ (b : Nat) -> Succ b)
         $x);
 
-The whole proof term is quite long (It is long since TT Lite performs normalization of terms and terms are printed
-in normalized form). An interested person is encouraged to launch the supercompiler to see it.
+The whole proof term is quite long (it is long since TT Lite performs normalization of terms and terms are printed
+in normal form). An interested person is encouraged to launch the supercompiler to see it.
 
 ### Interactive development
 
-There is no editor or IDE plugin for TT Lite yet. So the only possibility of speedup development is to make
+There is no editor or IDE plugin for TT Lite yet. So the only possibility to speedup development is to make a
 change in a file and reload this file in REPL. For this purpose there is a special statement:
 
     reload file;
 
 Examples:
 
-    reload example.id;
+    reload examples/id;
 
 For now, this statemenent reloads a specified file, but **do not** reload its dependencies.
 
 ### Why `*.hs` ?
 
 If you look into examples, you will notice that all of TT Lite examples are in files with extension `.hs`.
-There is a very simple reason for this: syntax of TT Lite is quite close to Haskell and GitHub performs makes quite
+There is a very simple reason for this: syntax of TT Lite is quite close to Haskell and GitHub performs quite
 good syntax coloring fot TT Lite files if they have extension `.hs`. That's it :)
