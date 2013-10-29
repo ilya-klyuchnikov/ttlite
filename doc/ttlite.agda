@@ -1,14 +1,14 @@
-module TTLite where
+module ttlite where
 
 postulate
   Level : Set
-  zero : Level
-  suc : Level → Level
+  lzero : Level
+  lsuc : Level → Level
   max : Level → Level → Level
 
 {-# BUILTIN LEVEL Level #-}
-{-# BUILTIN LEVELZERO zero #-}
-{-# BUILTIN LEVELSUC suc #-}
+{-# BUILTIN LEVELZERO lzero #-}
+{-# BUILTIN LEVELSUC lsuc #-}
 {-# BUILTIN LEVELMAX max #-}
 
 ------------------------------------------
@@ -25,13 +25,13 @@ postulate
 
 -- usually in books Σ is implemented via records, but here I would like to try data
 -- Indexes are inferred
-data Sigma {i j} (A : Set i) (f : A → Set j) : Set (max i j) where
-  sigma₀ : (a : A) -> (_ : f a) → Sigma A f 
+data Sigma {i j} (A : Set i) (B : A → Set j) : Set (max i j) where
+  sigma₀ : (a : A) -> (_ : B a) → Sigma A B
 
 -- using local let in order to pass indices explicitly
 sigma : ∀ {i j} (A : Set i) (B : A → Set j) (a : A) (_ : B a) → Sigma A B
-sigma A B a b = 
-  let r : Sigma A B 
+sigma A B a b =
+  let r : Sigma A B
       r = sigma₀ a b
   in r
 
@@ -48,30 +48,30 @@ elimSigma A B m f (sigma₀ a b) = f a b
 ------------------------------------------
 
 data Sum {i j} (A : Set i) (B : Set j) : Set (max i j) where
-  InL₀ : A → Sum A B
-  InR₀ : B → Sum A B
+  inl₀ : A → Sum A B
+  inr₀ : B → Sum A B
 
-InL : ∀ {i j} (A : Set i) (B : Set j) (a : A) → Sum A B
-InL A B a = InL₀ a
+inl : ∀ {i j} (A : Set i) (B : Set j) (a : A) → Sum A B
+inl A B a = inl₀ a
 
-InR : ∀ {i j} (A : Set i) (B : Set j) (b : B) → Sum A B
-InR A B b = InR₀ b
+inr : ∀ {i j} (A : Set i) (B : Set j) (b : B) → Sum A B
+inr A B b = inr₀ b
 
 elimSum : ∀ {i j k} 
             (A : Set i) 
             (B : Set j) 
             (m : Sum A B → Set k) 
-            (fₗ : ∀ (a : A) → m (InL A B a))
-            (fᵣ : ∀ (b : B) → m (InR A B b))
+            (fₗ : ∀ (a : A) → m (inl A B a))
+            (fᵣ : ∀ (b : B) → m (inr A B b))
             (e : Sum A B) → m e
-elimSum A B m fₗ fᵣ (InL₀ a) = fₗ a
-elimSum A B m fₗ fᵣ (InR₀ b) = fᵣ b
+elimSum A B m fₗ fᵣ (inl₀ a) = fₗ a
+elimSum A B m fₗ fᵣ (inr₀ b) = fᵣ b
 
 ------------------------------------------
 -- Falsity (aka ⊥)
 ------------------------------------------
 
-data Falsity : Set zero where
+data Falsity : Set lzero where
 
 elimFalsity : ∀ {i} 
                 (m : Falsity → Set i) 
@@ -82,53 +82,53 @@ elimFalsity m ()
 -- Truth (aka ⊤)
 ------------------------------------------
 
-data Truth : Set zero where
-  Triv : Truth
+data Truth : Set lzero where
+  triv : Truth
 
 elimTruth : ∀ {i} 
               (m : Truth → Set i) 
-              (f₁ : m Triv) 
+              (f₁ : m triv) 
               (e : Truth) → m e
-elimTruth m f₁ Triv = f₁
+elimTruth m f₁ triv = f₁
 
 ------------------------------------------
 -- Nat
 ------------------------------------------
 
-data Nat : Set zero where
-  Zero : Nat
-  Succ : Nat → Nat
+data Nat : Set lzero where
+  zero : Nat
+  succ : Nat → Nat
 
 elimNat : ∀ {i} 
             (m : Nat → Set i) 
-            (f₁ : m Zero) 
-            (f₂ : (n : Nat) → (_ : m n) → m (Succ n))
+            (f₁ : m zero) 
+            (f₂ : (n : Nat) → (_ : m n) → m (succ n))
             (e : Nat) → m e
-elimNat m f₁ f₂ Zero     = f₁
-elimNat m f₁ f₂ (Succ n) = f₂ n (elimNat m f₁ f₂ n)
+elimNat m f₁ f₂ zero     = f₁
+elimNat m f₁ f₂ (succ n) = f₂ n (elimNat m f₁ f₂ n)
 
 ------------------------------------------
 -- List
 ------------------------------------------
 
 data List {i} (A : Set i) : Set i where
-  Nil₀  : List A
-  Cons₀ : A → List A → List A
+  nil₀  : List A
+  cons₀ : A → List A → List A
 
-Nil : ∀ {i} (A : Set i) → List A
-Nil A = Nil₀
+nil : ∀ {i} (A : Set i) → List A
+nil A = nil₀
 
-Cons : ∀ {i} (A : Set i) (a : A) (as : List A) → List A
-Cons A a as = Cons₀ a as
+cons : ∀ {i} (A : Set i) (a : A) (as : List A) → List A
+cons A a as = cons₀ a as
 
 elimList : ∀ {i j}
              (A : Set i)
              (m : List A → Set j)
-             (f₁ : m (Nil A))
-             (f₂ : (a : A) (as : List A) (_ : m as) → m (Cons A a as))
+             (f₁ : m (nil A))
+             (f₂ : (a : A) (as : List A) (_ : m as) → m (cons A a as))
              (e : List A) → m e
-elimList A m f₁ f₂ Nil₀         = f₁
-elimList A m f₁ f₂ (Cons₀ a as) = f₂ a as (elimList A m f₁ f₂ as)
+elimList A m f₁ f₂ nil₀         = f₁
+elimList A m f₁ f₂ (cons₀ a as) = f₂ a as (elimList A m f₁ f₂ as)
 
 ------------------------------------------
 -- Identity
@@ -156,14 +156,14 @@ elimId A .a .a m f (refl₀ a) = f a
 -- Bool
 ------------------------------------------
 
-data Bool : Set zero where
-  False : Bool
-  True  : Bool
+data Bool : Set lzero where
+  false : Bool
+  true  : Bool
 
 elimBool : ∀ {i} 
              (m : Bool → Set i)
-             (f₁ : m False)
-             (f₂ : m True)
+             (f₁ : m false)
+             (f₂ : m true)
              (e : Bool) → m e
-elimBool m f₁ f₂ False = f₁
-elimBool m f₁ f₂ True  = f₂
+elimBool m f₁ f₂ false = f₁
+elimBool m f₁ f₂ true  = f₂
