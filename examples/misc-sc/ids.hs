@@ -43,7 +43,7 @@ eep = dpair (exists (x : Nat) . Id Nat x Zero) Zero (Refl Nat Zero);
 
 (_, _) = sc (sum_id $A $B $s);
 
-list_id_1 =
+list_id1 =
     \ (A : Set1) (xs : List A) ->
         elim
             (List A)
@@ -55,7 +55,7 @@ list_id_1 =
 $A1 : Set1;
 $xs1 : List $A1;
 
-(_, _) = sc (list_id_1 $A1 $xs1);
+(_, _) = sc (list_id1 $A1 $xs1);
 
 
 (sum_sc, sum_proof) = sc (Sum (Sum Nat Nat) Nat);
