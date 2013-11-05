@@ -169,162 +169,24 @@ elimBool m f₁ f₂ false = f₁
 elimBool m f₁ f₂ true  = f₂
 
 ------------------------------------------
--- TODO: vectors, ordinary pairs, W
+-- Pair
 ------------------------------------------
 
+data Pair {i j} (A : Set i) (B : Set j) : Set (max i j) where
+  pair₀ : A → B → Pair A B
+
+pair : ∀ {i j} (A : Set i) (B : Set j) (a : A) (b : B) → Pair A B
+pair A B a b = pair₀ a b
+
+elimPair : ∀ {i j k}
+             (A : Set i)
+             (B : Set j)
+             (m : Pair A B → Set k)
+             (f : (a : A) (b : B) → m (pair A B a b))
+             (e : Pair A B) → m e
+elimPair _ _ m f (pair₀ a b) = f a b
+
 ------------------------------------------
--- Proof combinators
--- Note that type inference is used 
--- (types of arguments are not written expl)
+-- TODO: vectors, W
 ------------------------------------------
 
-symm :
-    forall
-    (a : Set)
-    (x : a)
-    (y : a)
-    (_ : Id a x y) →
-        Id a y x
-symm =
-    \
-    (a : Set)
-    (x : a)
-    (y : a)
-    (eq : Id a x y) ->
-        elimId a x y
-            (\ x y eq_x_y -> Id a y x)
-            (\ x -> refl a x)
-            eq
-
-tran :
-    forall
-    (a : Set)
-    (x : a)
-    (y : a)
-    (z : a)
-    (_ : Id a x y)
-    (_ : Id a y z) ->
-        Id a x z
-tran =
-   \
-   (a : Set)
-   (x : a)
-   (y : a)
-   (z : a)
-   (eq_x_y : Id a x y) ->
-        elimId a x y
-            (\ x y eq_x_y -> forall (z : a) (_ : Id a y z) -> Id a x z)
-            (\ x y eq_x_y -> eq_x_y)
-            eq_x_y
-            z
-
-cong1 :
-    forall
-    (a : Set)
-    (b : Set)
-    (f : forall (_ : a) -> b)
-    (x : a)
-    (y : a)
-    (_ : Id a x y) ->
-        Id b (f x) (f y)
-cong1 =
-    \
-    (a : Set)
-    (b : Set)
-    (f : forall (_ : a) -> b)
-    (x : a)
-    (y : a)
-    (eq : Id a x y) ->
-        elimId a x y
-            (\ (x : a) (y : a) (eq_x_y : Id a x y) -> Id b (f x) (f y))
-            (\ (x : a) -> refl b (f x))
-            eq
-
-fcong1 :
-    forall
-    (a : Set)
-    (b : Set)
-    (x : a)
-    (f : forall (_ : a) -> b)
-    (g : forall (_ : a) -> b)
-    (_ : Id (forall (_ : a) -> b) f g) ->
-        Id b (f x) (g x)
-fcong1 =
-    \
-    (a : Set)
-    (b : Set)
-    (x : a)
-    (f : forall (_ : a) -> b)
-    (g : forall (_ : a) -> b)
-    (eq : Id (forall (_ : a) -> b) f g) ->
-        elimId (a → b) f g (\ f g _ -> Id b (f x) (g x)) (\ f -> refl b (f x)) eq
-
-fargCong :
-    forall
-    (a : Set)
-    (b : Set)
-    (x : a)
-    (y : a)
-    (f : forall (_ : a) -> b)
-    (g : forall (_ : a) -> b)
-    (_ : Id a x y)
-    (_ : Id (forall (_ : a) -> b) f g) ->
-        Id b (f x) (g y)
-
-fargCong =
-    \
-    (a : Set)
-    (b : Set)
-    (x : a)
-    (y : a)
-    (f : a → b)
-    (g : a → b)
-    (eq_x_y : Id a x y)
-    (eq_f_g : Id (a → b) f g)  ->
-        elimId (a → b) f g (\ f g _ →  Id b (f x) (g y)) (\ f → cong1 a b f x y eq_x_y) eq_f_g
-
-cong2 :
-    forall
-    (a : Set)
-    (b : Set)
-    (c : Set)
-    (f : forall (_ : a) (_ : b) -> c)
-    (x1 : a)
-    (x2 : a)
-    (eq_xs : Id a x1 x2)
-    (y1 : b)
-    (y2 : b)
-    (eq_ys : Id b y1 y2) ->
-        Id c (f x1 y1) (f x2 y2)
-cong2 =
-    \
-    (a : Set)
-    (b : Set)
-    (c : Set)
-    (f : a -> b -> c)
-    (x1 : a)
-    (x2 : a)
-    (eq_xs : Id a x1 x2)
-    (y1 : b)
-    (y2 : b)
-    (eq_ys : Id b y1 y2) ->
-        fargCong b c y1 y2 (f x1) (f x2) eq_ys (cong1 a (b -> c) f x1 x2 eq_xs)
-
-proof_by_sc :
-    forall
-    (A : Set)
-    (e1 : A)
-    (e2 : A)
-    (res : A)
-    (eq_e1_res : Id A e1 res)
-    (eq_e2_res : Id A e2 res) ->
-        Id A e1 e2
-proof_by_sc =
-    \
-    (A : Set)
-    (e1 : A)
-    (e2 : A)
-    (res : A)
-    (eq_e1_res : Id A e1 res)
-    (eq_e2_res : Id A e2 res) ->
-        tran A e1 res e2 eq_e1_res (symm A e2 res eq_e2_res)

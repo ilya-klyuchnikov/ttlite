@@ -40,14 +40,6 @@ trait CoreDriver extends TTSc with CoreCheck {
   def nv(n: Neutral): Option[Name] =
     None
 
-  // freeVars of an expression
-  def freeVars(t: Any): List[Name] = t match {
-    case Free(n: Local)   => List(n)
-    case Free(n: Assumed) => List(n)
-    case p: scala.Product => p.productIterator.flatMap(freeVars).toList.distinct
-    case _                => List()
-  }
-
   def elimVar(n: Name, nt: Value): DriveStep = nt match {
     case _ => StopDStep
   }

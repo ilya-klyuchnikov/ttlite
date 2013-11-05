@@ -22,7 +22,7 @@ trait TTSc extends CoreSubst with CoreCheck {
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
       VariantsStep(cases.toList.map { b =>
-        b -> Conf(t.term / Map(b.sel -> b.ptr), Context(t.ctx.vals, t.ctx.types ++ b.types))
+        b -> Conf(t.term / Map(b.sel -> b.ptr), Context(t.ctx.vals, t.ctx.types ++ b.types, Nil))
       })
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
@@ -215,7 +215,8 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
           (Global(s"${proofId}_raw") -> proofVal),
         state.types +
           (Global(scId) -> inTpVal) +
-          (Global(proofId) -> proofTypeVal)
+          (Global(proofId) -> proofTypeVal),
+        state.ids
       )
     case MRSC(res, mTerm) =>
       val inputTerm = fromM(mTerm)
@@ -271,12 +272,14 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
             (Global(s"${res}_${i}_proof") -> proofVal),
           s.types +
             (Global(s"${res}_${i}") ->  inTpVal) +
-            (Global(s"${res}_${i}_proof") -> proofTypeVal)
+            (Global(s"${res}_${i}_proof") -> proofTypeVal),
+          s.ids
         )
       }
       s = Context(
         s.vals + (Global(s"${res}_count") -> intToVNat(i)),
-        s.types + (Global(s"${res}_count") ->  VNat)
+        s.types + (Global(s"${res}_count") ->  VNat),
+        s.ids
       )
       s
     case _ =>

@@ -1,7 +1,5 @@
 package ttlite.core
 
-import org.kiama.output.PrettyPrinter
-
 trait CoreAST {
   trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
@@ -33,6 +31,14 @@ trait CoreAST {
     VNeutral(NFree(Global(s)))
   implicit def s2Term(s: String): Term =
     Free(Global(s))
+
+  // freeVars of an expression
+  def freeVars(t: Any): List[Name] = t match {
+    case Free(n: Local)   => List(n)
+    case Free(n: Assumed) => List(n)
+    case p: scala.Product => p.productIterator.flatMap(freeVars).toList.distinct
+    case _                => List()
+  }
 }
 
 trait CoreMetaSyntax extends CoreAST {
@@ -59,9 +65,7 @@ trait CoreMetaSyntax extends CoreAST {
 }
 
 trait CorePrinter extends CoreAST with PrettyPrinter {
-  def parensIf(b: Boolean, d: Doc) =
-    if (b) parens(d) else d
-  def pprint(c: Term): String =
+  def pp(c: Term): String =
     pretty(print(0, 0, c))
 
   def print(p: Int, ii: Int, t: Term): Doc = t match {
@@ -79,6 +83,25 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
       t.toString
   }
 }
+
+trait CorePrinterAgda extends CoreAST with PrettyPrinter {
+  def ppa(c: Term): String =
+    pretty(printA(0, 0, c))
+
+  def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Universe(-1) =>
+      "Set*"
+    case Universe(i) =>
+      s"Set$i"
+    case Bound(k) if ii - k - 1 >= 0 =>
+      vars(ii - k - 1)
+    case Free(n) =>
+      n.toString
+    case _ =>
+      t.toString
+  }
+}
+
 
 trait CoreQuote extends CoreAST {
   def quote0(v: Value): Term =
@@ -110,7 +133,7 @@ trait CoreEval extends CoreAST {
   def eval0(c: Term): Value = eval(c, emptyContext[Value], Nil)
   @deprecated
   def eval(t: Term, named: NameEnv[Value], bound: Env): Value =
-    eval(t, Context(named, emptyEnv), bound)
+    eval(t, Context(named, emptyEnv, Nil), bound)
   def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Ann(e, _) =>
       eval(e, ctx, bound)
@@ -129,14 +152,14 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
     if (inferred != expected) {
-      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(inferred)}", path)
+      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
     }
   }
 
   def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"expected: ${pprint(expected)},\ninferred: ${pprint(infTerm)}}", path)
+      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}}", path)
     }
   }
 
@@ -144,7 +167,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
-      throw new TypeError(s"expected: ${pprint(expTerm)},\ninferred: ${pprint(infTerm)}", path)
+      throw new TypeError(s"expected: ${pp(expTerm)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
@@ -153,7 +176,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       k
     case _ =>
       val infTerm = quote(i, inferred)
-      throw new TypeError(s"expected: Set*,\ninferred: ${pprint(infTerm)}", path)
+      throw new TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
   }
 
   def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
@@ -188,7 +211,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 }
 
-trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEval with CoreCheck with CoreQuote with REPL {
+trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePrinterAgda with CoreEval with CoreCheck with CoreQuote with REPL {
   type T = Term
   type V = Value
 
@@ -203,13 +226,17 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CoreEva
   def typeInfo(t: V): V =
     t
   override def tPrint(c: T): String =
-    pretty(print(0, 0, c))
+    pp(c)
+  override def tPrintAgda(c: T): String =
+    pretty(nest(printA(0, 0, c)))
+  override def fvs(c : T) : List[Name] =
+    freeVars(c)
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
     val tp = itype(state, t)
     checkEqual(0, tp, VUniverse(-1), Nil)
     val v = ieval(state, t)
     output(tPrint(iquote(v)))
-    state.copy(types = state.types + (s2name(x) -> v))
+    state.copy(types = state.types + (s2name(x) -> v), ids = s2name(x) :: state.ids)
   }
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))

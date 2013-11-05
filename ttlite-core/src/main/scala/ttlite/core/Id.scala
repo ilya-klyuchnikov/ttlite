@@ -35,6 +35,20 @@ trait IdPrinter extends FunPrinter with IdAST {
   }
 }
 
+trait IdPrinterAgda extends FunPrinterAgda with IdAST {
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Id(a, x, y) =>
+      printA(p, ii, 'Id @@ a @@ x @@ y)
+    case Refl(a, x) =>
+      printA(p, ii, 'refl @@ a @@ x)
+    case IdElim(Id(a, a1, a2), m, mr, eq) =>
+      printA(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
+
 trait IdEval extends FunEval with IdAST with CoreQuote {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Id(a, x, y) =>
@@ -137,4 +151,12 @@ trait IdQuote extends CoreQuote with IdAST {
   }
 }
 
-trait IdREPL extends CoreREPL with IdAST with IdMetaSyntax with IdPrinter with IdCheck with IdEval with IdQuote
+trait IdREPL
+  extends CoreREPL
+  with IdAST
+  with IdMetaSyntax
+  with IdPrinter
+  with IdPrinterAgda
+  with IdCheck
+  with IdEval
+  with IdQuote
