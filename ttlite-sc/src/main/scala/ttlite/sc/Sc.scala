@@ -148,7 +148,7 @@ trait ScParser extends MetaParser {
   override def stmts = List(scStmt) ++ super.stmts
   lazy val scStmt: PackratParser[Stmt[MTerm]] =
     ("(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
-      case id1 ~ id2 ~ t => SC(id1, id2, t.p())
+      case id1 ~ id2 ~ t => SC(id1, id2, t(Nil))
     }
 }
 

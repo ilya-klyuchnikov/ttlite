@@ -34,6 +34,41 @@ class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
     }
   }
 
+  describe("Rich Parser") {
+    //            0    0    1    1    2    2    3
+    //            0123456789012345678901234567890
+    //             |   |    |    |    |    |
+    val input = """\ (f : A) (x : B) -> f x"""
+    val mt = MetaParser.parseMTerm(input)
+    val topBind : MBind = mt.asInstanceOf[MBind]
+    val innerBind : MBind = topBind.body.asInstanceOf[MBind]
+    val innerBody  = innerBind.body
+    it("should mark positions of a binder in a correct way") {
+      assert(mt.startPos.column == 1)
+      assert(mt.endPos.column == 25)
+    }
+
+    it("should mark positions of arguments (types) in a correct way") {
+      val fTp = topBind.tp
+      assert(fTp.startPos.column == 8)
+      assert(fTp.endPos.column == 9)
+
+      val xTp = innerBind.tp
+      assert(xTp.startPos.column == 16)
+      assert(xTp.endPos.column == 17)
+    }
+
+    it ("should mark position of an inner binder starting from an argument to the end of the body") {
+      assert(innerBind.startPos.column == 11)
+      assert(innerBind.endPos.column == 25)
+    }
+
+    it ("should mark position of an inner body") {
+      assert(innerBody.startPos.column == 22)
+      assert(innerBody.endPos.column == 25)
+    }
+  }
+
   describe("Basic examples") {
     it("01. core") {
       TTREPL.main(Array("examples/core.hs"))

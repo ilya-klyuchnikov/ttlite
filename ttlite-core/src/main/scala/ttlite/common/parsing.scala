@@ -4,6 +4,15 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.input._
 import scala.util.parsing.combinator._
 
+/**
+ * RichPositional stores information about start/end positions of a term
+ * in the input.
+ *
+ * Usage scenario: mix this trait into a class of your AST.
+ * When you get a result of parsing, call `setPs(startPos, endPos)`.
+ *
+ * The usage of this trait implies late binding.
+ */
 trait RichPositional {
   var startPos: Position = NoPosition
   var endPos: Position = NoPosition
@@ -16,6 +25,7 @@ trait RichPositional {
   lazy val source: java.lang.CharSequence =
     startPos.asInstanceOf[OffsetPosition].source
 
+  // TODO: can we wrap a CharSequence (LinedInput)? Then this index may be calculated once.
   /** An index that contains all line starts, including first line, and eof. */
   private lazy val index: Array[Int] = {
     var lineStarts = new ArrayBuffer[Int]
@@ -26,17 +36,34 @@ trait RichPositional {
     lineStarts.toArray
   }
 
+  /**
+   * Returns a piece of the input text that directly corresponds to this term.
+   */
+  def lines: String =
+    source.subSequence(
+      index(startPos.line -1),
+      index(endPos.line)).toString
+
+  /**
+   * Returns lines of the input texts where this term spans.
+   */
   def origin: String =
     source.subSequence(
       index(startPos.line -1) + startPos.column - 1,
       index(endPos.line - 1) + endPos.column - 1).toString
 
+  /**
+   * Returns a part of the first line of the fragment BEFORE this term.
+   */
   def originPrefix: String =
     source.subSequence(
       index(startPos.line -1),
       index(startPos.line -1) + startPos.column - 1
     ).toString
 
+  /**
+   * Returns a part of the last line of the fragment AFTER this term.
+   */
   def originSuffix: String =
     source.subSequence(
       index(endPos.line - 1) + endPos.column - 1,
@@ -44,70 +71,106 @@ trait RichPositional {
     ).toString
 }
 
+/**
+ * Lexer that parser haskell-like language.
+ * Differences from `StdLexical`:
+ * 1) Haskell comments (`--` and `{-`/`-}`)
+ * 2) Identifier may contain extra characters:
+ *    `$` - used for assumed variables
+ *    `/` - used in hack for import (to have nice syntax coloring of import statements on github)
+ *    `'` - widely used in Haskell for names of auxiliary functions/variables
+ *    `\` - for lambda
+ */
 class MetaLexical extends lexical.StdLexical {
   import scala.util.parsing.input.CharArrayReader._
-  override def whitespace: Parser[Any] = rep(
+  override final lazy val whitespace: Parser[Any] = rep(
     whitespaceChar
       | '{' ~ '-' ~ comment
-      | '-' ~ '-' ~ rep( chrExcept(EofCh, '\n') )
+      | '-' ~ '-' ~ rep(chrExcept(EofCh, '\n'))
       | '{' ~ '-' ~ failure("unclosed comment")
   )
-  override protected def comment: Parser[Any] = (
-    '-' ~ '}'  ^^ { case _ => ' '  }
+  override final lazy val comment: Parser[Any] = (
+    '-' ~ '}'  ^^ { _ => ' '  }
       | chrExcept(EofCh) ~ comment
     )
-  override def identChar = letter | elem('_') | elem('$') | elem('/') | elem('\'') | elem('\\')
+  override final lazy val identChar =
+    super.identChar | elem('$') | elem('/') | elem('\'') | elem('\\')
 }
 
+
+// TODO: it seems to be logical to separate this into 2 traits: MetaTermParser + StmtParser
+// MetaTermParser is fixed, but StmtParser is customizable
+/**
+ * Parser of "concrete shallow-terms". See documentation for the syntax of "shallow-language".
+ * Entry points are `parseStatements` and `parseMTerm`
+ */
 trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
+
+  def parseStatements(in: String) : List[Stmt[MTerm]]  =
+    parseIO(stmt+, in)
+  def parseMTerm(in: String) : MTerm =
+    parseIO(term, in)(Nil)
+
+  // Setting up lexer
   override val lexical = new MetaLexical
   lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda")
   lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
-  type C = List[String]
-  case class Res(private val f : C => MTerm) extends RichPositional {
-    def p(c : C = Nil): MTerm = f(c).setPs(startPos, endPos)
+  // Ctx is a sequence of named binders. In the spirit of TAPL implementation.
+  type Ctx = List[String]
+  type Res = Ctx => MTerm
+  // PosRes propagates positional information to the final result
+  case class RichPosRes(res : Ctx => MTerm) extends (Ctx => MTerm) with RichPositional {
+    override def apply(c : Ctx): MTerm = res(c).setPs(startPos, endPos)
   }
-  case class P(p : (String, Res)) extends RichPositional
+  // Parser combinator which enriches/updates the result of a parser `p` with positional information
+  // Caveat: it works up to whitespaces/comments
+  def pos[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in1 =>
+    p(in1) match {
+      case Success(t, in2) => Success(t.setPs(in1.pos, in2.pos), in2)
+      case r => r
+    }
+  }
+  case class Arg(name : String, tp : RichPosRes) extends RichPositional
 
-  lazy val term: PackratParser[Res] = untyped
-  lazy val aTerm: PackratParser[Res] =
-    p(mVar | "(" ~> term <~ ")")
-  lazy val mVar: PackratParser[Res] =
-    p(ident ^^ {i => Res {ctx: C => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}} })
-  lazy val app: PackratParser[Res] =
-    p((aTerm+) ^^ {ts => Res {ctx: C => ts.map{_.p(ctx)}.reduce(_ ~ _)} })
+  lazy val term: PackratParser[RichPosRes] = bind | app
+  lazy val aTerm: PackratParser[RichPosRes] =
+    pos(mVar | "(" ~> term <~ ")")
+  lazy val mVar: PackratParser[RichPosRes] =
+    pos(ident ^^ {i => RichPosRes {ctx: Ctx => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}} })
+  lazy val app: PackratParser[RichPosRes] =
+    pos((aTerm+) ^^ {ts => RichPosRes {ctx: Ctx => ts.map{_(ctx)}.reduce(_ ~ _)} })
 
-  lazy val bind: PackratParser[Res] =
-    p(ident ~ (arg+) ~ (("." | "->") ~> term) ^^ {case id ~ args ~ body => Res {ctx: C =>
-      def mkBind(xs: List[P], c: C): MTerm = xs match {
-        case Nil => body.p(c)
-        case (p@P((n, tp))) :: xs =>
-          val bind = MBind(id, tp.p(c), mkBind(xs, n :: c))
-          bind.setPs(p.startPos, p.endPos)
-          bind
-      }
-      mkBind(args, ctx)
-    } })
-  lazy val untyped: PackratParser[Res] = bind | app
-  val arg: PackratParser[P] =
-    p("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => P(i, x)})
+  lazy val bind: PackratParser[RichPosRes] =
+    pos(ident ~ (arg+) ~ (("." | "->") ~> term) ^^
+      {case id ~ args ~ body =>
+        RichPosRes { ctx: Ctx =>
+          def mkBind(args: List[Arg], c: Ctx): MTerm = args match {
+            case Nil => body(c)
+            case arg :: xs =>
+              val bind = MBind(id, arg.tp(c), mkBind(xs, arg.name :: c))
+              bind.setPs(arg.startPos, body.endPos)
+              bind
+          }
+          mkBind(args, ctx)
+        }})
+
+  val arg: PackratParser[Arg] =
+    pos("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => Arg(i, x)})
+
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-  def stmts = List(quitStmt, assumeStmt, letStmt1, letStmt, importStmt, exportToAgdaStmt, reloadStmt, evalStmt)
-  def p[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in => p(in) match {
-    case Success(t, in1) => Success(t.setPs(in.pos, in1.pos), in1) case n => n
-  }}
+  def stmts = List(quitStmt, assumeStmt, typedLetStmt, letStmt, importStmt, exportToAgdaStmt, reloadStmt, evalStmt)
 
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
-    ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y.p(Nil))}
-  lazy val letStmt1: PackratParser[Stmt[MTerm]] =
-    (global ~ (":" ~> term) <~ ";") >> {
+    ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
+  lazy val typedLetStmt: PackratParser[Stmt[MTerm]] =
+    (globalId ~ (":" ~> term) <~ ";") >> {
       case x ~ tp =>
-        (ident ^?({case `x` => x}, _ => s"no implementation for $x")) ~ ("=" ~> term <~ ";") ^^ {
-          case x ~ y => TypedLet(x, y.p(Nil), tp.p(Nil))
+        (ident ^?({case `x` => x}, _ => s"definition of $x expected")) ~ ("=" ~> term <~ ";") ^^ {
+          case x ~ y => TypedLet(x, y(Nil), tp(Nil))
         }
     }
   lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
-    (assumed ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y.p(Nil))}
+    (assumedId ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y(Nil))}
   lazy val importStmt: PackratParser[Stmt[MTerm]] =
     "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
   lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
@@ -115,25 +178,24 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
     "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
-    term <~ ";" ^^ {t => Eval(t.p(Nil))}
+    term <~ ";" ^^ {t => Eval(t(Nil))}
   lazy val quitStmt: PackratParser[Stmt[MTerm]] =
     "quit" <~ ";" ^^ {t => Quit}
 
-  def assumed: PackratParser[String] =
-    ident ^? {case s: String if s.startsWith("$") => s}
-  def global: PackratParser[String] =
-    ident ^? {case s: String if !s.startsWith("$") => s}
-  def s2name(s: String): Name = if (s.startsWith("$")) Assumed(s) else Global(s)
+  def assumedId: PackratParser[String] =
+    ident ^? {case id if id.startsWith("$") => id}
+  def globalId: PackratParser[String] =
+    ident ^? {case id if !id.startsWith("$") => id}
+  def s2name(s: String): Name =
+    if (s.startsWith("$")) Assumed(s) else Global(s)
+
   def parseIO[A](p: Parser[A], in: String): A = phrase(p)(new lexical.Scanner(in)) match {
-    case t if t.successful =>
-      t.get
-    case f@Failure(msg, next) =>
+    case Success(res, _) => res
+    case Failure(msg, next) =>
       throw ParsingError(msg, next.pos.line, next.pos.column, next.pos.longString)
     case Error(msg, next) =>
       throw ParsingError(msg, next.pos.line, next.pos.column, next.pos.longString)
   }
-
-  def parseMTerm(in: String) = parseIO(term, in).p(Nil)
 }
 
 object MetaParser extends MetaParser
