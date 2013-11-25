@@ -1,7 +1,7 @@
 package ttlite.core.it
 
 import org.scalatest.matchers.MustMatchers
-import ttlite.core.TTREPL
+import ttlite.TTREPL
 
 class TTLiteExportSpec extends org.scalatest.FunSpec with MustMatchers {
   describe("Export to Agda") {
