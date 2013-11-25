@@ -47,6 +47,21 @@ trait DPairPrinter extends FunPrinter with DPairAST {
   }
 }
 
+trait DPairPrinterAgda extends FunPrinterAgda with DPairAST {
+
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Sigma(d, r) =>
+      printA(p, ii, 'Sigma @@ d @@ Lam(d, r))
+    case DPair(Sigma(d, r), a, b) =>
+      printA(p, ii, 'sigma @@ d @@ Lam(d, r) @@ a @@ b)
+    case SigmaElim(Sigma(d, r), m, f, dp) =>
+      printA(p, ii, 'elimSigma @@ d @@ Lam(d, r) @@ m @@ f @@ dp)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
+
 trait DPairQuote extends CoreQuote with DPairAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VSigma(v, f) =>
@@ -94,7 +109,7 @@ trait DPairCheck extends FunCheck with DPairAST {
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
 
-      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
+      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal), Nil), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
@@ -159,6 +174,7 @@ trait DPairREPL
   with DPairAST
   with DPairMetaSyntax
   with DPairPrinter
+  with DPairPrinterAgda
   with DPairCheck
   with DPairEval
   with DPairQuote

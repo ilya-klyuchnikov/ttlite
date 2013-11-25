@@ -41,6 +41,22 @@ trait ListPrinter extends FunPrinter with ListAST {
   }
 }
 
+trait ListPrinterAgda extends FunPrinterAgda with ListAST {
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case PiList(a) =>
+      printA(p, ii, 'List @@ a)
+    case PiNil(PiList(a)) =>
+      printA(p, ii, 'nil @@ a)
+    case PiCons(PiList(a), x, xs) =>
+      printA(p, ii, 'cons @@ a @@ x @@ xs)
+    case PiListElim(PiList(a), m, mn, mc, xs) =>
+      printA(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
+
 trait ListEval extends FunEval with ListAST {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case PiList(a) =>
@@ -155,4 +171,12 @@ trait ListQuote extends CoreQuote with ListAST {
   }
 }
 
-trait ListREPL extends CoreREPL with ListAST with ListMetaSyntax with ListPrinter with ListCheck with ListEval with ListQuote
+trait ListREPL
+  extends CoreREPL
+  with ListAST
+  with ListMetaSyntax
+  with ListPrinter
+  with ListPrinterAgda
+  with ListCheck
+  with ListEval
+  with ListQuote

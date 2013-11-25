@@ -35,6 +35,19 @@ trait PairPrinter extends FunPrinter with PairAST {
   }
 }
 
+trait PairPrinterAgda extends FunPrinterAgda with PairAST {
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Product(a, b) =>
+      printA(p, ii, 'Pair @@ a @@ b)
+    case Pair(Product(a, b), x, y) =>
+      printA(p, ii, 'pair @@ a @@ b @@ x @@ y)
+    case ProductElim(Product(a, b), m, f, pair) =>
+      printA(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
 trait PairEval extends FunEval with PairAST {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Product(a, b) =>
@@ -134,4 +147,12 @@ trait PairQuote extends CoreQuote with PairAST {
   }
 }
 
-trait PairREPL extends CoreREPL with PairAST with PairMetaSyntax with PairPrinter with PairCheck with PairEval with PairQuote
+trait PairREPL
+  extends CoreREPL
+  with PairAST
+  with PairMetaSyntax
+  with PairPrinter
+  with PairPrinterAgda
+  with PairCheck
+  with PairEval
+  with PairQuote

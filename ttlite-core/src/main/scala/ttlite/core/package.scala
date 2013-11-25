@@ -95,6 +95,7 @@ case class TypedLet[I](n: String, i: I, t: I) extends Stmt[I]
 case class Assume[I](n: String, i: I) extends Stmt[I]
 case class Eval[I](e: I) extends Stmt[I]
 case class Import(s: String) extends Stmt[Nothing]
+case class ExportToAgda(s: String) extends Stmt[Nothing]
 case class Reload(s: String) extends Stmt[Nothing]
 case object Quit extends Stmt[Nothing]
 
@@ -116,7 +117,7 @@ class MetaLexical extends lexical.StdLexical {
 
 trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
   override val lexical = new MetaLexical
-  lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload")
+  lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda")
   lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
   type C = List[String]
   case class Res(private val f : C => MTerm) extends RichPositional {
@@ -147,7 +148,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   val arg: PackratParser[P] =
     p("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => P(i, x)})
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-  def stmts = List(quitStmt, assumeStmt, letStmt1, letStmt, importStmt, reloadStmt, evalStmt)
+  def stmts = List(quitStmt, assumeStmt, letStmt1, letStmt, importStmt, exportToAgdaStmt, reloadStmt, evalStmt)
   def p[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in => p(in) match {
     case Success(t, in1) => Success(t.setPs(in.pos, in1.pos), in1) case n => n
   }}
@@ -165,6 +166,8 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     (assumed ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y.p(Nil))}
   lazy val importStmt: PackratParser[Stmt[MTerm]] =
     "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
+  lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
+    "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
     "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
@@ -235,7 +238,10 @@ case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
   def column = mterm.subTerm(path).startPos.column
   def origin = mterm.subTerm(path).origin
 }
-//case class RawTypingError(msg: String) extends TTLiteError(msg, 0, 0)
+
+trait PrettyPrinter extends org.kiama.output.PrettyPrinter {
+  def parensIf(b: Boolean, d: Doc) = if (b) parens(d) else d
+}
 
 object `package` {
   sealed trait PathElem
@@ -263,10 +269,10 @@ object `package` {
   //implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
   type NameEnv[V] = Map[Name, V]
   // todo: helper methods: bindVal, bindType
-  case class Context[V](vals: NameEnv[V], types: NameEnv[V])
+  case class Context[V](vals: NameEnv[V], types: NameEnv[V], ids: List[Name])
 
   def emptyEnv[V] = Map[Name, V]()
-  def emptyContext[V] = Context(emptyEnv[V], emptyEnv[V])
+  def emptyContext[V] = Context(emptyEnv[V], emptyEnv[V], Nil)
   val ids = "abcdefghijklmnopqrstuvwxyz"
   val suffs = List("", "1")
   val vars = for {j <- suffs; i <- ids} yield s"$i$j"

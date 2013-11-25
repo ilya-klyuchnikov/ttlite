@@ -1,4 +1,5 @@
 target/
+/agda/
 .idea/
 .idea_modules/
 .ensime_lucene/
@@ -6,3 +7,5 @@ target/
 *~
 .classpath
 .project
+*.agdai
+#*

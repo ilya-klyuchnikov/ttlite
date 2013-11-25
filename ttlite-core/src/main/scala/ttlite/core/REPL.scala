@@ -16,6 +16,9 @@ trait REPL {
   def ieval(ctx: Context[V], i: T): V
   // pretty printing of terms
   def tPrint(c: T): String
+  // pretty printing of term into Agda
+  def tPrintAgda(c: T): String
+  def fvs(c : T) : List[Name]
   def assume(s: Context[V], n: String, t: T): Context[V]
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
   def fromM(m: MTerm): T
@@ -84,7 +87,46 @@ trait REPL {
         loadModule(f, state, reload = false)
       case Reload(f) =>
         loadModule(f, state, reload = true)
+      case ExportToAgda(f) =>
+        exportToAgda(f, state)
+        state
     }
+
+  private def exportToAgda(f : String, state : Context[V]) {
+    import java.io.{File, FileWriter}
+
+    val agdaFile = new File(s"agda/${f}.agda")
+    new File(s"agda/${f}.agdai").delete()
+
+    agdaFile.getParentFile.mkdirs()
+    agdaFile.createNewFile()
+
+    val out = new FileWriter(agdaFile)
+
+    out.write(s"module ${f} where\n")
+    out.write(s"open import ttlite\n")
+
+    val assumed = state.ids.reverse
+
+    if (assumed.nonEmpty) {
+      out.write("\npostulate\n")
+      for {id <- assumed } {
+        val tp = iquote(state.types(id))
+        out.write(s"  ${id} : ${tPrintAgda(tp)}\n")
+      }
+    }
+
+    // TODO: hack - remove
+    for (id <- state.vals.keys.filterNot(n => List("pair", "cons", "nil", "_").contains(n.toString))) {
+      val v = iquote(state.vals(id))
+      val tp = iquote(state.types(id))
+
+      out.write(s"\n${id} : ${tPrintAgda(tp)}\n")
+      out.write(s"${id} = ${tPrintAgda(v)}\n")
+    }
+
+    out.close()
+  }
 
   def handleLet(state: Context[V], s: String, it: T): Context[V] = {
     val tp = iinfer(state, it)
@@ -94,7 +136,7 @@ trait REPL {
     } else {
       output(s"$s\n:\n${vPrint(tp)};")
     }
-    Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp))
+    Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp), state.ids)
   }
 
   private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =
@@ -155,7 +197,7 @@ trait REPL {
   def main(args: Array[String]) {
     AnsiConsole.systemInstall()
 
-    var state = Context[V](Map(), Map())
+    var state = Context[V](Map(), Map(), Nil)
     modules = Set()
     args match {
       case Array() =>

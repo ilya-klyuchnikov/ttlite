@@ -6,8 +6,6 @@ abort =
 boolElim =
     \ (m : forall (_ : Bool) . Set) (c1 : m False) (c2 : m True) (b : Bool) . elim Bool m c1 c2 b;
 
---Prop = boolElim (\ (_ : Bool) -> Set) Falsity Truth;
-
 not = boolElim (\ (_ : Bool) -> Bool) True False;
 and = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) (\ (_ : Bool) -> False) (id Bool);
 

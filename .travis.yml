@@ -4,6 +4,10 @@ scala:
 jdk:
   - oraclejdk7
 
+before_install:
+- sudo apt-get update
+- sudo apt-get install agda-bin
+
 sbt_args: -J-Xms512M -J-Xmx1500M -J-Xss2M -XX:MaxPermSize=724M
 
-script: sbt ++$TRAVIS_SCALA_VERSION test
+script: sbt ++$TRAVIS_SCALA_VERSION test it:test

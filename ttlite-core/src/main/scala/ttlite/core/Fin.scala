@@ -73,6 +73,31 @@ trait FinPrinter extends FunPrinter with FinAST {
   }
 }
 
+trait FinPrinterAgda extends FunPrinterAgda with FinAST {
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Falsity =>
+      printA(p, ii, "Falsity")
+    case Truth =>
+      printA(p, ii, "Truth")
+    case Bool =>
+      printA(p, ii, "Bool")
+    case Triv =>
+      printA(p, ii, "triv")
+    case False =>
+      printA(p, ii, "false")
+    case True =>
+      printA(p, ii, "true")
+    case FalsityElim(m, elem) =>
+      printA(p, ii, 'elimFalsity @@ m @@ elem)
+    case TruthElim(m, v, elem) =>
+      printA(p, ii, 'elimTruth @@ m @@ v @@ elem)
+    case BoolElim(m, v1, v2, elem) =>
+      printA(p, ii, 'elimBool @@ m @@ v1 @@ v2 @@ elem)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
 trait FinEval extends FunEval with FinAST {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Falsity =>
@@ -222,4 +247,12 @@ trait FinQuote extends CoreQuote with FinAST {
   }
 }
 
-trait FinREPL extends CoreREPL with FinAST with FinMetaSyntax with FinPrinter with FinCheck with FinEval with FinQuote
+trait FinREPL
+  extends CoreREPL
+  with FinAST
+  with FinMetaSyntax
+  with FinPrinter
+  with FinPrinterAgda
+  with FinCheck
+  with FinEval
+  with FinQuote

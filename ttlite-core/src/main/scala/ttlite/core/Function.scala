@@ -51,7 +51,7 @@ trait FunPrinter extends CorePrinter with FunAST {
       super.print(p, ii, t)
   }
 
-  def nestedForall(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+  private def nestedForall(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
     case Pi(d, r) =>
       nestedForall(i + 1, (i, d) :: fs, r)
     case x =>
@@ -60,6 +60,32 @@ trait FunPrinter extends CorePrinter with FunAST {
       nest(sep((text("forall") +: fors1).toSeq ++ Seq(print(0, i , x))))
   }
 }
+
+trait FunPrinterAgda extends CorePrinterAgda with FunAST {
+  // todo: nested lam
+  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Pi(d, Pi(d1, r)) =>
+      parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
+    case Pi(d, r) =>
+      parensIf(p > 0, sep(Seq("forall " <> parens(vars(ii) <> " : " <> printA(0, ii, d)) <> " -> ", nest(printA(0, ii + 1, r)))))
+    case Lam(t, c) =>
+      parensIf(p > 0,  "\\ " <> parens(vars(ii) <> " : " <> printA(0, ii, t)) <> " -> " <> nest(printA(0, ii + 1, c)))
+    case i :@: c =>
+      parensIf(p > 2, sep(Seq(printA(2, ii, i), nest(printA(3, ii, c)))))
+    case _ =>
+      super.printA(p, ii, t)
+  }
+
+  private def nestedForall(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Pi(d, r) =>
+      nestedForall(i + 1, (i, d) :: fs, r)
+    case x =>
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d)))}.toSeq
+      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " -> ")
+      nest(sep((text("forall") +: fors1).toSeq ++ Seq(printA(0, i , x))))
+  }
+}
+
 
 trait FunQuote extends CoreQuote with FunAST {
   override def quote(ii: Int, v: Value): Term = v match {
@@ -98,7 +124,7 @@ trait FunCheck extends CoreCheck with FunAST {
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
 
-      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal)), iSubst(0, Free(Local(i)), tp))
+      val tpType = iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> xVal), Nil), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
@@ -108,9 +134,9 @@ trait FunCheck extends CoreCheck with FunAST {
 
       checkUniverse(i, tType, path/(1, 2))
       // to force early error
-      iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e))
+      iType(i + 1, path/(2, 2), Context(ctx.vals, ctx.types + (Local(i) -> tVal), Nil), iSubst(0, Free(Local(i)), e))
 
-      VPi(tVal, v => iType(i + 1, path/(2, 2), Context(ctx.vals + (Local(i) -> v), ctx.types + (Local(i) -> tVal)), iSubst(0, Free(Local(i)), e)))
+      VPi(tVal, v => iType(i + 1, path/(2, 2), Context(ctx.vals + (Local(i) -> v), ctx.types + (Local(i) -> tVal), Nil), iSubst(0, Free(Local(i)), e)))
     case (e1 :@: e2) =>
       iType(i, path/(1, 2), ctx, e1) match {
         case VPi(x, f) =>
@@ -135,4 +161,4 @@ trait FunCheck extends CoreCheck with FunAST {
   }
 }
 
-trait FunREPL extends CoreREPL with FunAST with FunMetaSyntax with FunPrinter with FunCheck with FunEval with FunQuote
+trait FunREPL extends CoreREPL with FunAST with FunMetaSyntax with FunPrinter with FunPrinterAgda with FunCheck with FunEval with FunQuote
