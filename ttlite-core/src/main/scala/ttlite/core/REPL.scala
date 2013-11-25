@@ -117,7 +117,7 @@ trait REPL {
     }
 
     // TODO: hack - remove
-    for (id <- state.vals.keys.filterNot(_.toString.endsWith("_raw")).filterNot(n => List("pair", "cons", "nil", "_").contains(n.toString))) {
+    for (id <- state.vals.keys.filterNot(n => List("pair", "cons", "nil", "_").contains(n.toString))) {
       val v = iquote(state.vals(id))
       val tp = iquote(state.types(id))
 

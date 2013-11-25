@@ -61,9 +61,6 @@ class TTLiteSCExamples extends org.scalatest.FunSpec {
     it ("kmp2.hs") {
       TTScREPL.main(Array("examples/misc-sc/kmp.hs"))
     }
-    it ("mrsc_and_comm.hs - mrsc proves commutativity of AND operation") {
-      TTScREPL.main(Array("examples/misc-sc/mrsc_and_comm.hs"))
-    }
     it ("preprint.hs - example from preprint.hs") {
       TTScREPL.main(Array("examples/misc-sc/preprint.hs"))
     }

@@ -140,20 +140,14 @@ trait ProofResiduator extends BaseResiduator with IdAST {
 }
 
 case class SC[I](id1: String, id2: String, e: I) extends Stmt[I]
-case class MRSC[I](id: String, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
   lexical.reserved += ("sc", "mrsc")
-  override def stmts = List(mrscStmt, scStmt) ++ super.stmts
+  override def stmts = List(scStmt) ++ super.stmts
   lazy val scStmt: PackratParser[Stmt[MTerm]] =
     ("(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
       case id1 ~ id2 ~ t => SC(id1, id2, t.p())
-    }
-
-  lazy val mrscStmt: PackratParser[Stmt[MTerm]] =
-    ident ~ ("=" ~ "mrsc" ~> term <~ ";") ^^ {
-      case id ~ t => MRSC(id, t.p())
     }
 }
 
@@ -201,87 +195,17 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
       output("proof:")
       output(tPrint(proofTerm))
 
-      // in general, this line will fail
-      //iinfer(state.ne, state.ctx, rawAnnProofTerm).get
-
-      //output("expected type:")
-      //output(icprint(Eq(cType, it, cTerm)))
       output("::")
       output(tPrint(iquote(proofTypeVal)))
       Context(
         state.vals +
           (Global(scId) -> resVal) +
-          (Global(proofId) -> proofVal) +
-          (Global(s"${proofId}_raw") -> proofVal),
+          (Global(proofId) -> proofVal),
         state.types +
           (Global(scId) -> inTpVal) +
           (Global(proofId) -> proofTypeVal),
         state.ids
       )
-    case MRSC(res, mTerm) =>
-      val inputTerm = fromM(mTerm)
-      val inTpVal = iinfer(state, inputTerm)
-      // start configuration is a normalized one!
-      // it is a self contained!
-      val conf = Conf(iquote(ieval(state, inputTerm)), state)
-      val sGraphs = GraphGenerator(MultiRules, conf).toList
-      val tGraphs = sGraphs.map(Transformations.transpose)
-
-      var s = state
-      var i = 0
-
-      for (tGraph <- tGraphs) {
-        i += 1
-        //output(tgToString(tGraph))
-        val resVal = ieval(state, iquote(residuate(tGraph, state.vals)))
-        val resTerm = iquote(resVal)
-        val inType = iquote(inTpVal)
-
-        val resTermAnn = Ann(resTerm, inType)
-        val t3 = iinfer(state, resTermAnn)
-        output(s"res #$i")
-        output(tPrint(resTerm) + " :: " + tPrint(iquote(t3)) + ";")
-        // this place is a bit unsafe:
-        // we normalize a proof without first type-checking it
-        // this is why we can use combinators cong1, cong2, ... as generic combinators -
-        // that are applicable for *any* type, not only for small types (Set0).
-        val rawProofVal = proofResiduate(tGraph, state.vals)
-        val rawProofTerm = iquote(rawProofVal)
-        val rawAnnProofTerm = Ann(rawProofTerm, Id(inType, inputTerm, resTerm))
-
-        val proofVal = ieval(state, iquote(rawProofVal))
-        val proofTerm = iquote(ieval(state, iquote(proofVal)))
-        // to check that it really built correctly
-        val annProofTerm = Ann(proofTerm, Id(inType, inputTerm, resTerm))
-        val proofTypeVal = iinfer(state, annProofTerm)
-        //output("raw proof:")
-        //output(icprint(rawProofTerm))
-        //output(s"proof #$i:")
-        //output(icprint(proofTerm))
-
-        // in general, this line will fail
-        //iinfer(state.ne, state.ctx, rawAnnProofTerm).get
-
-        //output("expected type:")
-        //output(icprint(Eq(cType, it, cTerm)))
-        output("::")
-        output(tPrint(iquote(proofTypeVal)))
-        s = Context(
-          s.vals +
-            (Global(s"${res}_${i}") -> resVal) +
-            (Global(s"${res}_${i}_proof") -> proofVal),
-          s.types +
-            (Global(s"${res}_${i}") ->  inTpVal) +
-            (Global(s"${res}_${i}_proof") -> proofTypeVal),
-          s.ids
-        )
-      }
-      s = Context(
-        s.vals + (Global(s"${res}_count") -> intToVNat(i)),
-        s.types + (Global(s"${res}_count") ->  VNat),
-        s.ids
-      )
-      s
     case _ =>
       super.handleStmt(state, stmt)
   }
