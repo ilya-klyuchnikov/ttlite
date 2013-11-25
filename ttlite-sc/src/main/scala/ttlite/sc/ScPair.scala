@@ -1,6 +1,7 @@
 package ttlite.sc
 
 import mrsc.core._
+import ttlite.common._
 import ttlite.core._
 
 trait PairDriver extends CoreDriver with PairAST with PairEval {

@@ -2,6 +2,7 @@ package ttlite.sc
 
 import mrsc.core._
 import ttlite.core._
+import ttlite.common._
 
 trait TTSc extends CoreSubst with CoreCheck {
 

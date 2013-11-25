@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait ListAST extends CoreAST {
   case class PiList(A: Term) extends Term
   case class PiNil(et: Term) extends Term

@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait VectorAST extends CoreAST {
   case class Vec(A: Term, n: Term) extends Term
   case class VecNil(A: Term) extends Term

@@ -1,9 +1,12 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait CoreAST {
   trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
   case class Bound(i: Int) extends Term
+  // TODO something line generated name/var
   case class Free(n: Name) extends Term
 
   case class Universe(i: Int) extends Term {

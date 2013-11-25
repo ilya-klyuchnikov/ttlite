@@ -1,7 +1,9 @@
 package ttlite.core.test
 
-import ttlite.core._
 import org.scalatest.matchers.MustMatchers
+
+import ttlite.common._
+import ttlite.TTREPL
 
 class TTLiteSpec extends org.scalatest.FunSpec with MustMatchers {
   describe("Meta Parser") {

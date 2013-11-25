@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait FinAST extends CoreAST {
 
   // ⊥, Void, empty type

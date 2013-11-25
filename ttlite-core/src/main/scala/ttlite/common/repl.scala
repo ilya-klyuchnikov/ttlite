@@ -1,8 +1,7 @@
-package ttlite.core
-
-import org.fusesource.jansi.AnsiConsole
+package ttlite.common
 
 trait REPL {
+  import IoUtil._
 
   // TO OVERRIDE STARTS
   type T // term
@@ -195,6 +194,7 @@ trait REPL {
   }
 
   def main(args: Array[String]) {
+    import org.fusesource.jansi.AnsiConsole
     AnsiConsole.systemInstall()
 
     var state = Context[V](Map(), Map(), Nil)
@@ -215,19 +215,3 @@ trait REPL {
     }
   }
 }
-
-object TTREPL
-  extends CoreREPL
-  with FunREPL
-  with DPairREPL
-  with NatREPL
-  with VectorREPL
-  with IdREPL
-  with FinREPL
-  with ListREPL
-  with PairREPL
-  with SumREPL
-  with WREPL {
-  override val name = "TT"
-}
-

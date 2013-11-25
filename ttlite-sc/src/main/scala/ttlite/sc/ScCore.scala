@@ -1,6 +1,7 @@
 package ttlite.sc
 
 import mrsc.core._
+import ttlite.common._
 import ttlite.core._
 
 trait CoreSubst extends CoreEval with CoreQuote {

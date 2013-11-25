@@ -1,8 +1,8 @@
-package ttlite.core
+package ttlite.common
 
-import scala.util.parsing.combinator._
-import scala.util.parsing.input._
 import scala.collection.mutable.ArrayBuffer
+import scala.util.parsing.input._
+import scala.util.parsing.combinator._
 
 trait RichPositional {
   var startPos: Position = NoPosition
@@ -44,62 +44,6 @@ trait RichPositional {
     ).toString
 }
 
-// NAMES
-sealed class Name (s : String) {
-  override def toString = s
-}
-case class Global(n: String) extends Name(n)
-case class Assumed(n: String) extends Name(n)
-case class Local(i: Int) extends Name(s"<$i>")
-case class Quote(i: Int) extends Name(s"[$i]")
-// META-SYNTAX
-sealed trait MTerm extends RichPositional {
-  def ~(t1: MTerm) = @@(this, t1)
-  def subTerm(path : Path) : MTerm
-}
-case class MVar(n: Name) extends MTerm {
-  def subTerm(path : Path) : MTerm = path match {
-    case Nil => this
-    case _ => sys.error("??")
-  }
-}
-case class @@(t1: MTerm, t2: MTerm) extends MTerm {
-  override def toString = s"$t1 ~ $t2"
-  def subTerm(path : Path) : MTerm = path match {
-    case Nil => this
-    case L :: p => t1.subTerm(p)
-    case R :: p => t2.subTerm(p)
-    case _ => sys.error("??")
-  }
-}
-case class MAnn(t1: MTerm, t2: MTerm) extends MTerm {
-  def subTerm(path : Path) : MTerm = path match {
-    case Nil => this
-    case L :: p => t1.subTerm(p)
-    case R :: p => t2.subTerm(p)
-    case _ => sys.error("??")
-  }
-}
-case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm {
-  def subTerm(path : Path) : MTerm = path match {
-    case Nil => this
-    case L :: p => tp.subTerm(p)
-    case R :: p => body.subTerm(p)
-    case _ => sys.error("??")
-  }
-}
-
-trait Stmt[+I]
-case class Let[I](n: String, i: I) extends Stmt[I]
-case class TypedLet[I](n: String, i: I, t: I) extends Stmt[I]
-case class Assume[I](n: String, i: I) extends Stmt[I]
-case class Eval[I](e: I) extends Stmt[I]
-case class Import(s: String) extends Stmt[Nothing]
-case class ExportToAgda(s: String) extends Stmt[Nothing]
-case class Reload(s: String) extends Stmt[Nothing]
-case object Quit extends Stmt[Nothing]
-
-// PARSING
 class MetaLexical extends lexical.StdLexical {
   import scala.util.parsing.input.CharArrayReader._
   override def whitespace: Parser[Any] = rep(
@@ -193,87 +137,3 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 }
 
 object MetaParser extends MetaParser
-
-abstract class TTLiteError(msg: String) extends Exception(msg) {
-  var file : String = "_$_"
-  def setFile(f : String) : this.type = {
-    if (file == "_$_")
-      file = f
-    this
-  }
-  //override def getMessage(): String = "XXX"
-  def details: String = ""
-  def location: String = s"$file[${line}:${column}]"
-  def line : Int
-  def column : Int
-}
-object TTLiteExit extends TTLiteError("EXIT") {
-  val line : Int = 0
-  val column : Int = 0
-}
-case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError(msg) {
-  override def details: String = longString.replace("\n\n", "\n")
-}
-case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg) {
-  override def details =
-    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
-  val line = mt.startPos.line
-  val column = mt.startPos.column
-  def origin = mt.origin
-}
-case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
-  var mterm : MTerm = null
-  def setMTerm(mt : MTerm): TypeError = {
-    if (mterm == null) {
-      mterm = mt
-    }
-    this
-  }
-  override def details = {
-    val mt = mterm.subTerm(path)
-    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
-  }
-
-  def line = mterm.subTerm(path).startPos.line
-  def column = mterm.subTerm(path).startPos.column
-  def origin = mterm.subTerm(path).origin
-}
-
-trait PrettyPrinter extends org.kiama.output.PrettyPrinter {
-  def parensIf(b: Boolean, d: Doc) = if (b) parens(d) else d
-}
-
-object `package` {
-  sealed trait PathElem
-  object L extends PathElem
-  object R extends PathElem
-  type Path = List[PathElem]
-  def p(i : Int, n : Int) : Path = (i, n) match {
-    case (1, 2) => List(L)
-    case (2, 2) => List(R)
-    case (i, n) if i == n => List(R)
-    case (i, n) => L :: p(i, n - 1)
-  }
-  implicit class PathWrapper(path : Path) {
-    def /(i: Int, n: Int) = path ++ p(i, n)
-  }
-  import org.fusesource.jansi._
-  def ansi(s : String) : String =
-    Ansi.ansi.render(s).toString
-
-  def isAscii(): Boolean =
-    !AnsiConsole.wrapOutputStream(null).isInstanceOf[AnsiOutputStream]
-
-  lazy val lm: String = if (isAscii()) "" else "▶"
-  lazy val rm: String = ""//if (isAscii()) "" else "◀"
-  //implicit def sym2Term(s: Symbol): MTerm = MVar(Global(s.name))
-  type NameEnv[V] = Map[Name, V]
-  // todo: helper methods: bindVal, bindType
-  case class Context[V](vals: NameEnv[V], types: NameEnv[V], ids: List[Name])
-
-  def emptyEnv[V] = Map[Name, V]()
-  def emptyContext[V] = Context(emptyEnv[V], emptyEnv[V], Nil)
-  val ids = "abcdefghijklmnopqrstuvwxyz"
-  val suffs = List("", "1")
-  val vars = for {j <- suffs; i <- ids} yield s"$i$j"
-}

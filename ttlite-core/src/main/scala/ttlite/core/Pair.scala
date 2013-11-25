@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait PairAST extends CoreAST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(et: Term, a: Term, b: Term) extends Term

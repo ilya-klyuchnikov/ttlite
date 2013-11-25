@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait DPairAST extends CoreAST {
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term

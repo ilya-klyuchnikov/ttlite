@@ -1,6 +1,7 @@
 package ttlite.sc
 
 import mrsc.core._
+import ttlite.common._
 import ttlite.core._
 
 trait NatDriver extends CoreDriver with NatAST with NatEval {

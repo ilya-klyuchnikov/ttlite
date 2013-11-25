@@ -3,7 +3,8 @@ package ttlite.core.test
 import org.scalatest.matchers.MustMatchers
 import org.scalatest.FunSpec
 
-import ttlite.core._
+import ttlite.common._
+import ttlite.TTREPL
 
 // a lot of boilerplate error checking
 class ErrorHandlingSpec extends FunSpec with MustMatchers {

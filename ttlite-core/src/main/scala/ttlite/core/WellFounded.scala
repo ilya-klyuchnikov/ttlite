@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait WAST extends CoreAST {
   case class W(t1: Term, t2: Term) extends Term
   case class Sup(w: Term, t1: Term, t2: Term) extends Term

@@ -1,6 +1,7 @@
 package ttlite.sc
 
 import mrsc.core._
+import ttlite.common._
 import ttlite.core._
 
 trait FinDriver extends CoreDriver with FinAST with FinEval {

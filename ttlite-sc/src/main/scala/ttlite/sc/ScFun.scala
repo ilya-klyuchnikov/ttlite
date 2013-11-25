@@ -1,5 +1,6 @@
 package ttlite.sc
 
+import ttlite.common._
 import ttlite.core._
 
 trait FunDriver extends CoreDriver with FunEval {

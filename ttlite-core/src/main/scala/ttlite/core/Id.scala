@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait IdAST extends CoreAST {
   case class Id(A: Term, x: Term, y: Term) extends Term
   case class Refl(A: Term, x: Term) extends Term

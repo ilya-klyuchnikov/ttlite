@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait FunAST extends CoreAST {
   case class Pi(c1: Term, c2: Term) extends Term
   case class Lam(t: Term, e: Term) extends Term

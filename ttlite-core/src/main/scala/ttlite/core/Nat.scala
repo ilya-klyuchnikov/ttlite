@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait NatAST extends CoreAST {
   case object Nat extends Term
   case object Zero extends Term

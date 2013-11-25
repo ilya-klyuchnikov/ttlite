@@ -1,5 +1,7 @@
 package ttlite.core
 
+import ttlite.common._
+
 trait SumAST extends CoreAST {
   case class Sum(A: Term, B: Term) extends Term
   case class InL(et: Term, l: Term) extends Term
