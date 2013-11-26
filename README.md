@@ -10,6 +10,12 @@ It is structured into two sub-projects:
 The main feature of the supercompiler is that for any transformation performed by
 the supercompiler a proof of correctness is provided.
 
+The internals of TT Lite are described in the preprint:
+
+* Ilya Klyuchnikov, Sergei Romanenko. **TT Lite: a
+  supercompiler for Martin-Löf’s type theory**. Keldysh Institute preprints, 2013, No. 73, 28 p.
+  <http://library.keldysh.ru/preprint.asp?id=2013-73&lg=e>
+
 ## How to build
 
 TT Lite is built using SBT. You need to install SBT first from [here](http://www.scala-sbt.org).
@@ -114,7 +120,7 @@ Quitting REPL:
 ### Syntax and Semantics of TT
 
 Technical details of this implementation are described in the preprint
-[TT Lite: a supercompiler for Martin-Löf's type theory](http://pat.keldysh.ru/~ilya/ttlite.pdf).
+[TT Lite: a supercompiler for Martin-Löf's type theory](http://library.keldysh.ru/preprint.asp?id=2013-73&lg=e).
 However, the preprint just translates code of the current implementation into mathematical notation.
 
 The proposed way to get into this project is:
