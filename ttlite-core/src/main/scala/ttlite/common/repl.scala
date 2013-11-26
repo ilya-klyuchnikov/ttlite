@@ -136,7 +136,7 @@ trait REPL {
     } else {
       output(s"$s\n:\n${vPrint(tp)};")
     }
-    Context(state.vals + (Global(s) -> v),  state.types + (Global(s) -> tp), state.ids)
+    state.addGlobal(s, v, tp)
   }
 
   private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =
@@ -195,10 +195,9 @@ trait REPL {
   }
 
   def main(args: Array[String]) {
-    import org.fusesource.jansi.AnsiConsole
-    AnsiConsole.systemInstall()
+    org.fusesource.jansi.AnsiConsole.systemInstall()
 
-    var state = Context[V](Map(), Map(), Nil)
+    var state = Context.empty[V]
     modules = Set()
     args match {
       case Array() =>

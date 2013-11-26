@@ -23,7 +23,7 @@ trait TTSc extends CoreSubst with CoreCheck {
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
       VariantsStep(cases.toList.map { b =>
-        b -> Conf(t.term / Map(b.sel -> b.ptr), Context(t.ctx.vals, t.ctx.types ++ b.types, Nil))
+        b -> Conf(t.term / Map(b.sel -> b.ptr), t.ctx.addTypes(b.types))
       })
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
@@ -198,15 +198,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
 
       output("::")
       output(tPrint(iquote(proofTypeVal)))
-      Context(
-        state.vals +
-          (Global(scId) -> resVal) +
-          (Global(proofId) -> proofVal),
-        state.types +
-          (Global(scId) -> inTpVal) +
-          (Global(proofId) -> proofTypeVal),
-        state.ids
-      )
+      state.addGlobal(scId, resVal, inTpVal).addGlobal(proofId, proofVal, proofTypeVal)
     case _ =>
       super.handleStmt(state, stmt)
   }

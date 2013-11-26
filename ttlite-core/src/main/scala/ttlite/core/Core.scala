@@ -133,10 +133,10 @@ trait CoreQuote extends CoreAST {
 }
 
 trait CoreEval extends CoreAST {
-  def eval0(c: Term): Value = eval(c, emptyContext[Value], Nil)
-  @deprecated
+  def eval0(c: Term): Value = eval(c, Context.empty[Value], Nil)
+  @deprecated // used in residuator
   def eval(t: Term, named: NameEnv[Value], bound: Env): Value =
-    eval(t, Context(named, emptyEnv, Nil), bound)
+    eval(t, Context.fromVals(named), bound)
   def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Ann(e, _) =>
       eval(e, ctx, bound)
@@ -239,12 +239,12 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     checkEqual(0, tp, VUniverse(-1), Path.empty)
     val v = ieval(state, t)
     output(tPrint(iquote(v)))
-    state.copy(types = state.types + (s2name(x) -> v), ids = s2name(x) :: state.ids)
+    state.addAssumed(x, v)
   }
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))
 
-  def s2name(s: String): Name =
-    if (s.startsWith("$")) Assumed(s) else Global(s)
+  //def s2name(s: String): Name =
+    //if (s.startsWith("$")) Assumed(s) else Global(s)
 
 }
