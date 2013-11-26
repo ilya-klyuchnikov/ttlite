@@ -151,7 +151,7 @@ trait CoreEval extends CoreAST {
 
 trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def iType0(ctx: Context[Value], i: Term): Value =
-    iType(0, Nil, ctx, i)
+    iType(0, Path.empty, ctx, i)
 
   def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
     if (inferred != expected) {
@@ -236,7 +236,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     freeVars(c)
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
     val tp = itype(state, t)
-    checkEqual(0, tp, VUniverse(-1), Nil)
+    checkEqual(0, tp, VUniverse(-1), Path.empty)
     val v = ieval(state, t)
     output(tPrint(iquote(v)))
     state.copy(types = state.types + (s2name(x) -> v), ids = s2name(x) :: state.ids)

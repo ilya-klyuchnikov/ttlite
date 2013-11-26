@@ -58,7 +58,7 @@ class MTermError(val errorKind : String, val mt : MTerm, val msg : String) exten
 case class TypeError(msg : String, path : Path) extends Exception(msg) {
   def withMTerm(mterm : MTerm) : TTLiteError = MTermTypeError(this, mterm)
 }
-case class MTermTypeError(te : TypeError, topTerm : MTerm) extends MTermError("Type", topTerm.subTerm(te.path), te.msg)
+case class MTermTypeError(te : TypeError, topTerm : MTerm) extends MTermError("Type", Path.subterm(topTerm, te.path), te.msg)
 
 object TTLiteExit extends TTLiteError {
   val line : Int = 0
