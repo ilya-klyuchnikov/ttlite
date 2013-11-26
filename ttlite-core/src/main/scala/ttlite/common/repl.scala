@@ -30,7 +30,7 @@ trait REPL {
   private var modules: Set[String] = _
 
   def handleError(tte: TTLiteError): Unit = {
-    Console.println(ansi(s"@|bold,red Error in ${tte.location}|@"))
+    Console.println(ansi(s"@|bold,red ${tte.errorKind} error in ${tte.location}|@"))
     Console.println(tte.getMessage)
     Console.println()
     Console.println(tte.details)
@@ -38,8 +38,9 @@ trait REPL {
     //tte.printStackTrace()
   }
 
+  // we assume that it is input/output error
   def handleGeneralError(t : Throwable): Unit = {
-    Console.println(ansi(s"@|bold,red Error:|@"))
+    Console.println(ansi(s"@|bold,red IO error:|@"))
     Console.println(t.getMessage)
   }
 
@@ -58,14 +59,14 @@ trait REPL {
         try {
           assume(state, n, fromM(mt))
         } catch {
-          case t : TypeError => throw t.setMTerm(mt)
+          case t : TypeError => throw t.withMTerm(mt)
         }
       case Let(x, mt) =>
         val e = fromM(mt)
         try {
           handleLet(state, x, e)
         } catch {
-          case t : TypeError => throw t.setMTerm(mt)
+          case t : TypeError => throw t.withMTerm(mt)
         }
       case TypedLet(x, mt1, mt2) =>
         val e = fromM(mt1)
@@ -73,14 +74,14 @@ trait REPL {
         try {
           handleTypedLet(state, x, e, tp)
         } catch {
-          case t : TypeError => throw t.setMTerm(MAnn(mt1, mt2))
+          case t : TypeError => throw t.withMTerm(MAnn(mt1, mt2))
         }
       case Eval(mt) =>
         val e = fromM(mt)
         try {
           handleLet(state, "it", e)
         } catch {
-          case t : TypeError => throw t.setMTerm(mt)
+          case t : TypeError => throw t.withMTerm(mt)
         }
       case Import(f) =>
         loadModule(f, state, reload = false)
@@ -149,7 +150,7 @@ trait REPL {
         modules = modules + f
         s1
       } catch {
-        case ttError : TTLiteError => throw ttError.setFile(f)
+        case ttError : TTLiteError => throw ttError.withFile(f)
       }
 
   def loop(state : Context[V], console : org.kiama.util.Console) : Unit = {
@@ -189,7 +190,7 @@ trait REPL {
       val stm = parser.parseIO(parser.stmt, in)
       handleStmt(state, stm)
     } catch {
-      case ttError : TTLiteError => throw ttError.setFile("repl input")
+      case ttError : TTLiteError => throw ttError.withFile("repl input")
     }
   }
 

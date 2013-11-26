@@ -5,72 +5,67 @@ object IoUtil {
   def ansi(s : String) : String =
     Ansi.ansi.render(s).toString
 
-  def isAscii(): Boolean =
+  // This is a hack, but allows to detect that Eclipse/Idea consoles are not ANSI once
+  private def isAnsi_?(): Boolean =
     !AnsiConsole.wrapOutputStream(null).isInstanceOf[AnsiOutputStream]
 
   // left marker
-  lazy val lm: String = if (isAscii()) "" else "▶"
+  lazy val lm: String = if (isAnsi_?()) "" else "▶"
   //right marker
-  lazy val rm: String = ""//if (isAscii()) "" else "◀"
+  lazy val rm: String = if (isAnsi_?()) "" else "◀"
 }
 
-abstract class TTLiteError(msg: String) extends Exception(msg) {
-  var file : String = "_$_"
-  def setFile(f : String) : this.type = {
-    if (file == "_$_")
-      file = f
-    this
-  }
-  //override def getMessage(): String = "XXX"
-  def details: String = ""
-  def location: String = s"$file[${line}:${column}]"
-  def line : Int
-  def column : Int
+trait TTLiteError extends Exception {
+  val errorKind : String
+  val msg : String
+  val details: String
+  val location: String = ""
+  val line : Int
+  val column : Int
+  val origin: String = ""
+  override def getMessage() = msg
+  def withFile(f : String) : TTLiteError = FiledTTLiteError(this, f)
 }
 
-case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError(msg) {
-  override def details: String =
+case class FiledTTLiteError(err : TTLiteError, file : String) extends TTLiteError {
+  val errorKind = err.errorKind
+  val msg : String = err.msg
+  val details: String = err.details
+  override val location: String = s"$file[${line}:${column}]"
+  val line : Int = err.line
+  val column : Int = err.column
+  override val origin = err.origin
+  override def withFile(f : String) : TTLiteError = this
+}
+
+case class ParsingError(msg : String, line : Int, column : Int, longString : String) extends TTLiteError {
+  val errorKind = "Lexical"
+  val details: String =
     longString.replace("\n\n", "\n")
 }
 
-case class TranslationError(mt : MTerm, msg : String) extends TTLiteError(msg) {
+case class TranslationError(override val mt : MTerm, override val msg : String) extends MTermError("Lexical", mt, msg)
+
+class MTermError(val errorKind : String, val mt : MTerm, val msg : String) extends TTLiteError {
   import IoUtil._
-  override def details =
+  val details =
     ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
   val line = mt.startPos.line
   val column = mt.startPos.column
-  def origin = mt.origin
+  override val origin = mt.origin
 }
 
-case class TypeError(msg : String, path : Path) extends TTLiteError(msg) {
-  import IoUtil._
-  var mterm : MTerm = null
-
-  def setMTerm(mt : MTerm): TypeError = {
-    if (mterm == null) {
-      mterm = mt
-    }
-    this
-  }
-
-  override def details = {
-    val mt = mterm.subTerm(path)
-    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
-  }
-
-  def line =
-    mterm.subTerm(path).startPos.line
-
-  def column =
-    mterm.subTerm(path).startPos.column
-
-  def origin =
-    mterm.subTerm(path).origin
+case class TypeError(msg : String, path : Path) extends Exception(msg) {
+  def withMTerm(mterm : MTerm) : TTLiteError = MTermTypeError(this, mterm)
 }
+case class MTermTypeError(te : TypeError, topTerm : MTerm) extends MTermError("Type", topTerm.subTerm(te.path), te.msg)
 
-object TTLiteExit extends TTLiteError("Exit") {
+object TTLiteExit extends TTLiteError {
   val line : Int = 0
   val column : Int = 0
+  val errorKind  = "System"
+  val msg : String = "Signal to exit repl"
+  val details: String = msg
 }
 
 trait PrettyPrinter extends org.kiama.output.PrettyPrinter {

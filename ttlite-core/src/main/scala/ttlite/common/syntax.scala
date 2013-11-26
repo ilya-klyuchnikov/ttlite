@@ -25,7 +25,6 @@ case class @@(t1: MTerm, t2: MTerm) extends MTerm {
     case Nil => this
     case L :: p => t1.subTerm(p)
     case R :: p => t2.subTerm(p)
-    case _ => sys.error("??")
   }
 }
 case class MAnn(t1: MTerm, t2: MTerm) extends MTerm {
@@ -33,7 +32,6 @@ case class MAnn(t1: MTerm, t2: MTerm) extends MTerm {
     case Nil => this
     case L :: p => t1.subTerm(p)
     case R :: p => t2.subTerm(p)
-    case _ => sys.error("??")
   }
 }
 case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm {
@@ -41,7 +39,6 @@ case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm {
     case Nil => this
     case L :: p => tp.subTerm(p)
     case R :: p => body.subTerm(p)
-    case _ => sys.error("??")
   }
 }
 
