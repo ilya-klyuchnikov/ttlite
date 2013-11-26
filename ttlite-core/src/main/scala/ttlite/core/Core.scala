@@ -22,8 +22,14 @@ trait CoreAST {
   trait Neutral
   case class NFree(n: Name) extends Neutral
 
+  type NameEnv[V] = Map[Name, V]
   type Env = List[Value]
-  val emptyNEnv = Map[Name, Value]()
+  // names of bound variables
+  val vars = {
+    val ids = "abcdefghijklmnopqrstuvwxyz"
+    val suffs = List("", "1")
+    for {j <- suffs; i <- ids} yield s"$i$j"
+  }
 
   def vfree(n: Name): Value = VNeutral(NFree(n))
   implicit def sym2val(s: Symbol): Value =

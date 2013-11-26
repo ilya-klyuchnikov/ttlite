@@ -9,7 +9,7 @@ trait CoreSubst extends CoreEval with CoreQuote {
 
   implicit class TermSubst(t: Term) {
     def /(subst: Subst) = {
-      val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, emptyNEnv, Nil))}
+      val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, Map[Name, Value](), Nil))}
       quote0(eval(t, env, Nil))
     }
   }

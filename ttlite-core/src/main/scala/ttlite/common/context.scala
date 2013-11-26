@@ -3,11 +3,11 @@ package ttlite.common
 object Context {
   def empty[V] =
     new Context[V](Map(), Map(), Nil)
-  def fromVals[V](vals : NameEnv[V]) =
+  def fromVals[V](vals : Map[Name, V]) =
     new Context(vals, Map(), Nil)
 }
 // right now ids handles assumed variables only. This is wrong - it should have all variables
-class Context[V] private (val vals: NameEnv[V], val types: NameEnv[V], val ids: List[Name]) {
+class Context[V] private (val vals: Map[Name, V], val types: Map[Name, V], val ids: List[Name]) {
   def addGlobal(s : String, v : V, tp : V): Context[V] = {
     val n = Global(s)
     new Context(vals + (n -> v), types + (n -> tp), ids)
@@ -27,6 +27,6 @@ class Context[V] private (val vals: NameEnv[V], val types: NameEnv[V], val ids: 
     new Context(vals, types + (n -> tp), ids)
   }
 
-  def addTypes(tps : NameEnv[V]) : Context[V] =
+  def addTypes(tps : Map[Name, V]) : Context[V] =
     new Context(vals, types ++ tps, ids)
 }
