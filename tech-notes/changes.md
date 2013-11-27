@@ -11,7 +11,7 @@ exportToAgda moduleName;
 
 `moduleName` is a name of an Agda module which will be created in the directory `agda` (it is hardcoded for now).
 
-Here is an example of its usage (see [`examples/agda/map.hs`](/examples/agda/map.hs)):
+Here is an example of its usage (see [`examples/test/agda/map.hs`](/examples/test/agda/map.hs)):
 
 ```
 map =
@@ -58,7 +58,7 @@ agda -i agda/ -i doc/ agda/${module}.agda
 
 Assumed variable are exported as [module parameters](http://wiki.portal.chalmers.se/agda/pmwiki.php?n=ReferenceManual.Modules#param). 
 
-Example ([`/test/agda/assumed.hs`](/test/agda/assumed.hs)):
+Example ([`examples/test/agda/assumed.hs`](/examples/test/agda/assumed.hs)):
 
 ```
 $A : Set;
