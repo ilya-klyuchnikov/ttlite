@@ -156,18 +156,15 @@ trait REPL {
 
     val out = new FileWriter(agdaFile)
 
-    out.write(s"module ${f} where\n")
-    out.write(s"open import ttlite\n")
+    out.write(s"open import ttlite\n\n")
+    out.write(s"module ${f}")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
-
-    if (assumed.nonEmpty) {
-      out.write("\npostulate\n")
-      for {id <- assumed} {
-        val tp = quote(state.types(id))
-        out.write(s"  ${id} : ${prettyAgda(tp)}\n")
-      }
+    for {id <- assumed} {
+      val tp = quote(state.types(id))
+      out.write(s" (${id} : ${prettyAgda(tp)})")
     }
+    out.write(s" where\n")
 
     def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
     def globalName(n : Name): Boolean = n.isInstanceOf[Global]
