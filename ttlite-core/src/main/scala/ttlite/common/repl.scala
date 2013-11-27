@@ -210,7 +210,7 @@ trait REPL {
       step(state, console)
     } catch {
       case TTLiteExit =>
-        sys.exit()
+        throw TTLiteExit
       case t : TTLiteError =>
         handleError(t)
         state
@@ -226,7 +226,7 @@ trait REPL {
       loadModule(f, state, reload = false)
     } catch {
       case TTLiteExit =>
-        sys.exit()
+        throw TTLiteExit
       case t : TTLiteError =>
         handleError(t)
         state
@@ -248,22 +248,28 @@ trait REPL {
 
   def main(args: Array[String]) {
     org.fusesource.jansi.AnsiConsole.systemInstall()
+    org.kiama.util.JLineConsole.reader.addCompletor(new jline.FileNameCompletor())
 
     var state = Context.empty[V]
     modules = Set()
-    args match {
-      case Array() =>
-        loop(state, org.kiama.util.JLineConsole)
-      case Array("-i", f) =>
-        state = loadModuleI(f, state)
-        loop(state, org.kiama.util.JLineConsole)
-      case Array("-t", f) =>
-        state = loadModuleI(f, state)
-      case _ =>
-        batch = true
-        args.foreach { f =>
-          state = loadModule(f, state, reload = false)
-        }
+    try {
+      args match {
+        case Array() =>
+          loop(state, org.kiama.util.JLineConsole)
+        case Array("-i", f) =>
+          state = loadModuleI(f, state)
+          loop(state, org.kiama.util.JLineConsole)
+        case Array("-t", f) =>
+          state = loadModuleI(f, state)
+        case _ =>
+          batch = true
+          args.foreach { f =>
+            state = loadModule(f, state, reload = false)
+          }
+      }
+    } catch {
+      case TTLiteExit =>
+        Console.println("Bye")
     }
   }
 }

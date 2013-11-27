@@ -66,6 +66,7 @@ object TTLiteExit extends TTLiteError {
   val errorKind  = "System"
   val msg : String = "Signal to exit repl"
   val details: String = msg
+  override def withFile(f : String) = this
 }
 
 trait PrettyPrinter extends org.kiama.output.PrettyPrinter {
