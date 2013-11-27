@@ -29,6 +29,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with MustMatchers {
     it("sum.hs") {
       checkAgda("sum")
     }
+    it("map.hs") {
+      checkAgda("map")
+    }
   }
 
   describe("Export to Agda with assumed variables in correct order") {
