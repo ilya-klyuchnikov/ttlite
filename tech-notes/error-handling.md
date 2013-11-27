@@ -4,19 +4,19 @@ There are four kind or errors in TT Lite REPL.
 
 #### IO Error – when a file cannot be read.
 
-   ![IO Error](error-io.png)
+   ![IO Error](img/error-io.png)
 
 #### Lexical error – when an input cannot be correctly parsed by shallow parser.
 
-   ![Lexical Error](error-lexical.png)
+   ![Lexical Error](img/error-lexical.png)
 
 #### Parse error – when a shallow syntax cannot be translated into an abstract syntax.
 
-   ![Syntax Error](error-syntax.png)
+   ![Syntax Error](img/error-syntax.png)
 
 #### Type error - when a (sub)-expression is not well-typed.
 
-   ![Type Error](error-typing.png)
+   ![Type Error](img/error-typing.png)
    
 In the two last cases TT Lite REPL highlights an erroneous expression.
 
