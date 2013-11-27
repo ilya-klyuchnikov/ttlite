@@ -27,14 +27,14 @@ trait FunAST extends CoreAST {
 }
 
 trait FunMetaSyntax extends CoreMetaSyntax with FunAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MBind("forall", t1, t2) =>
-      Pi(fromM(t1), fromM(t2))
+      Pi(translate(t1), translate(t2))
     case MBind("\\", t1, t2) =>
-      Lam(fromM(t1), fromM(t2))
+      Lam(translate(t1), translate(t2))
     case t1 @@ t2 =>
-      fromM(t1) @@ fromM(t2)
-    case _ => super.fromM(m)
+      translate(t1) @@ translate(t2)
+    case _ => super.translate(m)
   }
 }
 

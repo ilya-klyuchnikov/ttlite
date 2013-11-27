@@ -12,7 +12,7 @@ trait GraphPrettyPrinter2 extends CoreREPL with TTSc {
 
   // kiama pretty printer is not able to produce single string, so here is a hack
   def toString(c: Conf): String = {
-    val s = pretty(tPrint(c.term), 1000) + " |||| " + pretty(tPrint(c.tp), 1000)
+    val s = pretty(pretty(c.term), 1000) + " |||| " + pretty(pretty(c.tp), 1000)
     s.replace('\n', ' ').replaceAll("\\s+", " ")
   }
 

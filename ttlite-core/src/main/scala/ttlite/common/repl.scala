@@ -3,39 +3,96 @@ package ttlite.common
 trait REPL {
   import IoUtil._
 
-  // TO OVERRIDE STARTS
-  type T // term
-  type V // value (normalized term)
+  /**
+   * The type of terms.
+   */
+  type T
+  /**
+   * The type of values
+   */
+  type V
+
+  /**
+   * Infers a type for a term.
+   *
+   * @param ctx a context
+   * @param term a term
+   * @return a type of a term `term` in the context `ctx`. A type is a value (`V`)
+   */
+  def infer(ctx: Context[V], term: T): V
+
+  /**
+   * Evaluates (= normalizes) a given term in the context.
+   * In a sense, this is reification. (AST => Value)
+   *
+   * @param ctx a context
+   * @param term a term
+   * @return a value of this term
+   */
+  def eval(ctx: Context[V], term: T): V
+
+  /**
+   * Quotes given value.
+   * In a sense, this is reflection. (Value => AST)
+   *
+   * @param value value
+   * @return a corresponding term
+   */
+  def quote(value: V): T
+
+  /**
+   * Translates a term from shallow syntax into an abstract syntax.
+   *
+   * @param shallowTerm
+   * @return
+   */
+  def translate(shallowTerm: MTerm): T
+
+  /**
+   * Pretty printing of terms into a concrete syntax.
+   *
+   * @param term
+   * @return
+   */
+  def pretty(term: T): String
+
+  /**
+   * Pretty printing of terms into Agda syntax
+   *
+   * @param term
+   * @return
+   */
+  def prettyAgda(term: T): String
+
+  /**
+   * Extends a context with an assumption
+   *
+   * @param ctx context
+   * @param id id of a term
+   * @param term term
+   * @return
+   */
+  def assume(ctx: Context[V], id: String, term: T): Context[V]
+
+  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
 
   // if batch, we do not output info into console.
   private var batch: Boolean = false
   val prompt: String
-  def itype(ctx: Context[V], i: T): V
-  def iquote(v: V): T
-  def ieval(ctx: Context[V], i: T): V
-  // pretty printing of terms
-  def tPrint(c: T): String
-  // pretty printing of term into Agda
-  def tPrintAgda(c: T): String
-  def fvs(c : T) : List[Name]
-  def assume(s: Context[V], n: String, t: T): Context[V]
-  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
-  def fromM(m: MTerm): T
 
   val parser: MetaParser = MetaParser
   val name: String
   // TO OVERRIDE ENDS
 
-  def vPrint(v: V): String = tPrint(iquote(v))
+  def vPrint(v: V): String = pretty(quote(v))
   private var modules: Set[String] = _
+
 
   def handleError(tte: TTLiteError): Unit = {
     Console.println(ansi(s"@|bold,red ${tte.errorKind} error in ${tte.location}|@"))
     Console.println(tte.getMessage)
     Console.println()
     Console.println(tte.details)
-
-    //tte.printStackTrace()
   }
 
   // we assume that it is input/output error
@@ -44,12 +101,8 @@ trait REPL {
     Console.println(t.getMessage)
   }
 
-
   def output(x: => Any): Unit =
     if (!batch) Console.println(s"$x")
-
-  def iinfer(ctx: Context[V], i: T): V =
-    itype(ctx, i)
 
   def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =
     stmt match {
@@ -57,27 +110,27 @@ trait REPL {
         throw TTLiteExit
       case Assume(n, mt) =>
         try {
-          assume(state, n, fromM(mt))
+          assume(state, n, translate(mt))
         } catch {
           case t : TypeError => throw t.withMTerm(mt)
         }
       case Let(x, mt) =>
-        val e = fromM(mt)
+        val e = translate(mt)
         try {
           handleLet(state, x, e)
         } catch {
           case t : TypeError => throw t.withMTerm(mt)
         }
       case TypedLet(x, mt1, mt2) =>
-        val e = fromM(mt1)
-        val tp = fromM(mt2)
+        val e = translate(mt1)
+        val tp = translate(mt2)
         try {
           handleTypedLet(state, x, e, tp)
         } catch {
           case t : TypeError => throw t.withMTerm(MAnn(mt1, mt2))
         }
       case Eval(mt) =>
-        val e = fromM(mt)
+        val e = translate(mt)
         try {
           handleLet(state, "it", e)
         } catch {
@@ -111,28 +164,28 @@ trait REPL {
     if (assumed.nonEmpty) {
       out.write("\npostulate\n")
       for {id <- assumed } {
-        val tp = iquote(state.types(id))
-        out.write(s"  ${id} : ${tPrintAgda(tp)}\n")
+        val tp = quote(state.types(id))
+        out.write(s"  ${id} : ${prettyAgda(tp)}\n")
       }
     }
 
     // TODO: hack - remove
     for (id <- state.vals.keys.filterNot(n => List("pair", "cons", "nil", "_").contains(n.toString))) {
-      val v = iquote(state.vals(id))
-      val tp = iquote(state.types(id))
+      val v = quote(state.vals(id))
+      val tp = quote(state.types(id))
 
-      out.write(s"\n${id} : ${tPrintAgda(tp)}\n")
-      out.write(s"${id} = ${tPrintAgda(v)}\n")
+      out.write(s"\n${id} : ${prettyAgda(tp)}\n")
+      out.write(s"${id} = ${prettyAgda(v)}\n")
     }
 
     out.close()
   }
 
   def handleLet(state: Context[V], s: String, it: T): Context[V] = {
-    val tp = iinfer(state, it)
-    val v = ieval(state, it)
+    val tp = infer(state, it)
+    val v = eval(state, it)
     if (s == "it"){
-      output(tPrint(iquote(v)) + "\n:\n" + vPrint(tp) + ";")
+      output(pretty(quote(v)) + "\n:\n" + vPrint(tp) + ";")
     } else {
       output(s"$s\n:\n${vPrint(tp)};")
     }

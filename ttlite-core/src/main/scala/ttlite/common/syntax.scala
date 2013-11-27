@@ -56,6 +56,7 @@ case class Assumed(n: String) extends Name(n)
 case class Local(i: Int) extends Name(s"<$i>")
 case class Quote(i: Int) extends Name(s"[$i]")
 // META-SYNTAX
+// TODO it is better to name it *shallow term* and *shallow syntax*
 sealed trait MTerm extends RichPositional {
   def ~(t1: MTerm) = @@(this, t1)
 }

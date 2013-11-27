@@ -51,7 +51,7 @@ trait CoreAST {
 }
 
 trait CoreMetaSyntax extends CoreAST {
-  def fromM(m: MTerm): Term = m match {
+  def translate(m: MTerm): Term = m match {
     case MVar(Global("Set")) =>
       Universe(0)
     case MVar(Global("Set0")) =>
@@ -67,7 +67,7 @@ trait CoreMetaSyntax extends CoreAST {
     case MVar(n) =>
       Free(n)
     case MAnn(t1, t2) =>
-      Ann(fromM(t1), fromM(t2))
+      Ann(translate(t1), translate(t2))
     case _ =>
       throw TranslationError(m, s"incorrect syntax `${m.origin}`")
   }
@@ -226,31 +226,24 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
 
   val prompt: String = "TT"
 
-  override def itype(ctx: Context[V], i: T): V =
+  override def infer(ctx: Context[V], i: T): V =
     iType0(ctx, i)
-  override def iquote(v: V): Term =
+  override def quote(v: V): Term =
     quote0(v)
-  override def ieval(ctx: Context[V], i: T): V =
+  override def eval(ctx: Context[V], i: T): V =
     eval(i, ctx, List())
-  def typeInfo(t: V): V =
-    t
-  override def tPrint(c: T): String =
+  override def pretty(c: T): String =
     pp(c)
-  override def tPrintAgda(c: T): String =
+  override def prettyAgda(c: T): String =
     pretty(nest(printA(0, 0, c)))
-  override def fvs(c : T) : List[Name] =
-    freeVars(c)
   def assume(state: Context[V], x: String, t: Term): Context[V] = {
-    val tp = itype(state, t)
+    val tp = infer(state, t)
     checkEqual(0, tp, VUniverse(-1), Path.empty)
-    val v = ieval(state, t)
-    output(tPrint(iquote(v)))
+    val v = eval(state, t)
+    output(pretty(quote(v)))
     state.addAssumed(x, v)
   }
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))
-
-  //def s2name(s: String): Name =
-    //if (s.startsWith("$")) Assumed(s) else Global(s)
 
 }

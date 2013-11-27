@@ -15,16 +15,16 @@ trait ListAST extends CoreAST {
 }
 
 trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("List")) @@ a =>
-      PiList(fromM(a))
+      PiList(translate(a))
     case MVar(Global("Nil")) @@ a =>
-      PiNil(fromM(a))
+      PiNil(translate(a))
     case MVar(Global("Cons")) @@ a @@ h @@ t =>
-      PiCons(fromM(a), fromM(h), fromM(t))
+      PiCons(translate(a), translate(h), translate(t))
     case MVar(Global("elim")) @@ (MVar(Global("List")) @@ a) @@ m @@ cN @@ cC @@ n =>
-      PiListElim(PiList(fromM(a)), fromM(m), fromM(cN), fromM(cC), fromM(n))
-    case _ => super.fromM(m)
+      PiListElim(PiList(translate(a)), translate(m), translate(cN), translate(cC), translate(n))
+    case _ => super.translate(m)
   }
 }
 

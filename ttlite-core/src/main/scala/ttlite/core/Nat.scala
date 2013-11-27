@@ -15,16 +15,16 @@ trait NatAST extends CoreAST {
 }
 
 trait MNat extends CoreMetaSyntax with NatAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Nat")) =>
       Nat
     case MVar(Global("Zero")) =>
       Zero
     case MVar(Global("Succ")) @@ n =>
-      Succ(fromM(n))
+      Succ(translate(n))
     case MVar(Global("elim")) @@ MVar(Global("Nat")) @@ m @@ cZ @@ cS @@ n =>
-      NatElim(fromM(m), fromM(cZ), fromM(cS), fromM(n))
-    case _ => super.fromM(m)
+      NatElim(translate(m), translate(cZ), translate(cS), translate(n))
+    case _ => super.translate(m)
   }
 }
 

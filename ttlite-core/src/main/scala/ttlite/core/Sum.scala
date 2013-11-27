@@ -15,16 +15,16 @@ trait SumAST extends CoreAST {
 }
 
 trait SumMetaSyntax extends CoreMetaSyntax with SumAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Sum")) @@ l @@ r =>
-      Sum(fromM(l), fromM(r))
+      Sum(translate(l), translate(r))
     case MVar(Global("InL")) @@ et @@ inj =>
-      InL(fromM(et), fromM(inj))
+      InL(translate(et), translate(inj))
     case MVar(Global("InR")) @@ et @@ inj =>
-      InR(fromM(et), fromM(inj))
+      InR(translate(et), translate(inj))
     case MVar(Global("elim")) @@ (MVar(Global("Sum")) @@ l @@ r) @@ m @@ lc @@ rc @@ inj =>
-      SumElim(Sum(fromM(l), fromM(r)), fromM(m), fromM(lc), fromM(rc), fromM(inj))
-    case _ => super.fromM(m)
+      SumElim(Sum(translate(l), translate(r)), translate(m), translate(lc), translate(rc), translate(inj))
+    case _ => super.translate(m)
   }
 }
 

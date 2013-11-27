@@ -158,46 +158,46 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
     case SC(scId, proofId, mTerm) =>
-      val inputTerm = fromM(mTerm)
-      val inTpVal = iinfer(state, inputTerm)
+      val inputTerm = translate(mTerm)
+      val inTpVal = infer(state, inputTerm)
 
       // start configuration is a normalized one!
       // it is a self contained!
-      val conf = Conf(iquote(ieval(state, inputTerm)), state)
+      val conf = Conf(quote(eval(state, inputTerm)), state)
       val sGraphs = GraphGenerator(SingleRules, conf).toList
       assert(sGraphs.size == 1)
       val sGraph = sGraphs.head
       val tGraph = Transformations.transpose(sGraph)
 
       //output(tgToString(tGraph))
-      val resVal = ieval(state, iquote(residuate(tGraph, state.vals)))
-      val resTerm = iquote(resVal)
-      val inType = iquote(inTpVal)
+      val resVal = eval(state, quote(residuate(tGraph, state.vals)))
+      val resTerm = quote(resVal)
+      val inType = quote(inTpVal)
 
       val resTermAnn = Ann(resTerm, inType)
-      val t3 = iinfer(state, resTermAnn)
+      val t3 = infer(state, resTermAnn)
 
-      output(tPrint(resTerm) + " :: " + tPrint(iquote(t3)) + ";")
+      output(pretty(resTerm) + " :: " + pretty(quote(t3)) + ";")
       // this place is a bit unsafe:
       // we normalize a proof without first type-checking it
       // this is why we can use combinators cong1, cong2, ... as generic combinators -
       // that are applicable for *any* type, not only for small types (Set0).
       val rawProofVal = proofResiduate(tGraph, state.vals)
-      val rawProofTerm = iquote(rawProofVal)
+      val rawProofTerm = quote(rawProofVal)
       val rawAnnProofTerm = Ann(rawProofTerm, Id(inType, inputTerm, resTerm))
 
-      val proofVal = ieval(state, iquote(rawProofVal))
-      val proofTerm = iquote(ieval(state, iquote(proofVal)))
+      val proofVal = eval(state, quote(rawProofVal))
+      val proofTerm = quote(eval(state, quote(proofVal)))
       // to check that it really built correctly
       val annProofTerm = Ann(proofTerm, Id(inType, inputTerm, resTerm))
-      val proofTypeVal = iinfer(state, annProofTerm)
+      val proofTypeVal = infer(state, annProofTerm)
       output("raw proof:")
-      output(tPrint(rawProofTerm))
+      output(pretty(rawProofTerm))
       output("proof:")
-      output(tPrint(proofTerm))
+      output(pretty(proofTerm))
 
       output("::")
-      output(tPrint(iquote(proofTypeVal)))
+      output(pretty(quote(proofTypeVal)))
       state.addGlobal(scId, resVal, inTpVal).addGlobal(proofId, proofVal, proofTypeVal)
     case _ =>
       super.handleStmt(state, stmt)

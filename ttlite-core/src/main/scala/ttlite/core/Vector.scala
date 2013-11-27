@@ -15,16 +15,16 @@ trait VectorAST extends CoreAST {
 }
 
 trait VectorMetaSyntax extends MNat with VectorAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Vec")) @@ a @@ n =>
-      Vec(fromM(a), fromM(n))
+      Vec(translate(a), translate(n))
     case MVar(Global("VNil")) @@ a =>
-      VecNil(fromM(a))
+      VecNil(translate(a))
     case MVar(Global("VCons")) @@ a @@ n @@ h @@ t =>
-      VecCons(fromM(a), fromM(n), fromM(h), fromM(t))
+      VecCons(translate(a), translate(n), translate(h), translate(t))
     case MVar(Global("vecElim")) @@ a @@ m @@ cN @@ cC @@ n @@ xs =>
-      VecElim(fromM(a), fromM(m), fromM(cN), fromM(cC), fromM(n), fromM(xs))
-    case _ => super.fromM(m)
+      VecElim(translate(a), translate(m), translate(cN), translate(cC), translate(n), translate(xs))
+    case _ => super.translate(m)
   }
 }
 

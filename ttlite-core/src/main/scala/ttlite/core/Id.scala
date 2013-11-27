@@ -13,14 +13,14 @@ trait IdAST extends CoreAST {
 }
 
 trait IdMetaSyntax extends CoreMetaSyntax with IdAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Id")) @@ a @@ x @@ y =>
-      Id(fromM(a), fromM(x), fromM(y))
+      Id(translate(a), translate(x), translate(y))
     case MVar(Global("Refl")) @@ a @@ x =>
-      Refl(fromM(a), fromM(x))
+      Refl(translate(a), translate(x))
     case MVar(Global("elim")) @@ (MVar(Global("Id")) @@ a @@ x @@ y) @@ p @@ pr @@ eq =>
-      IdElim(Id(fromM(a), fromM(x), fromM(y)), fromM(p), fromM(pr), fromM(eq))
-    case _ => super.fromM(m)
+      IdElim(Id(translate(a), translate(x), translate(y)), translate(p), translate(pr), translate(eq))
+    case _ => super.translate(m)
   }
 }
 

@@ -33,7 +33,7 @@ trait FinAST extends CoreAST {
 }
 
 trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Falsity")) => Falsity
     case MVar(Global("Truth")) => Truth
     case MVar(Global("Bool")) => Bool
@@ -41,12 +41,12 @@ trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
     case MVar(Global("False")) => False
     case MVar(Global("True")) => True
     case MVar(Global("elim")) @@ MVar(Global("Falsity")) @@ m @@ el =>
-      FalsityElim(fromM(m), fromM(el))
+      FalsityElim(translate(m), translate(el))
     case MVar(Global("elim")) @@ MVar(Global("Truth")) @@ m @@ v @@ el =>
-      TruthElim(fromM(m), fromM(v), fromM(el))
+      TruthElim(translate(m), translate(v), translate(el))
     case MVar(Global("elim")) @@ MVar(Global("Bool")) @@ m @@ c1 @@ c2 @@ el =>
-      BoolElim(fromM(m), fromM(c1), fromM(c2), fromM(el))
-    case _ => super.fromM(m)
+      BoolElim(translate(m), translate(c1), translate(c2), translate(el))
+    case _ => super.translate(m)
   }
 }
 

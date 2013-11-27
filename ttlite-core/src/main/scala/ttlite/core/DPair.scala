@@ -13,14 +13,14 @@ trait DPairAST extends CoreAST {
 }
 
 trait DPairMetaSyntax extends CoreMetaSyntax with DPairAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
-      SigmaElim(fromM(sigma), fromM(m), fromM(f), fromM(p))
+      SigmaElim(translate(sigma), translate(m), translate(f), translate(p))
     case MVar(Global("dpair")) @@ sigma @@ e1 @@ e2 =>
-      DPair(fromM(sigma), fromM(e1), fromM(e2))
+      DPair(translate(sigma), translate(e1), translate(e2))
     case MBind("exists", t1, t2) =>
-      Sigma(fromM(t1), fromM(t2))
-    case _ => super.fromM(m)
+      Sigma(translate(t1), translate(t2))
+    case _ => super.translate(m)
   }
 }
 

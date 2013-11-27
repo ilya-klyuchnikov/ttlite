@@ -14,14 +14,14 @@ trait WAST extends CoreAST {
 }
 
 trait WMetaSyntax extends CoreMetaSyntax with WAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MBind("W", t1, t2) =>
-      W(fromM(t1), fromM(t2))
+      W(translate(t1), translate(t2))
     case MVar(Global("Sup")) @@ sigma @@ e1 @@ e2 =>
-      Sup(fromM(sigma), fromM(e1), fromM(e2))
+      Sup(translate(sigma), translate(e1), translate(e2))
     case MVar(Global("Rec")) @@ w @@ m @@ a @@ b =>
-      Rec(fromM(w), fromM(m), fromM(a), fromM(b))
-    case _ => super.fromM(m)
+      Rec(translate(w), translate(m), translate(a), translate(b))
+    case _ => super.translate(m)
   }
 }
 

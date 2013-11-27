@@ -13,14 +13,14 @@ trait PairAST extends CoreAST {
 }
 
 trait PairMetaSyntax extends CoreMetaSyntax with PairAST {
-  override def fromM(m: MTerm): Term = m match {
+  override def translate(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
-      Product(fromM(a), fromM(b))
+      Product(translate(a), translate(b))
     case MVar(Global("Pair")) @@ et @@ x @@ y =>
-      Pair(fromM(et), fromM(x), fromM(y))
+      Pair(translate(et), translate(x), translate(y))
     case MVar(Global("elim")) @@ (MVar(Global("Product")) @@ a @@ b) @@ m @@ f @@ p =>
-      ProductElim(Product(fromM(a), fromM(b)), fromM(m), fromM(f), fromM(p))
-    case _ => super.fromM(m)
+      ProductElim(Product(translate(a), translate(b)), translate(m), translate(f), translate(p))
+    case _ => super.translate(m)
   }
 }
 
