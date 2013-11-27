@@ -97,8 +97,8 @@ fp = \ (A : Set) (B : Set) (C : Set) (D : Set)
                     p)
         fs;
 
-e1 = zip Bool Bool (nil Bool) (cons Bool True (nil Bool));
-e2 = zip Bool Bool (cons Bool True (nil Bool)) (nil Bool);
-e3 = zip Bool Bool (cons Bool True (nil Bool)) (cons Bool False (nil Bool));
-e4 = zip Bool Bool (cons Bool True (cons Bool True (nil Bool))) (cons Bool False (cons Bool True (nil Bool)));
-e5 = zip Bool Bool (cons Bool True (cons Bool True (nil Bool))) (cons Bool False (nil Bool));
+--e1 = zip Bool Bool (nil Bool) (cons Bool True (nil Bool));
+--e2 = zip Bool Bool (cons Bool True (nil Bool)) (nil Bool);
+--e3 = zip Bool Bool (cons Bool True (nil Bool)) (cons Bool False (nil Bool));
+--e4 = zip Bool Bool (cons Bool True (cons Bool True (nil Bool))) (cons Bool False (cons Bool True (nil Bool)));
+--e5 = zip Bool Bool (cons Bool True (cons Bool True (nil Bool))) (cons Bool False (nil Bool));

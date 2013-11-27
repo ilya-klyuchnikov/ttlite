@@ -170,8 +170,9 @@ trait REPL {
     }
 
     def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
 
-    for (id <- state.ids.filterNot(internalName)) {
+    for (id <- state.ids.filterNot(internalName).filter(globalName)) {
       val v = quote(state.vals(id))
       val tp = quote(state.types(id))
 
