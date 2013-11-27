@@ -1,32 +1,23 @@
 package ttlite.common
 
+import scala.collection.immutable.Queue
+
 object Context {
   def empty[V] =
-    new Context[V](Map(), Map(), Nil)
+    new Context[V](Map(), Map(), Queue())
   def fromVals[V](vals : Map[Name, V]) =
-    new Context(vals, Map(), Nil)
+    new Context(vals, Map(), Queue())
 }
 // right now ids handles assumed variables only. This is wrong - it should have all variables
-class Context[V] private (val vals: Map[Name, V], val types: Map[Name, V], val ids: List[Name]) {
-  def addGlobal(s : String, v : V, tp : V): Context[V] = {
-    val n = Global(s)
-    new Context(vals + (n -> v), types + (n -> tp), ids)
-  }
+class Context[V] private (val vals: Map[Name, V], val types: Map[Name, V], val ids: Queue[Name]) {
 
-  def addLocal(i : Int, v : V, tp : V) : Context[V] = {
-    val n = Local(i)
-    new Context(vals + (n -> v), types + (n -> tp), ids)
-  }
+  def addVal(n : Name, v : V, tp : V) : Context[V] =
+    new Context(vals + (n -> v), types + (n -> tp), ids.enqueue(n))
 
-  def addAssumed(s : String, tp : V) : Context[V] = {
-    val n = Assumed(s)
-    new Context(vals, types + (n -> tp), n :: ids)
-  }
+  def addType(n : Name, tp : V) : Context[V] =
+    new Context(vals, types + (n -> tp), ids.enqueue(n))
 
-  def addTyped(n : Name, tp : V) : Context[V] = {
-    new Context(vals, types + (n -> tp), ids)
-  }
-
+  // todo add to ids as well
   def addTypes(tps : Map[Name, V]) : Context[V] =
     new Context(vals, types ++ tps, ids)
 }

@@ -198,7 +198,7 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
 
       output("::")
       output(pretty(quote(proofTypeVal)))
-      state.addGlobal(scId, resVal, inTpVal).addGlobal(proofId, proofVal, proofTypeVal)
+      state.addVal(Global(scId), resVal, inTpVal).addVal(Global(proofId), proofVal, proofTypeVal)
     case _ =>
       super.handleStmt(state, stmt)
   }

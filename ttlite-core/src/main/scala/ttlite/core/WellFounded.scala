@@ -91,7 +91,7 @@ trait WCheck extends FunCheck with WAST {
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
 
-      val tpType = iType(i + 1, path/(2, 2), ctx.addTyped(Local(i), xVal), iSubst(0, Free(Local(i)), tp))
+      val tpType = iType(i + 1, path/(2, 2), ctx.addType(Local(i), xVal), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))

@@ -159,18 +159,19 @@ trait REPL {
     out.write(s"module ${f} where\n")
     out.write(s"open import ttlite\n")
 
-    val assumed = state.ids.reverse
+    val assumed = state.ids.filter(_.isInstanceOf[Assumed])
 
     if (assumed.nonEmpty) {
       out.write("\npostulate\n")
-      for {id <- assumed } {
+      for {id <- assumed} {
         val tp = quote(state.types(id))
         out.write(s"  ${id} : ${prettyAgda(tp)}\n")
       }
     }
 
-    // TODO: hack - remove
-    for (id <- state.vals.keys.filterNot(n => List("pair", "cons", "nil", "_").contains(n.toString))) {
+    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+
+    for (id <- state.ids.filterNot(internalName)) {
       val v = quote(state.vals(id))
       val tp = quote(state.types(id))
 
@@ -189,7 +190,7 @@ trait REPL {
     } else {
       output(s"$s\n:\n${vPrint(tp)};")
     }
-    state.addGlobal(s, v, tp)
+    state.addVal(Global(s), v, tp)
   }
 
   private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =

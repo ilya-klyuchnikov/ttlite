@@ -31,6 +31,12 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with MustMatchers {
     }
   }
 
+  describe("Export to Agda with assumed variables in correct order") {
+    it("assumed.hs") {
+      checkAgda("assumed")
+    }
+  }
+
   def checkAgda(module : String) {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/agda/${module}.hs"))

@@ -241,7 +241,7 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     checkEqual(0, tp, VUniverse(-1), Path.empty)
     val v = eval(state, t)
     output(pretty(quote(v)))
-    state.addAssumed(x, v)
+    state.addType(Assumed(x), v)
   }
   def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
     handleLet(state, s, Ann(t, tp))
