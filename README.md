@@ -261,3 +261,7 @@ For now, this statemenent reloads a specified file, but **do not** reload its de
 If you look into examples, you will notice that all of TT Lite examples are in files with extension `.hs`.
 There is a very simple reason for this: syntax of TT Lite is quite close to Haskell and GitHub performs quite
 good syntax coloring fot TT Lite files if they have extension `.hs`. That's it :)
+
+### Further reading
+
+* [Change notes](/tech-notes/changes.md)
