@@ -1,5 +1,5 @@
 target/
-/agda/
+generated/
 .idea/
 .idea_modules/
 .ensime_lucene/

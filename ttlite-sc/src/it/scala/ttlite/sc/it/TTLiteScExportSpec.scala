@@ -43,7 +43,7 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with MustMatchers {
   def checkAgda(module : String) {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/agda-sc/${module}.hs"))
-    val exitCode = s"agda -i agda/ -i doc/ agda/${module}.agda".!
+    val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
     exitCode mustBe 0
   }
 }

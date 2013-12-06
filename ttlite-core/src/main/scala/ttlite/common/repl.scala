@@ -155,7 +155,7 @@ trait REPL {
   private def exportToAgda(f : String, state : Context[V]) {
     import java.io.{File, FileWriter}
 
-    val agdaFile = new File(s"agda/${f}.agda")
+    val agdaFile = new File(s"generated/${f}.agda")
     new File(s"agda/${f}.agdai").delete()
 
     agdaFile.getParentFile.mkdirs()
