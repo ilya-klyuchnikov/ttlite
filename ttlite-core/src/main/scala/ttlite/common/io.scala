@@ -31,9 +31,9 @@ case class FiledTTLiteError(err : TTLiteError, file : String) extends TTLiteErro
   val errorKind = err.errorKind
   val msg : String = err.msg
   val details: String = err.details
-  override val location: String = s"$file[${line}:${column}]"
   val line : Int = err.line
   val column : Int = err.column
+  override val location: String = s"$file[${line}:${column}]"
   override val origin = err.origin
   override def withFile(f : String) : TTLiteError = this
 }

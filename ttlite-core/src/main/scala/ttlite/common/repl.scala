@@ -78,6 +78,8 @@ trait REPL {
 
   // if batch, we do not output info into console.
   private var batch: Boolean = false
+  // in verbose mode we output stack traces of errors
+  private var verbose: Boolean = false
   val prompt: String
 
   val parser: MetaParser = MetaParser
@@ -87,18 +89,23 @@ trait REPL {
   def vPrint(v: V): String = pretty(quote(v))
   private var modules: Set[String] = _
 
-
   def handleError(tte: TTLiteError): Unit = {
     Console.println(ansi(s"@|bold,red ${tte.errorKind} error in ${tte.location}|@"))
     Console.println(tte.getMessage)
     Console.println()
     Console.println(tte.details)
+    if  (verbose) {
+      tte.printStackTrace()
+    }
   }
 
   // we assume that it is input/output error
   def handleGeneralError(t : Throwable): Unit = {
     Console.println(ansi(s"@|bold,red IO error:|@"))
     Console.println(t.getMessage)
+    if (verbose) {
+      t.printStackTrace()
+    }
   }
 
   def output(x: => Any): Unit =
@@ -221,21 +228,6 @@ trait REPL {
     loop(st1, console)
   }
 
-  private def loadModuleI(f: String, state: Context[V]): Context[V] = {
-    try {
-      loadModule(f, state, reload = false)
-    } catch {
-      case TTLiteExit =>
-        throw TTLiteExit
-      case t : TTLiteError =>
-        handleError(t)
-        state
-      case t : Throwable =>
-        handleGeneralError(t)
-        state
-    }
-  }
-
   def step(state: Context[V], console : org.kiama.util.Console): Context[V] = {
     val in = console.readLine(ansi(s"@|bold $name> |@"))
     try {
@@ -256,11 +248,9 @@ trait REPL {
       args match {
         case Array() =>
           loop(state, org.kiama.util.JLineConsole)
-        case Array("-i", f) =>
-          state = loadModuleI(f, state)
+        case Array("-v") =>
+          verbose = true
           loop(state, org.kiama.util.JLineConsole)
-        case Array("-t", f) =>
-          state = loadModuleI(f, state)
         case _ =>
           batch = true
           args.foreach { f =>
@@ -269,7 +259,7 @@ trait REPL {
       }
     } catch {
       case TTLiteExit =>
-        Console.println("Bye")
+        Console.println("")
     }
   }
 }
