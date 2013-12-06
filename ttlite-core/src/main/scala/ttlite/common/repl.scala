@@ -74,8 +74,6 @@ trait REPL {
    */
   def assume(ctx: Context[V], id: String, term: T): Context[V]
 
-  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V]
-
   // if batch, we do not output info into console.
   private var batch: Boolean = false
   // in verbose mode we output stack traces of errors
@@ -84,7 +82,6 @@ trait REPL {
 
   val parser: MetaParser = MetaParser
   val name: String
-  // TO OVERRIDE ENDS
 
   def vPrint(v: V): String = pretty(quote(v))
   private var modules: Set[String] = _
@@ -129,12 +126,12 @@ trait REPL {
           case t : TypeError => throw t.withMTerm(mt)
         }
       case TypedLet(x, mt1, mt2) =>
-        val e = translate(mt1)
-        val tp = translate(mt2)
+        val mtAnn = MAnn(mt1, mt2)
+        val e = translate(mtAnn)
         try {
-          handleTypedLet(state, x, e, tp)
+          handleLet(state, x, e)
         } catch {
-          case t : TypeError => throw t.withMTerm(MAnn(mt1, mt2))
+          case t : TypeError => throw t.withMTerm(mtAnn)
         }
       case Eval(mt) =>
         val e = translate(mt)

@@ -249,7 +249,5 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     output(pretty(quote(v)))
     state.addType(Assumed(x), v)
   }
-  def handleTypedLet(state: Context[V], s: String, t: T, tp: T): Context[V] =
-    handleLet(state, s, Ann(t, tp))
 
 }
