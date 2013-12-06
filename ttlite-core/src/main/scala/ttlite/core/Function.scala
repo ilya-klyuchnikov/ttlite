@@ -68,7 +68,7 @@ trait FunPrinter extends CorePrinter with FunAST {
       nestedLambda(i + 1, (i, d) :: fs, r)
     case x =>
       val lams = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
-      val lams1 = lams.updated(lams.length - 1, lams(lams.length - 1) <> " .")
+      val lams1 = lams.updated(lams.length - 1, lams(lams.length - 1) <> " ->")
       nest(sep((text("\\") +: lams1).toSeq ++ Seq(print(0, i , x))))
   }
 }
