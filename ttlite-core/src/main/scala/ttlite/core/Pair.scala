@@ -88,7 +88,6 @@ trait PairCheck extends FunCheck with PairAST {
     case Pair(et, x, y) =>
       val eType = iType(i, path/(2, 4), ctx, et)
       checkUniverse(i, eType, path/(2, 4))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VProduct], path/(2, 4), "Product _ _", et)
       val VProduct(aVal, bVal) = etVal
@@ -103,20 +102,20 @@ trait PairCheck extends FunCheck with PairAST {
     case ProductElim(et, m, f, p) =>
       val eType = iType(i, path/(2, 5), ctx, et)
       checkUniverse(i, eType, path/(2, 5))
-
-      val VProduct(aVal, bVal) = eval(et, ctx, List())
-
-      val mVal = eval(m, ctx, List())
-      val pVal = eval(p, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VProduct], path/(2, 5), "Product _ _", et)
+      val VProduct(aVal, bVal) = etVal
 
       val mType = iType(i, path/(3, 5), ctx, m)
       checkEqual(i, mType, VPi(VProduct(aVal, bVal), {_ => VUniverse(-1)}), path/(3, 5))
+      val mVal = eval(m, ctx, List())
 
       val fType = iType(i, path/(4, 5), ctx, f)
       checkEqual(i, fType, VPi(aVal, a => VPi(bVal, b => mVal @@ VPair(VProduct(aVal, bVal), a, b))), path/(4, 5))
 
       val pType = iType(i, path/(5, 5), ctx, p)
       checkEqual(i, pType, VProduct(aVal, bVal), path/(5, 5))
+      val pVal = eval(p, ctx, List())
 
       mVal @@ pVal
     case _ =>

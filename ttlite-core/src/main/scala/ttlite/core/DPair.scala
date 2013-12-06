@@ -106,10 +106,9 @@ trait DPairCheck extends FunCheck with DPairAST {
   override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // Sigma is a bind, so arity is 2
     case Sigma(x, tp) =>
-      val xVal = eval(x, ctx, Nil)
-
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
+      val xVal = eval(x, ctx, Nil)
 
       val tpType = iType(i + 1, path/(2, 2), ctx.addType(Local(i), xVal), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
@@ -118,11 +117,11 @@ trait DPairCheck extends FunCheck with DPairAST {
     case DPair(sigma, x, y) =>
       val sigmaType = iType(i, path/(2, 4), ctx, sigma)
       checkUniverse(i, sigmaType, path/(2, 4))
+
       eval(sigma, ctx, Nil) match {
         case VSigma(a, f) =>
           val xType = iType(i, path/(3, 4), ctx, x)
           checkEqual(i, xType, a, path/(3, 4))
-
           val xVal = eval(x, ctx, Nil)
 
           val yType = iType(i, path/(4, 4), ctx, y)
@@ -135,17 +134,16 @@ trait DPairCheck extends FunCheck with DPairAST {
     case SigmaElim(sigma, m, f, p) =>
       val sigmaType = iType(i, path/(2, 5), ctx, sigma)
       checkUniverse(i, sigmaType, path/(2, 5))
+
       eval(sigma, ctx, Nil) match {
         case sigmaVal@VSigma(x1, x2) =>
 
           val pType = iType(i, path/(5, 5), ctx, p)
           checkEqual(i, pType, sigmaVal, path/(5, 5))
-
           val pVal = eval(p, ctx, List())
 
           val mType = iType(i, path/(3, 5), ctx, m)
           checkEqual(i, mType, VPi(sigmaVal, {_ => VUniverse(-1)}), path/(3, 5))
-
           val mVal = eval(m, ctx, List())
 
           val fType = iType(i, path/(4, 5), ctx, f)

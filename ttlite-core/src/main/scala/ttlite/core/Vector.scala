@@ -79,21 +79,19 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
 
       VUniverse(j)
     case VecNil(a) =>
-      val aVal = eval(a, ctx, List())
-
       val aType = iType(i, path/(1, 2), ctx, a)
       checkUniverse(i, aType, path/(1, 2))
+      val aVal = eval(a, ctx, List())
 
       VVec(aVal, VZero)
-    case VecCons(a, n, head, tail) => //, VVec(bVal, VSucc(k))) =>
-      val aVal = eval(a, ctx, List())
-      val nVal = eval(n, ctx, List())
-
+    case VecCons(a, n, head, tail) =>
       val aType = iType(i, path/(2, 5), ctx, a)
       checkUniverse(i, aType, path/(2, 5))
+      val aVal = eval(a, ctx, List())
 
       val nType = iType(i, path/(3, 5), ctx, n)
       checkEqual(i, nType, VNat, path/(3, 5))
+      val nVal = eval(n, ctx, List())
 
       val hType = iType(i, path/(4, 5), ctx, head)
       checkEqual(i, hType, aVal, path/(4, 5))
@@ -103,16 +101,13 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
 
       VVec(aVal, VSucc(nVal))
     case VecElim(a, m, nilCase, consCase, n, vec) =>
-      val aVal = eval(a, ctx, List())
-      val mVal = eval(m, ctx, List())
-      val nVal = eval(n, ctx, List())
-      val vecVal = eval(vec, ctx, List())
-
       val aType = iType(i, path/(2, 7), ctx, a)
       checkUniverse(i, aType, path/(2, 7))
+      val aVal = eval(a, ctx, List())
 
       val mType = iType(i, path/(3, 7), ctx, m)
       checkEqual(i, mType, VPi(VNat, {n => VPi(VVec(aVal, n), {_ => VUniverse(-1)})}), path/(3, 7))
+      val mVal = eval(m, ctx, List())
 
       val nilCaseType = iType(i, path/(4, 7), ctx, nilCase)
       checkEqual(i, nilCaseType, mVal @@ VZero @@ VVecNil(aVal), path/(4, 7))
@@ -128,9 +123,11 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
 
       val nType = iType(i, path/(6, 7), ctx, n)
       checkEqual(i, nType, VNat, path/(6, 7))
+      val nVal = eval(n, ctx, List())
 
       val vecType = iType(i, path/(7, 7), ctx, vec)
       checkEqual(i, vecType, VVec(aVal, nVal), path/(7, 7))
+      val vecVal = eval(vec, ctx, List())
 
       mVal @@ nVal @@ vecVal
     case _ =>
@@ -182,4 +179,11 @@ trait VectorQuote extends CoreQuote with VectorAST {
   }
 }
 
-trait VectorREPL extends NatREPL with VectorAST with VectorMetaSyntax with VectorPrinter with VectorCheck with VectorEval with VectorQuote
+trait VectorREPL
+  extends NatREPL
+  with VectorAST
+  with VectorMetaSyntax
+  with VectorPrinter
+  with VectorCheck
+  with VectorEval
+  with VectorQuote

@@ -6,7 +6,7 @@ trait CoreAST {
   trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
   case class Bound(i: Int) extends Term
-  // TODO something line generated name/var
+  // TODO something like generated name/var
   case class Free(n: Name) extends Term
 
   case class Universe(i: Int) extends Term {
@@ -198,10 +198,10 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     case Universe(i) =>
       VUniverse(i + 1)
     case Ann(e, tp) =>
-      val tpVal = eval(tp, ctx, Nil)
-
       val tpType = iType(i, path/(2, 2), ctx, tp)
       checkUniverse(i, tpType, path/(2, 2))
+
+      val tpVal = eval(tp, ctx, Nil)
 
       val eType = iType(i, path/(1, 2), ctx, e)
       checkEqual(i, eType, tpVal, path/(1, 2))

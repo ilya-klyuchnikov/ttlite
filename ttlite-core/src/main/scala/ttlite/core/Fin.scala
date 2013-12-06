@@ -177,32 +177,30 @@ trait FinCheck extends FunCheck with FinAST {
     case TruthElim(m, v, elem) =>
       val mType = iType(i, path/(3, 5), ctx, m)
       checkEqual(i, mType, VPi(VTruth, {_ => VUniverse(-1)}), path/(3, 5))
-
       val mVal = eval(m, ctx, List())
-      val elemVal = eval(elem, ctx, List())
 
       val vType = iType(i, path/(4, 5), ctx, v)
       checkEqual(i, vType, mVal @@ VTriv, path/(4, 5))
 
       val elemType = iType(i, path/(5, 5), ctx, elem)
       checkEqual(i, elemType, Truth, path/(5, 5))
-
-      mVal @@ elemVal
-    case BoolElim(m, v1, v2, elem) =>
-      val mType = iType(i, path/(3, 6), ctx, m)
-      checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}), path/(3, 6))
-
-      val mVal = eval(m, ctx, List())
       val elemVal = eval(elem, ctx, List())
 
-      val v1Type = iType(i, path/(4, 6), ctx, v1)
-      checkEqual(i, v1Type, mVal @@ VFalse, path/(4, 6))
+      mVal @@ elemVal
+    case BoolElim(m, f1, f2, elem) =>
+      val mType = iType(i, path/(3, 6), ctx, m)
+      checkEqual(i, mType, VPi(VBool, {_ => VUniverse(-1)}), path/(3, 6))
+      val mVal = eval(m, ctx, List())
 
-      val v2Type = iType(i, path/(5, 6), ctx, v2)
-      checkEqual(i, v2Type, mVal @@ VTrue, path/(5, 6))
+      val f1Type = iType(i, path/(4, 6), ctx, f1)
+      checkEqual(i, f1Type, mVal @@ VFalse, path/(4, 6))
+
+      val f2Type = iType(i, path/(5, 6), ctx, f2)
+      checkEqual(i, f2Type, mVal @@ VTrue, path/(5, 6))
 
       val elemType = iType(i, path/(6, 6), ctx, elem)
       checkEqual(i, elemType, Bool, path/(6, 6))
+      val elemVal = eval(elem, ctx, List())
 
       mVal @@ elemVal
     case _ =>

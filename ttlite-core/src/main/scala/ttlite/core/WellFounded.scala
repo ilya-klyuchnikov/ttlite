@@ -86,17 +86,19 @@ trait WCheck extends FunCheck with WAST {
   override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // this is a bind, so arity = 2
     case W(x, tp) =>
-      val xVal = eval(x, ctx, Nil)
-
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
+      val xVal = eval(x, ctx, Nil)
 
       val tpType = iType(i + 1, path/(2, 2), ctx.addType(Local(i), xVal), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
     case Sup(w, a, f) =>
-      eval(w, ctx, Nil) match {
+      val wType = iType(i, path/(2, 4), ctx, w)
+      checkUniverse(i, wType, path/(2, 4))
+      val wVal = eval(w, ctx, List())
+      wVal match {
         case VW(a1, f1) =>
 
           val aType = iType(i, path/(3, 4), ctx, a)
@@ -114,12 +116,13 @@ trait WCheck extends FunCheck with WAST {
     case Rec(w, m, b, a) =>
       val wType = iType(i, path/(2, 5), ctx, w)
       checkUniverse(i, wType, path/(2, 5))
-      val VW(t1, t2) = eval(w, ctx, List())
-
-      val mVal = eval(m, ctx, List())
+      val wVal = eval(w, ctx, List())
+      require(wVal.isInstanceOf[VW], path/(2, 5), "W _ _", w)
+      val VW(t1, t2) = wVal
 
       val mType = iType(i, path/(3, 5), ctx, m)
       checkEqual(i, mType, VPi(VW(t1, t2), {_ => VUniverse(-1)}), path/(3, 5))
+      val mVal = eval(m, ctx, List())
 
       val bType = iType(i, path/(4, 5), ctx, b)
       checkEqual(i, bType,

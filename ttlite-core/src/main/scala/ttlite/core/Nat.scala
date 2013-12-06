@@ -105,11 +105,9 @@ trait NatCheck extends FunCheck with NatAST {
     case Nat =>
       VUniverse(0)
     case NatElim(m, mz, ms, n) =>
-      val mVal = eval(m, ctx, Nil)
-      val nVal = eval(n, ctx, Nil)
-
       val mType = iType(i, path/(3, 6), ctx, m)
       checkEqual(i, mType, Pi(Nat, Universe(-1)), path/(3, 6))
+      val mVal = eval(m, ctx, Nil)
 
       val mzType = iType(i, path/(4, 6), ctx, mz)
       checkEqual(i, mzType, mVal @@ VZero, path/(4, 6))
@@ -119,6 +117,7 @@ trait NatCheck extends FunCheck with NatAST {
 
       val nType = iType(i, path/(6, 6), ctx, n)
       checkEqual(i, nType, Nat, path/(6, 6))
+      val nVal = eval(n, ctx, Nil)
 
       mVal @@ nVal
     case Zero =>
@@ -146,4 +145,12 @@ trait NatCheck extends FunCheck with NatAST {
 
 }
 
-trait NatREPL extends CoreREPL with NatAST with MNat with NatPrinter with NatPrinterAgda with NatCheck with NatEval with NatQuote
+trait NatREPL
+  extends CoreREPL
+  with NatAST
+  with MNat
+  with NatPrinter
+  with NatPrinterAgda
+  with NatCheck
+  with NatEval
+  with NatQuote

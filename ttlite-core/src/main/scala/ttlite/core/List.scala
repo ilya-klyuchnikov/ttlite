@@ -15,7 +15,7 @@ trait ListAST extends CoreAST {
 }
 
 trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
-  override def translate(m: MTerm): Term = m match {
+  override def translate(mt: MTerm): Term = mt match {
     case MVar(Global("List")) @@ a =>
       PiList(translate(a))
     case MVar(Global("Nil")) @@ a =>
@@ -24,7 +24,7 @@ trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
       PiCons(translate(a), translate(h), translate(t))
     case MVar(Global("elim")) @@ (MVar(Global("List")) @@ a) @@ m @@ cN @@ cC @@ n =>
       PiListElim(PiList(translate(a)), translate(m), translate(cN), translate(cC), translate(n))
-    case _ => super.translate(m)
+    case _ => super.translate(mt)
   }
 }
 
@@ -100,16 +100,14 @@ trait ListCheck extends FunCheck with ListAST {
 
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VPiList], path/(2, 2), "List _", et)
-
       val VPiList(aVal) = etVal
+
       VPiList(aVal)
     case PiCons(et, head, tail) =>
       val eType = iType(i, path/(2, 4), ctx, et)
       checkUniverse(i, eType, path/(2, 4))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VPiList], path/(2, 4), "List _", et)
-
       val VPiList(aVal) = etVal
 
       val hType = iType(i, path/(3, 4), ctx, head)
@@ -122,17 +120,13 @@ trait ListCheck extends FunCheck with ListAST {
     case PiListElim(et, m, nilCase, consCase, xs) =>
       val eType = iType(i, path/(2, 6), ctx, et)
       checkUniverse(i, eType, path/(2, 6))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VPiList], path/(2, 6), "List _", et)
-
       val VPiList(aVal) = eval(et, ctx, List())
-
-      val mVal = eval(m, ctx, List())
-      val xsVal = eval(xs, ctx, List())
 
       val mType = iType(i, path/(3, 6), ctx, m)
       checkEqual(i, mType, VPi(VPiList(aVal), {_ => VUniverse(-1)}), path/(3, 6))
+      val mVal = eval(m, ctx, List())
 
       val nilCaseType = iType(i, path/(4, 6), ctx, nilCase)
       checkEqual(i, nilCaseType, mVal @@ VPiNil(etVal), path/(4, 6))
@@ -145,6 +139,7 @@ trait ListCheck extends FunCheck with ListAST {
 
       val xsType = iType(i, path/(6, 6), ctx, xs)
       checkEqual(i, xsType, VPiList(aVal), path/(6, 6))
+      val xsVal = eval(xs, ctx, List())
 
       mVal @@ xsVal
     case _ =>

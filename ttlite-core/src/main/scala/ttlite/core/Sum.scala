@@ -102,7 +102,6 @@ trait SumCheck extends FunCheck with SumAST {
     case InL(et, l) =>
       val eType = iType(i, path/(2, 3), ctx, et)
       checkUniverse(i, eType, path/(2, 3))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VSum], path/(2, 3), "Sum _ _", et)
       val VSum(aVal, bVal) = etVal
@@ -114,7 +113,6 @@ trait SumCheck extends FunCheck with SumAST {
     case InR(et, r) =>
       val eType = iType(i, path/(2, 3), ctx, et)
       checkUniverse(i, eType, path/(2, 3))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VSum], path/(2, 3), "Sum _ _", et)
       val VSum(aVal, bVal) = etVal
@@ -124,18 +122,15 @@ trait SumCheck extends FunCheck with SumAST {
 
       VSum(aVal, bVal)
     case SumElim(et, m, lc, rc, sum) =>
-      val mVal = eval(m, ctx, List())
-      val sumVal = eval(sum, ctx, List())
-
       val eType = iType(i, path/(2, 6), ctx, et)
       checkUniverse(i, eType, path/(2, 6))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VSum], path/(2, 6), "Sum _ _", et)
       val VSum(ltVal, rtVal) = etVal
 
       val mType = iType(i, path/(3, 6), ctx, m)
       checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VUniverse(-1)}), path/(3, 6))
+      val mVal = eval(m, ctx, List())
 
       val lcType = iType(i, path/(4, 6), ctx, lc)
       checkEqual(i, lcType, VPi(ltVal, {lVal => mVal @@ VInL(etVal, lVal)}), path/(4, 6))
@@ -145,6 +140,7 @@ trait SumCheck extends FunCheck with SumAST {
 
       val sumType = iType(i, path/(6, 6), ctx, sum)
       checkEqual(i, sumType, VSum(ltVal, rtVal), path/(6, 6))
+      val sumVal = eval(sum, ctx, List())
 
       mVal @@ sumVal
     case _ =>

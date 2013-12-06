@@ -142,23 +142,20 @@ trait FunCheck extends CoreCheck with FunAST {
   override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
 
     case Pi(x, tp) =>
-      val xVal = eval(x, ctx, Nil)
-
       val xType = iType(i, path/(1, 2), ctx, x)
       val j = checkUniverse(i, xType, path/(1, 2))
+      val xVal = eval(x, ctx, Nil)
 
       val tpType = iType(i + 1, path/(2, 2), ctx.addType(Local(i), xVal), iSubst(0, Free(Local(i)), tp))
       val k = checkUniverse(i, tpType, path/(2, 2))
 
       VUniverse(math.max(j, k))
     case Lam(t, e) =>
-      val tVal = eval(t, ctx, Nil)
       val tType = iType(i, path/(1, 2), ctx, t)
-
       checkUniverse(i, tType, path/(1, 2))
-      // to force early error
+      val tVal = eval(t, ctx, Nil)
+      // to force an early error, since the type of `e` is calculated in the body lambda (delayed)
       iType(i + 1, path/(2, 2), ctx.addType(Local(i), tVal), iSubst(0, Free(Local(i)), e))
-
       VPi(tVal, v => iType(i + 1, path/(2, 2), ctx.addVal(Local(i), v, tVal), iSubst(0, Free(Local(i)), e)))
     case (e1 :@: e2) =>
       iType(i, path/(1, 2), ctx, e1) match {
@@ -184,4 +181,12 @@ trait FunCheck extends CoreCheck with FunAST {
   }
 }
 
-trait FunREPL extends CoreREPL with FunAST with FunMetaSyntax with FunPrinter with FunPrinterAgda with FunCheck with FunEval with FunQuote
+trait FunREPL
+  extends CoreREPL
+  with FunAST
+  with FunMetaSyntax
+  with FunPrinter
+  with FunPrinterAgda
+  with FunCheck
+  with FunEval
+  with FunQuote

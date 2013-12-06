@@ -77,10 +77,9 @@ trait IdEval extends FunEval with IdAST with CoreQuote {
 trait IdCheck extends FunCheck with IdAST {
   override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Id(a, x, y) =>
-      val aVal = eval(a, ctx, Nil)
-
       val aType = iType(i, path/(2, 4), ctx, a)
-      val m = checkUniverse(i, aType, path/(2, 4))
+      val j = checkUniverse(i, aType, path/(2, 4))
+      val aVal = eval(a, ctx, Nil)
 
       val xType = iType(i, path/(3, 4), ctx, x)
       checkEqual(i, xType, aVal, path/(3, 4))
@@ -88,40 +87,34 @@ trait IdCheck extends FunCheck with IdAST {
       val yType = iType(i, path/(4, 4), ctx, y)
       checkEqual(i, yType, aVal, path/(4, 4))
 
-      VUniverse(m)
+      VUniverse(j)
     case Refl(a, z) =>
-      val aVal = eval(a, ctx, Nil)
-      val zVal = eval(z, ctx, Nil)
-
       val aType = iType(i, path/(2, 3), ctx, a)
       checkUniverse(i, aType, path/(2, 3))
+      val aVal = eval(a, ctx, Nil)
 
       val zType = iType(i, path/(3, 3), ctx, z)
       checkEqual(i, zType, aVal, path/(3, 3))
+      val zVal = eval(z, ctx, Nil)
 
       VId(aVal, zVal, zVal)
-
     case IdElim(et, prop, propR, eq) =>
       val eType = iType(i, path/(2, 5), ctx, et)
       checkUniverse(i, eType, path/(2, 5))
-
       val etVal = eval(et, ctx, List())
       require(etVal.isInstanceOf[VId], path/(2, 5), "Id _ _ _", et)
       val VId(aVal, xVal, yVal) = etVal
 
-      val propVal = eval(prop, ctx, Nil)
-      val eqVal = eval(eq, ctx, Nil)
-
       val propType = iType(i, path/(3, 5), ctx, prop)
       checkEqual(i, propType, VPi(aVal, {x => VPi(aVal, {y => VPi(VId(aVal, x, y), {_ => VUniverse(-1)})})}), path/(3, 5))
+      val propVal = eval(prop, ctx, Nil)
 
-      // the main point is here: we check that prop x x (Refl A x) is well-typed
-      // propR : {a => x => prop x x (Refl a x)}
       val propRType = iType(i, path/(4, 5), ctx, propR)
       checkEqual(i, propRType, VPi(aVal, {x => propVal @@ x @@ x @@ VRefl(aVal, x)}), path/(4, 5))
 
       val eqType = iType(i, path/(5, 5), ctx, eq)
       checkEqual(i, eqType, VId(aVal, xVal, yVal), path/(5, 5))
+      val eqVal = eval(eq, ctx, Nil)
 
       propVal @@ xVal @@ yVal @@ eqVal
     case _ =>
