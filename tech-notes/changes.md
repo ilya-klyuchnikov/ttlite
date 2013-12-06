@@ -1,5 +1,10 @@
 ## Change notes
-------------------
+
+### 2013-12-06. Import/Reload autocomplete.
+
+Start type `import "` or `reload "` and you will have file name auto-completion via `tab`. Note that you need to type the first quote.
+
+   ![Syntax Error](img/autocomplete.png)
 
 ### 2013-11-27. Formalization in Agda. Export to Agda.
 
@@ -9,7 +14,7 @@ A new statement in TT Lite REPL `exportToAgda`. Command `exportToAgda` exports a
 exportToAgda moduleName;
 ```
 
-`moduleName` is a name of an Agda module which will be created in the directory `agda` (it is hardcoded for now).
+`moduleName` is a name of an Agda module which will be created in the directory `generated` (it is hardcoded for now).
 
 Here is an example of its usage (see [`examples/test/agda/map.hs`](/examples/test/agda/map.hs)):
 
@@ -26,7 +31,7 @@ map =
 exportToAgda map;
 ```
 
-Executing this file results in creation of the file `agda/map.agda` with the following content (up to formatting):
+Executing this file results in creation of the file `generated/map.agda` with the following content (up to formatting):
 
 ```
 open import ttlite
@@ -48,12 +53,12 @@ map = \ (a : Set0) (b : Set0) (c : forall (c : a) ->  b) (d : List a) ->
             d
 ```
 
-The module [`ttlite.agda`](/doc/ttlite.agda) contains a definition of TT Lite types in Agda settings.
+The module [`ttlite.agda`](/syntax/ttlite.agda) contains a definition of TT Lite types in Agda settings.
 
 The file `map.agda` from the example can be checked by Agda compiler using following command (from the project directory):
 
 ```
-agda -i agda/ -i doc/ agda/${module}.agda
+agda -i generated/ -i doc/ generated/${module}.agda
 ```
 
 Assumed variable are exported as [module parameters](http://wiki.portal.chalmers.se/agda/pmwiki.php?n=ReferenceManual.Modules#param). 
@@ -70,7 +75,7 @@ g = \ (xs : List listA) -> $L2;
 exportToAgda assumed;
 ```
 
-The result of export (`/agda/assumed.agda`):
+The result of export (`/generated/assumed.agda`):
 
 ```
 open import ttlite
