@@ -36,9 +36,7 @@ test_gt n0 n0 False (Refl Bool False);
 test_lte n1 n0 False (Refl Bool False);
 test_gt n1 n0 True (Refl Bool True);
 
-bool_to_prop = \ (x : Bool) -> elim Bool (\ (_ : Bool) -> Set) Falsity Truth x;
-
-lte_prop = \ (x : Nat) (y : Nat) -> bool_to_prop (lte x y);
+--lte_prop = \ (x : Nat) (y : Nat) -> bool_to_prop (lte x y);
 gt_prop  = \ (x : Nat) (y : Nat) -> bool_to_prop (gt  x y);
 
 --$qsort1 : (∀n:N).(∀l:[N]).((#l ≤ n) ⇒ [N])
@@ -61,7 +59,7 @@ e2 =
 test : Id (List Nat) e1 e2;
 test = Refl (List Nat) e1;
 
-f =
+f1 =
     \ (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) (b : Bool) ->
         elim Bool
             (\ (_ : Bool) -> List Nat)
@@ -70,7 +68,7 @@ f =
             b;
 
 x1 = filter Nat $p (cons Nat $v $vs);
-x2 = f $p $v $vs ($p $v);
+x2 = f1 $p $v $vs ($p $v);
 
 test1 : Id (List Nat) x1 x2;
 test1 = Refl (List Nat) x1;
@@ -90,7 +88,7 @@ filter_lemma1 : forall (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) .
 filter_lemma1 =
     \ (p : forall (_ : Nat) . Bool) (v : Nat) (vs : List Nat) ->
         elim Bool
-            (\ (b : Bool) -> lte_prop (length Nat (f p v vs b)) (length Nat (cons Nat v (filter Nat p vs))) )
+            (\ (b : Bool) -> lte_prop (length Nat (f1 p v vs b)) (length Nat (cons Nat v (filter Nat p vs))) )
             (lte_lemma5 (length Nat (filter Nat p vs)))
             (lte_refl (length Nat (filter Nat p vs)))
             (p v);
@@ -109,7 +107,7 @@ filter_lemma2 =
         (\ (v : Nat) (vs : List Nat)
             (qq : lte_prop (length Nat (filter Nat p vs)) (length Nat vs)) ->
             elim Bool
-                (\ (b : Bool) -> lte_prop (length Nat (f p v vs b)) (length Nat (cons Nat v vs)))
+                (\ (b : Bool) -> lte_prop (length Nat (f1 p v vs b)) (length Nat (cons Nat v vs)))
                 (lte_tran
                     (length Nat (filter Nat p vs))
                     (length Nat vs)
@@ -185,17 +183,17 @@ qsort : forall (_ : List Nat) . List Nat;
 qsort = \ (xs : List Nat) -> qsort_aux (length Nat xs) xs (lte_refl (length Nat xs));
 
 
-t1     = qsort (cons Nat n3 (cons Nat n2 (cons Nat n1 (nil Nat))));
-t1_ans = (cons Nat n1 (cons Nat n2 (cons Nat n3 (nil Nat))));
+t10     = qsort (cons Nat n3 (cons Nat n2 (cons Nat n1 (nil Nat))));
+t10_ans = (cons Nat n1 (cons Nat n2 (cons Nat n3 (nil Nat))));
 
-qsort_test1 : Id (List Nat) t1 t1_ans;
-qsort_test1 = Refl (List Nat) t1_ans;
+qsort_test10 : Id (List Nat) t10 t10_ans;
+qsort_test10 = Refl (List Nat) t10_ans;
 
-t2 = qsort (cons Nat n3 (cons Nat n2 (cons Nat n3 (nil Nat))));
-t2_ans = (cons Nat n2 (cons Nat n3 (cons Nat n3 (nil Nat))));
+t20 = qsort (cons Nat n3 (cons Nat n2 (cons Nat n3 (nil Nat))));
+t20_ans = (cons Nat n2 (cons Nat n3 (cons Nat n3 (nil Nat))));
 
-qsort_test2 : Id (List Nat) t2 t2_ans;
-qsort_test2 = Refl (List Nat) t2_ans;
+qsort_test2 : Id (List Nat) t20 t20_ans;
+qsort_test2 = Refl (List Nat) t20_ans;
 
 ---- AND NOW THE PROOF ----
 -- if List is sorted then
@@ -214,9 +212,6 @@ sorted =
                     (\ (v1 : Nat) (vs1 : List Nat) (_ : Set) -> Product (lte_prop v v1) rec)
                     vs)
             xs;
-
-xxx = sorted t1_ans;
-yyy = sorted (cons Nat n3 (cons Nat n2 (cons Nat n0 (nil Nat))));
 
 -- equality over natural numbers
 eqn : forall (_ : Nat) (_ : Nat) . Bool;

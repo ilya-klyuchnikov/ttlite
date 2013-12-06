@@ -161,11 +161,11 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   def stmts = List(quitStmt, assumeStmt, typedLetStmt, letStmt, importStmt, exportToAgdaStmt, reloadStmt, evalStmt)
 
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
-    ident ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
+    globalId ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
   lazy val typedLetStmt: PackratParser[Stmt[MTerm]] =
     (globalId ~ (":" ~> term) <~ ";") >> {
-      case x ~ tp =>
-        (ident ^?({case `x` => x}, _ => s"definition of $x expected")) ~ ("=" ~> term <~ ";") ^^ {
+      case id ~ tp =>
+        (ident ^?({case n if n == id.n => id}, _ => s"definition of ${id.n} expected")) ~ ("=" ~> term <~ ";") ^^ {
           case x ~ y => TypedLet(x, y(Nil), tp(Nil))
         }
     }
@@ -182,10 +182,10 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lazy val quitStmt: PackratParser[Stmt[MTerm]] =
     "quit" <~ ";" ^^ {t => Quit}
 
-  def assumedId: PackratParser[String] =
-    ident ^? {case id if id.startsWith("$") => id}
-  def globalId: PackratParser[String] =
-    ident ^? {case id if !id.startsWith("$") => id}
+  def assumedId: PackratParser[Id] =
+    pos(ident ^? {case id if id.startsWith("$") => Id(id)})
+  def globalId: PackratParser[Id] =
+    pos(ident ^? {case id if !id.startsWith("$") => Id(id)})
   def s2name(s: String): Name =
     if (s.startsWith("$")) Assumed(s) else Global(s)
 

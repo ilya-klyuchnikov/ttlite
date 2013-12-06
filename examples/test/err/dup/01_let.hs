@@ -1,0 +1,3 @@
+x = Nat;
+
+x = False;

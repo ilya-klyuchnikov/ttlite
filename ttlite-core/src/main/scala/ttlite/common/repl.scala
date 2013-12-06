@@ -72,7 +72,7 @@ trait REPL {
    * @param term term
    * @return
    */
-  def assume(ctx: Context[V], id: String, term: T): Context[V]
+  def assume(ctx: Context[V], id: Id, term: T): Context[V]
 
   // if batch, we do not output info into console.
   private var batch: Boolean = false
@@ -108,6 +108,8 @@ trait REPL {
   def output(x: => Any): Unit =
     if (!batch) Console.println(s"$x")
 
+  var res = 0
+
   def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =
     stmt match {
       case Quit =>
@@ -136,7 +138,8 @@ trait REPL {
       case Eval(mt) =>
         val e = translate(mt)
         try {
-          handleLet(state, "it", e)
+          res += 1
+          handleLet(state, Id(s"res_${res}"), e)
         } catch {
           case t : TypeError => throw t.withMTerm(mt)
         }
@@ -184,15 +187,15 @@ trait REPL {
     out.close()
   }
 
-  def handleLet(state: Context[V], s: String, it: T): Context[V] = {
+  def handleLet(state: Context[V], id: Id, it: T): Context[V] = {
+    val name = Global(id.n)
+    if (state.ids.contains(name)) {
+      throw DuplicateIdError(id)
+    }
     val tp = infer(state, it)
     val v = eval(state, it)
-    if (s == "it"){
-      output(pretty(quote(v)) + "\n:\n" + vPrint(tp) + ";")
-    } else {
-      output(s"$s\n:\n${vPrint(tp)};")
-    }
-    state.addVal(Global(s), v, tp)
+    output(s"${id.n}\n:\n${vPrint(tp)};")
+    state.addVal(name, v, tp)
   }
 
   private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =

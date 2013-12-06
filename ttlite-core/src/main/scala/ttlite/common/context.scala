@@ -17,7 +17,7 @@ class Context[V] private (val vals: Map[Name, V], val types: Map[Name, V], val i
   def addType(n : Name, tp : V) : Context[V] =
     new Context(vals, types + (n -> tp), ids.enqueue(n))
 
-  // todo add to ids as well
+  // todo add to ids as well -- for now this is used only during supercompilation
   def addTypes(tps : Map[Name, V]) : Context[V] =
     new Context(vals, types ++ tps, ids)
 }

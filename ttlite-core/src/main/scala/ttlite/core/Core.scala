@@ -242,12 +242,16 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     pp(c)
   override def prettyAgda(c: T): String =
     pretty(nest(printA(0, 0, c)))
-  def assume(state: Context[V], x: String, t: Term): Context[V] = {
+  def assume(state: Context[V], id: Id, t: Term): Context[V] = {
+    val name = Assumed(id.n)
+    if (state.ids.contains(name)) {
+      throw DuplicateIdError(id)
+    }
     val tp = infer(state, t)
     checkEqual(0, tp, VUniverse(-1), Path.empty)
     val v = eval(state, t)
     output(pretty(quote(v)))
-    state.addType(Assumed(x), v)
+    state.addType(name, v)
   }
 
 }

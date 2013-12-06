@@ -60,6 +60,36 @@ class ErrorHandlingSpec extends FunSpec with MustMatchers {
     }
   }
 
+  describe("Error handling of duplicate ids") {
+    val root = "examples/test/err/dup"
+    it("should report duplicate id in let declaration") {
+      val thrown = evaluating { TTREPL.main(Array(s"$root/01_let.hs")) } must produce [FiledTTLiteError]
+      thrown.file must equal (s"$root/01_let.hs")
+      thrown.getMessage must startWith("Identifier x is already")
+      thrown.origin must startWith("x")
+      thrown.line must equal (3)
+      thrown.column must equal (1)
+    }
+
+    it("should report duplicate id in typed-let declaration") {
+      val thrown = evaluating { TTREPL.main(Array(s"$root/02_typed_let.hs")) } must produce [FiledTTLiteError]
+      thrown.file must equal (s"$root/02_typed_let.hs")
+      thrown.getMessage must startWith("Identifier y is already")
+      thrown.origin must startWith("y")
+      thrown.line must equal (3)
+      thrown.column must equal (1)
+    }
+
+    it("should report duplicate id for assumption") {
+      val thrown = evaluating { TTREPL.main(Array(s"$root/03_assume.hs")) } must produce [FiledTTLiteError]
+      thrown.file must equal (s"$root/03_assume.hs")
+      thrown.getMessage must startWith("Identifier $z is already")
+      thrown.origin must startWith("$z")
+      thrown.line must equal (3)
+      thrown.column must equal (1)
+    }
+  }
+
   describe("Basic type-checking errors") {
     val root = "examples/test/err/type"
 

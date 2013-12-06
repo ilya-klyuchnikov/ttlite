@@ -54,25 +54,13 @@ wnat2nat = \ (n : WNat) ->
         (\ (y : nodes) ->
             elim Bool
                 (\ (y : nodes) -> forall (_ : forall (_ : node_to_labels y) . WNat) (_ : forall (_ : node_to_labels y) . Nat) . Nat )
-                (\ (z : forall (_ : node_to_labels zero_node) . WNat) (u : forall (_ : node_to_labels zero_node) . Nat) -> Zero)
-                (\ (z : forall (_ : node_to_labels succ_node) . WNat) (u : forall (_ : node_to_labels succ_node) . Nat) -> Succ (u pred_label))
-                y)
-        n;
-
--- more explicit coding
-wnat2nat = \ (n : WNat) ->
-    Rec WNat
-        (\ (_ : WNat) -> Nat)
-        (\ (y : nodes) ->
-            elim Bool
-                (\ (y : nodes) -> forall (_ : forall (_ : node_to_labels y) . WNat) (_ : forall (_ : node_to_labels y) . Nat) . Nat )
                 (\ (z : forall (_ : zero_children) . WNat) (u : forall (_ : zero_children) . Nat) -> Zero)
                 (\ (z : forall (_ : succ_children) . WNat) (u : forall (_ : succ_children) . Nat) -> Succ (u pred_label))
                 y)
         n;
 
 -- primitive recursion over nat
-wnat_fold =
+wnat_fold :
     forall (A : Set) (fz : A) (fs : forall (_ : WNat) (_ : A) . A) (n : WNat) . A;
 wnat_fold =
     \ (A : Set) (fz : A) (fs : forall (_ : WNat) (_ : A) . A) (n : WNat) ->

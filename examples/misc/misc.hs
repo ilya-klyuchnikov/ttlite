@@ -82,14 +82,6 @@ p1 = Refl Bool True;
 p2 : Id Bool (less n2 n1) False;
 p2 = Refl Bool False;
 
---$lookup : forall (A : Set) (xs : List A) (n : Nat) (_ : isTrue (less n (length A xs))) . A;
-
-abort : forall (A : Set) (v : Falsity) . A;
-abort =
-    \ (A : Set) (v : Falsity) ->
-        elim Falsity (\ (_ : Falsity) -> A) v;
-
-
 nonEmpty : forall (A : Set) (xs : List A). Set;
 nonEmpty = \ (A : Set) (xs : List A) -> isTrue (less Zero (length A xs));
 

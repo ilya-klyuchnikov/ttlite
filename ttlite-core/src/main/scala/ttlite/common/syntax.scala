@@ -65,10 +65,12 @@ case class @@(t1: MTerm, t2: MTerm) extends MTerm
 case class MAnn(t1: MTerm, t2: MTerm) extends MTerm
 case class MBind(id: String, tp: MTerm, body: MTerm) extends MTerm
 
+case class Id(n : String) extends RichPositional
+
 trait Stmt[+I]
-case class Let[I](n: String, i: I) extends Stmt[I]
-case class TypedLet[I](n: String, i: I, t: I) extends Stmt[I]
-case class Assume[I](n: String, i: I) extends Stmt[I]
+case class Let[I](n: Id, i: I) extends Stmt[I]
+case class TypedLet[I](n: Id, i: I, t: I) extends Stmt[I]
+case class Assume[I](n: Id, i: I) extends Stmt[I]
 case class Eval[I](e: I) extends Stmt[I]
 case class Import(s: String) extends Stmt[Nothing]
 case class ExportToAgda(s: String) extends Stmt[Nothing]

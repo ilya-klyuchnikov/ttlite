@@ -37,7 +37,7 @@ f = \(x: Bool) ->
 proof : Id Set Falsity Truth;
 proof = cong11 Bool Set0 f False True $a;
 
-top2bot = forall (_ : Truth) . Falsity;
+top2bot : forall (_ : Truth) . Falsity;
 top2bot = apply Falsity Truth proof;
 
 bot = top2bot Triv;

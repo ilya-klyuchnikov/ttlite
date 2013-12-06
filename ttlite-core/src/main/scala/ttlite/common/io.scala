@@ -55,6 +55,17 @@ class MTermError(val errorKind : String, val mt : MTerm, val msg : String) exten
   override val origin = mt.origin
 }
 
+case class DuplicateIdError(id : Id) extends TTLiteError {
+  import IoUtil._
+  val details =
+    ansi(s"${id.originPrefix}${lm}@|magenta,bold ${id.origin}|@${rm}${id.originSuffix}")
+  val line = id.startPos.line
+  val column = id.startPos.column
+  override val origin = id.origin
+  val errorKind: String = "Syntax"
+  val msg: String = s"Identifier ${id.n} is already defined"
+}
+
 case class TypeError(msg : String, path : Path) extends Exception(msg) {
   def withMTerm(mterm : MTerm) : TTLiteError = MTermTypeError(this, mterm)
 }
