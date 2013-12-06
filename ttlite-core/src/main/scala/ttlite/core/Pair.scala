@@ -89,8 +89,9 @@ trait PairCheck extends FunCheck with PairAST {
       val eType = iType(i, path/(2, 4), ctx, et)
       checkUniverse(i, eType, path/(2, 4))
 
-      // todo: error
-      val VProduct(aVal, bVal) = eval(et, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VProduct], path/(2, 4), "Product _ _", et)
+      val VProduct(aVal, bVal) = etVal
 
       val xType = iType(i, path/(3, 4), ctx, x)
       checkEqual(i, xType, aVal, path/(3, 4))

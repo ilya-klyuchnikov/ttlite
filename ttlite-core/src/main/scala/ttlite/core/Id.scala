@@ -105,7 +105,9 @@ trait IdCheck extends FunCheck with IdAST {
       val eType = iType(i, path/(2, 5), ctx, et)
       checkUniverse(i, eType, path/(2, 5))
 
-      val VId(aVal, xVal, yVal) = eval(et, ctx, Nil)
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VId], path/(2, 5), "Id _ _ _", et)
+      val VId(aVal, xVal, yVal) = etVal
 
       val propVal = eval(prop, ctx, Nil)
       val eqVal = eval(eq, ctx, Nil)

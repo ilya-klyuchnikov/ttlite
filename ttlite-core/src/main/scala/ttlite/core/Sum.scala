@@ -99,35 +99,40 @@ trait SumCheck extends FunCheck with SumAST {
       val k = checkUniverse(i, bType, path/(3, 3))
 
       VUniverse(math.max(j, k))
-    case InL(e, l) =>
-      val eType = iType(i, path/(2, 3), ctx, e)
+    case InL(et, l) =>
+      val eType = iType(i, path/(2, 3), ctx, et)
       checkUniverse(i, eType, path/(2, 3))
 
-      val VSum(aVal, bVal) = eval(e, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VSum], path/(2, 3), "Sum _ _", et)
+      val VSum(aVal, bVal) = etVal
 
       val lType = iType(i, path/(3, 3), ctx, l)
       checkEqual(i, lType, aVal, path/(3, 3))
 
       VSum(aVal, bVal)
-    case InR(e, r) =>
-      val eType = iType(i, path/(2, 3), ctx, e)
+    case InR(et, r) =>
+      val eType = iType(i, path/(2, 3), ctx, et)
       checkUniverse(i, eType, path/(2, 3))
 
-      val VSum(aVal, bVal) = eval(e, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VSum], path/(2, 3), "Sum _ _", et)
+      val VSum(aVal, bVal) = etVal
 
       val rType = iType(i, path/(3, 3), ctx, r)
       checkEqual(i, rType, bVal, path/(3, 3))
 
       VSum(aVal, bVal)
-    case SumElim(e, m, lc, rc, sum) =>
+    case SumElim(et, m, lc, rc, sum) =>
       val mVal = eval(m, ctx, List())
       val sumVal = eval(sum, ctx, List())
 
-      val eType = iType(i, path/(2, 6), ctx, e)
+      val eType = iType(i, path/(2, 6), ctx, et)
       checkUniverse(i, eType, path/(2, 6))
 
-      val VSum(ltVal, rtVal) = eval(e, ctx, List())
-      val etVal = VSum(ltVal, rtVal)
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VSum], path/(2, 6), "Sum _ _", et)
+      val VSum(ltVal, rtVal) = etVal
 
       val mType = iType(i, path/(3, 6), ctx, m)
       checkEqual(i, mType, VPi(VSum(ltVal, rtVal), {_ => VUniverse(-1)}), path/(3, 6))

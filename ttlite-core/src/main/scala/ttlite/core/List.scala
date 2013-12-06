@@ -98,13 +98,19 @@ trait ListCheck extends FunCheck with ListAST {
       val eType = iType(i, path/(2, 2), ctx, et)
       checkUniverse(i, eType, path/(2, 2))
 
-      val VPiList(aVal) = eval(et, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VPiList], path/(2, 2), "List _", et)
+
+      val VPiList(aVal) = etVal
       VPiList(aVal)
     case PiCons(et, head, tail) =>
       val eType = iType(i, path/(2, 4), ctx, et)
       checkUniverse(i, eType, path/(2, 4))
 
-      val VPiList(aVal) = eval(et, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VPiList], path/(2, 4), "List _", et)
+
+      val VPiList(aVal) = etVal
 
       val hType = iType(i, path/(3, 4), ctx, head)
       checkEqual(i, hType, aVal, path/(3, 4))
@@ -117,7 +123,10 @@ trait ListCheck extends FunCheck with ListAST {
       val eType = iType(i, path/(2, 6), ctx, et)
       checkUniverse(i, eType, path/(2, 6))
 
-      val etVal@VPiList(aVal) = eval(et, ctx, List())
+      val etVal = eval(et, ctx, List())
+      require(etVal.isInstanceOf[VPiList], path/(2, 6), "List _", et)
+
+      val VPiList(aVal) = eval(et, ctx, List())
 
       val mVal = eval(m, ctx, List())
       val xsVal = eval(xs, ctx, List())

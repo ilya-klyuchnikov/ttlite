@@ -188,6 +188,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       throw new TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
   }
 
+  def require(cond : Boolean, path : Path, expected : String, inferred: Term) {
+    if (!cond) {
+      throw new TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
+    }
+  }
+
   def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Universe(i) =>
       VUniverse(i + 1)
