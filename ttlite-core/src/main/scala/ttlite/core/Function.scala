@@ -39,12 +39,13 @@ trait FunMetaSyntax extends CoreMetaSyntax with FunAST {
 }
 
 trait FunPrinter extends CorePrinter with FunAST {
-  // todo: nested lam
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
       parensIf(p > 0, sep(Seq("forall " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
+    case Lam(t, Lam(t1, c)) =>
+      parensIf(p > 0, nestedLambda(ii + 2, List((ii + 1, t1), (ii, t)), c))
     case Lam(t, c) =>
       parensIf(p > 0,  "\\ " <> parens(vars(ii) <> " : " <> print(0, ii, t)) <> " -> " <> nest(print(0, ii + 1, c)))
     case i :@: c =>
@@ -61,6 +62,15 @@ trait FunPrinter extends CorePrinter with FunAST {
       val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
       nest(sep((text("forall") +: fors1).toSeq ++ Seq(print(0, i , x))))
   }
+
+  private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Lam(d, r) =>
+      nestedLambda(i + 1, (i, d) :: fs, r)
+    case x =>
+      val lams = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
+      val lams1 = lams.updated(lams.length - 1, lams(lams.length - 1) <> " .")
+      nest(sep((text("\\") +: lams1).toSeq ++ Seq(print(0, i , x))))
+  }
 }
 
 trait FunPrinterAgda extends CorePrinterAgda with FunAST {
@@ -70,8 +80,10 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
       parensIf(p > 0, sep(Seq("forall " <> parens(vars(ii) <> " : " <> printA(0, ii, d)) <> " -> ", nest(printA(0, ii + 1, r)))))
-    case Lam(t, c) =>
-      parensIf(p > 0,  "\\ " <> parens(vars(ii) <> " : " <> printA(0, ii, t)) <> " -> " <> nest(printA(0, ii + 1, c)))
+    case Lam(d, Lam(d1, r)) =>
+      parensIf(p > 0, nestedLambda(ii + 2, List((ii + 1, d1), (ii, d)), r))
+    case Lam(d, r) =>
+      parensIf(p > 0, sep(Seq("\\ " <> parens(vars(ii) <> " : " <> printA(0, ii, d)) <> " -> ", nest(printA(0, ii + 1, r)))))
     case i :@: c =>
       parensIf(p > 2, sep(Seq(printA(2, ii, i), nest(printA(3, ii, c)))))
     case _ =>
@@ -85,6 +97,15 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
       val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d)))}.toSeq
       val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " -> ")
       nest(sep((text("forall") +: fors1).toSeq ++ Seq(printA(0, i , x))))
+  }
+
+  private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Lam(d, r) =>
+      nestedLambda(i + 1, (i, d) :: fs, r)
+    case x =>
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d)))}.toSeq
+      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " -> ")
+      nest(sep((text("\\") +: fors1).toSeq ++ Seq(printA(0, i , x))))
   }
 }
 
@@ -119,7 +140,7 @@ trait FunEval extends CoreEval with FunAST {
 
 trait FunCheck extends CoreCheck with FunAST {
   override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
-    // Pi is a bind, so arity is 2
+
     case Pi(x, tp) =>
       val xVal = eval(x, ctx, Nil)
 
