@@ -240,7 +240,7 @@ trait REPL {
 
   def main(args: Array[String]) {
     org.fusesource.jansi.AnsiConsole.systemInstall()
-    org.kiama.util.JLineConsole.reader.addCompletor(new jline.FileNameCompletor())
+    org.kiama.util.JLineConsole.reader.addCompletor(new ImportCompletor())
 
     var state = Context.empty[V]
     modules = Set()
