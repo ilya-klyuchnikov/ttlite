@@ -1,9 +1,8 @@
 package ttlite.core.it
 
-import org.scalatest.matchers.MustMatchers
 import ttlite.TTREPL
 
-class TTLiteExportSpec extends org.scalatest.FunSpec with MustMatchers {
+class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers {
   describe("Export to Agda") {
     it("core.hs") {
       checkAgda("core")
@@ -44,6 +43,6 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with MustMatchers {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/agda/${module}.hs"))
     val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
-    exitCode mustBe 0
+    exitCode shouldBe 0
   }
 }

@@ -1,9 +1,9 @@
 package ttlite.sc.it
 
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.Matchers
 import ttlite.sc.TTScREPL
 
-class TTLiteScExportSpec extends org.scalatest.FunSpec with MustMatchers {
+class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
   describe("Export to Agda") {
     it("ids_sc.hs") {
       checkAgda("ids_sc")
@@ -44,6 +44,6 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with MustMatchers {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/agda-sc/${module}.hs"))
     val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
-    exitCode mustBe 0
+    exitCode shouldBe 0
   }
 }
