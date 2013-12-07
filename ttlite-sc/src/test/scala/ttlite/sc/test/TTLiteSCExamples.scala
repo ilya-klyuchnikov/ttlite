@@ -65,4 +65,10 @@ class TTLiteSCExamples extends org.scalatest.FunSpec {
       TTScREPL.main(Array("examples/misc-sc/preprint.hs"))
     }
   }
+
+  describe("Experiments") {
+    it ("01.hs") {
+      TTScREPL.main(Array("examples/experiments/01.hs"))
+    }
+  }
 }
