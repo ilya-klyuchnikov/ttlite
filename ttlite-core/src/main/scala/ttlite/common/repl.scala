@@ -198,19 +198,23 @@ trait REPL {
     state.addVal(name, v, tp)
   }
 
-  private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] =
-    if (modules(f) && !reload)
-      return state
-    else
-      try {
-        val input = scala.io.Source.fromFile(f).mkString
-        val stmts = parser.parseIO(parser.stmt+, input)
-        val s1 = stmts.foldLeft(state){(s, stm) => handleStmt(s, stm)}
-        modules = modules + f
-        s1
-      } catch {
-        case ttError : TTLiteError => throw ttError.withFile(f)
-      }
+  private def loadModule(f: String, state: Context[V], reload: Boolean): Context[V] = {
+    if (reload) {
+      modules = Set()
+    }
+    val state1 = if (reload) Context.empty[V] else state
+    if (modules(f))
+      return state1
+    try {
+      val input = scala.io.Source.fromFile(f).mkString
+      val stmts = parser.parseIO(parser.stmt+, input)
+      val s1 = stmts.foldLeft(state1){(s, stm) => handleStmt(s, stm)}
+      modules = modules + f
+      s1
+    } catch {
+      case ttError : TTLiteError => throw ttError.withFile(f)
+    }
+  }
 
   def loop(state : Context[V], console : org.kiama.util.Console) : Unit = {
     val st1 = try {
@@ -259,7 +263,7 @@ trait REPL {
       }
     } catch {
       case TTLiteExit =>
-        Console.println("")
+        Console.println("Bye")
     }
   }
 }
