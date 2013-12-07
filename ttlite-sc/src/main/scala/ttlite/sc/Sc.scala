@@ -22,9 +22,7 @@ trait TTSc extends CoreSubst with CoreCheck {
   }
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(cases.toList.map { b =>
-        b -> Conf(t.term / Map(b.sel -> b.ptr), t.ctx.addTypes(b.types))
-      })
+      VariantsStep(cases.toList.map { b => b -> Conf(t.term / Map(b.sel -> b.ptr), t.ctx.addTypes(b.types)) })
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
     override def step(t: Conf) = DecomposeStep(label, args.toList)
@@ -154,64 +152,69 @@ trait ScParser extends MetaParser {
 
 object ScParser extends ScParser
 
-trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 { self: NatAST =>
+// todo : more unified output of
+trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
+  import ttlite.common.IoUtil._
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
     case SC(scId, proofId, mTerm) =>
       val inputTerm = translate(mTerm)
-      val inTpVal = infer(state, inputTerm)
+      val inputTypeValue = infer(state, inputTerm)
+      val inputType = quote(inputTypeValue)
 
-      // start configuration is a normalized one!
-      // it is a self contained!
-      val conf = Conf(quote(eval(state, inputTerm)), state)
-      val sGraphs = GraphGenerator(SingleRules, conf).toList
+      // JFYI: start configuration is a normalized one and it is a self-contained
+      val startConf = Conf(quote(eval(state, inputTerm)), state)
+      val sGraphs = GraphGenerator(SingleRules, startConf).toList
       assert(sGraphs.size == 1)
       val sGraph = sGraphs.head
       val tGraph = Transformations.transpose(sGraph)
 
-      //output(tgToString(tGraph))
-      val resVal = eval(state, quote(residuate(tGraph, state.vals)))
-      val resTerm = quote(resVal)
-      val inType = quote(inTpVal)
+      val outputValue = eval(state, quote(residuate(tGraph, state.vals)))
+      val outputTerm = quote(outputValue)
 
-      val resTermAnn = Ann(resTerm, inType)
-      val t3 = infer(state, resTermAnn)
+      if (verbose) {
+        output(tgToString(tGraph))
+      }
 
-      output(pretty(resTerm) + " :: " + pretty(quote(t3)) + ";")
-      // this place is a bit unsafe:
-      // we normalize a proof without first type-checking it
-      // this is why we can use combinators cong1, cong2, ... as generic combinators -
+      // this is just smoke testing - output type should be the same as the input one
+      infer(state, Ann(outputTerm, inputType))
+
+      // This place is a bit tricky (and a bit unsafe):
+      // when we construct a proof we construct it as a value.
+      // (unfolding functions like `cong1`, `cong2`) without type-checking.
+      // This is why we can use combinators cong1, cong2, ... as generic combinators -
       // that are applicable for *any* type, not only for small types (Set0).
+      // Otherwise, we should implement indexed universes - see https://github.com/ilya-klyuchnikov/ttlite/issues/61
+      // Caveat: this line may not terminate if there is an error in proof generator
       val rawProofVal = proofResiduate(tGraph, state.vals)
-      val rawProofTerm = quote(rawProofVal)
-      val rawAnnProofTerm = Ann(rawProofTerm, Id(inType, inputTerm, resTerm))
+
+      // in general case it may fail since proof combinators (symm, cong) are defined for Set0
+      // proof combinators
+      // val rawProofTerm = quote(rawProofVal)
+      // infer(state, Ann(rawProofTerm, Id(inputType, inputTerm, outputTerm)))
 
       val proofVal = eval(state, quote(rawProofVal))
       val proofTerm = quote(eval(state, quote(proofVal)))
-      // to check that it really built correctly
-      val annProofTerm = Ann(proofTerm, Id(inType, inputTerm, resTerm))
-      val proofTypeVal = infer(state, annProofTerm)
-      output("raw proof:")
-      output(pretty(rawProofTerm))
-      output("proof:")
-      output(pretty(proofTerm))
 
-      output("::")
-      output(pretty(quote(proofTypeVal)))
-      state.addVal(Global(scId), resVal, inTpVal).addVal(Global(proofId), proofVal, proofTypeVal)
+      // to check that it really built correctly
+      val proofTypeVal = infer(state, Ann(proofTerm, Id(inputType, inputTerm, outputTerm)))
+      val proofType = quote(proofTypeVal)
+
+      output(ansi(s"@|bold ${scId}|@ : ${pretty(inputType)};"))
+      output(ansi(s"@|bold ${scId}|@ = ${pretty(outputTerm)};\n"))
+
+      output(ansi(s"@|bold ${proofId}|@ : ${pretty(proofType)};"))
+      output(ansi(s"@|bold ${proofId}|@ = ${pretty(proofTerm)};\n"))
+
+      state.
+        addVal(Global(scId), outputValue, inputTypeValue).
+        addVal(Global(proofId), proofVal, proofTypeVal)
     case _ =>
       super.handleStmt(state, stmt)
   }
 
-  def intToVNat(i: Int): Value =
-    (1 to i).foldLeft(VZero: Value){(v: Value, _: Int) => VSucc(v)}
-
   object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
     val maxDepth = 4
-  }
-
-  object MultiRules extends BaseRules with MultiDriving with Folding with Termination with NoRebuildings {
-    val maxDepth = 5
   }
 }
 

@@ -77,7 +77,7 @@ trait REPL {
   // if batch, we do not output info into console.
   private var batch: Boolean = false
   // in verbose mode we output stack traces of errors
-  private var verbose: Boolean = false
+  protected var verbose: Boolean = false
   val prompt: String
 
   val parser: MetaParser = MetaParser
@@ -194,7 +194,10 @@ trait REPL {
     }
     val tp = infer(state, it)
     val v = eval(state, it)
-    output(s"${id.n}\n:\n${vPrint(tp)};")
+
+    output(ansi(s"@|bold ${id.n}|@ : ${vPrint(tp)};"))
+    output(ansi(s"@|bold ${id.n}|@ = ${vPrint(v)};\n"))
+
     state.addVal(name, v, tp)
   }
 
