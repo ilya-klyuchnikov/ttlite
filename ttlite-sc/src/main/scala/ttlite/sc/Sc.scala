@@ -200,11 +200,15 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
       val proofTypeVal = infer(state, Ann(proofTerm, Id(inputType, inputTerm, outputTerm)))
       val proofType = quote(proofTypeVal)
 
-      output(ansi(s"@|bold ${scId.n}|@ : ${pretty(inputType)};"))
-      output(ansi(s"@|bold ${scId.n}|@ = ${pretty(outputTerm)};\n"))
+      if (scId.n != "_") {
+        output(ansi(s"@|bold ${scId.n}|@ : ${pretty(inputType)};"))
+        output(ansi(s"@|bold ${scId.n}|@ = ${pretty(outputTerm)};\n"))
+      }
 
-      output(ansi(s"@|bold ${proofId.n}|@ : ${pretty(proofType)};"))
-      output(ansi(s"@|bold ${proofId.n}|@ = ${pretty(proofTerm)};\n"))
+      if (proofId.n != "_") {
+        output(ansi(s"@|bold ${proofId.n}|@ : ${pretty(proofType)};"))
+        output(ansi(s"@|bold ${proofId.n}|@ = ${pretty(proofTerm)};\n"))
+      }
 
       if (state.ids.contains(scId.n)) {
         throw DuplicateIdError(scId)
