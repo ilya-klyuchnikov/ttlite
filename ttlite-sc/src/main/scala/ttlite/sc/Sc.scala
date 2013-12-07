@@ -138,14 +138,14 @@ trait ProofResiduator extends BaseResiduator with IdAST {
     }
 }
 
-case class SC[I](id1: String, id2: String, e: I) extends Stmt[I]
+case class SC[I](outId: Id, proofId: Id, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
   lexical.reserved += ("sc", "mrsc")
   override def stmts = List(scStmt) ++ super.stmts
   lazy val scStmt: PackratParser[Stmt[MTerm]] =
-    ("(" ~> ident <~ ",") ~ ident ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
+    ("(" ~> globalId <~ ",") ~ globalId ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
       case id1 ~ id2 ~ t => SC(id1, id2, t(Nil))
     }
 }
@@ -200,15 +200,22 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
       val proofTypeVal = infer(state, Ann(proofTerm, Id(inputType, inputTerm, outputTerm)))
       val proofType = quote(proofTypeVal)
 
-      output(ansi(s"@|bold ${scId}|@ : ${pretty(inputType)};"))
-      output(ansi(s"@|bold ${scId}|@ = ${pretty(outputTerm)};\n"))
+      output(ansi(s"@|bold ${scId.n}|@ : ${pretty(inputType)};"))
+      output(ansi(s"@|bold ${scId.n}|@ = ${pretty(outputTerm)};\n"))
 
-      output(ansi(s"@|bold ${proofId}|@ : ${pretty(proofType)};"))
-      output(ansi(s"@|bold ${proofId}|@ = ${pretty(proofTerm)};\n"))
+      output(ansi(s"@|bold ${proofId.n}|@ : ${pretty(proofType)};"))
+      output(ansi(s"@|bold ${proofId.n}|@ = ${pretty(proofTerm)};\n"))
 
-      state.
-        addVal(Global(scId), outputValue, inputTypeValue).
-        addVal(Global(proofId), proofVal, proofTypeVal)
+      if (state.ids.contains(scId.n)) {
+        throw DuplicateIdError(scId)
+      }
+      val state1 = if (scId.n != "_") state.addVal(Global(scId.n), outputValue, inputTypeValue) else state
+      if (state1.ids.contains(proofId.n)) {
+        throw DuplicateIdError(proofId)
+      }
+      val state2 = if (proofId.n != "_") state1.addVal(Global(proofId.n), proofVal, proofTypeVal) else state1
+
+      state2
     case _ =>
       super.handleStmt(state, stmt)
   }
