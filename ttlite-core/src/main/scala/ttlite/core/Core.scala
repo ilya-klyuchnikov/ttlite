@@ -168,7 +168,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}}", path)
+      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
