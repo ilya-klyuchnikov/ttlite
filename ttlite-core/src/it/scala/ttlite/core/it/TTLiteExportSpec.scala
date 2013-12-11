@@ -31,6 +31,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("map.hs") {
       checkAgda("map")
     }
+    it("niter.hs") {
+      checkAgda("niter")
+    }
   }
 
   describe("Export to Agda with assumed variables in correct order") {
