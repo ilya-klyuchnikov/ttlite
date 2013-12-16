@@ -30,7 +30,7 @@ not2 = λ b → elimBool (λ _ → Bool) (not1 b) (not1 b) b
 `false = quoteTerm false
 `true  = quoteTerm true
 
--- extreamly simple unfolding
+-- extremely simple unfolding
 -- it unfolds only top-level lambda in the form
 -- λ v → elimBool m b1 b2 v
 unfold : Term → Term
