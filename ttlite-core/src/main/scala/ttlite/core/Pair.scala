@@ -50,6 +50,19 @@ trait PairPrinterAgda extends FunPrinterAgda with PairAST {
   }
 }
 
+trait PairPrinterIdris extends FunPrinterIdris with PairAST {
+  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Product(a, b) =>
+      printI(p, ii, 'Pair @@ a @@ b)
+    case Pair(Product(a, b), x, y) =>
+      printI(p, ii, 'pair @@ a @@ b @@ x @@ y)
+    case ProductElim(Product(a, b), m, f, pair) =>
+      printI(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
+
 trait PairEval extends FunEval with PairAST {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Product(a, b) =>
@@ -155,6 +168,7 @@ trait PairREPL
   with PairMetaSyntax
   with PairPrinter
   with PairPrinterAgda
+  with PairPrinterIdris
   with PairCheck
   with PairEval
   with PairQuote

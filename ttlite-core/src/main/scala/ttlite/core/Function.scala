@@ -74,7 +74,6 @@ trait FunPrinter extends CorePrinter with FunAST {
 }
 
 trait FunPrinterAgda extends CorePrinterAgda with FunAST {
-  // todo: nested lam
   override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
@@ -109,6 +108,18 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
   }
 }
 
+trait FunPrinterIdris extends CorePrinterIdris with FunAST {
+  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Pi(d, r) =>
+      parensIf(p > 0, sep(Seq(parens(vars(ii) <> " : " <> printI(0, ii, d)) <> " -> ", nest(printI(0, ii + 1, r)))))
+    case Lam(d, r) =>
+      parensIf(p > 0, sep(Seq("\\ " <> vars(ii)  <> " => ", nest(printI(0, ii + 1, r)))))
+    case i :@: c =>
+      parensIf(p > 2, sep(Seq(printI(2, ii, i), nest(printI(3, ii, c)))))
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
 
 trait FunQuote extends CoreQuote with FunAST {
   override def quote(ii: Int, v: Value): Term = v match {
@@ -187,6 +198,7 @@ trait FunREPL
   with FunMetaSyntax
   with FunPrinter
   with FunPrinterAgda
+  with FunPrinterIdris
   with FunCheck
   with FunEval
   with FunQuote

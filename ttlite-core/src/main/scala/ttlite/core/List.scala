@@ -58,6 +58,20 @@ trait ListPrinterAgda extends FunPrinterAgda with ListAST {
   }
 }
 
+trait ListPrinterIdris extends FunPrinterIdris with ListAST {
+  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case PiList(a) =>
+      printI(p, ii, 'List @@ a)
+    case PiNil(PiList(a)) =>
+      printI(p, ii, 'nil @@ a)
+    case PiCons(PiList(a), x, xs) =>
+      printI(p, ii, 'cons @@ a @@ x @@ xs)
+    case PiListElim(PiList(a), m, mn, mc, xs) =>
+      printI(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
 
 trait ListEval extends FunEval with ListAST {
   override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
@@ -183,6 +197,7 @@ trait ListREPL
   with ListMetaSyntax
   with ListPrinter
   with ListPrinterAgda
+  with ListPrinterIdris
   with ListCheck
   with ListEval
   with ListQuote

@@ -65,6 +65,14 @@ trait REPL {
   def prettyAgda(term: T): String
 
   /**
+   * Pretty printing of terms into Idris syntax
+   *
+   * @param term
+   * @return
+   */
+  def prettyIdris(term: T): String
+
+  /**
    * Extends a context with an assumption
    *
    * @param ctx context
@@ -150,6 +158,9 @@ trait REPL {
       case ExportToAgda(f) =>
         exportToAgda(f, state)
         state
+      case ExportToIdris(f) =>
+        exportToIdris(f, state)
+        state
     }
 
   private def exportToAgda(f : String, state : Context[V]) {
@@ -182,6 +193,40 @@ trait REPL {
 
       out.write(s"\n${id} : ${prettyAgda(tp)}\n")
       out.write(s"${id} = ${prettyAgda(v)}\n")
+    }
+
+    out.close()
+  }
+
+  private def exportToIdris(f : String, state : Context[V]) {
+    import java.io.{File, FileWriter}
+
+    val idrisFile = new File(s"generated/${f}.idr")
+    new File(s"idr/${f}.ibc").delete()
+
+    idrisFile.getParentFile.mkdirs()
+    idrisFile.createNewFile()
+
+    val out = new FileWriter(idrisFile)
+
+    out.write(s"module ${f}\n\n")
+    out.write(s"import ttlite\n\n")
+
+    val assumed = state.ids.filter(_.isInstanceOf[Assumed])
+    for {Assumed(id) <- assumed} {
+      val tp = quote(state.types(Assumed(id)))
+      out.write(s"${id.replace("$", "")}__ : ${prettyIdris(tp)}\n")
+    }
+
+    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
+
+    for (id <- state.ids.filterNot(internalName).filter(globalName)) {
+      val v = quote(state.vals(id))
+      val tp = quote(state.types(id))
+
+      out.write(s"\n${id} : ${prettyIdris(tp)}\n")
+      out.write(s"${id} = ${prettyIdris(v)}\n")
     }
 
     out.close()

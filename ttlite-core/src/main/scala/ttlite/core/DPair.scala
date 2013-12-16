@@ -50,7 +50,6 @@ trait DPairPrinter extends FunPrinter with DPairAST {
 }
 
 trait DPairPrinterAgda extends FunPrinterAgda with DPairAST {
-
   override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
       printA(p, ii, 'Sigma @@ d @@ Lam(d, r))
@@ -63,6 +62,18 @@ trait DPairPrinterAgda extends FunPrinterAgda with DPairAST {
   }
 }
 
+trait DPairPrinterIdris extends FunPrinterIdris with DPairAST {
+  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Sigma(d, r) =>
+      printI(p, ii, 'Sigma @@ d @@ Lam(d, r))
+    case DPair(Sigma(d, r), a, b) =>
+      printI(p, ii, 'sigma @@ d @@ Lam(d, r) @@ a @@ b)
+    case SigmaElim(Sigma(d, r), m, f, dp) =>
+      printI(p, ii, 'elimSigma @@ d @@ Lam(d, r) @@ m @@ f @@ dp)
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
 
 trait DPairQuote extends CoreQuote with DPairAST {
   override def quote(ii: Int, v: Value): Term = v match {
@@ -175,6 +186,7 @@ trait DPairREPL
   with DPairMetaSyntax
   with DPairPrinter
   with DPairPrinterAgda
+  with DPairPrinterIdris
   with DPairCheck
   with DPairEval
   with DPairQuote

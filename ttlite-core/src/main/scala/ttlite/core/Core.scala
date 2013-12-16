@@ -94,9 +94,6 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
 }
 
 trait CorePrinterAgda extends CoreAST with PrettyPrinter {
-  def ppa(c: Term): String =
-    pretty(printA(0, 0, c))
-
   def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(-1) =>
       "Set*"
@@ -111,6 +108,20 @@ trait CorePrinterAgda extends CoreAST with PrettyPrinter {
   }
 }
 
+trait CorePrinterIdris extends CoreAST with PrettyPrinter {
+  def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Universe(_) =>
+      "Type"
+    case Bound(k) if ii - k - 1 >= 0 =>
+      vars(ii - k - 1)
+    case Free(Assumed(n)) =>
+      s"${n.replace("$", "")}__"
+    case Free(n) =>
+      n.toString
+    case _ =>
+      t.toString
+  }
+}
 
 trait CoreQuote extends CoreAST {
   def quote0(v: Value): Term =
@@ -226,7 +237,17 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 }
 
-trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePrinterAgda with CoreEval with CoreCheck with CoreQuote with REPL {
+trait CoreREPL
+  extends CoreAST
+  with CoreMetaSyntax
+  with CorePrinter
+  with CorePrinterAgda
+  with CorePrinterIdris
+  with CoreEval
+  with CoreCheck
+  with CoreQuote
+  with REPL {
+
   type T = Term
   type V = Value
 
@@ -242,6 +263,8 @@ trait CoreREPL extends CoreAST with CoreMetaSyntax with CorePrinter with CorePri
     pp(c)
   override def prettyAgda(c: T): String =
     pretty(nest(printA(0, 0, c)))
+  override def prettyIdris(c: T): String =
+    pretty(nest(printI(0, 0, c)))
   def assume(state: Context[V], id: Id, t: Term): Context[V] = {
     val name = Assumed(id.n)
     if (state.ids.contains(name)) {

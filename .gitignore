@@ -8,4 +8,5 @@ generated/
 .classpath
 .project
 *.agdai
+*.ibc
 #*

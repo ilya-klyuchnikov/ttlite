@@ -58,6 +58,21 @@ trait NatPrinterAgda extends FunPrinterAgda with NatAST {
   }
 }
 
+trait NatPrinterIdris extends FunPrinterIdris with NatAST {
+  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Nat =>
+      "Nat"
+    case NatElim(m, z, s, n) =>
+      printI(p, ii, 'elimNat @@ m @@ z @@ s @@ n)
+    case Zero =>
+      printI(p, ii, 'zero)
+    case Succ(n) =>
+      printI(p, ii, 'succ @@ n)
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
+
 trait NatQuote extends CoreQuote with NatAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VNat => Nat
@@ -151,6 +166,7 @@ trait NatREPL
   with MNat
   with NatPrinter
   with NatPrinterAgda
+  with NatPrinterIdris
   with NatCheck
   with NatEval
   with NatQuote

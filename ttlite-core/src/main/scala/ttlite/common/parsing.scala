@@ -113,7 +113,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
   // Setting up lexer
   override val lexical = new MetaLexical
-  lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda")
+  lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda", "exportToIdris")
   lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
   // Ctx is a sequence of named binders. In the spirit of TAPL implementation.
   type Ctx = List[String]
@@ -158,7 +158,18 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     pos("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => Arg(i, x)})
 
   lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
-  def stmts = List(quitStmt, assumeStmt, typedLetStmt, letStmt, importStmt, exportToAgdaStmt, reloadStmt, evalStmt)
+  def stmts =
+    List(
+      quitStmt,
+      assumeStmt,
+      typedLetStmt,
+      letStmt,
+      importStmt,
+      reloadStmt,
+      exportToAgdaStmt,
+      exportToIdrisStmt,
+      evalStmt
+    )
 
   lazy val letStmt: PackratParser[Stmt[MTerm]] =
     globalId ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
@@ -175,6 +186,8 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
   lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
     "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda
+  lazy val exportToIdrisStmt: PackratParser[Stmt[MTerm]] =
+    "exportToIdris" ~> ident <~ ";" ^^ ExportToIdris
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
     "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
