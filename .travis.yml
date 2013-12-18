@@ -10,8 +10,11 @@ before_install:
 - sudo apt-get install haskell-platform
 - sudo apt-get install libncurses5-dev
 - cabal update
-- cabal install idris
-- PATH=~/.cabal/bin:$PATH
+- cd ..
+- git clone https://github.com/idris-lang/Idris-dev.git
+- cd Idris-dev
+- make
+- cd ../ttlite
 
 sbt_args: -J-Xms512M -J-Xmx1500M -J-Xss2M -XX:MaxPermSize=724M
 
