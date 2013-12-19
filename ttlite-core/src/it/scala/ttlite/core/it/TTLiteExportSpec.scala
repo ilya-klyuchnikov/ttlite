@@ -36,9 +36,6 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
   }
 
-  // current export mostly doesn't work because of Idris bug:
-  // https://github.com/idris-lang/Idris-dev/issues/733
-  // such tests are ignored for now
   describe("Export to Idris") {
     it("core.hs") {
       checkIdris("core")
@@ -46,28 +43,29 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("nat.hs") {
       checkIdris("nat")
     }
-    ignore("sigma.hs") {
+    it("sigma.hs") {
       checkIdris("sigma")
     }
-    ignore("fin.hs") {
+    it("fin.hs") {
       checkIdris("fin")
     }
+    // Idris: https://github.com/idris-lang/Idris-dev/issues/741
     ignore("id.hs") {
       checkIdris("id")
     }
-    ignore("list.hs") {
+    it("list.hs") {
       checkIdris("list")
     }
-    ignore("pair.hs") {
+    it("pair.hs") {
       checkIdris("pair")
     }
-    ignore("sum.hs") {
+    it("sum.hs") {
       checkIdris("sum")
     }
-    ignore("map.hs") {
+    it("map.hs") {
       checkIdris("map")
     }
-    ignore("niter.hs") {
+    it("niter.hs") {
       checkIdris("niter")
     }
   }
@@ -91,10 +89,14 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     exitCode shouldBe 0
   }
 
+  val idrisCmd = "../Idris-dev/dist/build/idris/idris"
+
   def checkIdris(module : String) {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/idris/${module}.hs"))
-    val exitCode = s"idris --noprelude --check -i generated/ -i syntax/ generated/${module}.idr".!
+    val cmd = s"${idrisCmd} --noprelude --check -i generated/ -i syntax/ generated/${module}.idr"
+    info(cmd)
+    val exitCode = cmd.!
     exitCode shouldBe 0
   }
 }
