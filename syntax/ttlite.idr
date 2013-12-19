@@ -42,8 +42,8 @@ elimSum _ _ _ fl fr (inr _ _ b) = fr b
 Falsity : Type
 Falsity = _|_
 
-elimFalsity : (m : Falsity -> Type) -> Falsity -> m e
-elimFalsity m e = FalseElim e
+elimFalsity : (m : Falsity -> Type) -> (e : Falsity) -> m e
+elimFalsity m e = FalseElim e {a = m e}
 
 ------------------------------------------
 -- Truth (aka ⊤)
@@ -95,7 +95,7 @@ Id : (A : Type) -> A -> A -> Type
 Id A = (=) {a0 = A} {b0 = A}
 
 Refl : (A : Type) -> (a : A) -> Id A a a
-Refl A a = refl
+Refl A a = refl {a}
 
 
 elimId : (a : Type) ->
@@ -103,7 +103,7 @@ elimId : (a : Type) ->
          (a2 : a) ->
          (m : (x : a) -> (y : a) -> Id a x y -> Type) ->
          (f : (x : a) -> m x x (Refl a x)) ->
-         (id : a1 = a2) ->
+         (id : Id a a1 a2) ->
          m a1 a2 id
 elimId _ x _ _ f refl = f x
 
