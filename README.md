@@ -16,7 +16,7 @@ The internals of TT Lite are described in the preprint:
   supercompiler for Martin-Löf’s type theory**. Keldysh Institute preprints, 2013, No. 73, 28 p.
   <http://library.keldysh.ru/preprint.asp?id=2013-73&lg=e>
 
-## How to build
+## How to build / Test
 
 TT Lite is built using SBT. You need to install SBT first from [here](http://www.scala-sbt.org).
 
@@ -24,6 +24,12 @@ TT Lite is built using SBT. You need to install SBT first from [here](http://www
     $ cd ttlite
     $ sbt
     > test
+
+TTLite contains integration tests which invoke Agda compiler for generated proofs:
+
+    > it:test
+
+In order to run these test you should have `agda` executable in path.
 
 ### SBT settings
 Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.
@@ -33,16 +39,6 @@ I use following settings for SBT (file `~/.sbtconfig`):
 
 ### SBT launcher
 This project is built with SBT 0.13, so it requires that you have SBT launcher 0.13 (try `sbt --version` to know it).
-If you have an old SBT launcher and do not want to update it for some reasons, then you can try to change
-`project/build.properties` to:
-
-    sbt.version=0.12.4
-
-The symptom that you have an old SBT launcher is an exception like this:
-
-    [ERROR] Terminal initialization failed; falling back to unsupported
-        java.lang.IncompatibleClassChangeError:
-        Found class jline.Terminal, but interface was expected
 
 ## Quick Start
 
