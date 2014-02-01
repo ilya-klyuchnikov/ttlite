@@ -40,10 +40,57 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     }
   }
 
+  ignore("Export to Idris") {
+    it("ids_sc.hs") {
+      checkIdris("ids_sc")
+    }
+    it("hosc01.hs") {
+      checkIdris("hosc01")
+    }
+    it("hosc02.hs") {
+      checkIdris("hosc02")
+    }
+    it("hosc03.hs") {
+      checkIdris("hosc03")
+    }
+    it("hosc05.hs") {
+      checkIdris("hosc05")
+    }
+    ignore("hosc06.hs") {
+      checkIdris("hosc06")
+    }
+    it("hosc07.hs") {
+      checkIdris("hosc07")
+    }
+    it("hosc09.hs") {
+      checkIdris("hosc09")
+    }
+    it("hosc10.hs") {
+      checkIdris("hosc10")
+    }
+    it("hosc11.hs") {
+      checkIdris("hosc11")
+    }
+    it("hosc12.hs") {
+      checkIdris("hosc12")
+    }
+  }
+
   def checkAgda(module : String) {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/agda-sc/${module}.hs"))
     val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
+    exitCode shouldBe 0
+  }
+
+  val idrisCmd = "../Idris-dev/dist/build/idris/idris"
+
+  def checkIdris(module : String) {
+    import scala.sys.process._
+    TTScREPL.main(Array(s"examples/test/idris-sc/${module}.hs"))
+    val cmd = s"${idrisCmd} --noprelude --check -i generated/ -i syntax/ generated/${module}.idr"
+    info(cmd)
+    val exitCode = cmd.!
     exitCode shouldBe 0
   }
 }

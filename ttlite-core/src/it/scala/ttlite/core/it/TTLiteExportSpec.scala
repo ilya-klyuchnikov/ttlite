@@ -34,9 +34,12 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("niter.hs") {
       checkAgda("niter")
     }
+    it("assumed.hs") {
+      checkAgda("assumed")
+    }
   }
 
-  describe("Export to Idris") {
+  ignore("Export to Idris") {
     it("core.hs") {
       checkIdris("core")
     }
@@ -68,15 +71,6 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("niter.hs") {
       checkIdris("niter")
     }
-  }
-
-  describe("Export to Agda with assumed variables in correct order") {
-    it("assumed.hs") {
-      checkAgda("assumed")
-    }
-  }
-
-  describe("Export to Idris with assumed variables in correct order") {
     it("assumed.hs") {
       checkIdris("assumed")
     }
