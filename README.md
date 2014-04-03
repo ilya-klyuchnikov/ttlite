@@ -10,11 +10,17 @@ It is structured into two sub-projects:
 The main feature of the supercompiler is that for any transformation performed by
 the supercompiler a proof of correctness is provided.
 
-The internals of TT Lite are described in the preprint:
+The technical internals of TT Lite are described in the preprint:
 
 * Ilya Klyuchnikov, Sergei Romanenko. **TT Lite: a
   supercompiler for Martin-Löf’s type theory**. Keldysh Institute preprints, 2013, No. 73, 28 p.
   <http://library.keldysh.ru/preprint.asp?id=2013-73&lg=e>
+
+The fundamental principles of our approach to certifying supercompilation are described in the following paper:
+
+* Ilya Klyuchnikov, Sergei Romanenko.
+  **Certifying supercompilation for Martin-Löf's type theory**. PSI14, preprint version.
+  <http://pat.keldysh.ru/~ilya/ttlite-psi2014.pdf>
 
 ## How to build / Test
 
