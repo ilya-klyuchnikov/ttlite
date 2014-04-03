@@ -86,7 +86,7 @@ cong1 =
 --   congruence of operators
 --         f1 = f2
 --   -------------------
---       f1 e = f1 e
+--       f1 e = f2 e
 fcong1 :
     forall
     (a : Set)
