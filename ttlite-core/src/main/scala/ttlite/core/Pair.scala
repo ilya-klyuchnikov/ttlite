@@ -50,6 +50,19 @@ trait PairPrinterAgda extends FunPrinterAgda with PairAST {
   }
 }
 
+trait PairPrinterCoq extends FunPrinterCoq with PairAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Product(a, b) =>
+      printC(p, ii, 'Pair @@ a @@ b)
+    case Pair(Product(a, b), x, y) =>
+      printC(p, ii, 'pair @@ a @@ b @@ x @@ y)
+    case ProductElim(Product(a, b), m, f, pair) =>
+      printC(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
 trait PairPrinterIdris extends FunPrinterIdris with PairAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
@@ -168,6 +181,7 @@ trait PairREPL
   with PairMetaSyntax
   with PairPrinter
   with PairPrinterAgda
+  with PairPrinterCoq
   with PairPrinterIdris
   with PairCheck
   with PairEval

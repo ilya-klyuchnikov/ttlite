@@ -40,6 +40,42 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     }
   }
 
+  describe("Export to Coq") {
+    it("ids_sc.hs") {
+      checkCoq("ids_sc")
+    }
+    it("hosc01.hs") {
+      checkCoq("hosc01")
+    }
+    it("hosc02.hs") {
+      checkCoq("hosc02")
+    }
+    it("hosc03.hs") {
+      checkCoq("hosc03")
+    }
+    it("hosc05.hs") {
+      checkCoq("hosc05")
+    }
+    it("hosc06.hs") {
+      checkCoq("hosc06")
+    }
+    it("hosc07.hs") {
+      checkCoq("hosc07")
+    }
+    it("hosc09.hs") {
+      checkCoq("hosc09")
+    }
+    it("hosc10.hs") {
+      checkCoq("hosc10")
+    }
+    it("hosc11.hs") {
+      checkCoq("hosc11")
+    }
+    it("hosc12.hs") {
+      checkCoq("hosc12")
+    }
+  }
+
   ignore("Export to Idris") {
     it("ids_sc.hs") {
       checkIdris("ids_sc")
@@ -80,6 +116,13 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/agda-sc/${module}.hs"))
     val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
+    exitCode shouldBe 0
+  }
+
+  def checkCoq(module : String) {
+    import scala.sys.process._
+    TTScREPL.main(Array(s"examples/test/coq-sc/${module}.hs"))
+    val exitCode = s"coqc -I generated/ -I syntax/ generated/${module}.v".!
     exitCode shouldBe 0
   }
 

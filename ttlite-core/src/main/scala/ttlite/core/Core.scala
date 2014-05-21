@@ -108,6 +108,25 @@ trait CorePrinterAgda extends CoreAST with PrettyPrinter {
   }
 }
 
+trait CorePrinterCoq extends CoreAST with PrettyPrinter {
+  def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Universe(-1) =>
+      "Type"
+    case Universe(i) =>
+      "Type"
+    case Bound(k) if ii - k - 1 >= 0 =>
+      vars(ii - k - 1)
+    case Free(Assumed(n)) =>
+      s"${n.replace("$", "")}__"
+    case Free(n) if n.toString == "if" =>
+      "if__"
+    case Free(n) =>
+      n.toString
+    case _ =>
+      t.toString
+  }
+}
+
 trait CorePrinterIdris extends CoreAST with PrettyPrinter {
   def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(_) =>
@@ -242,6 +261,7 @@ trait CoreREPL
   with CoreMetaSyntax
   with CorePrinter
   with CorePrinterAgda
+  with CorePrinterCoq
   with CorePrinterIdris
   with CoreEval
   with CoreCheck
@@ -263,6 +283,8 @@ trait CoreREPL
     pp(c)
   override def prettyAgda(c: T): String =
     pretty(nest(printA(0, 0, c)))
+  override def prettyCoq(c: T): String =
+    pretty(nest(printC(0, 0, c)))
   override def prettyIdris(c: T): String =
     pretty(nest(printI(0, 0, c)))
   def assume(state: Context[V], id: Id, t: Term): Context[V] = {

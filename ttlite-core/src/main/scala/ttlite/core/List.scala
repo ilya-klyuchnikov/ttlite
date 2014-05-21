@@ -58,6 +58,21 @@ trait ListPrinterAgda extends FunPrinterAgda with ListAST {
   }
 }
 
+trait ListPrinterCoq extends FunPrinterCoq with ListAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case PiList(a) =>
+      printC(p, ii, 'List @@ a)
+    case PiNil(PiList(a)) =>
+      printC(p, ii, 'nil @@ a)
+    case PiCons(PiList(a), x, xs) =>
+      printC(p, ii, 'cons @@ a @@ x @@ xs)
+    case PiListElim(PiList(a), m, mn, mc, xs) =>
+      printC(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
 trait ListPrinterIdris extends FunPrinterIdris with ListAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
@@ -197,6 +212,7 @@ trait ListREPL
   with ListMetaSyntax
   with ListPrinter
   with ListPrinterAgda
+  with ListPrinterCoq
   with ListPrinterIdris
   with ListCheck
   with ListEval

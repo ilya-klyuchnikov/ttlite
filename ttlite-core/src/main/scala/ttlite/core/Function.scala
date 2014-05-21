@@ -108,6 +108,41 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
   }
 }
 
+trait FunPrinterCoq extends CorePrinterCoq with FunAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Pi(d, Pi(d1, r)) =>
+      parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
+    case Pi(d, r) =>
+      parensIf(p > 0, sep(Seq("forall " <> parens(vars(ii) <> " : " <> printC(0, ii, d)) <> " ,", nest(printC(0, ii + 1, r)))))
+    case Lam(d, Lam(d1, r)) =>
+      parensIf(p > 0, nestedLambda(ii + 2, List((ii + 1, d1), (ii, d)), r))
+    case Lam(d, r) =>
+      parensIf(p > 0, sep(Seq("fun " <> parens(vars(ii) <> " : " <> printC(0, ii, d)) <> " =>", nest(printC(0, ii + 1, r)))))
+    case i :@: c =>
+      parensIf(p > 2, sep(Seq(printC(2, ii, i), nest(printC(3, ii, c)))))
+    case _ =>
+      super.printC(p, ii, t)
+  }
+
+  private def nestedForall(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Pi(d, r) =>
+      nestedForall(i + 1, (i, d) :: fs, r)
+    case x =>
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printC(0, n, d)))}.toSeq
+      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " ,")
+      nest(sep((text("forall") +: fors1).toSeq ++ Seq(printC(0, i , x))))
+  }
+
+  private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
+    case Lam(d, r) =>
+      nestedLambda(i + 1, (i, d) :: fs, r)
+    case x =>
+      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printC(0, n, d)))}.toSeq
+      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " =>")
+      nest(sep((text("fun") +: fors1).toSeq ++ Seq(printC(0, i , x))))
+  }
+}
+
 trait FunPrinterIdris extends CorePrinterIdris with FunAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, r) =>
@@ -198,6 +233,7 @@ trait FunREPL
   with FunMetaSyntax
   with FunPrinter
   with FunPrinterAgda
+  with FunPrinterCoq
   with FunPrinterIdris
   with FunCheck
   with FunEval

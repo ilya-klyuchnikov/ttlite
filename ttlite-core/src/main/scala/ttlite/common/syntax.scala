@@ -74,6 +74,8 @@ case class Assume[I](n: Id, i: I) extends Stmt[I]
 case class Eval[I](e: I) extends Stmt[I]
 case class Import(s: String) extends Stmt[Nothing]
 case class ExportToAgda(s: String) extends Stmt[Nothing]
+case class ExportToCoq(s: String) extends Stmt[Nothing]
+
 case class ExportToIdris(s : String) extends Stmt[Nothing]
 case class Reload(s: String) extends Stmt[Nothing]
 case object Quit extends Stmt[Nothing]

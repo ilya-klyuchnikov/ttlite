@@ -50,6 +50,19 @@ trait IdPrinterAgda extends FunPrinterAgda with IdAST {
   }
 }
 
+trait IdPrinterCoq extends FunPrinterCoq with IdAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Id(a, x, y) =>
+      printC(p, ii, 'Id @@ a @@ x @@ y)
+    case Refl(a, x) =>
+      printC(p, ii, 'refl @@ a @@ x)
+    case IdElim(Id(a, a1, a2), m, mr, eq) =>
+      printC(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
 trait IdPrinterIdris extends FunPrinterIdris with IdAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
@@ -166,6 +179,7 @@ trait IdREPL
   with IdMetaSyntax
   with IdPrinter
   with IdPrinterAgda
+  with IdPrinterCoq
   with IdPrinterIdris
   with IdCheck
   with IdEval

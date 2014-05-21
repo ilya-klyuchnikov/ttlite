@@ -31,11 +31,11 @@ TT Lite is built using SBT. You need to install SBT first from [here](http://www
     $ sbt
     > test
 
-TTLite contains integration tests which invoke Agda compiler for generated proofs:
+TTLite contains integration tests which invoke Agda and Coq compilers for generated proofs:
 
     > it:test
 
-In order to run these test you should have `agda` executable in path.
+In order to run these test you should have `agda` and `coqc` executables in path.
 
 ### SBT settings
 Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.

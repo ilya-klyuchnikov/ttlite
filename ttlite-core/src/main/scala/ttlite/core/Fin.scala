@@ -100,6 +100,31 @@ trait FinPrinterAgda extends FunPrinterAgda with FinAST {
   }
 }
 
+trait FinPrinterCoq extends FunPrinterCoq with FinAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Falsity =>
+      printC(p, ii, "Falsity")
+    case Truth =>
+      printC(p, ii, "Truth")
+    case Bool =>
+      printC(p, ii, "Bool")
+    case Triv =>
+      printC(p, ii, "triv")
+    case False =>
+      printC(p, ii, "false")
+    case True =>
+      printC(p, ii, "true")
+    case FalsityElim(m, elem) =>
+      printC(p, ii, 'elimFalsity @@ m @@ elem)
+    case TruthElim(m, v, elem) =>
+      printC(p, ii, 'elimTruth @@ m @@ v @@ elem)
+    case BoolElim(m, v1, v2, elem) =>
+      printC(p, ii, 'elimBool @@ m @@ v1 @@ v2 @@ elem)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
 trait FinPrinterIdris extends FunPrinterIdris with FinAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
@@ -278,6 +303,7 @@ trait FinREPL
   with FinMetaSyntax
   with FinPrinter
   with FinPrinterAgda
+  with FinPrinterCoq
   with FinPrinterIdris
   with FinCheck
   with FinEval
