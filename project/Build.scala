@@ -32,7 +32,7 @@ object TTLiteBuild extends Build {
       .settings( Defaults.itSettings : _*)
       .settings(
         name := "sc",
-        libraryDependencies += "mrsc" %% "mrsc" % "0.5.1",
+        libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.1",
         libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.5" % "test,it"
       )
       .dependsOn(CoreProject)
