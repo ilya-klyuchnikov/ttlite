@@ -1,5 +1,9 @@
 ## Change notes
 
+### 2014-05-21. Formalization in Coq. Export to Coq
+
+A new statement in TT Lite REPL `exportCoq`. It works similar to `exportToAgda`.
+
 ### 2013-12-06. Import/Reload autocomplete.
 
 Start type `import "` or `reload "` and you will have file name auto-completion via `tab`. Note that you need to type the first quote.

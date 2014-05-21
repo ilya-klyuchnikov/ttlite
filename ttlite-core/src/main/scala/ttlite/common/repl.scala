@@ -3,22 +3,13 @@ package ttlite.common
 trait REPL {
   import IoUtil._
 
-  /**
-   * The type of terms.
-   */
+  /** The type of terms */
   type T
-  /**
-   * The type of values
-   */
+
+  /** The type of values */
   type V
 
-  /**
-   * Infers a type for a term.
-   *
-   * @param ctx a context
-   * @param term a term
-   * @return a type of a term `term` in the context `ctx`. A type is a value (`V`)
-   */
+  /** Infers a type for a term. */
   def infer(ctx: Context[V], term: T): V
 
   /**
@@ -34,51 +25,25 @@ trait REPL {
   /**
    * Quotes given value.
    * In a sense, this is reflection. (Value => AST)
-   *
-   * @param value value
-   * @return a corresponding term
    */
   def quote(value: V): T
 
-  /**
-   * Translates a term from shallow syntax into an abstract syntax.
-   *
-   * @param shallowTerm
-   * @return
-   */
   def translate(shallowTerm: MTerm): T
 
-  /**
-   * Pretty printing of terms into a concrete syntax.
-   *
-   * @param term
-   * @return
-   */
+  /** Pretty printing of terms into a concrete syntax. */
   def pretty(term: T): String
 
-  /**
-   * Pretty printing of terms into Agda syntax
-   *
-   * @param term
-   * @return
-   */
+  /** Pretty printing of terms into Agda syntax */
   def prettyAgda(term: T): String
 
-  /**
-   * Pretty printing of terms into Idris syntax
-   *
-   * @param term
-   * @return
-   */
+  /** Pretty printing of terms into Coq syntax */
+  def prettyCoq(term: T): String
+
+  /** Pretty printing of terms into Idris syntax */
   def prettyIdris(term: T): String
 
   /**
    * Extends a context with an assumption
-   *
-   * @param ctx context
-   * @param id id of a term
-   * @param term term
-   * @return
    */
   def assume(ctx: Context[V], id: Id, term: T): Context[V]
 
@@ -158,6 +123,9 @@ trait REPL {
       case ExportToAgda(f) =>
         exportToAgda(f, state)
         state
+      case ExportToCoq(f) =>
+        exportToCoq(f, state)
+        state
       case ExportToIdris(f) =>
         exportToIdris(f, state)
         state
@@ -193,6 +161,37 @@ trait REPL {
 
       out.write(s"\n${id} : ${prettyAgda(tp)}\n")
       out.write(s"${id} = ${prettyAgda(v)}\n")
+    }
+
+    out.close()
+  }
+
+  private def exportToCoq(f : String, state : Context[V]) {
+    import java.io.{File, FileWriter}
+
+    val agdaFile = new File(s"generated/${f}.v")
+
+    agdaFile.getParentFile.mkdirs()
+    agdaFile.createNewFile()
+
+    val out = new FileWriter(agdaFile)
+
+    out.write(s"Load ttlite.\n\n")
+
+    val assumed = state.ids.filter(_.isInstanceOf[Assumed])
+    for {Assumed(id) <- assumed} {
+      val tp = quote(state.types(Assumed(id)))
+      out.write(s"Parameter ${id.replace("$", "")}__ : ${prettyCoq(tp)}.\n")
+    }
+
+    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
+
+    for (id <- state.ids.filterNot(internalName).filter(globalName)) {
+      val id1 = if (id.toString == "if") "if__" else id.toString
+      val v = quote(state.vals(id))
+      val tp = quote(state.types(id))
+      out.write(s"Definition $id1 : ${prettyCoq(tp)} := ${prettyCoq(v)}.\n")
     }
 
     out.close()

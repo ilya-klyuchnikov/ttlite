@@ -58,6 +58,21 @@ trait SumPrinterAgda extends FunPrinterAgda with SumAST {
   }
 }
 
+trait SumPrinterCoq extends FunPrinterCoq with SumAST {
+  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Sum(a, b) =>
+      printC(p, ii, 'Sum @@ a @@ b)
+    case InL(Sum(a, b), l) =>
+      printC(p, ii, 'inl @@ a @@ b @@ l)
+    case InR(Sum(a, b), r) =>
+      printC(p, ii, 'inr @@ a @@ b @@ r)
+    case SumElim(Sum(a, b), m, lc, rc, sum) =>
+      printC(p, ii, 'elimSum @@ a @@ b @@ m @@ lc @@ rc @@ sum)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
 trait SumPrinterIdris extends FunPrinterIdris with SumAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
@@ -200,6 +215,7 @@ trait SumREPL
   with SumMetaSyntax
   with SumPrinter
   with SumPrinterAgda
+  with SumPrinterCoq
   with SumPrinterIdris
   with SumCheck
   with SumEval

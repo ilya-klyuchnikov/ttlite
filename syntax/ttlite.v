@@ -97,7 +97,7 @@ Fixpoint elimList
 Inductive Id (A : Type) (a : A): A -> Type :=
   refl : Id A a a.
 
-Print Id_rect.
+(* Print Id_rect. *)
 
 Definition elimId
   (A : Type)
@@ -123,4 +123,17 @@ Definition elimBool
   match e with
   | false => f1
   | true  => f2
+  end.
+
+Inductive Pair (A : Type) (B : Type) : Type :=
+  | pair : A -> B -> Pair A B. 
+
+Definition elimPair
+  (A : Type)
+  (B : Type)
+  (m : Pair A B -> Type)
+  (f : forall (a: A) (b : B), m (pair A B a b))
+  (e : Pair A B) : m e :=
+  match e with
+  | pair a b => f a b
   end.

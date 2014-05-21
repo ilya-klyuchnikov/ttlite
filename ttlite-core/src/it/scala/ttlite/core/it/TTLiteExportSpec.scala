@@ -39,6 +39,42 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
   }
 
+  describe("Export to Coq") {
+    it("core.hs") {
+      checkCoq("core")
+    }
+    it("nat.hs") {
+      checkCoq("nat")
+    }
+    it("sigma.hs") {
+      checkCoq("sigma")
+    }
+    it("fin.hs") {
+      checkCoq("fin")
+    }
+    it("id.hs") {
+      checkCoq("id")
+    }
+    it("list.hs") {
+      checkCoq("list")
+    }
+    it("pair.hs") {
+      checkCoq("pair")
+    }
+    it("sum.hs") {
+      checkCoq("sum")
+    }
+    it("map.hs") {
+      checkCoq("map")
+    }
+    it("niter.hs") {
+      checkCoq("niter")
+    }
+    it("assumed.hs") {
+      checkCoq("assumed")
+    }
+  }
+
   ignore("Export to Idris") {
     it("core.hs") {
       checkIdris("core")
@@ -83,7 +119,14 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     exitCode shouldBe 0
   }
 
-  val idrisCmd = "../Idris-dev/dist/build/idris/idris"
+  def checkCoq(module : String) {
+    import scala.sys.process._
+    TTREPL.main(Array(s"examples/test/coq/${module}.hs"))
+    val exitCode = s"coqc -I generated/ -I syntax/ generated/${module}.v".!
+    exitCode shouldBe 0
+  }
+
+  val idrisCmd = "idris"
 
   def checkIdris(module : String) {
     import scala.sys.process._

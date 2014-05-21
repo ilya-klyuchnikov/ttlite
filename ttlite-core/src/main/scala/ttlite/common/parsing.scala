@@ -113,8 +113,10 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
   // Setting up lexer
   override val lexical = new MetaLexical
-  lexical.reserved += ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda", "exportToIdris")
-  lexical.delimiters += ("(", ")", ":", ".", "=", "->", ";")
+  lexical.reserved +=
+    ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda", "exportToCoq", "exportToIdris")
+  lexical.delimiters +=
+    ("(", ")", ":", ".", "=", "->", ";")
   // Ctx is a sequence of named binders. In the spirit of TAPL implementation.
   type Ctx = List[String]
   type Res = Ctx => MTerm
@@ -167,6 +169,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
       importStmt,
       reloadStmt,
       exportToAgdaStmt,
+      exportToCoqStmt,
       exportToIdrisStmt,
       evalStmt
     )
@@ -186,6 +189,8 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
   lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
     "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda
+  lazy val exportToCoqStmt: PackratParser[Stmt[MTerm]] =
+    "exportToCoq" ~> ident <~ ";" ^^ ExportToCoq
   lazy val exportToIdrisStmt: PackratParser[Stmt[MTerm]] =
     "exportToIdris" ~> ident <~ ";" ^^ ExportToIdris
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
