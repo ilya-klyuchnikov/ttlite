@@ -3,6 +3,8 @@ package ttlite.core
 import ttlite.common._
 
 trait FunAST extends CoreAST {
+  import scala.language.implicitConversions
+
   case class Pi(c1: Term, c2: Term) extends Term
   case class Lam(t: Term, e: Term) extends Term
   case class :@:(h: Term, t: Term) extends Term
@@ -39,6 +41,8 @@ trait FunMetaSyntax extends CoreMetaSyntax with FunAST {
 }
 
 trait FunPrinter extends CorePrinter with FunAST {
+  import scala.collection.immutable.Seq
+
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
@@ -74,6 +78,8 @@ trait FunPrinter extends CorePrinter with FunAST {
 }
 
 trait FunPrinterAgda extends CorePrinterAgda with FunAST {
+  import scala.collection.immutable.Seq
+
   override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
@@ -109,6 +115,8 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
 }
 
 trait FunPrinterCoq extends CorePrinterCoq with FunAST {
+  import scala.collection.immutable.Seq
+
   override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
@@ -144,6 +152,8 @@ trait FunPrinterCoq extends CorePrinterCoq with FunAST {
 }
 
 trait FunPrinterIdris extends CorePrinterIdris with FunAST {
+  import scala.collection.immutable.Seq
+
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, r) =>
       parensIf(p > 0, sep(Seq(parens(vars(ii) <> " : " <> printI(0, ii, d)) <> " -> ", nest(printI(0, ii + 1, r)))))

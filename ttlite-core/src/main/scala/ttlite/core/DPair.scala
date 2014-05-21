@@ -25,6 +25,7 @@ trait DPairMetaSyntax extends CoreMetaSyntax with DPairAST {
 }
 
 trait DPairPrinter extends FunPrinter with DPairAST {
+  import scala.collection.immutable.Seq
 
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, Sigma(d1, r)) =>

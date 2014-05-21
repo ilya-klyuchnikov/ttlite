@@ -1,5 +1,7 @@
 package ttlite.common
 
+import scala.language.postfixOps
+
 trait REPL {
   import IoUtil._
 
@@ -291,7 +293,7 @@ trait REPL {
 
   def main(args: Array[String]) {
     org.fusesource.jansi.AnsiConsole.systemInstall()
-    org.kiama.util.JLineConsole.reader.addCompletor(new ImportCompletor())
+    org.kiama.util.JLineConsole.reader.addCompleter(new ImportCompleter())
 
     var state = Context.empty[V]
     modules = Set()

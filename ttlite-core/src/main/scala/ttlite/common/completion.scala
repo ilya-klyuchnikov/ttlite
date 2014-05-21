@@ -1,8 +1,8 @@
 package ttlite.common
 
-class ImportCompletor extends jline.FileNameCompletor {
+class ImportCompleter extends jline.console.completer.FileNameCompleter {
   val importFileRE = """(\s*)(reload|import)(\s+)(\")(.*)""".r
-  override def complete(buf : String, cursor : Int, candidates : java.util.List[_]): Int = {
+  override def complete(buf : String, cursor : Int, candidates : java.util.List[CharSequence]): Int = {
     buf match {
       case importFileRE(s1, s2, s3, s4, file) =>
         super.complete(file, cursor, candidates) match {

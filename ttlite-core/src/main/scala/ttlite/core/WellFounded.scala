@@ -26,6 +26,8 @@ trait WMetaSyntax extends CoreMetaSyntax with WAST {
 }
 
 trait WPrinter extends FunPrinter with WAST {
+  import scala.collection.immutable.Seq
+
   override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
       parensIf(p > 0, sep(Seq("W " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))

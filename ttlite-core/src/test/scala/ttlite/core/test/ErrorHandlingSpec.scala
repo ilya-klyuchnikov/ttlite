@@ -5,13 +5,14 @@ import org.scalatest.FunSpec
 
 import ttlite.common._
 import ttlite.TTREPL
+import org.scalatest.words.ResultOfATypeInvocation
 
 // a lot of boilerplate error checking
 class ErrorHandlingSpec extends FunSpec with Matchers {
   describe("Error handling of shallow parsing") {
     val root = "examples/test/err/in"
     it("should report parse errors") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/01_lexical.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/01_lexical.hs")) }
       thrown.errorKind should equal("Lexical")
       thrown.file should equal (s"$root/01_lexical.hs")
       thrown.line should equal (2)
@@ -24,7 +25,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     val root = "examples/test/err/meta"
 
     it("should report unknown binder as incorrect syntax") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/01_binder.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/01_binder.hs")) }
       thrown.file should equal (s"$root/01_binder.hs")
       thrown.getMessage should startWith("incorrect syntax")
       thrown.origin should equal("(fun (x : Nat) -> x)")
@@ -33,7 +34,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report correct file when an error in an imported module") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/02_import.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/02_import.hs")) }
       thrown.file should equal (s"$root/01_binder.hs")
       thrown.getMessage should startWith("incorrect syntax")
       thrown.origin should equal("(fun (x : Nat) -> x)")
@@ -42,7 +43,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report not saturated eliminator") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/03_elim.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/03_elim.hs")) }
       thrown.file should equal (s"$root/03_elim.hs")
       thrown.getMessage should startWith("incorrect eliminator")
       thrown.origin should startWith("elim")
@@ -51,7 +52,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     ignore("should report not saturated constructor application") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/04_ctr.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/04_ctr.hs")) }
       thrown.file should equal (s"$root/04_ctr.hs")
       thrown.getMessage should startWith("incorrect constructor application")
       thrown.origin should startWith("Succ")
@@ -63,7 +64,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
   describe("Error handling of duplicate ids") {
     val root = "examples/test/err/dup"
     it("should report duplicate id in let declaration") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/01_let.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/01_let.hs")) }
       thrown.file should equal (s"$root/01_let.hs")
       thrown.getMessage should startWith("Identifier x is already")
       thrown.origin should startWith("x")
@@ -72,7 +73,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report duplicate id in typed-let declaration") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/02_typed_let.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/02_typed_let.hs")) }
       thrown.file should equal (s"$root/02_typed_let.hs")
       thrown.getMessage should startWith("Identifier y is already")
       thrown.origin should startWith("y")
@@ -81,7 +82,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report duplicate id for assumption") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/03_assume.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/03_assume.hs")) }
       thrown.file should equal (s"$root/03_assume.hs")
       thrown.getMessage should startWith("Identifier $z is already")
       thrown.origin should startWith("$z")
@@ -94,7 +95,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     val root = "examples/test/err/type"
 
     it("should report error on unknown id in definition") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/01_unknown_id.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/01_unknown_id.hs")) }
       thrown.file should equal (s"$root/01_unknown_id.hs")
       thrown.getMessage should startWith("unknown id")
       thrown.origin should startWith("y")
@@ -103,7 +104,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report error on unknown id in declaration") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/02_unknown_id.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/02_unknown_id.hs")) }
       thrown.file should equal (s"$root/02_unknown_id.hs")
       thrown.getMessage should startWith("unknown id")
       thrown.origin should startWith("y")
@@ -112,7 +113,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("should report error on declaration `x : y` when y is not a type") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/03_not_a_type.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/03_not_a_type.hs")) }
       thrown.file should equal (s"$root/03_not_a_type.hs")
       thrown.getMessage should startWith("expected: Set*")
       thrown.origin should startWith("True")
@@ -121,7 +122,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("""abs = \ (f : forall (_ : List Nat) . Nat) -> f (forall (_ : Set) . Set)""") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/04_subterm.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/04_subterm.hs")) }
       thrown.file should equal (s"$root/04_subterm.hs")
       thrown.getMessage should startWith("expected: List Nat")
       thrown.origin should equal ("(forall (_ : Set) . Set)")
@@ -130,7 +131,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
     }
 
     it("""should restore shallow subterm from path""") {
-      val thrown = evaluating { TTREPL.main(Array(s"$root/05_subterm.hs")) } should produce [FiledTTLiteError]
+      val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/05_subterm.hs")) }
       thrown.file should equal (s"$root/05_subterm.hs")
       thrown.getMessage should startWith("unknown id")
       thrown.origin should equal ("x")

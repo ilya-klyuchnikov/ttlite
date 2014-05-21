@@ -16,6 +16,8 @@ trait CoreSubst extends CoreEval with CoreQuote {
 }
 
 trait CoreDriver extends TTSc with CoreCheck {
+  import scala.language.implicitConversions
+
   var v = 100
   def freshName(): Name = {
     v += 1

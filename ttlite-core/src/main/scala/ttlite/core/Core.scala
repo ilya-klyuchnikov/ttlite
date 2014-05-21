@@ -3,6 +3,8 @@ package ttlite.core
 import ttlite.common._
 
 trait CoreAST {
+  import scala.language.implicitConversions
+
   trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
   case class Bound(i: Int) extends Term
@@ -74,6 +76,8 @@ trait CoreMetaSyntax extends CoreAST {
 }
 
 trait CorePrinter extends CoreAST with PrettyPrinter {
+  import scala.collection.immutable.Seq
+
   def pp(c: Term): String =
     pretty(print(0, 0, c))
 
@@ -170,7 +174,7 @@ trait CoreQuote extends CoreAST {
 
 trait CoreEval extends CoreAST {
   def eval0(c: Term): Value = eval(c, Context.empty[Value], Nil)
-  @deprecated // used in residuator
+  // just for residuator
   def eval(t: Term, named: NameEnv[Value], bound: Env): Value =
     eval(t, Context.fromVals(named), bound)
   def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {

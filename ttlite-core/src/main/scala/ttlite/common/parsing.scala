@@ -1,5 +1,7 @@
 package ttlite.common
 
+import scala.language.postfixOps
+
 import scala.collection.mutable.ArrayBuffer
 import scala.util.parsing.input._
 import scala.util.parsing.combinator._
