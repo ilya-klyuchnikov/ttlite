@@ -4,7 +4,7 @@ import Keys._
 object TTLiteBuild extends Build {
 
   override lazy val settings = super.settings ++ Seq(
-    scalaVersion := "2.11.0",
+    scalaVersion := "2.11.2",
     organization := "ttlite",
     version := "0.5-SNAPSHOT",
     scalacOptions ++= Seq("-deprecation", "-feature"),
