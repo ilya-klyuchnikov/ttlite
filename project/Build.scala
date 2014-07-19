@@ -23,7 +23,7 @@ object TTLiteBuild extends Build {
         name := "core",
         libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.6.0",
         libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11",
-        libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.5" % "test,it"
+        libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test,it"
       )
       .configs(IntegrationTest)
 
@@ -33,7 +33,7 @@ object TTLiteBuild extends Build {
       .settings(
         name := "sc",
         libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.1",
-        libraryDependencies += "org.scalatest" %% "scalatest" % "2.1.5" % "test,it"
+        libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test,it"
       )
       .dependsOn(CoreProject)
       .configs(IntegrationTest)
