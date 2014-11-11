@@ -5,7 +5,8 @@ jdk:
   - oraclejdk7
 
 before_install:
-- sudo apt-get update
+- sudo add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu/ utopic main universe"
+- sudo apt-get -qq update
 - sudo apt-get install agda-bin
 - sudo apt-get install coq
 

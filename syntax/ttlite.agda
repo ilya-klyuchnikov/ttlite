@@ -1,22 +1,13 @@
 module ttlite where
 
-postulate
-  Level : Set
-  lzero : Level
-  lsuc : Level → Level
-  max : Level → Level → Level
-
-{-# BUILTIN LEVEL Level #-}
-{-# BUILTIN LEVELZERO lzero #-}
-{-# BUILTIN LEVELSUC lsuc #-}
-{-# BUILTIN LEVELMAX max #-}
+open import Agda.Primitive
 
 ------------------------------------------
 -- Dep prod (aka Π)
 ------------------------------------------
 
 -- Π = forall, λ is λ 
-Π : ∀ {i j : Level} (A : Set i) (P : A → Set j) → Set (max i j)
+Π : ∀ {i j : Level} (A : Set i) (P : A → Set j) → Set (i ⊔ j)
 Π A P = ∀ (x : A) → P x
 
 ------------------------------------------
@@ -25,7 +16,7 @@ postulate
 
 -- usually in books Σ is implemented via records, but here I would like to try data
 -- Indexes are inferred
-data Sigma {i j} (A : Set i) (B : A → Set j) : Set (max i j) where
+data Sigma {i j} (A : Set i) (B : A → Set j) : Set (i ⊔ j) where
   sigma₀ : (a : A) -> (_ : B a) → Sigma A B
 
 -- using local let in order to pass indices explicitly
@@ -47,7 +38,7 @@ elimSigma A B m f (sigma₀ a b) = f a b
 -- Sum (aka +)
 ------------------------------------------
 
-data Sum {i j} (A : Set i) (B : Set j) : Set (max i j) where
+data Sum {i j} (A : Set i) (B : Set j) : Set (i ⊔ j) where
   inl₀ : A → Sum A B
   inr₀ : B → Sum A B
 
@@ -172,7 +163,7 @@ elimBool m f₁ f₂ true  = f₂
 -- Pair
 ------------------------------------------
 
-data Pair {i j} (A : Set i) (B : Set j) : Set (max i j) where
+data Pair {i j} (A : Set i) (B : Set j) : Set (i ⊔ j) where
   pair₀ : A → B → Pair A B
 
 pair : ∀ {i j} (A : Set i) (B : Set j) (a : A) (b : B) → Pair A B
