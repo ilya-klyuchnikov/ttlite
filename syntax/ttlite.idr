@@ -6,14 +6,14 @@ module ttlite
 -- Sigma (aka Σ)
 ------------------------------------------
 
-data Sigma : (A : Type) -> (B : A -> Type) -> Type where
-    sigma : (A : Type) -> (B : A -> Type) -> (a : A) -> B a -> Sigma A B
+data TTSigma : (A : Type) -> (B : A -> Type) -> Type where
+    sigma : (A : Type) -> (B : A -> Type) -> (a : A) -> B a -> TTSigma A B
 
 elimSigma : (A : Type) ->
             (B : A -> Type) ->
-            (m : Sigma A B -> Type) ->
+            (m : TTSigma A B -> Type) ->
             (f : (a : A) -> (b : B a) -> m (sigma A B a b)) ->
-            (e : Sigma A B) ->
+            (e : TTSigma A B) ->
             m e
 elimSigma A B m f (sigma _ _ a b) = f a b
 
@@ -37,13 +37,13 @@ elimSum _ _ _ fl fr (inr _ _ b) = fr b
 ------------------------------------------
 -- Falsity (aka ⊥)
 ------------------------------------------
--- forwarding to Idris built-in _|_
+-- forwarding to Idris built-in Void and void
 
 Falsity : Type
-Falsity = _|_
+Falsity = Void
 
 elimFalsity : (m : Falsity -> Type) -> (e : Falsity) -> m e
-elimFalsity m e = FalseElim e {a = m e}
+elimFalsity m e = void e {a = m e}
 
 ------------------------------------------
 -- Truth (aka ⊤)
@@ -88,24 +88,21 @@ elimList A m f1 f2 (cons A a as) = f2 a as (elimList A m f1 f2 as)
 ------------------------------------------
 -- Identity
 ------------------------------------------
--- forwarding to Idris built-in propositional equality
--- forwarding Id to built-in (=), forwarding Refl to built-in refl
-
 Id : (A : Type) -> A -> A -> Type
-Id A = (=) {a0 = A} {b0 = A}
+Id A = (=) {A = A} {B = A}
 
-Refl : (A : Type) -> (a : A) -> Id A a a
-Refl A a = refl {a}
+TTRefl : (A : Type) -> (a : A) -> Id A a a
+TTRefl A a = Refl
 
 
 elimId : (a : Type) ->
          (a1 : a) ->
          (a2 : a) ->
          (m : (x : a) -> (y : a) -> Id a x y -> Type) ->
-         (f : (x : a) -> m x x (Refl a x)) ->
+         (f : (x : a) -> m x x (TTRefl a x)) ->
          (id : Id a a1 a2) ->
          m a1 a2 id
-elimId _ x _ _ f refl = f x
+elimId _ x _ _ f Refl = f x
 
 ------------------------------------------
 -- Bool
@@ -125,13 +122,13 @@ elimBool m f1 f2 true = f2
 -- Pair
 ------------------------------------------
 
-data Pair : (A : Type) -> (B : Type) -> Type where
-    pair : (A : Type) -> (B : Type) -> A -> B -> Pair A B
+data TTPair : (A : Type) -> (B : Type) -> Type where
+    pair : (A : Type) -> (B : Type) -> A -> B -> TTPair A B
 
 elimPair : (A : Type) ->
            (B : Type) ->
-           (m : Pair A B -> Type) ->
+           (m : TTPair A B -> Type) ->
            (f : (a : A) -> (b : B) -> m (pair A B a b)) ->
-           (e : Pair A B) ->
+           (e : TTPair A B) ->
            m e
 elimPair A B m f (pair A B a b) = f a b

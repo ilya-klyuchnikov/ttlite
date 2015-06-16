@@ -75,7 +75,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
   }
 
-  ignore("Export to Idris") {
+  describe("Export to Idris") {
     it("core.hs") {
       checkIdris("core")
     }
@@ -89,7 +89,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
       checkIdris("fin")
     }
     // Idris: https://github.com/idris-lang/Idris-dev/issues/741
-    ignore("id.hs") {
+    it("id.hs") {
       checkIdris("id")
     }
     it("list.hs") {
@@ -115,7 +115,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
   def checkAgda(module : String) {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/agda/${module}.hs"))
-    val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
+    val cmd = s"agda -i generated/ -i syntax/ generated/${module}.agda"
+    info(cmd)
+    val exitCode = cmd.!
     exitCode shouldBe 0
   }
 

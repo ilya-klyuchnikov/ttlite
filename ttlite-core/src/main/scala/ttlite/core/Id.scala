@@ -68,7 +68,7 @@ trait IdPrinterIdris extends FunPrinterIdris with IdAST {
     case Id(a, x, y) =>
       printI(p, ii, 'Id @@ a @@ x @@ y)
     case Refl(a, x) =>
-      printI(p, ii, 'Refl @@ a @@ x)
+      printI(p, ii, 'TTRefl @@ a @@ x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
       printI(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
     case _ =>

@@ -66,7 +66,7 @@ trait PairPrinterCoq extends FunPrinterCoq with PairAST {
 trait PairPrinterIdris extends FunPrinterIdris with PairAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printI(p, ii, 'Pair @@ a @@ b)
+      printI(p, ii, 'TTPair @@ a @@ b)
     case Pair(Product(a, b), x, y) =>
       printI(p, ii, 'pair @@ a @@ b @@ x @@ y)
     case ProductElim(Product(a, b), m, f, pair) =>
