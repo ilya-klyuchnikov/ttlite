@@ -79,7 +79,7 @@ trait DPairPrinterCoq extends FunPrinterCoq with DPairAST {
 trait DPairPrinterIdris extends FunPrinterIdris with DPairAST {
   override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printI(p, ii, 'Sigma @@ d @@ Lam(d, r))
+      printI(p, ii, 'TTSigma @@ d @@ Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
       printI(p, ii, 'sigma @@ d @@ Lam(d, r) @@ a @@ b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>

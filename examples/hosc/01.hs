@@ -13,5 +13,5 @@ $x : $A;
 e1 = compose $A $B (List $B) (unit $B) $f;
 e2 = compose $A (List $A) (List $B) (map $A $B $f) (unit $A);
 
-proof : Id (forall (_ : $A) . List $B) e1 e2;
-proof = Refl (forall (_ : $A) . List $B) e1;
+proof1 : Id (forall (_ : $A) . List $B) e1 e2;
+proof1 = Refl (forall (_ : $A) . List $B) e1;

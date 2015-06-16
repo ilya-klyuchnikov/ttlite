@@ -11,7 +11,7 @@ and = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) (\ (_ : Bool) -> False
 
 or  = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) (id Bool) (\ (_ : Bool) -> True);
 xor = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) (id Bool) not;
-if  = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) not (id Bool);
+if1  = boolElim (\ (_ : Bool) -> forall (_ : Bool) . Bool) not (id Bool);
 
 
 unit_id =

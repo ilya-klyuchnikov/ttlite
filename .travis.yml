@@ -9,6 +9,11 @@ before_install:
 - sudo apt-get -qq update
 - sudo apt-get install agda-bin
 - sudo apt-get install coq
+- sudo apt-get install haskell-platform
+- sudo apt-get install libncurses5-dev
+- cabal update
+- cabal install idris-0.9.18.1 --jobs=1
+- PATH=~/.cabal/bin:$PATH
 
 sbt_args: -J-Xms512M -J-Xmx1500M -J-Xss2M -XX:MaxPermSize=724M
 

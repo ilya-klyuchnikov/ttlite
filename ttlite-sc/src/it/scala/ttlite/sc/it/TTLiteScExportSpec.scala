@@ -76,7 +76,7 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     }
   }
 
-  ignore("Export to Idris") {
+  describe("Export to Idris") {
     it("ids_sc.hs") {
       checkIdris("ids_sc")
     }
@@ -92,7 +92,7 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     it("hosc05.hs") {
       checkIdris("hosc05")
     }
-    ignore("hosc06.hs") {
+    it("hosc06.hs") {
       checkIdris("hosc06")
     }
     it("hosc07.hs") {
@@ -126,7 +126,7 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
     exitCode shouldBe 0
   }
 
-  val idrisCmd = "../Idris-dev/dist/build/idris/idris"
+  val idrisCmd = "idris"
 
   def checkIdris(module : String) {
     import scala.sys.process._
