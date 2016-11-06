@@ -171,13 +171,14 @@ trait REPL {
   private def exportToCoq(f : String, state : Context[V]) {
     import java.io.{File, FileWriter}
 
-    val agdaFile = new File(s"generated/${f}.v")
+    val coqFile = new File(s"generated/${f}.v")
 
-    agdaFile.getParentFile.mkdirs()
-    agdaFile.createNewFile()
+    coqFile.getParentFile.mkdirs()
+    coqFile.createNewFile()
 
-    val out = new FileWriter(agdaFile)
+    val out = new FileWriter(coqFile)
 
+    out.write(s"""Add LoadPath "syntax".\n""")
     out.write(s"Load ttlite.\n\n")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])

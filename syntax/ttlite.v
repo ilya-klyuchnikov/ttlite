@@ -1,4 +1,4 @@
-(* 
+(*
  * The first approximation of TT Lite formalization in Coq
  * No indexed universes yet
  * Explicit eliminators are just for demonstrations
@@ -10,14 +10,14 @@
 Inductive Sigma (A : Type) (B : A -> Type) : Type :=
   sigma : forall (a : A) (b : B a), Sigma A B.
 
-Definition elimSigma 
+Definition elimSigma
   (A : Type)
   (B : A -> Type)
   (m : Sigma A B -> Type)
   (f : forall (a : A) (b : B a), m (sigma A B a b))
   (e : Sigma A B) : m e :=
-  match e with 
-  | sigma a b => f a b
+  match e with
+  | sigma _ _ a b => f a b
   end.
 
 (* Sum *)
@@ -33,9 +33,9 @@ Definition elimSum
   (f1 : forall (a : A), m (inl A B a))
   (f2 : forall (b : B), m (inr A B b))
   (e : Sum A B) : m e :=
-  match e with 
-  | inl a => f1 a
-  | inr b => f2 b
+  match e with
+  | inl _ _ a => f1 a
+  | inr _ _ b => f2 b
   end.
 
 (* Falsity *)
@@ -69,7 +69,7 @@ Fixpoint elimNat
   (m : Nat -> Type)
   (f1 : m zero)
   (f2 : forall (n : Nat) (rec : m n) , m (succ n))
-  (n : Nat) : m n := 
+  (n : Nat) : m n :=
    match n with
    | zero   => f1
    | succ n => f2 n (elimNat m f1 f2 n)
@@ -88,9 +88,9 @@ Fixpoint elimList
   (f2 : forall (x : A) (xs : List A) (r : m xs), m (cons A x xs))
   (e : List A) : m e :=
   match e with
-  | nil =>       f1
-  | cons x xs => f2 x xs (elimList A m f1 f2 xs)
-  end.  
+  | nil _ =>       f1
+  | cons _ x xs => f2 x xs (elimList A m f1 f2 xs)
+  end.
 
 (** Identity **)
 
@@ -101,12 +101,12 @@ Inductive Id (A : Type) (a : A): A -> Type :=
 
 Definition elimId
   (A : Type)
-  (a1 a2 : A) 
-  (m : forall (a1 a2 : A) (id : Id A a1 a2) , Type) 
+  (a1 a2 : A)
+  (m : forall (a1 a2 : A) (id : Id A a1 a2) , Type)
   (f1 : forall (a : A) , m a a (refl A a) )
   (e : Id A a1 a2) : m a1 a2 e :=
-  match e with 
-  | refl => f1 a1
+  match e with
+  | refl _ _ => f1 a1
   end.
 
 (** Bool **)
@@ -115,7 +115,7 @@ Inductive Bool : Type :=
   | false : Bool
   | true : Bool.
 
-Definition elimBool 
+Definition elimBool
   (m : Bool -> Type)
   (f1 : m false)
   (f2 : m true)
@@ -126,7 +126,7 @@ Definition elimBool
   end.
 
 Inductive Pair (A : Type) (B : Type) : Type :=
-  | pair : A -> B -> Pair A B. 
+  | pair : A -> B -> Pair A B.
 
 Definition elimPair
   (A : Type)
@@ -135,5 +135,5 @@ Definition elimPair
   (f : forall (a: A) (b : B), m (pair A B a b))
   (e : Pair A B) : m e :=
   match e with
-  | pair a b => f a b
+  | pair _ _ a b => f a b
   end.

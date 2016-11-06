@@ -124,7 +124,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
   def checkCoq(module : String) {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/coq/${module}.hs"))
-    val exitCode = s"coqc -I generated/ -I syntax/ generated/${module}.v".!
+    val exitCode = s"coqc generated/${module}.v".!
     exitCode shouldBe 0
   }
 
