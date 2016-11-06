@@ -10,3 +10,6 @@ generated/
 *.agdai
 *.ibc
 #*
+*.aux
+*.glob
+*.vo
