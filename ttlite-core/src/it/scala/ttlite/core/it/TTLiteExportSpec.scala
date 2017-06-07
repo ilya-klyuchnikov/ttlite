@@ -88,7 +88,6 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("fin.hs") {
       checkIdris("fin")
     }
-    // Idris: https://github.com/idris-lang/Idris-dev/issues/741
     it("id.hs") {
       checkIdris("id")
     }

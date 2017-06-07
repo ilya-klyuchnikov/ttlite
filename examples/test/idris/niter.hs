@@ -1,11 +1,11 @@
-$a : Set0;
-$seed : $a;
-$f : forall (_ : $a) . $a;
+$A : Set0;
+$seed : $A;
+$f : forall (_ : $A) . $A;
 
 niter = \ (n : Nat) ->
-    elim Nat (\ (_ : Nat) -> $a)
+    elim Nat (\ (_ : Nat) -> $A)
         $seed
-        (\ (_ : Nat) (prev : $a) -> $f prev)
+        (\ (_ : Nat) (prev : $A) -> $f prev)
         n;
 
 exportToIdris niter;

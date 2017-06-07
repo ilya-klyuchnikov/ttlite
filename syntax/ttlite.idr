@@ -2,6 +2,8 @@ module ttlite
 
 %default total
 
+%access public export
+
 ------------------------------------------
 -- Sigma (aka Σ)
 ------------------------------------------

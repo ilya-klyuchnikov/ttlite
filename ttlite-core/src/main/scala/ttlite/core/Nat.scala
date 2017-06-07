@@ -80,9 +80,9 @@ trait NatPrinterIdris extends FunPrinterIdris with NatAST {
     case NatElim(m, z, s, n) =>
       printI(p, ii, 'elimNat @@ m @@ z @@ s @@ n)
     case Zero =>
-      printI(p, ii, 'zero)
+      printI(p, ii, 'Zero)
     case Succ(n) =>
-      printI(p, ii, 'succ @@ n)
+      printI(p, ii, 'Succ @@ n)
     case _ =>
       super.printI(p, ii, t)
   }

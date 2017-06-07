@@ -134,11 +134,11 @@ trait FinPrinterIdris extends FunPrinterIdris with FinAST {
     case Bool =>
       printI(p, ii, "Bool")
     case Triv =>
-      printI(p, ii, "triv")
+      printI(p, ii, "Triv")
     case False =>
-      printI(p, ii, "false")
+      printI(p, ii, "False")
     case True =>
-      printI(p, ii, "true")
+      printI(p, ii, "True")
     case FalsityElim(m, elem) =>
       printI(p, ii, 'elimFalsity @@ m @@ elem)
     case TruthElim(m, v, elem) =>

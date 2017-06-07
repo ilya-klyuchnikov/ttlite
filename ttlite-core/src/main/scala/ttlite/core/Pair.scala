@@ -68,7 +68,7 @@ trait PairPrinterIdris extends FunPrinterIdris with PairAST {
     case Product(a, b) =>
       printI(p, ii, 'TTPair @@ a @@ b)
     case Pair(Product(a, b), x, y) =>
-      printI(p, ii, 'pair @@ a @@ b @@ x @@ y)
+      printI(p, ii, 'Pair @@ a @@ b @@ x @@ y)
     case ProductElim(Product(a, b), m, f, pair) =>
       printI(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
     case _ =>
