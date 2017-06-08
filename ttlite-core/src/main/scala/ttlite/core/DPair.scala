@@ -44,9 +44,9 @@ trait DPairPrinter extends FunPrinter with DPairAST {
     case Sigma(d, r) =>
       nestedExists(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
-      nest(sep((text("exists") +: fors1).toSeq ++ Seq(print(0, i , x))))
+      val fors = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(print(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " .")
+      nest(sep((text("exists") +: fors1) ++ Seq(print(0, i , x))))
   }
 }
 

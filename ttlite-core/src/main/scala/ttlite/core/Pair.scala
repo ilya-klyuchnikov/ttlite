@@ -92,7 +92,7 @@ trait PairEval extends FunEval with PairAST {
       super.eval(t, ctx, bound)
   }
 
-  def productElim(etVal: Value, mVal: Value, fVal: Value, pVal: Value) =
+  def productElim(etVal: Value, mVal: Value, fVal: Value, pVal: Value): Value =
     pVal match {
       case VPair(_, x, y) =>
         fVal @@ x @@ y

@@ -115,14 +115,18 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
   def checkAgda(module : String) {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/agda-sc/${module}.hs"))
-    val exitCode = s"agda -i generated/ -i syntax/ generated/${module}.agda".!
+    val cmd = s"agda -v 0 -i generated/ -i syntax/ generated/${module}.agda"
+    info(cmd)
+    val exitCode = cmd.!
     exitCode shouldBe 0
   }
 
   def checkCoq(module : String) {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/coq-sc/${module}.hs"))
-    val exitCode = s"coqc -I generated/ -I syntax/ generated/${module}.v".!
+    val cmd = s"coqc generated/${module}.v"
+    info(cmd)
+    val exitCode = cmd.!
     exitCode shouldBe 0
   }
 

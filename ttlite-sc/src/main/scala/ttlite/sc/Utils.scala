@@ -25,7 +25,7 @@ trait GraphPrettyPrinter2 extends CoreREPL with TTSc {
     if (node.base.isDefined) {
       sb.append("*")
     }
-    if (focus == Some(node.tPath)) {
+    if (focus.contains(node.tPath)) {
       sb.append(" <===")
     }
     for (edge <- node.outs) {

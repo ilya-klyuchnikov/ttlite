@@ -95,7 +95,7 @@ class MetaLexical extends lexical.StdLexical {
     '-' ~ '}'  ^^ { _ => ' '  }
       | chrExcept(EofCh) ~ comment
     )
-  override final lazy val identChar =
+  override final lazy val identChar: Parser[Char] =
     super.identChar | elem('$') | elem('/') | elem('\'') | elem('\\')
 }
 
@@ -150,9 +150,9 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
         RichPosRes { ctx: Ctx =>
           def mkBind(args: List[Arg], c: Ctx): MTerm = args match {
             case Nil => body(c)
-            case arg :: xs =>
-              val bind = MBind(id, arg.tp(c), mkBind(xs, arg.name :: c))
-              bind.setPs(arg.startPos, body.endPos)
+            case x :: xs =>
+              val bind = MBind(id, x.tp(c), mkBind(xs, x.name :: c))
+              bind.setPs(x.startPos, body.endPos)
               bind
           }
           mkBind(args, ctx)

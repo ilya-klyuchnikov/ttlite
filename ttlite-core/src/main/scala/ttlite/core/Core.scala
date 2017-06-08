@@ -12,7 +12,7 @@ trait CoreAST {
   case class Free(n: Name) extends Term
 
   case class Universe(i: Int) extends Term {
-    override def equals(that: Any) = that match {
+    override def equals(that: Any): Boolean = that match {
       case Universe(k) => i == k || i == -1 || k == -1
       case _ => false
     }
@@ -27,7 +27,7 @@ trait CoreAST {
   type NameEnv[V] = Map[Name, V]
   type Env = List[Value]
   // names of bound variables
-  val vars = {
+  val vars: List[String] = {
     val ids = "abcdefghijklmnopqrstuvwxyz"
     val suffs = List("", "1")
     for {j <- suffs; i <- ids} yield s"$i$j"
@@ -116,7 +116,7 @@ trait CorePrinterCoq extends CoreAST with PrettyPrinter {
   def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(-1) =>
       "Type"
-    case Universe(i) =>
+    case Universe(_) =>
       "Type"
     case Bound(k) if ii - k - 1 >= 0 =>
       vars(ii - k - 1)
@@ -195,14 +195,14 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 
   def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
     if (inferred != expected) {
-      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
+      throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
     }
   }
 
   def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
-      throw new TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
+      throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
@@ -210,7 +210,7 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
-      throw new TypeError(s"expected: ${pp(expTerm)},\ninferred: ${pp(infTerm)}", path)
+      throw TypeError(s"expected: ${pp(expTerm)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
@@ -219,12 +219,12 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
       k
     case _ =>
       val infTerm = quote(i, inferred)
-      throw new TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
+      throw TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
   }
 
   def require(cond : Boolean, path : Path, expected : String, inferred: Term) {
     if (!cond) {
-      throw new TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
+      throw TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
     }
   }
 

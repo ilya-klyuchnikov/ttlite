@@ -6,13 +6,13 @@ object IoUtil {
     Ansi.ansi.render(s).toString
 
   // This is a hack, but allows to detect that Eclipse/Idea consoles are not ANSI once
-  private def isAnsi_?(): Boolean =
+  private def isAnsi_? : Boolean =
     !AnsiConsole.wrapOutputStream(null).isInstanceOf[AnsiOutputStream]
 
   // left marker
-  lazy val lm: String = if (isAnsi_?()) "" else "▶"
+  lazy val lm: String = if (isAnsi_?) "" else "▶"
   //right marker
-  lazy val rm: String = if (isAnsi_?()) "" else "◀"
+  lazy val rm: String = if (isAnsi_?) "" else "◀"
 }
 
 trait TTLiteError extends Exception {
@@ -23,18 +23,18 @@ trait TTLiteError extends Exception {
   val line : Int
   val column : Int
   val origin: String = ""
-  override def getMessage() = msg
+  override def getMessage: String = msg
   def withFile(f : String) : TTLiteError = FiledTTLiteError(this, f)
 }
 
 case class FiledTTLiteError(err : TTLiteError, file : String) extends TTLiteError {
-  val errorKind = err.errorKind
+  val errorKind: String = err.errorKind
   val msg : String = err.msg
   val details: String = err.details
   val line : Int = err.line
   val column : Int = err.column
-  override val location: String = s"$file[${line}:${column}]"
-  override val origin = err.origin
+  override val location: String = s"$file[$line:$column]"
+  override val origin: String = err.origin
   override def withFile(f : String) : TTLiteError = this
 }
 
@@ -48,20 +48,20 @@ case class TranslationError(override val mt : MTerm, override val msg : String) 
 
 class MTermError(val errorKind : String, val mt : MTerm, val msg : String) extends TTLiteError {
   import IoUtil._
-  val details =
+  val details: String =
     ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
-  val line = mt.startPos.line
-  val column = mt.startPos.column
-  override val origin = mt.origin
+  val line: Int = mt.startPos.line
+  val column: Int = mt.startPos.column
+  override val origin: String = mt.origin
 }
 
 case class DuplicateIdError(id : Id) extends TTLiteError {
   import IoUtil._
-  val details =
+  val details: String =
     ansi(s"${id.originPrefix}${lm}@|magenta,bold ${id.origin}|@${rm}${id.originSuffix}")
-  val line = id.startPos.line
-  val column = id.startPos.column
-  override val origin = id.origin
+  val line: Int = id.startPos.line
+  val column: Int = id.startPos.column
+  override val origin: String = id.origin
   val errorKind: String = "Syntax"
   val msg: String = s"Identifier ${id.n} is already defined"
 }
@@ -77,9 +77,9 @@ object TTLiteExit extends TTLiteError {
   val errorKind  = "System"
   val msg : String = "Signal to exit repl"
   val details: String = msg
-  override def withFile(f : String) = this
+  override def withFile(f : String): TTLiteError = this
 }
 
 trait PrettyPrinter extends org.kiama.output.PrettyPrinter {
-  def parensIf(b: Boolean, d: Doc) = if (b) parens(d) else d
+  def parensIf(b: Boolean, d: Doc): Doc = if (b) parens(d) else d
 }

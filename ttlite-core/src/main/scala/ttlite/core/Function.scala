@@ -14,10 +14,10 @@ trait FunAST extends CoreAST {
   case class NApp(n: Neutral, v: Value) extends Neutral
 
   implicit class TApplicable(t: Term) {
-    def @@(t1: Term) = :@:(t, t1)
+    def @@(t1: Term): :@: = :@:(t, t1)
   }
   implicit class VApplicable(v: Value) {
-    def @@(v1: Value) = v match {
+    def @@(v1: Value): Value = v match {
       case VLam(_, f) => f(v1)
       case VNeutral(n) => VNeutral(NApp(n, v1))
     }
@@ -62,18 +62,18 @@ trait FunPrinter extends CorePrinter with FunAST {
     case Pi(d, r) =>
       nestedForall(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " .")
-      nest(sep((text("forall") +: fors1).toSeq ++ Seq(print(0, i , x))))
+      val fors = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(print(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " .")
+      nest(sep((text("forall") +: fors1) ++ Seq(print(0, i , x))))
   }
 
   private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
     case Lam(d, r) =>
       nestedLambda(i + 1, (i, d) :: fs, r)
     case x =>
-      val lams = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(print(0, n, d)))}.toSeq
-      val lams1 = lams.updated(lams.length - 1, lams(lams.length - 1) <> " ->")
-      nest(sep((text("\\") +: lams1).toSeq ++ Seq(print(0, i , x))))
+      val lams = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(print(0, n, d))) }
+      val lams1 = lams.updated(lams.length - 1, lams.last <> " ->")
+      nest(sep((text("\\") +: lams1) ++ Seq(print(0, i , x))))
   }
 }
 
@@ -99,18 +99,18 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
     case Pi(d, r) =>
       nestedForall(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " -> ")
-      nest(sep((text("forall") +: fors1).toSeq ++ Seq(printA(0, i , x))))
+      val fors = fs.reverse.map { case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " -> ")
+      nest(sep((text("forall") +: fors1) ++ Seq(printA(0, i , x))))
   }
 
   private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
     case Lam(d, r) =>
       nestedLambda(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printA(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " -> ")
-      nest(sep((text("\\") +: fors1).toSeq ++ Seq(printA(0, i , x))))
+      val fors = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(printA(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " -> ")
+      nest(sep((text("\\") +: fors1) ++ Seq(printA(0, i , x))))
   }
 }
 
@@ -136,18 +136,18 @@ trait FunPrinterCoq extends CorePrinterCoq with FunAST {
     case Pi(d, r) =>
       nestedForall(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printC(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " ,")
-      nest(sep((text("forall") +: fors1).toSeq ++ Seq(printC(0, i , x))))
+      val fors = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(printC(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " ,")
+      nest(sep((text("forall") +: fors1) ++ Seq(printC(0, i , x))))
   }
 
   private def nestedLambda(i: Int, fs: List[(Int, Term)], t: Term): Doc = t match {
     case Lam(d, r) =>
       nestedLambda(i + 1, (i, d) :: fs, r)
     case x =>
-      val fors = fs.reverse.map{case (n,d) => parens(vars(n) <> " : " <> nest(printC(0, n, d)))}.toSeq
-      val fors1 = fors.updated(fors.length - 1, fors(fors.length - 1) <> " =>")
-      nest(sep((text("fun") +: fors1).toSeq ++ Seq(printC(0, i , x))))
+      val fors = fs.reverse.map { case (n, d) => parens(vars(n) <> " : " <> nest(printC(0, n, d))) }
+      val fors1 = fors.updated(fors.length - 1, fors.last <> " =>")
+      nest(sep((text("fun") +: fors1) ++ Seq(printC(0, i , x))))
   }
 }
 

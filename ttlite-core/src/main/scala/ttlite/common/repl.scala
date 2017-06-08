@@ -178,8 +178,7 @@ trait REPL {
 
     val out = new FileWriter(coqFile)
 
-    out.write(s"""Add LoadPath "syntax".\n""")
-    out.write(s"Load ttlite.\n\n")
+    out.write(s"""Load "syntax/ttlite".\n\n""")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
     for {Assumed(id) <- assumed} {

@@ -91,7 +91,7 @@ trait IdEval extends FunEval with IdAST with CoreQuote {
     case _ => super.eval(t, ctx, bound)
   }
 
-  def idElim(etVal: Value, propVal: Value, propRVal: Value, eqVal: Value) = eqVal match {
+  private def idElim(etVal: Value, propVal: Value, propRVal: Value, eqVal: Value) = eqVal match {
     case r@VRefl(a, z) =>
       propRVal @@ z
     case VNeutral(n) =>

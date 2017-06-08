@@ -183,19 +183,19 @@ trait FinEval extends FunEval with FinAST {
       super.eval(t, ctx, bound)
   }
 
-  def voidElim(m: Value, elem: Value) = elem match {
+  def voidElim(m: Value, elem: Value): Value = elem match {
     case VNeutral(n) =>
       VNeutral(NFalsityElim(m, n))
   }
 
-  def unitElim(m: Value, f: Value, elem: Value) = elem match {
+  def unitElim(m: Value, f: Value, elem: Value): Value = elem match {
     case VTriv =>
       f
     case VNeutral(n) =>
       VNeutral(NTruthElim(m, f, n))
   }
 
-  def boolElim(m: Value, f1: Value, f2: Value, elem: Value) = elem match {
+  def boolElim(m: Value, f1: Value, f2: Value, elem: Value): Value = elem match {
     case VFalse =>
       f1
     case VTrue =>
