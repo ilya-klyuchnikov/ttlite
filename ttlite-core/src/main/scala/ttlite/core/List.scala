@@ -78,9 +78,9 @@ trait ListPrinterIdris extends FunPrinterIdris with ListAST {
     case PiList(a) =>
       printI(p, ii, 'List @@ a)
     case PiNil(PiList(a)) =>
-      printI(p, ii, 'nil @@ a)
+      printI(p, ii, 'Nil @@ a)
     case PiCons(PiList(a), x, xs) =>
-      printI(p, ii, 'cons @@ a @@ x @@ xs)
+      printI(p, ii, 'Cons @@ a @@ x @@ xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
       printI(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
     case _ =>

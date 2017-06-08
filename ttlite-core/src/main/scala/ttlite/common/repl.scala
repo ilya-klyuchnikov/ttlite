@@ -214,6 +214,8 @@ trait REPL {
     out.write(s"module ${f}\n\n")
     out.write(s"import ttlite\n\n")
 
+    out.write(s"%auto_implicits off\n\n")
+
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
     for {Assumed(id) <- assumed} {
       val tp = quote(state.types(Assumed(id)))

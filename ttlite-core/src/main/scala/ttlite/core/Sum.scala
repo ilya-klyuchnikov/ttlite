@@ -78,9 +78,9 @@ trait SumPrinterIdris extends FunPrinterIdris with SumAST {
     case Sum(a, b) =>
       printI(p, ii, 'Sum @@ a @@ b)
     case InL(Sum(a, b), l) =>
-      printI(p, ii, 'inl @@ a @@ b @@ l)
+      printI(p, ii, 'Inl @@ a @@ b @@ l)
     case InR(Sum(a, b), r) =>
-      printI(p, ii, 'inr @@ a @@ b @@ r)
+      printI(p, ii, 'Inr @@ a @@ b @@ r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
       printI(p, ii, 'elimSum @@ a @@ b @@ m @@ lc @@ rc @@ sum)
     case _ =>
