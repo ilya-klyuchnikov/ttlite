@@ -4,7 +4,7 @@ import Keys._
 object TTLiteBuild extends Build {
 
   override lazy val settings = super.settings ++ Seq(
-    scalaVersion := "2.11.2",
+    scalaVersion := "2.12.2",
     organization := "ttlite",
     version := "0.5-SNAPSHOT",
     scalacOptions ++= Seq("-deprecation", "-feature"),
@@ -21,9 +21,9 @@ object TTLiteBuild extends Build {
       .settings( Defaults.itSettings : _*)
       .settings(
         name := "core",
-        libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.6.0",
+        libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.8.0",
         libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11",
-        libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test,it"
+        libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test,it"
       )
       .configs(IntegrationTest)
 
@@ -32,8 +32,8 @@ object TTLiteBuild extends Build {
       .settings( Defaults.itSettings : _*)
       .settings(
         name := "sc",
-        libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.1",
-        libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.0" % "test,it"
+        libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
+        libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test,it"
       )
       .dependsOn(CoreProject)
       .configs(IntegrationTest)
