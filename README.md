@@ -37,27 +37,18 @@ TTLite contains integration tests which invoke Agda and Coq compilers for genera
 
 In order to run these test you should have `agda` and `coqc` executables in path.
 
-### SBT settings
-Building/testing TT Lite with default sbt settings may fail due to `OutOfMemory` issues.
-I use following settings for SBT (file `~/.sbtconfig`):
-
-    SBT_OPTS="-Xms512M -Xmx1500M -Xss1M -XX:+CMSClassUnloadingEnabled -XX:+UseConcMarkSweepGC -XX:MaxPermSize=724M"
-
-### SBT launcher
-This project is built with SBT 0.13, so it requires that you have SBT launcher 0.13 (try `sbt --version` to know it).
-
 ## Quick Start
 
 There are two sub-projects:
 
-* `ttlite-core` - TT Lite Core
-* `ttlite-sc` - TT Lite SC
+* `core` - TT Lite Core
+* `sc` - TT Lite SC
 
 ### TTLite Core
 
-To launch TT Core REPL, type in sbt console `ttlite-core/run`:
+To launch TT Core REPL, type in sbt console `core/run`:
 
-    > ttlite-core/run
+    > core/run
 
 Load some definitions from examples:
 
@@ -129,8 +120,8 @@ The proposed way to get into this project is:
 
 * Sketch the preprint for grasping syntax and semantics (without details).
 * Look into examples of how functions are defined (dir [`examples`](examples/))
-* Sketch some modules ([`Function.scala`](ttlite-core/src/main/scala/ttlite/core/Function.scala), 
-[`Nat.scala`](ttlite-core/src/main/scala/ttlite/core/Nat.scala), 
+* Sketch some modules ([`Function.scala`](ttlite-core/src/main/scala/ttlite/core/Function.scala),
+[`Nat.scala`](ttlite-core/src/main/scala/ttlite/core/Nat.scala),
 [`DProduct.scala`](ttlite-core/src/main/scala/ttlite/core/DProduct.scala))
 for getting an idea how syntax and semantics are implemented.
 
@@ -148,7 +139,7 @@ A program in TT Lite consists of the following statements:
 
 To launch TT Lite SC REPL, type in sbt console `ttlite-sc/run`:
 
-    > ttlite-sc/run
+    > sc/run
 
 Launching examples:
 
@@ -164,7 +155,7 @@ The meaning of the new statement is that `t1` is a result of transformation of a
 `t1` and `t2` are put in the context as terms and available for further manipulations.
 
 Here is an example of proving the equivalence of two expressions with assumed variables (`examples/hosc/10.hs`):
-    
+
     import examples/nat;
     import examples/id;
 
