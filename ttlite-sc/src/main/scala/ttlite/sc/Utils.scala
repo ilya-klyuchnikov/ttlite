@@ -3,7 +3,7 @@ package ttlite.sc
 import mrsc.core._
 import ttlite.core.CoreREPL
 
-trait GraphPrettyPrinter2 extends CoreREPL with TTSc {
+trait GraphPrettyPrinter2 extends TTSc {
 
   def tgToString(tg: TGraph[Conf, Label]): String = {
     val focus = tg.focus

@@ -52,62 +52,12 @@ trait TTSc extends CoreSubst with CoreCheck {
   def singleDrive(c: Conf): DriveStep
 
   def multiDrive(c: Conf): List[DriveStep]
-
-  trait BaseRules extends MRSCRules[Conf, Label] {
-    type Signal = Option[N]
-
-    // we check elimBranch for subst
-    // in order to ensure that we respect eliminator recursion
-    def inspect(g: G): Signal = {
-      val term = g.current.conf.term
-      var node = g.current
-      while (node.in != null) {
-        node.in.driveInfo match {
-          case ElimLabel(_, _, sub, _) if node.in.node.conf.term / sub == term =>
-            return Some(node.in.node)
-          case _ =>
-        }
-        node = node.in.node
-      }
-      None
-    }
-  }
-
-  trait Folding extends BaseRules {
-    override def fold(signal: Signal, g: G): List[S] =
-      signal.map(n => FoldStep(n.sPath): S).toList
-  }
-  trait NoRebuildings extends BaseRules {
-    override def rebuild(signal: Signal, g: G) = List()
-  }
-  // The simplest termination strategy
-  trait Termination extends BaseRules {
-    val maxDepth: Int
-    override def steps(g: G): List[S] =
-      if (g.depth > maxDepth) List(StopStep.graphStep) else super.steps(g)
-  }
-
-  trait SingleDriving extends BaseRules {
-    override def drive(signal: Signal, g: G): List[S] =
-      if (signal.isEmpty) {
-        val t = g.current.conf
-        val piStep = singleDrive(t).step(t)
-        piStep.graphStep :: Nil
-      } else
-        Nil
-  }
-
-  trait MultiDriving extends BaseRules {
-    override def drive(signal: Signal, g: G): List[S] = {
-      val t = g.current.conf
-      multiDrive(t).map(_.step(t).graphStep)
-    }
-  }
 }
 
 trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreQuoting {
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
+
   def residuate(g: TG, nEnv: NameEnv[Value]): Value = {
     fold(g.root, nEnv.withDefault(vfree), Nil, Map())
   }
@@ -160,8 +110,7 @@ trait ScParser extends MetaParser {
 
 object ScParser extends ScParser
 
-// todo : more unified output of
-trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
+trait ScREPL extends CoreREPL with TTSc with BaseResiduator with ProofResiduator with GraphPrettyPrinter2 {
   import ttlite.common.IoUtil._
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
@@ -232,13 +181,64 @@ trait ScREPL extends TTSc with BaseResiduator with ProofResiduator with GraphPre
       super.handleStmt(state, stmt)
   }
 
+  trait BaseRules extends MRSCRules[Conf, Label] {
+    type Signal = Option[N]
+
+    // we check elimBranch for subst
+    // in order to ensure that we respect eliminator recursion
+    def inspect(g: G): Signal = {
+      val term = g.current.conf.term
+      var node = g.current
+      while (node.in != null) {
+        node.in.driveInfo match {
+          case ElimLabel(_, _, sub, _) if node.in.node.conf.term / sub == term =>
+            return Some(node.in.node)
+          case _ =>
+        }
+        node = node.in.node
+      }
+      None
+    }
+  }
+
+  trait Folding extends BaseRules {
+    override def fold(signal: Signal, g: G): List[S] =
+      signal.map(n => FoldStep(n.sPath): S).toList
+  }
+  trait NoRebuildings extends BaseRules {
+    override def rebuild(signal: Signal, g: G) = List()
+  }
+  // The simplest termination strategy
+  trait Termination extends BaseRules {
+    val maxDepth: Int
+    override def steps(g: G): List[S] =
+      if (g.depth > maxDepth) List(StopStep.graphStep) else super.steps(g)
+  }
+
+  trait SingleDriving extends BaseRules {
+    override def drive(signal: Signal, g: G): List[S] =
+      if (signal.isEmpty) {
+        val t = g.current.conf
+        val piStep = singleDrive(t).step(t)
+        piStep.graphStep :: Nil
+      } else
+        Nil
+  }
+
+  trait MultiDriving extends BaseRules {
+    override def drive(signal: Signal, g: G): List[S] = {
+      val t = g.current.conf
+      multiDrive(t).map(_.step(t).graphStep)
+    }
+  }
+
   object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
     val maxDepth = 4
   }
 }
 
 object TTScREPL
-  extends ScREPL
+  extends TTSc
   with CoreREPL with CoreDriver with CoreResiduator with CoreProofResiduator
   with FunREPL with FunDriver with FunResiduator with FunProofResiduator
   with DPairREPL with DPairDriver with DPairResiduator with DPairProofResiduator
@@ -247,6 +247,7 @@ object TTScREPL
   with NatREPL with NatDriver with NatResiduator with NatProofResiduator
   with ListREPL with ListDriver with ListResiduator with ListProofResiduator
   with PairREPL with PairDriver with PairResiduator with PairProofResiduator
-  with FinREPL with FinDriver with FinResiduator with FinProofResiduator {
+  with FinREPL with FinDriver with FinResiduator with FinProofResiduator
+  with ScREPL {
   override val name = "TT-SC"
 }
