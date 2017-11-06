@@ -229,8 +229,8 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
   }
 
   def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
-    case Universe(i) =>
-      VUniverse(i + 1)
+    case Universe(n) =>
+      VUniverse(n + 1)
     case Ann(e, tp) =>
       val tpType = iType(i, path/(2, 2), ctx, tp)
       checkUniverse(i, tpType, path/(2, 2))
