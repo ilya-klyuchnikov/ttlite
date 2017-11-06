@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait NatDriver extends CoreDriver with NatAST with NatEval {
+trait NatDriver extends CoreDriver with NatAST with NatEval { self: FunAST =>
 
   case object SuccLabel extends Label
 
@@ -34,7 +34,7 @@ trait NatDriver extends CoreDriver with NatAST with NatEval {
 
 }
 
-trait NatResiduator extends BaseResiduator with NatDriver {
+trait NatResiduator extends BaseResiduator with NatDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case

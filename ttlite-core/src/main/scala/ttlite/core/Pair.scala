@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait PairAST extends CoreAST {
+trait PairAST extends AST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(et: Term, a: Term, b: Term) extends Term
   case class ProductElim(et: Term, m: Term, f: Term, pair: Term) extends Term
@@ -12,8 +12,8 @@ trait PairAST extends CoreAST {
   case class NProductElim(et: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait PairMetaSyntax extends CoreMetaSyntax with PairAST {
-  override def translate(m: MTerm): Term = m match {
+trait PairMetaSyntax extends MetaSyntax with PairAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
       Product(translate(a), translate(b))
     case MVar(Global("Pair")) @@ et @@ x @@ y =>
@@ -24,60 +24,60 @@ trait PairMetaSyntax extends CoreMetaSyntax with PairAST {
   }
 }
 
-trait PairPrinter extends FunPrinter with PairAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait PairPrinter extends Printer with PairAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      print(p, ii, 'Product @@ a @@ b)
+      printL(p, ii, 'Product, a, b)
     case Pair(et, x, y) =>
-      print(p, ii, 'Pair @@ et @@ x @@ y)
+      printL(p, ii, 'Pair, et, x, y)
     case ProductElim(et, m, f, pair) =>
-      print(p, ii, 'elim @@ et @@ m @@ f @@ pair)
+      printL(p, ii, 'elim, et, m, f, pair)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait PairPrinterAgda extends FunPrinterAgda with PairAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait PairPrinterAgda extends PrinterAgda with PairAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printA(p, ii, 'Pair @@ a @@ b)
+      printAL(p, ii, 'Pair, a, b)
     case Pair(Product(a, b), x, y) =>
-      printA(p, ii, 'pair @@ a @@ b @@ x @@ y)
+      printAL(p, ii, 'pair, a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printA(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+      printAL(p, ii, 'elimPair, a, b, m, f, pair)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait PairPrinterCoq extends FunPrinterCoq with PairAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait PairPrinterCoq extends PrinterCoq with PairAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printC(p, ii, 'Pair @@ a @@ b)
+      printCL(p, ii, 'Pair, a, b)
     case Pair(Product(a, b), x, y) =>
-      printC(p, ii, 'pair @@ a @@ b @@ x @@ y)
+      printCL(p, ii, 'pair, a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printC(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+      printCL(p, ii, 'elimPair, a, b, m, f, pair)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait PairPrinterIdris extends FunPrinterIdris with PairAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait PairPrinterIdris extends PrinterIdris with PairAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printI(p, ii, 'TTPair @@ a @@ b)
+      printIL(p, ii, 'TTPair, a, b)
     case Pair(Product(a, b), x, y) =>
-      printI(p, ii, 'Pair @@ a @@ b @@ x @@ y)
+      printIL(p, ii, 'Pair, a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printI(p, ii, 'elimPair @@ a @@ b @@ m @@ f @@ pair)
+      printIL(p, ii, 'elimPair, a, b, m, f, pair)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait PairEval extends FunEval with PairAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait PairEval extends Eval with PairAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Product(a, b) =>
       VProduct(eval(a, ctx, bound), eval(b, ctx, bound))
     case Pair(et, x, y) =>
@@ -101,8 +101,8 @@ trait PairEval extends FunEval with PairAST {
     }
 }
 
-trait PairCheck extends FunCheck with PairAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait PairCheck extends Check with PairAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, path/(2, 3), ctx, a)
       val j = checkUniverse(i, aType, path/(2, 3))
@@ -148,7 +148,7 @@ trait PairCheck extends FunCheck with PairAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Product(a, b) =>
       Product(iSubst(i, r, a), iSubst(i, r, b))
     case Pair(et, x, y) =>
@@ -159,8 +159,8 @@ trait PairCheck extends FunCheck with PairAST {
   }
 }
 
-trait PairQuote extends CoreQuote with PairAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait PairQuoting extends Quoting with PairAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VProduct(a, b) =>
       Product(quote(ii, a), quote(ii, b))
     case VPair(et, x, y) =>
@@ -168,7 +168,7 @@ trait PairQuote extends CoreQuote with PairAST {
     case _ => super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NProductElim(et, m, f, p) =>
       ProductElim(quote(ii, et), quote(ii, m), quote(ii, f), neutralQuote(ii, p))
     case _ => super.neutralQuote(ii, n)
@@ -185,4 +185,6 @@ trait PairREPL
   with PairPrinterIdris
   with PairCheck
   with PairEval
-  with PairQuote
+  with PairQuoting {
+  self: FunAST =>
+}

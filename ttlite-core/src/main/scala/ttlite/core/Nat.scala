@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait NatAST extends CoreAST {
+trait NatAST extends AST {
   case object Nat extends Term
   case object Zero extends Term
   case class Succ(e: Term) extends Term
@@ -14,8 +14,8 @@ trait NatAST extends CoreAST {
   case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
-trait MNat extends CoreMetaSyntax with NatAST {
-  override def translate(m: MTerm): Term = m match {
+trait NatMetaSyntax extends MetaSyntax with NatAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Nat")) =>
       Nat
     case MVar(Global("Zero")) =>
@@ -28,82 +28,82 @@ trait MNat extends CoreMetaSyntax with NatAST {
   }
 }
 
-trait NatPrinter extends FunPrinter with NatAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait NatPrinter extends Printer with NatAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      print(p, ii, 'elim @@ Nat @@ m @@ z @@ s @@ n)
+      printL(p, ii, 'elim, Nat, m, z, s, n)
     case Zero =>
-      print(p, ii, 'Zero)
+      "Zero"
     case Succ(n) =>
-      print(p, ii, 'Succ @@ n)
+      printL(p, ii, 'Succ, n)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait NatPrinterAgda extends FunPrinterAgda with NatAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait NatPrinterAgda extends PrinterAgda with NatAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printA(p, ii, 'elimNat @@ m @@ z @@ s @@ n)
+      printAL(p, ii, 'elimNat, m, z, s, n)
     case Zero =>
-      printA(p, ii, 'zero)
+      "zero"
     case Succ(n) =>
-      printA(p, ii, 'succ @@ n)
+      printAL(p, ii, 'succ, n)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait NatPrinterCoq extends FunPrinterCoq with NatAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait NatPrinterCoq extends PrinterCoq with NatAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printC(p, ii, 'elimNat @@ m @@ z @@ s @@ n)
+      printCL(p, ii, 'elimNat, m, z, s, n)
     case Zero =>
-      printC(p, ii, 'zero)
+      "zero"
     case Succ(n) =>
-      printC(p, ii, 'succ @@ n)
+      printCL(p, ii, 'succ, n)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait NatPrinterIdris extends FunPrinterIdris with NatAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait NatPrinterIdris extends PrinterIdris with NatAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printI(p, ii, 'elimNat @@ m @@ z @@ s @@ n)
+      printIL(p, ii, 'elimNat, m, z, s, n)
     case Zero =>
-      printI(p, ii, 'Zero)
+      "Zero"
     case Succ(n) =>
-      printI(p, ii, 'Succ @@ n)
+      printIL(p, ii, 'Succ, n)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait NatQuote extends CoreQuote with NatAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait NatQuoting extends Quoting with NatAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VNat => Nat
     case VZero => Zero
     case VSucc(n) => Succ(quote(ii, n))
     case _ => super.quote(ii, v)
   }
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NNatElim(m, z, s, n) =>
       NatElim(quote(ii, m), quote(ii, z), quote(ii, s), neutralQuote(ii, n))
     case _ => super.neutralQuote(ii, n)
   }
 }
 
-trait NatEval extends FunEval with NatAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait NatEval extends Eval with NatAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Zero =>
       VZero
     case Succ(n) =>
@@ -130,13 +130,13 @@ trait NatEval extends FunEval with NatAST {
   }
 }
 
-trait NatCheck extends FunCheck with NatAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait NatCheck extends Check with NatAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Nat =>
       VUniverse(0)
     case NatElim(m, mz, ms, n) =>
       val mType = iType(i, path/(3, 6), ctx, m)
-      checkEqual(i, mType, Pi(Nat, Universe(-1)), path/(3, 6))
+      checkEqual(i, mType, VPi(VNat, {_ => VUniverse(-1)}), path/(3, 6))
       val mVal = eval(m, ctx, Nil)
 
       val mzType = iType(i, path/(4, 6), ctx, mz)
@@ -161,7 +161,7 @@ trait NatCheck extends FunCheck with NatAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Nat =>
       Nat
     case NatElim(m, mz, ms, n) =>
@@ -178,11 +178,13 @@ trait NatCheck extends FunCheck with NatAST {
 trait NatREPL
   extends CoreREPL
   with NatAST
-  with MNat
+  with NatMetaSyntax
   with NatPrinter
   with NatPrinterAgda
   with NatPrinterCoq
   with NatPrinterIdris
   with NatCheck
   with NatEval
-  with NatQuote
+  with NatQuoting {
+  self: FunAST =>
+}

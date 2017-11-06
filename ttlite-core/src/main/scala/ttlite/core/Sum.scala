@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait SumAST extends CoreAST {
+trait SumAST extends AST {
   case class Sum(A: Term, B: Term) extends Term
   case class InL(et: Term, l: Term) extends Term
   case class InR(et: Term, r: Term) extends Term
@@ -14,8 +14,8 @@ trait SumAST extends CoreAST {
   case class NSumElim(et: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
-trait SumMetaSyntax extends CoreMetaSyntax with SumAST {
-  override def translate(m: MTerm): Term = m match {
+trait SumMetaSyntax extends MetaSyntax with SumAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Sum")) @@ l @@ r =>
       Sum(translate(l), translate(r))
     case MVar(Global("InL")) @@ et @@ inj =>
@@ -28,68 +28,68 @@ trait SumMetaSyntax extends CoreMetaSyntax with SumAST {
   }
 }
 
-trait SumPrinter extends FunPrinter with SumAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait SumPrinter extends Printer with SumAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      print(p, ii, 'Sum @@ a @@ b)
+      printL(p, ii, 'Sum, a, b)
     case InL(et, l) =>
-      print(p, ii, 'InL @@ et @@ l)
+      printL(p, ii, 'InL, et, l)
     case InR(et, r) =>
-      print(p, ii, 'InR @@ et @@ r)
+      printL(p, ii, 'InR, et, r)
     case SumElim(et, m, lc, rc, sum) =>
-      print(p, ii, 'elim @@ et @@ m @@ lc @@ rc @@ sum)
+      printL(p, ii, 'elim, et, m, lc, rc, sum)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait SumPrinterAgda extends FunPrinterAgda with SumAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait SumPrinterAgda extends PrinterAgda with SumAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printA(p, ii, 'Sum @@ a @@ b)
+      printAL(p, ii, 'Sum, a, b)
     case InL(Sum(a, b), l) =>
-      printA(p, ii, 'inl @@ a @@ b @@ l)
+      printAL(p, ii, 'inl, a, b, l)
     case InR(Sum(a, b), r) =>
-      printA(p, ii, 'inr @@ a @@ b @@ r)
+      printAL(p, ii, 'inr, a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printA(p, ii, 'elimSum @@ a @@ b @@ m @@ lc @@ rc @@ sum)
+      printAL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait SumPrinterCoq extends FunPrinterCoq with SumAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait SumPrinterCoq extends PrinterCoq with SumAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printC(p, ii, 'Sum @@ a @@ b)
+      printCL(p, ii, 'Sum, a, b)
     case InL(Sum(a, b), l) =>
-      printC(p, ii, 'inl @@ a @@ b @@ l)
+      printCL(p, ii, 'inl, a, b, l)
     case InR(Sum(a, b), r) =>
-      printC(p, ii, 'inr @@ a @@ b @@ r)
+      printCL(p, ii, 'inr, a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printC(p, ii, 'elimSum @@ a @@ b @@ m @@ lc @@ rc @@ sum)
+      printCL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait SumPrinterIdris extends FunPrinterIdris with SumAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait SumPrinterIdris extends PrinterIdris with SumAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printI(p, ii, 'Sum @@ a @@ b)
+      printIL(p, ii, 'Sum, a, b)
     case InL(Sum(a, b), l) =>
-      printI(p, ii, 'Inl @@ a @@ b @@ l)
+      printIL(p, ii, 'Inl, a, b, l)
     case InR(Sum(a, b), r) =>
-      printI(p, ii, 'Inr @@ a @@ b @@ r)
+      printIL(p, ii, 'Inr, a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printI(p, ii, 'elimSum @@ a @@ b @@ m @@ lc @@ rc @@ sum)
+      printIL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait SumEval extends FunEval with SumAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait SumEval extends Eval with SumAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Sum(lt, rt) =>
       VSum(eval(lt, ctx, bound), eval(rt, ctx, bound))
     case InL(et, l) =>
@@ -118,8 +118,8 @@ trait SumEval extends FunEval with SumAST {
     }
 }
 
-trait SumCheck extends FunCheck with SumAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait SumCheck extends Check with SumAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Sum(a, b) =>
       val aType = iType(i, path/(2, 3), ctx, a)
       val j = checkUniverse(i, aType, path/(2, 3))
@@ -176,7 +176,7 @@ trait SumCheck extends FunCheck with SumAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Sum(a, b) =>
       Sum(iSubst(i, r, a), iSubst(i, r, b))
     case InL(et, x) =>
@@ -190,8 +190,8 @@ trait SumCheck extends FunCheck with SumAST {
   }
 }
 
-trait SumQuote extends CoreQuote with SumAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait SumQuoting extends Quoting with SumAST { self: FunAST =>
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VSum(a, b) =>
       Sum(quote(ii, a), quote(ii, b))
     case VInL(et, x) =>
@@ -202,7 +202,7 @@ trait SumQuote extends CoreQuote with SumAST {
       super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NSumElim(et, m, lc, rc, sum) =>
       SumElim(quote(ii, et), quote(ii, m), quote(ii, lc), quote(ii, rc), neutralQuote(ii, sum))
     case _ => super.neutralQuote(ii, n)
@@ -219,4 +219,6 @@ trait SumREPL
   with SumPrinterIdris
   with SumCheck
   with SumEval
-  with SumQuote
+  with SumQuoting {
+  self: FunAST =>
+}

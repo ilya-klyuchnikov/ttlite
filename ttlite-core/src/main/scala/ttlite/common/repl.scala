@@ -110,7 +110,7 @@ trait REPL {
         } catch {
           case t : TypeError => throw t.withMTerm(mtAnn)
         }
-      case Eval(mt) =>
+      case EvalStmt(mt) =>
         val e = translate(mt)
         try {
           res += 1

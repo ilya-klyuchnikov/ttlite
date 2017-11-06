@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait FunAST extends CoreAST {
+trait FunAST extends AST {
   import scala.language.implicitConversions
 
   case class Pi(c1: Term, c2: Term) extends Term
@@ -13,37 +13,30 @@ trait FunAST extends CoreAST {
   case class VLam(t: Value, e: Value => Value) extends Value
   case class NApp(n: Neutral, v: Value) extends Neutral
 
-  implicit class TApplicable(t: Term) {
-    def @@(t1: Term): :@: = :@:(t, t1)
-  }
   implicit class VApplicable(v: Value) {
     def @@(v1: Value): Value = v match {
       case VLam(_, f) => f(v1)
       case VNeutral(n) => VNeutral(NApp(n, v1))
     }
   }
-  implicit def sym2appV(s: Symbol): VApplicable =
-    VNeutral(NFree(Global(s.name)))
-  implicit def sym2appT(s: Symbol): TApplicable =
-    Free(Global(s.name))
 }
 
-trait FunMetaSyntax extends CoreMetaSyntax with FunAST {
-  override def translate(m: MTerm): Term = m match {
+trait FunMetaSyntax extends MetaSyntax with FunAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MBind("forall", t1, t2) =>
       Pi(translate(t1), translate(t2))
     case MBind("\\", t1, t2) =>
       Lam(translate(t1), translate(t2))
     case t1 @@ t2 =>
-      translate(t1) @@ translate(t2)
+      :@:(translate(t1), translate(t2))
     case _ => super.translate(m)
   }
 }
 
-trait FunPrinter extends CorePrinter with FunAST {
+trait FunPrinter extends Printer with FunAST {
   import scala.collection.immutable.Seq
 
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
@@ -77,10 +70,10 @@ trait FunPrinter extends CorePrinter with FunAST {
   }
 }
 
-trait FunPrinterAgda extends CorePrinterAgda with FunAST {
+trait FunPrinterAgda extends PrinterAgda with FunAST {
   import scala.collection.immutable.Seq
 
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
@@ -114,10 +107,10 @@ trait FunPrinterAgda extends CorePrinterAgda with FunAST {
   }
 }
 
-trait FunPrinterCoq extends CorePrinterCoq with FunAST {
+trait FunPrinterCoq extends PrinterCoq with FunAST {
   import scala.collection.immutable.Seq
 
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, Pi(d1, r)) =>
       parensIf(p > 0, nestedForall(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Pi(d, r) =>
@@ -151,10 +144,10 @@ trait FunPrinterCoq extends CorePrinterCoq with FunAST {
   }
 }
 
-trait FunPrinterIdris extends CorePrinterIdris with FunAST {
+trait FunPrinterIdris extends PrinterIdris with FunAST {
   import scala.collection.immutable.Seq
 
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Pi(d, r) =>
       parensIf(p > 0, sep(Seq(parens(vars(ii) <> " : " <> printI(0, ii, d)) <> " -> ", nest(printI(0, ii + 1, r)))))
     case Lam(d, r) =>
@@ -166,23 +159,23 @@ trait FunPrinterIdris extends CorePrinterIdris with FunAST {
   }
 }
 
-trait FunQuote extends CoreQuote with FunAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait FunQuoting extends Quoting with FunAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VPi(v, f) =>
       Pi(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
     case VLam(t, f) =>
       Lam(quote(ii, t), quote(ii + 1, f(vfree(Quote(ii)))))
     case _ => super.quote(ii, v)
   }
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NApp(n, v) =>
-      neutralQuote(ii, n) @@ quote(ii, v)
+      :@:(neutralQuote(ii, n), quote(ii, v))
     case _ => super.neutralQuote(ii, n)
   }
 }
 
-trait FunEval extends CoreEval with FunAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait FunEval extends Eval with FunAST {
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Pi(ty, ty1) =>
       VPi(eval(ty, ctx, bound), x => eval(ty1, ctx, x :: bound))
     case Lam(t, e) =>
@@ -194,8 +187,8 @@ trait FunEval extends CoreEval with FunAST {
   }
 }
 
-trait FunCheck extends CoreCheck with FunAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait FunCheck extends Check with FunAST {
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
 
     case Pi(x, tp) =>
       val xType = iType(i, path/(1, 2), ctx, x)
@@ -226,13 +219,13 @@ trait FunCheck extends CoreCheck with FunAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Pi(ty, ty1) =>
       Pi(iSubst(i, r, ty), iSubst(i + 1, r, ty1))
     case Lam(t, e) =>
       Lam(iSubst(i, r, t), iSubst(i + 1, r, e))
     case (e1 :@: e2) =>
-      iSubst(i, r, e1) @@ iSubst(i, r, e2)
+      :@:(iSubst(i, r, e1), iSubst(i, r, e2))
     case _ => super.iSubst(i, r, it)
   }
 }
@@ -247,4 +240,4 @@ trait FunREPL
   with FunPrinterIdris
   with FunCheck
   with FunEval
-  with FunQuote
+  with FunQuoting

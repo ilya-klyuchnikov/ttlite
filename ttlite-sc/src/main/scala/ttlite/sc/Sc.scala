@@ -105,7 +105,7 @@ trait TTSc extends CoreSubst with CoreCheck {
   }
 }
 
-trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreQuote {
+trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with CoreQuoting {
   type TG = TGraph[Conf, Label]
   type N = TNode[Conf, Label]
   def residuate(g: TG, nEnv: NameEnv[Value]): Value = {
@@ -122,7 +122,11 @@ trait BaseResiduator extends TTSc with CoreAST with CoreEval with CoreSubst with
     }
 }
 
-trait ProofResiduator extends BaseResiduator with IdAST {
+trait ProofResiduator extends BaseResiduator with IdAST with FunAST {
+  import scala.language.implicitConversions
+  implicit def sym2appV(s: Symbol): VApplicable =
+    VNeutral(NFree(Global(s.name)))
+
   def proofResiduate(g: TG, nEnv: NameEnv[Value]): Value = {
     val env = nEnv.withDefault(vfree)
     proofFold(g.root, env, Nil, Map(), env, Nil, Map())

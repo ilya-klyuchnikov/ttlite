@@ -2,14 +2,11 @@ package ttlite.core
 
 import ttlite.common._
 
-trait CoreAST {
+trait CoreAST extends AST {
   import scala.language.implicitConversions
 
-  trait Term
   case class Ann(c1: Term, ct2: Term) extends Term
   case class Bound(i: Int) extends Term
-  // TODO something like generated name/var
-  case class Free(n: Name) extends Term
 
   case class Universe(i: Int) extends Term {
     override def equals(that: Any): Boolean = that match {
@@ -18,22 +15,6 @@ trait CoreAST {
     }
   }
 
-  trait Value
-  case class VUniverse(i: Int) extends Value
-  case class VNeutral(n: Neutral) extends Value
-  trait Neutral
-  case class NFree(n: Name) extends Neutral
-
-  type NameEnv[V] = Map[Name, V]
-  type Env = List[Value]
-  // names of bound variables
-  val vars: List[String] = {
-    val ids = "abcdefghijklmnopqrstuvwxyz"
-    val suffs = List("", "1")
-    for {j <- suffs; i <- ids} yield s"$i$j"
-  }
-
-  def vfree(n: Name): Value = VNeutral(NFree(n))
   implicit def sym2val(s: Symbol): Value =
     VNeutral(NFree(Global(s.name)))
   implicit def sym2Term(s: Symbol): Term =
@@ -52,7 +33,7 @@ trait CoreAST {
   }
 }
 
-trait CoreMetaSyntax extends CoreAST {
+trait CoreMetaSyntax extends CoreAST with MetaSyntax {
   def translate(m: MTerm): Term = m match {
     case MVar(Global("Set")) =>
       Universe(0)
@@ -75,11 +56,8 @@ trait CoreMetaSyntax extends CoreAST {
   }
 }
 
-trait CorePrinter extends CoreAST with PrettyPrinter {
+trait CorePrinter extends CoreAST with Printer {
   import scala.collection.immutable.Seq
-
-  def pp(c: Term): String =
-    pretty(print(0, 0, c))
 
   def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Ann(c, ty) =>
@@ -97,7 +75,7 @@ trait CorePrinter extends CoreAST with PrettyPrinter {
   }
 }
 
-trait CorePrinterAgda extends CoreAST with PrettyPrinter {
+trait CorePrinterAgda extends CoreAST with PrinterAgda {
   def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(-1) =>
       "Set*"
@@ -112,7 +90,7 @@ trait CorePrinterAgda extends CoreAST with PrettyPrinter {
   }
 }
 
-trait CorePrinterCoq extends CoreAST with PrettyPrinter {
+trait CorePrinterCoq extends CoreAST with PrinterCoq {
   def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(-1) =>
       "Type"
@@ -131,7 +109,7 @@ trait CorePrinterCoq extends CoreAST with PrettyPrinter {
   }
 }
 
-trait CorePrinterIdris extends CoreAST with PrettyPrinter {
+trait CorePrinterIdris extends CoreAST with PrinterIdris {
   def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Universe(_) =>
       "Type"
@@ -146,10 +124,7 @@ trait CorePrinterIdris extends CoreAST with PrettyPrinter {
   }
 }
 
-trait CoreQuote extends CoreAST {
-  def quote0(v: Value): Term =
-    quote(0, v)
-
+trait CoreQuoting extends CoreAST with Quoting {
   def quote(ii: Int, v: Value): Term = v match {
     case VUniverse(i) =>
       Universe(i)
@@ -172,11 +147,7 @@ trait CoreQuote extends CoreAST {
   }
 }
 
-trait CoreEval extends CoreAST {
-  def eval0(c: Term): Value = eval(c, Context.empty[Value], Nil)
-  // just for residuator
-  def eval(t: Term, named: NameEnv[Value], bound: Env): Value =
-    eval(t, Context.fromVals(named), bound)
+trait CoreEval extends CoreAST with Eval {
   def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Ann(e, _) =>
       eval(e, ctx, bound)
@@ -189,44 +160,7 @@ trait CoreEval extends CoreAST {
   }
 }
 
-trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
-  def iType0(ctx: Context[Value], i: Term): Value =
-    iType(0, Path.empty, ctx, i)
-
-  def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
-    if (inferred != expected) {
-      throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
-    }
-  }
-
-  def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
-    val infTerm = quote(i, inferred)
-    if (infTerm != expected) {
-      throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
-    }
-  }
-
-  def checkEqual(i: Int, inferred: Value, expected: Value, path : Path) {
-    val infTerm = quote(i, inferred)
-    val expTerm = quote(i, expected)
-    if (infTerm != expTerm) {
-      throw TypeError(s"expected: ${pp(expTerm)},\ninferred: ${pp(infTerm)}", path)
-    }
-  }
-
-  def checkUniverse(i: Int, inferred: Value, path : Path): Int = inferred match {
-    case VUniverse(k) =>
-      k
-    case _ =>
-      val infTerm = quote(i, inferred)
-      throw TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
-  }
-
-  def require(cond : Boolean, path : Path, expected : String, inferred: Term) {
-    if (!cond) {
-      throw TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
-    }
-  }
+trait CoreCheck extends CoreAST with Quoting with Check {
 
   def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Universe(n) =>
@@ -261,7 +195,8 @@ trait CoreCheck extends CoreAST with CoreQuote with CoreEval with CorePrinter {
 }
 
 trait CoreREPL
-  extends CoreAST
+  extends REPL
+  with CoreAST
   with CoreMetaSyntax
   with CorePrinter
   with CorePrinterAgda
@@ -269,8 +204,7 @@ trait CoreREPL
   with CorePrinterIdris
   with CoreEval
   with CoreCheck
-  with CoreQuote
-  with REPL {
+  with CoreQuoting {
 
   type T = Term
   type V = Value

@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait ListAST extends CoreAST {
+trait ListAST extends AST {
   case class PiList(A: Term) extends Term
   case class PiNil(et: Term) extends Term
   case class PiCons(et: Term, head: Term, tail: Term) extends Term
@@ -14,8 +14,8 @@ trait ListAST extends CoreAST {
   case class NPiListElim(et: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
-trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
-  override def translate(mt: MTerm): Term = mt match {
+trait ListMetaSyntax extends MetaSyntax with ListAST {
+  abstract override def translate(mt: MTerm): Term = mt match {
     case MVar(Global("List")) @@ a =>
       PiList(translate(a))
     case MVar(Global("Nil")) @@ a =>
@@ -28,68 +28,68 @@ trait ListMetaSyntax extends CoreMetaSyntax with ListAST {
   }
 }
 
-trait ListPrinter extends FunPrinter with ListAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait ListPrinter extends Printer with ListAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      print(p, ii, 'List @@ a)
+      printL(p, ii, 'List, a)
     case PiNil(a) =>
-      print(p, ii, 'Nil @@ a)
+      printL(p, ii, 'Nil, a)
     case PiCons(a, x, xs) =>
-      print(p, ii, 'Cons @@ a @@ x @@ xs)
+      printL(p, ii, 'Cons, a, x, xs)
     case PiListElim(a, m, mn, mc, xs) =>
-      print(p, ii, 'elim @@ a @@ m @@ mn @@ mc @@ xs)
+      printL(p, ii, 'elim, a, m, mn, mc, xs)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait ListPrinterAgda extends FunPrinterAgda with ListAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait ListPrinterAgda extends PrinterAgda with ListAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printA(p, ii, 'List @@ a)
+      printAL(p, ii, 'List, a)
     case PiNil(PiList(a)) =>
-      printA(p, ii, 'nil @@ a)
+      printAL(p, ii, 'nil, a)
     case PiCons(PiList(a), x, xs) =>
-      printA(p, ii, 'cons @@ a @@ x @@ xs)
+      printAL(p, ii, 'cons, a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printA(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+      printAL(p, ii, 'elimList, a, m, mn, mc, xs)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait ListPrinterCoq extends FunPrinterCoq with ListAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait ListPrinterCoq extends PrinterCoq with ListAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printC(p, ii, 'List @@ a)
+      printCL(p, ii, 'List, a)
     case PiNil(PiList(a)) =>
-      printC(p, ii, 'nil @@ a)
+      printCL(p, ii, 'nil, a)
     case PiCons(PiList(a), x, xs) =>
-      printC(p, ii, 'cons @@ a @@ x @@ xs)
+      printCL(p, ii, 'cons, a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printC(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+      printCL(p, ii, 'elimList, a, m, mn, mc, xs)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait ListPrinterIdris extends FunPrinterIdris with ListAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait ListPrinterIdris extends PrinterIdris with ListAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printI(p, ii, 'List @@ a)
+      printIL(p, ii, 'List, a)
     case PiNil(PiList(a)) =>
-      printI(p, ii, 'Nil @@ a)
+      printIL(p, ii, 'Nil, a)
     case PiCons(PiList(a), x, xs) =>
-      printI(p, ii, 'Cons @@ a @@ x @@ xs)
+      printIL(p, ii, 'Cons, a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printI(p, ii, 'elimList @@ a @@ m @@ mn @@ mc @@ xs)
+      printIL(p, ii, 'elimList, a, m, mn, mc, xs)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait ListEval extends FunEval with ListAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait ListEval extends Eval with ListAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case PiList(a) =>
       VPiList(eval(a, ctx, bound))
     case PiNil(et) =>
@@ -117,8 +117,8 @@ trait ListEval extends FunEval with ListAST {
   }
 }
 
-trait ListCheck extends FunCheck with ListAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait ListCheck extends Check with ListAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case PiList(a) =>
       val aType = iType(i, path/(2, 2), ctx, a)
       val j = checkUniverse(i, aType, path/(2, 2))
@@ -175,7 +175,7 @@ trait ListCheck extends FunCheck with ListAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case PiList(a) =>
       PiList(iSubst(i, r, a))
     case PiNil(a) =>
@@ -188,7 +188,7 @@ trait ListCheck extends FunCheck with ListAST {
   }
 }
 
-trait ListQuote extends CoreQuote with ListAST {
+trait ListQuoting extends CoreQuoting with ListAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VPiList(a) =>
       PiList(quote(ii, a))
@@ -216,4 +216,6 @@ trait ListREPL
   with ListPrinterIdris
   with ListCheck
   with ListEval
-  with ListQuote
+  with ListQuoting {
+  self: FunAST =>
+}

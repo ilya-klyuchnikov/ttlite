@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait CoreSubst extends CoreEval with CoreQuote {
+trait CoreSubst extends CoreEval with CoreQuoting {
   type Subst = Map[Name, Term]
 
   implicit class TermSubst(t: Term) {

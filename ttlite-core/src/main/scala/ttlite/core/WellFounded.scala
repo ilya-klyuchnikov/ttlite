@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait WAST extends CoreAST {
+trait WAST extends AST {
   case class W(t1: Term, t2: Term) extends Term
   case class Sup(w: Term, t1: Term, t2: Term) extends Term
   // w elim, a - is w, need to re-order later
@@ -13,8 +13,8 @@ trait WAST extends CoreAST {
   case class NRec(w: Value, m: Value, b: Value, a: Neutral) extends Neutral
 }
 
-trait WMetaSyntax extends CoreMetaSyntax with WAST {
-  override def translate(m: MTerm): Term = m match {
+trait WMetaSyntax extends MetaSyntax with WAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MBind("W", t1, t2) =>
       W(translate(t1), translate(t2))
     case MVar(Global("Sup")) @@ sigma @@ e1 @@ e2 =>
@@ -25,23 +25,23 @@ trait WMetaSyntax extends CoreMetaSyntax with WAST {
   }
 }
 
-trait WPrinter extends FunPrinter with WAST {
+trait WPrinter extends Printer with WAST {
   import scala.collection.immutable.Seq
 
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
       parensIf(p > 0, sep(Seq("W " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case Sup(s, a, b) =>
-      print(p, ii, 'Sup @@ s @@ a @@ b)
+      printL(p, ii, 'Sup, s, a, b)
     case Rec(w, m, a, b) =>
-      print(p, ii, 'Rec @@ w @@m @@ a @@ b)
+      printL(p, ii, 'Rec, w, m, a, b)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait WQuote extends CoreQuote with WAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait WQuoting extends Quoting with WAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VW(v, f) =>
       W(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
     case VSup(sigma, e1, e2) =>
@@ -49,15 +49,15 @@ trait WQuote extends CoreQuote with WAST {
     case _ => super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NRec(w, m, a, b) =>
       Rec(quote(ii, w), quote(ii, m), quote(ii, a), neutralQuote(ii, b))
     case _ => super.neutralQuote(ii, n)
   }
 }
 
-trait WEval extends FunEval with WAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait WEval extends Eval with WAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case W(t1, t2) =>
       VW(eval(t1, ctx, bound), x => eval(t2, ctx, x :: bound))
     case Sup(w, e1, e2) =>
@@ -84,8 +84,8 @@ trait WEval extends FunEval with WAST {
   }
 }
 
-trait WCheck extends FunCheck with WAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait WCheck extends Check with WAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // this is a bind, so arity = 2
     case W(x, tp) =>
       val xType = iType(i, path/(1, 2), ctx, x)
@@ -144,7 +144,7 @@ trait WCheck extends FunCheck with WAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case W(t1, t2) =>
       W(iSubst(i, r, t1), iSubst(i + 1, r, t2))
     case Sup(sigma, e1, e2) =>
@@ -162,4 +162,6 @@ trait WREPL
   with WPrinter
   with WCheck
   with WEval
-  with WQuote
+  with WQuoting {
+  self: FunAST =>
+}

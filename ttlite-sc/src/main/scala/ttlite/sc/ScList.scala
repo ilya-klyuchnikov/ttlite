@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait ListDriver extends CoreDriver with ListAST with ListEval {
+trait ListDriver extends CoreDriver with ListAST with ListEval { self: FunAST =>
 
   case object ConsLabel extends Label
   case object ListLabel extends Label
@@ -40,7 +40,7 @@ trait ListDriver extends CoreDriver with ListAST with ListEval {
 
 }
 
-trait ListResiduator extends BaseResiduator with ListDriver {
+trait ListResiduator extends BaseResiduator with ListDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case

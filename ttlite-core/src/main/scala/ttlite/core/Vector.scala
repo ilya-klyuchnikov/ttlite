@@ -14,8 +14,8 @@ trait VectorAST extends CoreAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
-trait VectorMetaSyntax extends MNat with VectorAST {
-  override def translate(m: MTerm): Term = m match {
+trait VectorMetaSyntax extends MetaSyntax with VectorAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Vec")) @@ a @@ n =>
       Vec(translate(a), translate(n))
     case MVar(Global("VNil")) @@ a =>
@@ -28,23 +28,23 @@ trait VectorMetaSyntax extends MNat with VectorAST {
   }
 }
 
-trait VectorPrinter extends FunPrinter with VectorAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait VectorPrinter extends Printer with VectorAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      print(p, ii, 'Vec @@ a @@ n)
+      printL(p, ii, 'Vec, a, n)
     case VecNil(a) =>
-      print(p, ii, 'VNil @@ a)
+      printL(p, ii, 'VNil, a)
     case VecCons(a, n, x, xs) =>
-      print(p, ii, 'VCons @@ a @@ n @@ x @@ xs)
+      printL(p, ii, 'VCons, a, n, x, xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      print(p, ii, 'vecElim @@ a @@ m @@ mn @@ mc @@ n @@ xs)
+      printL(p, ii, 'vecElim, a, m, mn, mc, n, xs)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait VectorEval extends FunEval with VectorAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait VectorEval extends Eval with VectorAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
       VVec(eval(a, ctx, bound), eval(n, ctx, bound))
     case VecNil(a) =>
@@ -68,8 +68,8 @@ trait VectorEval extends FunEval with VectorAST {
   }
 }
 
-trait VectorCheck extends FunCheck with VectorAST with NatAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait VectorCheck extends Check with VectorAST { self: FunAST with NatAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, path/(2, 3), ctx, a)
       val j = checkUniverse(i, aType, path/(2, 3))
@@ -134,7 +134,7 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Vec(a, n) =>
       Vec(iSubst(i, r, a), iSubst(i, r, n))
     case VecNil(a) =>
@@ -155,8 +155,8 @@ trait VectorCheck extends FunCheck with VectorAST with NatAST {
   }
 }
 
-trait VectorQuote extends CoreQuote with VectorAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait VectorQuoting extends Quoting with VectorAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VVec(a, n) =>
       Vec(quote(ii, a), quote(ii, n))
     case VVecNil(a) =>
@@ -165,7 +165,7 @@ trait VectorQuote extends CoreQuote with VectorAST {
       VecCons(quote(ii, a), quote(ii, n), quote(ii, head), quote(ii, tail))
     case _ => super.quote(ii, v)
   }
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NVecElim(a, m, nilCase, consCase, n, vec) =>
       VecElim(
         quote(ii, a),
@@ -180,10 +180,12 @@ trait VectorQuote extends CoreQuote with VectorAST {
 }
 
 trait VectorREPL
-  extends NatREPL
+  extends CoreREPL
   with VectorAST
   with VectorMetaSyntax
   with VectorPrinter
   with VectorCheck
   with VectorEval
-  with VectorQuote
+  with VectorQuoting {
+  self: FunAST with NatAST =>
+}

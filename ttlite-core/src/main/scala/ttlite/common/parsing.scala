@@ -198,7 +198,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
     "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
   lazy val evalStmt: PackratParser[Stmt[MTerm]] =
-    term <~ ";" ^^ {t => Eval(t(Nil))}
+    term <~ ";" ^^ {t => EvalStmt(t(Nil))}
   lazy val quitStmt: PackratParser[Stmt[MTerm]] =
     "quit" <~ ";" ^^ {t => Quit}
 

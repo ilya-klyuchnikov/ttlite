@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait DPairDriver extends CoreDriver with DPairAST with DPairEval {
+trait DPairDriver extends CoreDriver with DPairAST with DPairEval { self: FunAST =>
 
   case object DPairLabel extends Label
 
@@ -34,7 +34,7 @@ trait DPairDriver extends CoreDriver with DPairAST with DPairEval {
 
 }
 
-trait DPairResiduator extends CoreResiduator with DPairDriver {
+trait DPairResiduator extends CoreResiduator with DPairDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>

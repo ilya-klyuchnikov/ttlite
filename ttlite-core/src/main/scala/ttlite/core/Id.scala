@@ -12,8 +12,8 @@ trait IdAST extends CoreAST {
   case class NIdElim(et: Value, prop: Value, propR: Value, eq: Neutral) extends Neutral
 }
 
-trait IdMetaSyntax extends CoreMetaSyntax with IdAST {
-  override def translate(m: MTerm): Term = m match {
+trait IdMetaSyntax extends MetaSyntax with IdAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Id")) @@ a @@ x @@ y =>
       Id(translate(a), translate(x), translate(y))
     case MVar(Global("Refl")) @@ a @@ x =>
@@ -24,60 +24,60 @@ trait IdMetaSyntax extends CoreMetaSyntax with IdAST {
   }
 }
 
-trait IdPrinter extends FunPrinter with IdAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait IdPrinter extends Printer with IdAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      print(p, ii, 'Id @@ a @@ x @@ y)
+      printL(p, ii, 'Id, a, x, y)
     case Refl(a, x) =>
-      print(p, ii, 'Refl @@ a @@ x)
+      printL(p, ii, 'Refl, a, x)
     case IdElim(et, m, mr, eq) =>
-      print(p, ii, 'elim @@ et @@ m @@ mr @@ eq)
+      printL(p, ii, 'elim, et, m, mr, eq)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait IdPrinterAgda extends FunPrinterAgda with IdAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait IdPrinterAgda extends PrinterAgda with IdAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printA(p, ii, 'Id @@ a @@ x @@ y)
+      printAL(p, ii, 'Id, a, x, y)
     case Refl(a, x) =>
-      printA(p, ii, 'refl @@ a @@ x)
+      printAL(p, ii, 'refl, a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printA(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
+      printAL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait IdPrinterCoq extends FunPrinterCoq with IdAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait IdPrinterCoq extends PrinterCoq with IdAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printC(p, ii, 'Id @@ a @@ x @@ y)
+      printCL(p, ii, 'Id, a, x, y)
     case Refl(a, x) =>
-      printC(p, ii, 'refl @@ a @@ x)
+      printCL(p, ii, 'refl, a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printC(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
+      printCL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait IdPrinterIdris extends FunPrinterIdris with IdAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait IdPrinterIdris extends PrinterIdris with IdAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printI(p, ii, 'Id @@ a @@ x @@ y)
+      printIL(p, ii, 'Id, a, x, y)
     case Refl(a, x) =>
-      printI(p, ii, 'TTRefl @@ a @@ x)
+      printIL(p, ii, 'TTRefl, a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printI(p, ii, 'elimId @@ a @@ a1 @@ a2 @@ m @@ mr @@ eq)
+      printIL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait IdEval extends FunEval with IdAST with CoreQuote {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait IdEval extends Eval with IdAST with CoreQuoting { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Id(a, x, y) =>
       VId(eval(a, ctx, bound), eval(x, ctx, bound), eval(y, ctx, bound))
     case Refl(a, x) =>
@@ -99,8 +99,8 @@ trait IdEval extends FunEval with IdAST with CoreQuote {
   }
 }
 
-trait IdCheck extends FunCheck with IdAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait IdCheck extends Check with IdAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Id(a, x, y) =>
       val aType = iType(i, path/(2, 4), ctx, a)
       val j = checkUniverse(i, aType, path/(2, 4))
@@ -146,7 +146,7 @@ trait IdCheck extends FunCheck with IdAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Id(a, x, y) =>
       Id(iSubst(i, r, a), iSubst(i, r, x), iSubst(i, r, y))
     case Refl(a, x) =>
@@ -158,7 +158,7 @@ trait IdCheck extends FunCheck with IdAST {
   }
 }
 
-trait IdQuote extends CoreQuote with IdAST {
+trait IdQuoting extends CoreQuoting with IdAST {
   override def quote(ii: Int, v: Value): Term = v match {
     case VId(a, x, y) =>
       Id(quote(ii, a), quote(ii, x), quote(ii, y))
@@ -183,4 +183,6 @@ trait IdREPL
   with IdPrinterIdris
   with IdCheck
   with IdEval
-  with IdQuote
+  with IdQuoting {
+  self: FunAST =>
+}

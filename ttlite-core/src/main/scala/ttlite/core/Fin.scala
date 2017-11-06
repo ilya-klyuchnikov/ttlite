@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait FinAST extends CoreAST {
+trait FinAST extends AST {
 
   // ⊥, Void, empty type
   case object Falsity extends Term
@@ -32,8 +32,8 @@ trait FinAST extends CoreAST {
   case class NBoolElim(m: Value, v1: Value, v2: Value, elem: Neutral) extends Neutral
 }
 
-trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
-  override def translate(m: MTerm): Term = m match {
+trait FinMetaSyntax extends MetaSyntax with FinAST {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Falsity")) => Falsity
     case MVar(Global("Truth")) => Truth
     case MVar(Global("Bool")) => Bool
@@ -50,108 +50,108 @@ trait FinMetaSyntax extends CoreMetaSyntax with FinAST {
   }
 }
 
-trait FinPrinter extends FunPrinter with FinAST {
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+trait FinPrinter extends Printer with FinAST {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
-      print(p, ii, "Falsity")
+      "Falsity"
     case Truth =>
-      print(p, ii, "Truth")
+      "Truth"
     case Bool =>
-      print(p, ii, "Bool")
+      "Bool"
     case Triv =>
-      print(p, ii, "Triv")
+      "Triv"
     case False =>
-      print(p, ii, "False")
+      "False"
     case True =>
-      print(p, ii, "True")
+      "True"
     case FalsityElim(m, elem) =>
-      print(p, ii, 'elim @@ Falsity @@ m @@ elem)
+      printL(p, ii, 'elim, Falsity, m, elem)
     case TruthElim(m, v, elem) =>
-      print(p, ii, 'elim @@ Truth @@ m @@ v @@ elem)
+      printL(p, ii, 'elim, Truth, m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      print(p, ii, 'elim @@ Bool @@ m @@ v1 @@ v2 @@ elem)
+      printL(p, ii, 'elim, Bool, m, v1, v2, elem)
     case _ =>
       super.print(p, ii, t)
   }
 }
 
-trait FinPrinterAgda extends FunPrinterAgda with FinAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait FinPrinterAgda extends PrinterAgda with FinAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
-      printA(p, ii, "Falsity")
+      "Falsity"
     case Truth =>
-      printA(p, ii, "Truth")
+      "Truth"
     case Bool =>
-      printA(p, ii, "Bool")
+      "Bool"
     case Triv =>
-      printA(p, ii, "triv")
+      "triv"
     case False =>
-      printA(p, ii, "false")
+      "false"
     case True =>
-      printA(p, ii, "true")
+      "true"
     case FalsityElim(m, elem) =>
-      printA(p, ii, 'elimFalsity @@ m @@ elem)
+      printAL(p, ii, 'elimFalsity, m, elem)
     case TruthElim(m, v, elem) =>
-      printA(p, ii, 'elimTruth @@ m @@ v @@ elem)
+      printAL(p, ii, 'elimTruth, m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printA(p, ii, 'elimBool @@ m @@ v1 @@ v2 @@ elem)
+      printAL(p, ii, 'elimBool, m, v1, v2, elem)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait FinPrinterCoq extends FunPrinterCoq with FinAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait FinPrinterCoq extends PrinterCoq with FinAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
-      printC(p, ii, "Falsity")
+      "Falsity"
     case Truth =>
-      printC(p, ii, "Truth")
+      "Truth"
     case Bool =>
-      printC(p, ii, "Bool")
+      "Bool"
     case Triv =>
-      printC(p, ii, "triv")
+      "triv"
     case False =>
-      printC(p, ii, "false")
+      "false"
     case True =>
-      printC(p, ii, "true")
+      "true"
     case FalsityElim(m, elem) =>
-      printC(p, ii, 'elimFalsity @@ m @@ elem)
+      printCL(p, ii, 'elimFalsity, m, elem)
     case TruthElim(m, v, elem) =>
-      printC(p, ii, 'elimTruth @@ m @@ v @@ elem)
+      printCL(p, ii, 'elimTruth, m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printC(p, ii, 'elimBool @@ m @@ v1 @@ v2 @@ elem)
+      printCL(p, ii, 'elimBool, m, v1, v2, elem)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait FinPrinterIdris extends FunPrinterIdris with FinAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait FinPrinterIdris extends PrinterIdris with FinAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
-      printI(p, ii, "Falsity")
+      "Falsity"
     case Truth =>
-      printI(p, ii, "Truth")
+      "Truth"
     case Bool =>
-      printI(p, ii, "Bool")
+      "Bool"
     case Triv =>
-      printI(p, ii, "Triv")
+      "Triv"
     case False =>
-      printI(p, ii, "False")
+      "False"
     case True =>
-      printI(p, ii, "True")
+      "True"
     case FalsityElim(m, elem) =>
-      printI(p, ii, 'elimFalsity @@ m @@ elem)
+      printIL(p, ii, 'elimFalsity, m, elem)
     case TruthElim(m, v, elem) =>
-      printI(p, ii, 'elimTruth @@ m @@ v @@ elem)
+      printIL(p, ii, 'elimTruth, m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printI(p, ii, 'elimBool @@ m @@ v1 @@ v2 @@ elem)
+      printIL(p, ii, 'elimBool, m, v1, v2, elem)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
 trait FinEval extends FunEval with FinAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Falsity =>
       VFalsity
     case Truth =>
@@ -206,7 +206,7 @@ trait FinEval extends FunEval with FinAST {
 }
 
 trait FinCheck extends FunCheck with FinAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Falsity | Truth | Bool =>
       VUniverse(0)
     case Triv =>
@@ -257,7 +257,7 @@ trait FinCheck extends FunCheck with FinAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Falsity => Falsity
     case Truth => Truth
     case Bool => Bool
@@ -275,8 +275,8 @@ trait FinCheck extends FunCheck with FinAST {
   }
 }
 
-trait FinQuote extends CoreQuote with FinAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait FinQuoting extends Quoting with FinAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VFalsity => Falsity
     case VTruth => Truth
     case VBool => Bool
@@ -286,7 +286,7 @@ trait FinQuote extends CoreQuote with FinAST {
     case _ => super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NFalsityElim(m, elem) =>
       FalsityElim(quote(ii, m), neutralQuote(ii, elem))
     case NTruthElim(m, v, elem) =>
@@ -307,4 +307,4 @@ trait FinREPL
   with FinPrinterIdris
   with FinCheck
   with FinEval
-  with FinQuote
+  with FinQuoting

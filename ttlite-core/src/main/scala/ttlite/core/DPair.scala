@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait DPairAST extends CoreAST {
+trait DPairAST extends AST {
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term
   case class SigmaElim(sigma: Term, m: Term, f: Term, pair: Term) extends Term
@@ -12,8 +12,8 @@ trait DPairAST extends CoreAST {
   case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait DPairMetaSyntax extends CoreMetaSyntax with DPairAST {
-  override def translate(m: MTerm): Term = m match {
+trait DPairMetaSyntax extends DPairAST with MetaSyntax {
+  abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
       SigmaElim(translate(sigma), translate(m), translate(f), translate(p))
     case MVar(Global("dpair")) @@ sigma @@ e1 @@ e2 =>
@@ -24,18 +24,18 @@ trait DPairMetaSyntax extends CoreMetaSyntax with DPairAST {
   }
 }
 
-trait DPairPrinter extends FunPrinter with DPairAST {
+trait DPairPrinter extends Printer with DPairAST {
   import scala.collection.immutable.Seq
 
-  override def print(p: Int, ii: Int, t: Term): Doc = t match {
+  abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, Sigma(d1, r)) =>
       parens(nestedExists(ii + 2, List((ii + 1, d1), (ii, d)), r))
     case Sigma(d, r) =>
       parensIf(p > 0, sep(Seq("exists " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case DPair(s, a, b) =>
-      print(p, ii, 'dpair @@ s @@ a @@ b)
+      printL(p, ii, 'dpair, s, a, b)
     case SigmaElim(s, m, f, dp) =>
-      print(p, ii, 'elim @@ s @@ m @@ f @@ dp)
+      printL(p, ii, 'elim, s, m, f, dp)
     case _ =>
       super.print(p, ii, t)
   }
@@ -50,47 +50,47 @@ trait DPairPrinter extends FunPrinter with DPairAST {
   }
 }
 
-trait DPairPrinterAgda extends FunPrinterAgda with DPairAST {
-  override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+trait DPairPrinterAgda extends PrinterAgda with DPairAST { self: FunAST =>
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printA(p, ii, 'Sigma @@ d @@ Lam(d, r))
+      printAL(p, ii, 'Sigma, d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printA(p, ii, 'sigma @@ d @@ Lam(d, r) @@ a @@ b)
+      printAL(p, ii, 'sigma, d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printA(p, ii, 'elimSigma @@ d @@ Lam(d, r) @@ m @@ f @@ dp)
+      printAL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
     case _ =>
       super.printA(p, ii, t)
   }
 }
 
-trait DPairPrinterCoq extends FunPrinterCoq with DPairAST {
-  override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+trait DPairPrinterCoq extends PrinterCoq with DPairAST { self: FunAST =>
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printC(p, ii, 'Sigma @@ d @@ Lam(d, r))
+      printCL(p, ii, 'Sigma, d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printC(p, ii, 'sigma @@ d @@ Lam(d, r) @@ a @@ b)
+      printCL(p, ii, 'sigma, d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printC(p, ii, 'elimSigma @@ d @@ Lam(d, r) @@ m @@ f @@ dp)
+      printCL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
     case _ =>
       super.printC(p, ii, t)
   }
 }
 
-trait DPairPrinterIdris extends FunPrinterIdris with DPairAST {
-  override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+trait DPairPrinterIdris extends PrinterIdris with DPairAST { self: FunAST =>
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printI(p, ii, 'TTSigma @@ d @@ Lam(d, r))
+      printIL(p, ii, 'TTSigma, d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printI(p, ii, 'Sigma @@ d @@ Lam(d, r) @@ a @@ b)
+      printIL(p, ii, 'Sigma, d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printI(p, ii, 'elimSigma @@ d @@ Lam(d, r) @@ m @@ f @@ dp)
+      printIL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
     case _ =>
       super.printI(p, ii, t)
   }
 }
 
-trait DPairQuote extends CoreQuote with DPairAST {
-  override def quote(ii: Int, v: Value): Term = v match {
+trait DPairQuoting extends Quoting with DPairAST {
+  abstract override def quote(ii: Int, v: Value): Term = v match {
     case VSigma(v, f) =>
       Sigma(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
     case VDPair(sigma, e1, e2) =>
@@ -98,15 +98,15 @@ trait DPairQuote extends CoreQuote with DPairAST {
     case _ => super.quote(ii, v)
   }
 
-  override def neutralQuote(ii: Int, n: Neutral): Term = n match {
+  abstract override def neutralQuote(ii: Int, n: Neutral): Term = n match {
     case NSigmaElim(sigma, m, f, p) =>
       SigmaElim(quote(ii, sigma), quote(ii, m), quote(ii, f), neutralQuote(ii, p))
     case _ => super.neutralQuote(ii, n)
   }
 }
 
-trait DPairEval extends FunEval with DPairAST {
-  override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
+trait DPairEval extends Eval with DPairAST { self: FunAST =>
+  abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Sigma(ty, ty1) =>
       VSigma(eval(ty, ctx, bound), x => eval(ty1, ctx, x :: bound))
     case DPair(sigma, e1, e2) =>
@@ -127,8 +127,8 @@ trait DPairEval extends FunEval with DPairAST {
   }
 }
 
-trait DPairCheck extends FunCheck with DPairAST {
-  override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
+trait DPairCheck extends Check with DPairAST { self: FunAST =>
+  abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // Sigma is a bind, so arity is 2
     case Sigma(x, tp) =>
       val xType = iType(i, path/(1, 2), ctx, x)
@@ -182,7 +182,7 @@ trait DPairCheck extends FunCheck with DPairAST {
       super.iType(i, path, ctx, t)
   }
 
-  override def iSubst(i: Int, r: Term, it: Term): Term = it match {
+  abstract override def iSubst(i: Int, r: Term, it: Term): Term = it match {
     case Sigma(ty, ty1) =>
       Sigma(iSubst(i, r, ty), iSubst(i + 1, r, ty1))
     case DPair(sigma, e1, e2) =>
@@ -204,4 +204,6 @@ trait DPairREPL
   with DPairPrinterIdris
   with DPairCheck
   with DPairEval
-  with DPairQuote
+  with DPairQuoting {
+  self: FunAST =>
+}
