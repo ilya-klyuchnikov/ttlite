@@ -3,8 +3,6 @@ package ttlite.core
 import ttlite.common._
 
 trait CoreAST extends AST {
-  import scala.language.implicitConversions
-
   case class Ann(c1: Term, ct2: Term) extends Term
   case class Bound(i: Int) extends Term
 
@@ -14,15 +12,6 @@ trait CoreAST extends AST {
       case _ => false
     }
   }
-
-  implicit def sym2val(s: Symbol): Value =
-    VNeutral(NFree(Global(s.name)))
-  implicit def sym2Term(s: Symbol): Term =
-    Free(Global(s.name))
-  implicit def s2val(s: String): Value =
-    VNeutral(NFree(Global(s)))
-  implicit def s2Term(s: String): Term =
-    Free(Global(s))
 }
 
 trait CoreMetaSyntax extends CoreAST with MetaSyntax {
