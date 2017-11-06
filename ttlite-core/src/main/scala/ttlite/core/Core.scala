@@ -23,14 +23,6 @@ trait CoreAST extends AST {
     VNeutral(NFree(Global(s)))
   implicit def s2Term(s: String): Term =
     Free(Global(s))
-
-  // freeVars of an expression
-  def freeVars(t: Any): List[Name] = t match {
-    case Free(n: Local)   => List(n)
-    case Free(n: Assumed) => List(n)
-    case p: scala.Product => p.productIterator.flatMap(freeVars).toList.distinct
-    case _                => List()
-  }
 }
 
 trait CoreMetaSyntax extends CoreAST with MetaSyntax {

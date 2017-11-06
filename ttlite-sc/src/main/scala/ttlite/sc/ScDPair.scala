@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait DPairDriver extends CoreDriver with DPairAST with DPairEval { self: FunAST =>
+trait DPairDriver extends Driver with DPairAST with Eval { self: FunAST =>
 
   case object DPairLabel extends Label
 
@@ -34,7 +34,7 @@ trait DPairDriver extends CoreDriver with DPairAST with DPairEval { self: FunAST
 
 }
 
-trait DPairResiduator extends CoreResiduator with DPairDriver { self: FunAST =>
+trait DPairResiduator extends Residuator with DPairDriver with DPairEval { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -52,39 +52,39 @@ trait DPairResiduator extends CoreResiduator with DPairDriver { self: FunAST =>
     }
 }
 
-trait DPairProofResiduator extends DPairResiduator with ProofResiduator {
+trait DPairProofResiduator extends DPairResiduator with ProofResiduator { self: FunAST with IdAST =>
   override def proofFold(node: N,
-                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
-        val sigmaVal@VSigma(x1, y1) = eval(sigma, env, bound)
+        val sigmaVal@VSigma(x1, y1) = eval(sigma, env1, bound1)
         val motive =
           VLam(sigmaVal, n =>
             VId(
-              eval(node.conf.tp, env + (sel -> n), n :: bound),
-              eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM)))
+              eval(node.conf.tp, env1 + (sel -> n), n :: bound1),
+              eval(node.conf.term, env1 + (sel -> n), n :: bound1),
+              fold(node, env1 + (sel -> n), n :: bound1, recM1)))
 
         val pairCase = VLam(x1, x => VLam(y1(x), y =>
           proofFold(nodeS,
-            env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
+            env1 + (xN -> x) + (yN -> y), y :: x :: bound1, recM1,
             env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
 
-        sigmaElim(sigmaVal, motive, pairCase, env(sel))
+        sigmaElim(sigmaVal, motive, pairCase, env1(sel))
 
       case TEdge(x, DPairLabel) :: TEdge(y, DPairLabel) :: Nil =>
-        val sigma = eval(node.conf.tp, env, bound)
-        val x1 = eval(x.conf.term, env, bound)
-        val x2 = fold(x, env, bound, recM)
-        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+        val sigma = eval(node.conf.tp, env1, bound1)
+        val x1 = eval(x.conf.term, env1, bound1)
+        val x2 = fold(x, env1, bound1, recM1)
+        val eq_x1_x2 = proofFold(x, env1, bound1, recM1, env2, bound2, recM2)
 
-        val y1 = eval(y.conf.term, env, bound)
-        val y2 = fold(y, env, bound, recM)
-        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+        val y1 = eval(y.conf.term, env1, bound1)
+        val y2 = fold(y, env1, bound1, recM1)
+        val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
-        val a = eval(x.conf.tp, env, bound)
-        val b = eval(y.conf.tp, env, bound)
+        val a = eval(x.conf.tp, env1, bound1)
+        val b = eval(y.conf.tp, env1, bound1)
 
         'cong2 @@ a @@ b @@ sigma @@
           //VLam(a, _ => VLam(b, _ => VDPair(sigma, x1, y1))) @@
@@ -93,7 +93,7 @@ trait DPairProofResiduator extends DPairResiduator with ProofResiduator {
           y1 @@ y2 @@ eq_y1_y2
 
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+        super.proofFold(node, env1, bound1, recM1, env2, bound2, recM2)
     }
 }
 

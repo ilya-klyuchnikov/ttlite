@@ -3,7 +3,7 @@ package ttlite.sc
 import ttlite.common._
 import ttlite.core._
 
-trait FunDriver extends CoreDriver with FunEval {
+trait FunDriver extends Driver with FunEval {
 
   override def nv(t: Neutral): Option[Name] = t match {
     case NApp(NFree(n), _) => Some(n)
@@ -16,12 +16,17 @@ trait FunDriver extends CoreDriver with FunEval {
     case _ => super.elimVar(n, nt)
   }
 
-  // TODO - it is possible to decompose application if the inner "operator" is neutral
+  // TODO: it is possible to decompose application if the inner "operator" is neutral
+  // TODO: like \x -> elimList x ...
+  // TODO: or like (elimList x ....) x
+  // TODO: but I think, in general it should be configurable
   override def decompose(c: Conf): DriveStep = c.term match {
     case _ =>
       super.decompose(c)
   }
 }
 
-trait FunResiduator extends CoreResiduator with FunDriver
-trait FunProofResiduator extends ProofResiduator with FunResiduator
+trait FunResiduator extends Residuator with FunDriver
+trait FunProofResiduator extends ProofResiduator with FunResiduator {
+  self: FunAST with IdAST =>
+}

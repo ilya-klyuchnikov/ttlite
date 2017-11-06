@@ -1,6 +1,6 @@
 package ttlite.sc.test
 
-import ttlite.sc.TTScREPL
+import ttlite.TTScREPL
 
 class TTLiteSCExamples extends org.scalatest.FunSpec {
   describe("Hosc Examples") {

@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait NatDriver extends CoreDriver with NatAST with NatEval { self: FunAST =>
+trait NatDriver extends Driver with NatAST with NatEval { self: FunAST =>
 
   case object SuccLabel extends Label
 
@@ -34,7 +34,7 @@ trait NatDriver extends CoreDriver with NatAST with NatEval { self: FunAST =>
 
 }
 
-trait NatResiduator extends BaseResiduator with NatDriver { self: FunAST =>
+trait NatResiduator extends Residuator with NatDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
@@ -57,9 +57,9 @@ trait NatResiduator extends BaseResiduator with NatDriver { self: FunAST =>
 }
 
 // we need 2 maps here! - one for proof and one for ordinary!!!!
-trait NatProofResiduator extends NatResiduator with ProofResiduator {
+trait NatProofResiduator extends NatResiduator with ProofResiduator { self: FunAST with IdAST =>
   override def proofFold(node: N,
-                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
@@ -70,37 +70,37 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator {
         val motive =
           VLam(VNat, n =>
             VId(
-              eval(node.conf.tp, env + (sel -> n), n :: bound),
-              eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM)))
+              eval(node.conf.tp, env1 + (sel -> n), n :: bound1),
+              eval(node.conf.term, env1 + (sel -> n), n :: bound1),
+              fold(node, env1 + (sel -> n), n :: bound1, recM1)))
 
         val zCase =
           proofFold(nodeZ,
-            env, bound, recM,
+            env1, bound1, recM1,
             env2, bound2, recM2)
 
         val sCase =
           VLam(VNat, n => VLam(motive @@ n, {rec =>
             // SIC!! - node, not nodeS!!
-            val rec1 = fold(node, env + (sel -> n), n :: bound, recM)
+            val rec1 = fold(node, env1 + (sel -> n), n :: bound1, recM1)
             proofFold(nodeS,
-              env + (fresh -> n),
-              rec1 :: n :: bound,
-              recM + (node.tPath -> rec1),
+              env1 + (fresh -> n),
+              rec1 :: n :: bound1,
+              recM1 + (node.tPath -> rec1),
               env2 + (fresh -> n),
               rec :: n :: bound2,
               recM2 + (node.tPath -> rec))}))
 
-        natElim(motive, zCase, sCase, env(sel))
+        natElim(motive, zCase, sCase, env1(sel))
       case TEdge(n1, SuccLabel) :: Nil =>
         'cong1 @@
           VNat @@
           VNat @@
           VLam(VNat, n => VSucc(n)) @@
-          eval(n1.conf.term, env, bound) @@
-          fold(n1, env, bound, recM) @@
-          proofFold(n1, env, bound, recM, env2, bound2, recM2)
+          eval(n1.conf.term, env1, bound1) @@
+          fold(n1, env1, bound1, recM1) @@
+          proofFold(n1, env1, bound1, recM1, env2, bound2, recM2)
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+        super.proofFold(node, env1, bound1, recM1, env2, bound2, recM2)
     }
 }

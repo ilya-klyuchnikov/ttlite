@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait ListDriver extends CoreDriver with ListAST with ListEval { self: FunAST =>
+trait ListDriver extends Driver with ListAST with ListEval { self: FunAST =>
 
   case object ConsLabel extends Label
   case object ListLabel extends Label
@@ -40,7 +40,7 @@ trait ListDriver extends CoreDriver with ListAST with ListEval { self: FunAST =>
 
 }
 
-trait ListResiduator extends BaseResiduator with ListDriver { self: FunAST =>
+trait ListResiduator extends Residuator with ListDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
@@ -69,9 +69,9 @@ trait ListResiduator extends BaseResiduator with ListDriver { self: FunAST =>
     }
 }
 
-trait ListProofResiduator extends ListResiduator with ProofResiduator {
+trait ListProofResiduator extends ListResiduator with ProofResiduator { self: FunAST with IdAST =>
   override def proofFold(node: N,
-                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case
@@ -79,58 +79,58 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator {
           TEdge(nodeS, ElimLabel(_, PiCons(_, Free(hN), Free(tN)), _, _)) ::
           Nil =>
 
-        val aVal = eval(a, env, bound)
+        val aVal = eval(a, env1, bound1)
 
         val motive =
           VLam(VPiList(aVal), n =>
             VId(
-              eval(node.conf.tp, env + (sel -> n), n :: bound),
-              eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM)))
+              eval(node.conf.tp, env1 + (sel -> n), n :: bound1),
+              eval(node.conf.term, env1 + (sel -> n), n :: bound1),
+              fold(node, env1 + (sel -> n), n :: bound1, recM1)))
 
         val nilCase =
           proofFold(nodeZ,
-            env, bound, recM,
+            env1, bound1, recM1,
             env2, bound2, recM2)
 
         val consCase =
           VLam (aVal, h => VLam (VPiList(aVal), t => VLam (motive @@ t, {rec =>
             // SIC!! - node, not nodeS!!
-            val rec1 = fold(node, env + (sel -> t), t :: bound, recM)
+            val rec1 = fold(node, env1 + (sel -> t), t :: bound1, recM1)
             proofFold(nodeS,
-              env + (hN -> h) + (tN -> t),
-              rec1 :: t :: h :: bound,
-              recM + (node.tPath -> rec1),
+              env1 + (hN -> h) + (tN -> t),
+              rec1 :: t :: h :: bound1,
+              recM1 + (node.tPath -> rec1),
 
               env2 + (hN -> h) + (tN -> t),
               rec :: t :: h :: bound2,
               recM2 + (node.tPath -> rec))})))
 
-        listElim(VPiList(aVal), motive, nilCase, consCase, env(sel))
+        listElim(VPiList(aVal), motive, nilCase, consCase, env1(sel))
       case TEdge(h, ConsLabel) :: TEdge(t, ConsLabel) :: Nil =>
-        val VPiList(a) = eval(node.conf.tp, env, bound)
-        val h1 = eval(h.conf.term, env, bound)
-        val h2 = fold(h, env, bound, recM)
-        val eq_h1_h2 = proofFold(h, env, bound, recM, env2, bound2, recM2)
+        val VPiList(a) = eval(node.conf.tp, env1, bound1)
+        val h1 = eval(h.conf.term, env1, bound1)
+        val h2 = fold(h, env1, bound1, recM1)
+        val eq_h1_h2 = proofFold(h, env1, bound1, recM1, env2, bound2, recM2)
 
-        val t1 = eval(t.conf.term, env, bound)
-        val t2 = fold(t, env, bound, recM)
-        val eq_t1_t2 = proofFold(t, env, bound, recM, env2, bound2, recM2)
+        val t1 = eval(t.conf.term, env1, bound1)
+        val t2 = fold(t, env1, bound1, recM1)
+        val eq_t1_t2 = proofFold(t, env1, bound1, recM1, env2, bound2, recM2)
 
         'cong2 @@ a @@ VPiList(a) @@ VPiList(a) @@
           VLam(a, x => VLam(VPiList(a), y => VPiCons(VPiList(a), x, y))) @@
           h1 @@ h2 @@ eq_h1_h2 @@
           t1 @@ t2 @@ eq_t1_t2
       case TEdge(n1, ListLabel) :: Nil =>
-        val tp = eval(node.conf.tp, env, bound)
+        val tp = eval(node.conf.tp, env1, bound1)
         'cong1 @@
           tp @@
           tp @@
           VLam(tp, a => VPiList(a)) @@
-          eval(n1.conf.term, env, bound) @@
-          fold(n1, env, bound, recM) @@
-          proofFold(n1, env, bound, recM, env2, bound2, recM2)
+          eval(n1.conf.term, env1, bound1) @@
+          fold(n1, env1, bound1, recM1) @@
+          proofFold(n1, env1, bound1, recM1, env2, bound2, recM2)
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+        super.proofFold(node, env1, bound1, recM1, env2, bound2, recM2)
     }
 }

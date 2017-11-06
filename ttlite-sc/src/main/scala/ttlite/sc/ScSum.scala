@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait SumDriver extends CoreDriver with SumAST with SumEval { self: FunAST =>
+trait SumDriver extends Driver with SumAST with SumEval { self: FunAST =>
 
   case object SumLabel extends Label
   case object InLLabel extends Label
@@ -47,7 +47,7 @@ trait SumDriver extends CoreDriver with SumAST with SumEval { self: FunAST =>
   }
 }
 
-trait SumResiduator extends BaseResiduator with SumDriver { self: FunAST =>
+trait SumResiduator extends Residuator with SumDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _, _)) ::
@@ -76,9 +76,9 @@ trait SumResiduator extends BaseResiduator with SumDriver { self: FunAST =>
     }
 }
 
-trait SumProofResiduator extends SumResiduator with ProofResiduator {
+trait SumProofResiduator extends SumResiduator with ProofResiduator { self: FunAST with IdAST =>
   override def proofFold(node: N,
-                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _, _)) ::
@@ -86,63 +86,63 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator {
         Nil =>
 
         val etVal@VSum(aVal, bVal) =
-          eval(et, env, bound)
+          eval(et, env1, bound1)
         val motive =
           VLam(etVal, n =>
             VId(
-              eval(node.conf.tp, env + (sel -> n), n :: bound),
-              eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM)))
+              eval(node.conf.tp, env1 + (sel -> n), n :: bound1),
+              eval(node.conf.term, env1 + (sel -> n), n :: bound1),
+              fold(node, env1 + (sel -> n), n :: bound1, recM1)))
 
         val lCase = VLam(aVal, l =>
           proofFold(nodeL,
-            env + (lN -> l), l :: bound, recM,
+            env1 + (lN -> l), l :: bound1, recM1,
             env2 + (lN -> l), l :: bound2, recM2))
 
         val rCase = VLam(bVal, r =>
           proofFold(nodeR,
-            env + (rN -> r), r :: bound, recM,
+            env1 + (rN -> r), r :: bound1, recM1,
             env2 + (rN -> r), r :: bound2, recM2))
 
-        sumElim(etVal, motive, lCase, rCase, env(sel))
+        sumElim(etVal, motive, lCase, rCase, env1(sel))
 
       case TEdge(l, InLLabel) :: Nil =>
-        val VSum(a, b) = eval(node.conf.tp, env, bound)
+        val VSum(a, b) = eval(node.conf.tp, env1, bound1)
         'cong1 @@
           a @@
           VSum(a, b) @@
           VLam(a, x => VInL(VSum(a, b), x)) @@
-          eval(l.conf.term, env, bound) @@
-          fold(l, env, bound, recM) @@
-          proofFold(l, env, bound, recM, env2, bound2, recM2)
+          eval(l.conf.term, env1, bound1) @@
+          fold(l, env1, bound1, recM1) @@
+          proofFold(l, env1, bound1, recM1, env2, bound2, recM2)
 
       case TEdge(r, InRLabel) :: Nil =>
-        val VSum(a, b) = eval(node.conf.tp, env, bound)
+        val VSum(a, b) = eval(node.conf.tp, env1, bound1)
         'cong1 @@
           b @@
           VSum(a, b) @@
           VLam(b, y => VInR(VSum(a, b), y)) @@
-          eval(r.conf.term, env, bound) @@
-          fold(r, env, bound, recM) @@
-          proofFold(r, env, bound, recM, env2, bound2, recM2)
+          eval(r.conf.term, env1, bound1) @@
+          fold(r, env1, bound1, recM1) @@
+          proofFold(r, env1, bound1, recM1, env2, bound2, recM2)
       case TEdge(x, SumLabel) :: TEdge(y, SumLabel) :: Nil =>
-        val tp = eval(node.conf.tp, env, bound)
-        val xtp = eval(x.conf.tp, env, bound)
-        val ytp = eval(y.conf.tp, env, bound)
+        val tp = eval(node.conf.tp, env1, bound1)
+        val xtp = eval(x.conf.tp, env1, bound1)
+        val ytp = eval(y.conf.tp, env1, bound1)
 
-        val x1 = eval(x.conf.term, env, bound)
-        val x2 = fold(x, env, bound, recM)
-        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+        val x1 = eval(x.conf.term, env1, bound1)
+        val x2 = fold(x, env1, bound1, recM1)
+        val eq_x1_x2 = proofFold(x, env1, bound1, recM1, env2, bound2, recM2)
 
-        val y1 = eval(y.conf.term, env, bound)
-        val y2 = fold(y, env, bound, recM)
-        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+        val y1 = eval(y.conf.term, env1, bound1)
+        val y2 = fold(y, env1, bound1, recM1)
+        val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
         'cong2 @@ xtp @@ ytp @@ tp @@
           VLam(xtp, x => VLam(ytp, y => VSum(x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+        super.proofFold(node, env1, bound1, recM1, env2, bound2, recM2)
     }
 }

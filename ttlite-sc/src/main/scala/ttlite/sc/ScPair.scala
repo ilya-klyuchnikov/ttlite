@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait PairDriver extends CoreDriver with PairAST with PairEval { self: FunAST =>
+trait PairDriver extends Driver with PairAST with PairEval { self: FunAST =>
 
   case object PairLabel extends Label
   case object ProductLabel extends Label
@@ -42,7 +42,7 @@ trait PairDriver extends CoreDriver with PairAST with PairEval { self: FunAST =>
 
 }
 
-trait PairResiduator extends BaseResiduator with PairDriver { self: FunAST =>
+trait PairResiduator extends Residuator with PairDriver { self: FunAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, Pair(Product(a, b), Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -65,61 +65,61 @@ trait PairResiduator extends BaseResiduator with PairDriver { self: FunAST =>
     }
 }
 
-trait PairProofResiduator extends PairResiduator with ProofResiduator {
+trait PairProofResiduator extends PairResiduator with ProofResiduator { self: FunAST with IdAST =>
   override def proofFold(node: N,
-                         env: NameEnv[Value], bound: Env, recM: Map[TPath, Value],
+                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, Pair(Product(a, b), Free(xN), Free(yN)), _, _)) :: Nil =>
-        val aVal = eval(a, env, bound)
-        val bVal = eval(b, env, bound)
+        val aVal = eval(a, env1, bound1)
+        val bVal = eval(b, env1, bound1)
         val motive =
           VLam(VProduct(aVal, bVal), n =>
             VId(
-              eval(node.conf.tp, env + (sel -> n), n :: bound),
-              eval(node.conf.term, env + (sel -> n), n :: bound),
-              fold(node, env + (sel -> n), n :: bound, recM)))
+              eval(node.conf.tp, env1 + (sel -> n), n :: bound1),
+              eval(node.conf.term, env1 + (sel -> n), n :: bound1),
+              fold(node, env1 + (sel -> n), n :: bound1, recM1)))
 
         val pairCase = VLam(aVal, x => VLam(bVal, y =>
           proofFold(nodeS,
-            env + (xN -> x) + (yN -> y), y :: x :: bound, recM,
+            env1 + (xN -> x) + (yN -> y), y :: x :: bound1, recM1,
             env2 + (xN -> x) + (yN -> y), y :: x :: bound2, recM2)))
 
-        productElim(VProduct(aVal, bVal), motive, pairCase, env(sel))
+        productElim(VProduct(aVal, bVal), motive, pairCase, env1(sel))
 
       case TEdge(x, PairLabel) :: TEdge(y, PairLabel) :: Nil =>
-        val VProduct(a, b) = eval(node.conf.tp, env, bound)
-        val x1 = eval(x.conf.term, env, bound)
-        val x2 = fold(x, env, bound, recM)
-        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+        val VProduct(a, b) = eval(node.conf.tp, env1, bound1)
+        val x1 = eval(x.conf.term, env1, bound1)
+        val x2 = fold(x, env1, bound1, recM1)
+        val eq_x1_x2 = proofFold(x, env1, bound1, recM1, env2, bound2, recM2)
 
-        val y1 = eval(y.conf.term, env, bound)
-        val y2 = fold(y, env, bound, recM)
-        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+        val y1 = eval(y.conf.term, env1, bound1)
+        val y2 = fold(y, env1, bound1, recM1)
+        val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
         'cong2 @@ a @@ b @@ VProduct(a, b) @@
           VLam(a, x => VLam(b, y => VPair(VProduct(a, b), x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
       case TEdge(x, ProductLabel) :: TEdge(y, ProductLabel) :: Nil =>
-        val tp = eval(node.conf.tp, env, bound)
+        val tp = eval(node.conf.tp, env1, bound1)
 
-        val xtp = eval(x.conf.tp, env, bound)
-        val ytp = eval(y.conf.tp, env, bound)
+        val xtp = eval(x.conf.tp, env1, bound1)
+        val ytp = eval(y.conf.tp, env1, bound1)
 
-        val x1 = eval(x.conf.term, env, bound)
-        val x2 = fold(x, env, bound, recM)
-        val eq_x1_x2 = proofFold(x, env, bound, recM, env2, bound2, recM2)
+        val x1 = eval(x.conf.term, env1, bound1)
+        val x2 = fold(x, env1, bound1, recM1)
+        val eq_x1_x2 = proofFold(x, env1, bound1, recM1, env2, bound2, recM2)
 
-        val y1 = eval(y.conf.term, env, bound)
-        val y2 = fold(y, env, bound, recM)
-        val eq_y1_y2 = proofFold(y, env, bound, recM, env2, bound2, recM2)
+        val y1 = eval(y.conf.term, env1, bound1)
+        val y2 = fold(y, env1, bound1, recM1)
+        val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
         'cong2 @@ xtp @@ ytp @@ tp @@
           VLam(xtp, x => VLam(ytp, y => VProduct(x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
       case _ =>
-        super.proofFold(node, env, bound, recM, env2, bound2, recM2)
+        super.proofFold(node, env1, bound1, recM1, env2, bound2, recM2)
     }
 }
