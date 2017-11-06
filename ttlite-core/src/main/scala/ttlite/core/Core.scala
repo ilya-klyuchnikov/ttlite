@@ -81,8 +81,6 @@ trait CorePrinterCoq extends CoreAST with PrinterCoq {
       vars(ii - k - 1)
     case Free(Assumed(n)) =>
       s"${n.replace("$", "")}__"
-    case Free(n) if n.toString == "if" =>
-      "if__"
     case Free(n) =>
       n.toString
     case _ =>
