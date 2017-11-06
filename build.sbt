@@ -7,8 +7,10 @@ lazy val commonSettings = Seq(
   baseDirectory in run := file("."),
   testOptions in Test += Tests.Argument("-oD"),
   testOptions in IntegrationTest += Tests.Argument("-oD"),
-  parallelExecution in Test := false,
-  parallelExecution in IntegrationTest := false
+  fork in Test := true,
+  fork in IntegrationTest := true,
+  baseDirectory in Test := file("."),
+  baseDirectory in IntegrationTest := file("."),
 )
 
 lazy val core = (project in file("ttlite-core"))
