@@ -18,7 +18,7 @@ lazy val core = (project in file("ttlite-core"))
     name := "core",
     libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.8.0",
     libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
     Defaults.itSettings
   )
 
@@ -29,7 +29,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(
     name := "sc",
     libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.1" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
     Defaults.itSettings
   )
   .dependsOn(core)
