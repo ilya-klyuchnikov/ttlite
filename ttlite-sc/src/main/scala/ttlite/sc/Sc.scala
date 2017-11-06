@@ -22,7 +22,11 @@ trait TTSc extends CoreSubst with CoreCheck {
   }
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(cases.toList.map { b => b -> Conf(t.term / Map(b.sel -> b.ptr), t.ctx.addTypes(b.types)) })
+      VariantsStep(
+        cases.toList.map { lbl: ElimLabel =>
+          lbl -> Conf(
+            t.term / Map(lbl.sel -> lbl.ptr),
+            lbl.types.foldLeft(t.ctx)((ctx, nt) => ctx.addType(nt._1, nt._2)))})
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
     override def step(t: Conf) = DecomposeStep(label, args.toList)
