@@ -1,7 +1,5 @@
 os: osx
 
-osx_image: xcode8.3
-
 before_install: brew update && brew bundle
 
 script: sbt test it:test
