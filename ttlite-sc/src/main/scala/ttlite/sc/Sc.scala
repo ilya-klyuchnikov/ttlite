@@ -237,7 +237,7 @@ trait ScREPL extends CoreREPL with TTSc with BaseResiduator with ProofResiduator
   }
 }
 
-object TTScREPL
+class TTScREPL
   extends TTSc
   with CoreREPL with CoreDriver with CoreResiduator with CoreProofResiduator
   with FunREPL with FunDriver with FunResiduator with FunProofResiduator
@@ -250,4 +250,10 @@ object TTScREPL
   with FinREPL with FinDriver with FinResiduator with FinProofResiduator
   with ScREPL {
   override val name = "TT-SC"
+}
+
+object TTScREPL {
+  def main(args: Array[String]): Unit = {
+    new TTScREPL().mainRepl(args)
+  }
 }

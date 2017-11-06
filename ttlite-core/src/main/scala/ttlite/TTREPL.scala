@@ -2,7 +2,7 @@ package ttlite
 
 import ttlite.core._
 
-object TTREPL
+class TTREPL
   extends CoreREPL
   with FunREPL
   with DPairREPL
@@ -15,4 +15,10 @@ object TTREPL
   with SumREPL
   with WREPL {
   override val name = "TT"
+}
+
+object TTREPL {
+  def main(args: Array[String]): Unit = {
+    new TTREPL().mainRepl(args)
+  }
 }

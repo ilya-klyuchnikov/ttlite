@@ -293,7 +293,7 @@ trait REPL {
     }
   }
 
-  def main(args: Array[String]) {
+  def mainRepl(args: Array[String]) {
     org.fusesource.jansi.AnsiConsole.systemInstall()
     org.kiama.util.JLineConsole.reader.addCompleter(new ImportCompleter())
 
