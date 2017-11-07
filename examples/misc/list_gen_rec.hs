@@ -90,13 +90,13 @@ rec = \(A: Set) (p: forall (_: List A) . Set) (below: forall (xs: List A)(_: bel
 
 -- trivial function
 -- it doesn't use `g`
-below_1 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
-below_1 = \ (xs : List Nat) (g : belowList Nat m1 xs) -> False;
+below1 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
+below1 = \ (xs : List Nat) (g : belowList Nat m1 xs) -> False;
 
 -- less trivial, but still quite trivial
 -- it performs only pattern patching
-below_2 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
-below_2 =
+below2 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
+below2 =
     \ (xs : List Nat) ->
         elim (List Nat) ( \ (xs : List Nat) -> forall (_ : belowList Nat m1 xs) . m1 xs)
             (\ (g :  belowList Nat m1 (nil Nat)) -> False)
@@ -111,8 +111,8 @@ below_2 =
 $n : Nat;
 $l : List Nat;
 
-below_3 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
-below_3 =
+below3 : forall (xs: List Nat)(g: belowList Nat m1 xs) . m1 xs;
+below3 =
     \ (xs : List Nat) ->
         elim (List Nat) ( \ (xs : List Nat) -> forall (_ : bl Nat m1 xs) . m1 xs)
             (\ (g :  bl Nat m1 (nil Nat)) -> False)
@@ -171,10 +171,10 @@ k = belowList Nat m1 (cons Nat $n $l);
 z = Product (belowList Nat m1 $l) (m1 $l);
 
 f1 : forall (_ : List Nat) . Bool;
-f1 = rec Nat m1 below_1;
+f1 = rec Nat m1 below1;
 
 f3 : forall (_ : List Nat) . Bool;
-f3 = rec Nat m1 below_3;
+f3 = rec Nat m1 below3;
 
 test0 : Id (List Nat) (odd (seq1 n0 n0)) (seq2 n0 n0);
 test0 = Refl (List Nat) (seq2 n0 n0);

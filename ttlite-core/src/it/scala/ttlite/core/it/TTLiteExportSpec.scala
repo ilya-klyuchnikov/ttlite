@@ -37,6 +37,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("assumed.hs") {
       checkAgda("assumed")
     }
+    it("misc_list_gen_rec") {
+      checkAgda("misc_list_gen_rec")
+    }
   }
 
   describe("Export to Coq") {
