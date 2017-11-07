@@ -7,10 +7,10 @@ import ttlite.common._
 trait SC extends Eval with Quoting with Check {
   import scala.language.implicitConversions
 
-  var v = 100
+  var v = 0
   def freshName(): Name = {
     v += 1
-    Local(v)
+    ScLocal(v)
   }
 
   implicit def name2Term(n: Name) = Free(n)

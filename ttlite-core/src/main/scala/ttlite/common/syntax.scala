@@ -51,10 +51,13 @@ case class Path private (rawElems : Queue[(Int, Int)]) {
 sealed class Name (s : String) {
   override def toString: String = s
 }
+
 case class Global(n: String) extends Name(n)
 case class Assumed(n: String) extends Name(n)
 case class Local(i: Int) extends Name(s"<$i>")
+case class ScLocal(i: Int) extends Name(s"{$i}")
 case class Quote(i: Int) extends Name(s"[$i]")
+
 // META-SYNTAX
 // TODO it is better to name it *shallow term* and *shallow syntax*
 sealed trait MTerm extends RichPositional {
