@@ -76,8 +76,8 @@ head_aux = \ (n : Nat) (v : Vec A n) ->
 head : forall (n : Nat) (v : Vec A (Succ n)) . A;
 head = \ (n : Nat) (v : Vec A (Succ n)) -> head_aux (Succ n) v Triv;
 
-at : forall (n : Nat) (v : Vec A n) (i : Nat) (contr: gt_prop n i) . A;
-at = \ (n : Nat) (v : Vec A n) ->
+at_i : forall (n : Nat) (v : Vec A n) (i : Nat) (contr: gt_prop n i) . A;
+at_i = \ (n : Nat) (v : Vec A n) ->
     vecElim A
         (\ (n : Nat) (_ : Vec A n) -> forall (i : Nat) (contr: gt_prop n i) . A)
         (\ (i : Nat) (contr : gt_prop Zero i) -> abort A contr)
@@ -99,4 +99,4 @@ at = \ (n : Nat) (v : Vec A n) ->
         v;
 
 head1 : forall (n : Nat) (v : Vec A (Succ n)) . A;
-head1 = \ (n : Nat) (v : Vec A (Succ n)) -> at (Succ n) v Zero Triv;
+head1 = \ (n : Nat) (v : Vec A (Succ n)) -> at_i (Succ n) v Zero Triv;

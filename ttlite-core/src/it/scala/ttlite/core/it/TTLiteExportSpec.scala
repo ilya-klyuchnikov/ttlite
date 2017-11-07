@@ -40,6 +40,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("misc_list_gen_rec") {
       checkAgda("misc_list_gen_rec")
     }
+    it("vec.hs") {
+      checkAgda("vec")
+    }
   }
 
   describe("Export to Coq") {
@@ -76,6 +79,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("assumed.hs") {
       checkCoq("assumed")
     }
+    it("vec.hs") {
+      checkCoq("vec")
+    }
   }
 
   describe("Export to Idris") {
@@ -111,6 +117,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
     it("assumed.hs") {
       checkIdris("assumed")
+    }
+    it("vec.hs") {
+      checkIdris("vec")
     }
   }
 

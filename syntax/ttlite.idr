@@ -134,3 +134,23 @@ elimPair : (A : Type) ->
            (e : TTPair A B) ->
            m e
 elimPair A B m f (Pair A B a b) = f a b
+
+------------------------------------------
+-- Vector
+------------------------------------------
+
+data Vec : (A : Type) -> (n : Nat) -> Type where
+    VNil : (A : Type) -> Vec A Zero
+    VCons : (A : Type) -> (n : Nat) -> A -> (Vec A n) -> Vec A (Succ n)
+
+
+elimVec : (A : Type) ->
+          (m : (n : Nat) -> Vec A n -> Type) ->
+          (f1 : m Zero (VNil A)) ->
+          (f2 : (n : Nat) -> (a : A) -> (as : Vec A n) -> m n as -> m (Succ n) (VCons A n a as)) ->
+          (n : Nat) ->
+          (v : Vec A n) ->
+           m n v
+
+elimVec A m f1 f2 Zero (VNil A) = f1
+elimVec A m f1 f2 (Succ n) (VCons A n a as) = f2 n a as (elimVec A m f1 f2 n as)

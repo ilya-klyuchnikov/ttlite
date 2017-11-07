@@ -128,6 +128,8 @@ Definition elimBool
 Inductive Pair (A : Type) (B : Type) : Type :=
   | pair : A -> B -> Pair A B.
 
+(** Pair **)
+
 Definition elimPair
   (A : Type)
   (B : Type)
@@ -136,4 +138,22 @@ Definition elimPair
   (e : Pair A B) : m e :=
   match e with
   | pair _ _ a b => f a b
+  end.
+
+(** Vec **)
+
+Inductive Vec (A : Type) : Nat -> Type :=
+  | vnil : Vec A zero
+  | vcons : forall (n : Nat) , A -> Vec A n -> Vec A (succ n).
+
+Fixpoint elimVec
+  (A : Type)
+  (m : forall (n : Nat) (_ : Vec A n) , Type)
+  (f1 : m zero (vnil A))
+  (f2 : forall (n : Nat) (x : A) (xs : Vec A n) (r : m n xs), m (succ n) (vcons A n x xs))
+  (n : Nat)
+  (v : Vec A n) : m n v :=
+  match v with
+  | vnil _ =>         f1
+  | vcons _ n1 x xs => f2 n1 x xs (elimVec A m f1 f2 n1 xs)
   end.

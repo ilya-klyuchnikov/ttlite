@@ -43,6 +43,51 @@ trait VectorPrinter extends Printer with VectorAST {
   }
 }
 
+trait VectorPrinterAgda extends PrinterAgda with VectorAST {
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case Vec(a, n) =>
+      printAL(p, ii, 'Vec, a, n)
+    case VecNil(a) =>
+      printAL(p, ii, 'vnil, a)
+    case VecCons(a, n, x, xs) =>
+      printAL(p, ii, 'vcons, a, n, x, xs)
+    case VecElim(a, m, mn, mc, n, xs) =>
+      printAL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
+trait VectorPrinterCoq extends PrinterCoq with VectorAST {
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case Vec(a, n) =>
+      printCL(p, ii, 'Vec, a, n)
+    case VecNil(a) =>
+      printCL(p, ii, 'vnil, a)
+    case VecCons(a, n, x, xs) =>
+      printCL(p, ii, 'vcons, a, n, x, xs)
+    case VecElim(a, m, mn, mc, n, xs) =>
+      printCL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
+trait VectorPrinterIdris extends PrinterIdris with VectorAST {
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case Vec(a, n) =>
+      printIL(p, ii, 'Vec, a, n)
+    case VecNil(a) =>
+      printIL(p, ii, 'VNil, a)
+    case VecCons(a, n, x, xs) =>
+      printIL(p, ii, 'VCons, a, n, x, xs)
+    case VecElim(a, m, mn, mc, n, xs) =>
+      printIL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+    case _ =>
+      super.printI(p, ii, t)
+  }
+}
+
 trait VectorEval extends Eval with VectorAST { self: FunAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
@@ -184,6 +229,9 @@ trait VectorREPL
   with VectorAST
   with VectorMetaSyntax
   with VectorPrinter
+  with VectorPrinterAgda
+  with VectorPrinterCoq
+  with VectorPrinterIdris
   with VectorCheck
   with VectorEval
   with VectorQuoting {

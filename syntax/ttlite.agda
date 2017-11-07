@@ -178,6 +178,31 @@ elimPair : ∀ {i j k}
 elimPair _ _ m f (pair₀ a b) = f a b
 
 ------------------------------------------
--- TODO: vectors, W
+-- Vector
 ------------------------------------------
 
+data Vec {i} (A : Set i) : (n : Nat) -> Set i where
+  vnil₀ : Vec A zero
+  vcons₀ : A -> (n : Nat) -> Vec A n -> Vec A (succ n)
+
+vnil : ∀ {i} (A : Set i) → Vec A zero
+vnil A = vnil₀
+
+vcons : ∀ {i} (A : Set i) (n : Nat) (a : A) (as : Vec A n) → Vec A (succ n)
+vcons A n a as = vcons₀ a n as
+
+elimVec : ∀ {i j}
+            (A : Set i)
+            (m : (n : Nat) (_ : Vec A n) → Set j)
+            (f₁ : m zero (vnil A))
+            (f₂ : (n : Nat) (a : A) (as : Vec A n) (_ : m n as) → m (succ n) (vcons A n a as))
+            (n : Nat)
+            (v : Vec A n)
+            → m n v
+
+elimVec A m f₁ f₂ zero vnil₀  = f₁
+elimVec A m f₁ f₂ (succ n) (vcons₀ a _ as) = f₂ n a as (elimVec A m f₁ f₂ n as)
+
+------------------------------------------
+-- TODO: W
+------------------------------------------
