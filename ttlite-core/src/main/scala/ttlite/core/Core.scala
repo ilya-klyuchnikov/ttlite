@@ -116,11 +116,11 @@ trait CoreQuoting extends CoreAST with Quoting {
   }
 
   private def boundFree(ii: Int, n: Name): Term = n match {
-    // "shift hack" - for beta reduction
-    case Quote(k) if ii - k - 1 == 0 =>
-      Bound(0)
     case Quote(k) =>
-      Bound(ii - k - 1)
+      if (ii - k - 1 >= 0)
+        Bound(ii - k - 1)
+      else
+        Free(Local(k - ii))
     case x =>
       Free(x)
   }
