@@ -70,8 +70,6 @@ trait SC extends Eval with Quoting with Check {
   }
 
   def singleDrive(c: Conf): DriveStep
-
-  def multiDrive(c: Conf): List[DriveStep]
 }
 
 trait Driver extends SC {
@@ -86,9 +84,6 @@ trait Driver extends SC {
       }
     case _ => decompose(c)
   }
-
-  override def multiDrive(c: Conf): List[DriveStep] =
-    (decompose(c) +: freeVars(c.term).map(n => elimVar(n, iType0(c.ctx, Free(n))))).distinct
 
   // neutral variable of a value
   def nv(n: Neutral): Option[Name] =

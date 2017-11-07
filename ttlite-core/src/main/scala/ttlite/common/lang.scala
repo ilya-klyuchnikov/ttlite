@@ -25,14 +25,6 @@ trait AST {
   }
 
   def vfree(n: Name): Value = VNeutral(NFree(n))
-
-  // freeVars of an expression
-  def freeVars(t: Any): List[Name] = t match {
-    case Free(n: Local)   => List(n)
-    case Free(n: Assumed) => List(n)
-    case p: scala.Product => p.productIterator.flatMap(freeVars).toList.distinct
-    case _                => List()
-  }
 }
 
 trait MetaSyntax extends AST {

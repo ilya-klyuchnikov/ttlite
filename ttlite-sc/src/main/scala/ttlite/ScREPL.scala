@@ -9,7 +9,7 @@ case class ScStmt[I](outId: Id, proofId: Id, e: I) extends Stmt[I]
 
 trait ScParser extends MetaParser {
   lexical.delimiters += ","
-  lexical.reserved += ("sc", "mrsc")
+  lexical.reserved += "sc"
   override def stmts = List(scStmt) ++ super.stmts
   lazy val scStmt: PackratParser[Stmt[MTerm]] =
     ("(" ~> globalId <~ ",") ~ globalId ~ (")" ~ "=" ~ "sc" ~> term <~ ";") ^^ {
@@ -132,13 +132,6 @@ trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with 
         piStep.graphStep :: Nil
       } else
         Nil
-  }
-
-  trait MultiDriving extends BaseRules {
-    override def drive(signal: Signal, g: G): List[S] = {
-      val t = g.current.conf
-      multiDrive(t).map(_.step(t).graphStep)
-    }
   }
 
   object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
