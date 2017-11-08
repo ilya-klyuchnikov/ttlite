@@ -103,7 +103,7 @@ trait NatQuoting extends Quoting with NatAST {
   }
 }
 
-trait NatEval extends Eval with NatAST { self: FunAST =>
+trait NatEval extends Eval with NatAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Zero =>
       VZero
@@ -131,7 +131,7 @@ trait NatEval extends Eval with NatAST { self: FunAST =>
   }
 }
 
-trait NatCheck extends Check with NatAST { self: FunAST =>
+trait NatCheck extends Check with NatAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Nat =>
       VUniverse(0)
@@ -187,5 +187,5 @@ trait NatREPL
   with NatCheck
   with NatEval
   with NatQuoting {
-  self: FunAST =>
+  self: PiAST =>
 }

@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait PairDriver extends Driver with PairAST with PairEval { self: FunAST =>
+trait ProductDriver extends Driver with ProductAST with ProductEval { self: PiAST =>
 
   case object PairLabel extends Label
   case object ProductLabel extends Label
@@ -42,7 +42,7 @@ trait PairDriver extends Driver with PairAST with PairEval { self: FunAST =>
 
 }
 
-trait PairResiduator extends Residuator with PairDriver { self: FunAST =>
+trait ProductResiduator extends Residuator with ProductDriver { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, Pair(Product(a, b), Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -65,7 +65,7 @@ trait PairResiduator extends Residuator with PairDriver { self: FunAST =>
     }
 }
 
-trait PairProofResiduator extends PairResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait ProductProofResiduator extends ProductResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

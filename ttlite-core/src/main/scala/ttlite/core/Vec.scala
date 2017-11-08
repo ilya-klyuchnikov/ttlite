@@ -88,7 +88,7 @@ trait VecPrinterIdris extends PrinterIdris with VecAST {
   }
 }
 
-trait VecEval extends Eval with VecAST { self: FunAST =>
+trait VecEval extends Eval with VecAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
       VVec(eval(a, ctx, bound), eval(n, ctx, bound))
@@ -113,7 +113,7 @@ trait VecEval extends Eval with VecAST { self: FunAST =>
   }
 }
 
-trait VecCheck extends Check with VecAST { self: FunAST with NatAST =>
+trait VecCheck extends Check with VecAST { self: PiAST with NatAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, path/(2, 3), ctx, a)
@@ -235,5 +235,5 @@ trait VecREPL
   with VecCheck
   with VecEval
   with VecQuoting {
-  self: FunAST with NatAST =>
+  self: PiAST with NatAST =>
 }

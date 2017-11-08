@@ -3,7 +3,7 @@ package ttlite.sc
 import ttlite.common._
 import ttlite.core._
 
-trait FunDriver extends Driver with FunEval {
+trait PiDriver extends Driver with PiEval {
 
   override def nv(t: Neutral): Option[Name] = t match {
     case NApp(NFree(n), _) => Some(n)
@@ -26,7 +26,7 @@ trait FunDriver extends Driver with FunEval {
   }
 }
 
-trait FunResiduator extends Residuator with FunDriver
-trait FunProofResiduator extends ProofResiduator with FunResiduator {
-  self: FunAST with IdAST =>
+trait PiResiduator extends Residuator with PiDriver
+trait PiProofResiduator extends ProofResiduator with PiResiduator {
+  self: PiAST with IdAST =>
 }

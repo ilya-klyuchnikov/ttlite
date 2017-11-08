@@ -19,7 +19,7 @@ trait ScParser extends MetaParser {
 
 object ScParser extends ScParser
 
-trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with GraphPrettyPrinter2 { self: FunAST with IdAST =>
+trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with GraphPrettyPrinter2 { self: PiAST with IdAST =>
   import ttlite.common.IoUtil._
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] = stmt match {
@@ -142,14 +142,14 @@ trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with 
 class TTScREPL
   extends SC
     with CoreREPL with Driver with Residuator with ProofResiduator
-    with FunREPL with FunDriver with FunResiduator with FunProofResiduator
-    with DPairREPL with DPairDriver with DPairResiduator with DPairProofResiduator
+    with PiREPL with PiDriver with PiResiduator with PiProofResiduator
+    with SigmaREPL with SigmaDriver with SigmaResiduator with SigmaProofResiduator
     with SumREPL with SumDriver with SumResiduator with SumProofResiduator
     with IdREPL with IdDriver with IdResiduator with IdProofResiduator
     with NatREPL with NatDriver with NatResiduator with NatProofResiduator
     with ListREPL with ListDriver with ListResiduator with ListProofResiduator
-    with PairREPL with PairDriver with PairResiduator with PairProofResiduator
-    with FinREPL with FinDriver with FinResiduator with FinProofResiduator
+    with ProductREPL with ProductDriver with ProductResiduator with ProductProofResiduator
+    with EnumREPL with EnumDriver with EnumResiduator with EnumProofResiduator
     with ScREPL {
   override val name = "TT-SC"
 }

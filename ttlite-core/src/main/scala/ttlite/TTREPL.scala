@@ -4,14 +4,14 @@ import ttlite.core._
 
 class TTREPL
   extends CoreREPL
-  with FunREPL
-  with DPairREPL
+  with PiREPL
+  with SigmaREPL
   with NatREPL
   with VecREPL
   with IdREPL
-  with FinREPL
+  with EnumREPL
   with ListREPL
-  with PairREPL
+  with ProductREPL
   with SumREPL
   with WREPL {
   override val name = "TT"

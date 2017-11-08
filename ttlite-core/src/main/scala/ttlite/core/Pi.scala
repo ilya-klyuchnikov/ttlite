@@ -2,8 +2,9 @@ package ttlite.core
 
 import ttlite.common._
 
-// Chapter 7. Cartesian product of a family of sets
-trait FunAST extends AST {
+// Chapter 7. Cartesian product of a family of sets.
+// Dependent product type, or pi-type.
+trait PiAST extends AST {
   import scala.language.implicitConversions
 
   case class Pi(c1: Term, c2: Term) extends Term
@@ -22,7 +23,7 @@ trait FunAST extends AST {
   }
 }
 
-trait FunMetaSyntax extends MetaSyntax with FunAST {
+trait PiMetaSyntax extends MetaSyntax with PiAST {
   abstract override def translate(m: MTerm): Term = m match {
     case MBind("forall", t1, t2) =>
       Pi(translate(t1), translate(t2))
@@ -34,7 +35,7 @@ trait FunMetaSyntax extends MetaSyntax with FunAST {
   }
 }
 
-trait FunPrinter extends Printer with FunAST {
+trait PiPrinter extends Printer with PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
@@ -71,7 +72,7 @@ trait FunPrinter extends Printer with FunAST {
   }
 }
 
-trait FunPrinterAgda extends PrinterAgda with FunAST {
+trait PiPrinterAgda extends PrinterAgda with PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
@@ -108,7 +109,7 @@ trait FunPrinterAgda extends PrinterAgda with FunAST {
   }
 }
 
-trait FunPrinterCoq extends PrinterCoq with FunAST {
+trait PiPrinterCoq extends PrinterCoq with PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
@@ -145,7 +146,7 @@ trait FunPrinterCoq extends PrinterCoq with FunAST {
   }
 }
 
-trait FunPrinterIdris extends PrinterIdris with FunAST {
+trait PiPrinterIdris extends PrinterIdris with PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
@@ -160,7 +161,7 @@ trait FunPrinterIdris extends PrinterIdris with FunAST {
   }
 }
 
-trait FunQuoting extends Quoting with FunAST {
+trait PiQuoting extends Quoting with PiAST {
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VPi(v, f) =>
       Pi(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
@@ -175,7 +176,7 @@ trait FunQuoting extends Quoting with FunAST {
   }
 }
 
-trait FunEval extends Eval with FunAST {
+trait PiEval extends Eval with PiAST {
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Pi(ty, ty1) =>
       VPi(eval(ty, ctx, bound), x => eval(ty1, ctx, x :: bound))
@@ -188,7 +189,7 @@ trait FunEval extends Eval with FunAST {
   }
 }
 
-trait FunCheck extends Check with FunAST {
+trait PiCheck extends Check with PiAST {
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
 
     case Pi(x, tp) =>
@@ -231,14 +232,14 @@ trait FunCheck extends Check with FunAST {
   }
 }
 
-trait FunREPL
+trait PiREPL
   extends CoreREPL
-  with FunAST
-  with FunMetaSyntax
-  with FunPrinter
-  with FunPrinterAgda
-  with FunPrinterCoq
-  with FunPrinterIdris
-  with FunCheck
-  with FunEval
-  with FunQuoting
+  with PiAST
+  with PiMetaSyntax
+  with PiPrinter
+  with PiPrinterAgda
+  with PiPrinterCoq
+  with PiPrinterIdris
+  with PiCheck
+  with PiEval
+  with PiQuoting

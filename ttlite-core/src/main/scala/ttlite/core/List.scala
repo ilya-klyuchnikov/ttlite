@@ -89,7 +89,7 @@ trait ListPrinterIdris extends PrinterIdris with ListAST {
   }
 }
 
-trait ListEval extends Eval with ListAST { self: FunAST =>
+trait ListEval extends Eval with ListAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case PiList(a) =>
       VPiList(eval(a, ctx, bound))
@@ -118,7 +118,7 @@ trait ListEval extends Eval with ListAST { self: FunAST =>
   }
 }
 
-trait ListCheck extends Check with ListAST { self: FunAST =>
+trait ListCheck extends Check with ListAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case PiList(a) =>
       val aType = iType(i, path/(2, 2), ctx, a)
@@ -218,5 +218,5 @@ trait ListREPL
   with ListCheck
   with ListEval
   with ListQuoting {
-  self: FunAST =>
+  self: PiAST =>
 }

@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait IdDriver extends Driver with IdEval { self: FunAST =>
+trait IdDriver extends Driver with IdEval { self: PiAST =>
 
   case object ReflLabel extends Label
   case object EqLabel extends Label
@@ -26,7 +26,7 @@ trait IdDriver extends Driver with IdEval { self: FunAST =>
 
 }
 
-trait IdResiduator extends Residuator with IdDriver { self: FunAST =>
+trait IdResiduator extends Residuator with IdDriver { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(x, ReflLabel) :: Nil =>
@@ -40,7 +40,7 @@ trait IdResiduator extends Residuator with IdDriver { self: FunAST =>
     }
 }
 
-trait IdProofResiduator extends IdResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait IdProofResiduator extends IdResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

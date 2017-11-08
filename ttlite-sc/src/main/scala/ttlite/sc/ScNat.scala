@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait NatDriver extends Driver with NatAST with NatEval { self: FunAST =>
+trait NatDriver extends Driver with NatAST with NatEval { self: PiAST =>
 
   case object SuccLabel extends Label
 
@@ -34,7 +34,7 @@ trait NatDriver extends Driver with NatAST with NatEval { self: FunAST =>
 
 }
 
-trait NatResiduator extends Residuator with NatDriver { self: FunAST =>
+trait NatResiduator extends Residuator with NatDriver { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case
@@ -57,7 +57,7 @@ trait NatResiduator extends Residuator with NatDriver { self: FunAST =>
 }
 
 // we need 2 maps here! - one for proof and one for ordinary!!!!
-trait NatProofResiduator extends NatResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait NatProofResiduator extends NatResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

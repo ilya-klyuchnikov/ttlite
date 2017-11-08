@@ -77,7 +77,7 @@ trait IdPrinterIdris extends PrinterIdris with IdAST {
   }
 }
 
-trait IdEval extends Eval with IdAST with CoreQuoting { self: FunAST =>
+trait IdEval extends Eval with IdAST with CoreQuoting { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Id(a, x, y) =>
       VId(eval(a, ctx, bound), eval(x, ctx, bound), eval(y, ctx, bound))
@@ -100,7 +100,7 @@ trait IdEval extends Eval with IdAST with CoreQuoting { self: FunAST =>
   }
 }
 
-trait IdCheck extends Check with IdAST { self: FunAST =>
+trait IdCheck extends Check with IdAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Id(a, x, y) =>
       val aType = iType(i, path/(2, 4), ctx, a)
@@ -185,5 +185,5 @@ trait IdREPL
   with IdCheck
   with IdEval
   with IdQuoting {
-  self: FunAST =>
+  self: PiAST =>
 }

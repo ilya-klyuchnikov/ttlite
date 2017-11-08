@@ -89,7 +89,7 @@ trait SumPrinterIdris extends PrinterIdris with SumAST {
   }
 }
 
-trait SumEval extends Eval with SumAST { self: FunAST =>
+trait SumEval extends Eval with SumAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Sum(lt, rt) =>
       VSum(eval(lt, ctx, bound), eval(rt, ctx, bound))
@@ -119,7 +119,7 @@ trait SumEval extends Eval with SumAST { self: FunAST =>
     }
 }
 
-trait SumCheck extends Check with SumAST { self: FunAST =>
+trait SumCheck extends Check with SumAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Sum(a, b) =>
       val aType = iType(i, path/(2, 3), ctx, a)
@@ -191,7 +191,7 @@ trait SumCheck extends Check with SumAST { self: FunAST =>
   }
 }
 
-trait SumQuoting extends Quoting with SumAST { self: FunAST =>
+trait SumQuoting extends Quoting with SumAST { self: PiAST =>
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VSum(a, b) =>
       Sum(quote(ii, a), quote(ii, b))
@@ -221,5 +221,5 @@ trait SumREPL
   with SumCheck
   with SumEval
   with SumQuoting {
-  self: FunAST =>
+  self: PiAST =>
 }

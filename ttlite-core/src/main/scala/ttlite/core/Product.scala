@@ -3,7 +3,7 @@ package ttlite.core
 import ttlite.common._
 
 // Chapter 11. Cartesian product of two sets
-trait PairAST extends AST {
+trait ProductAST extends AST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(et: Term, a: Term, b: Term) extends Term
   case class ProductElim(et: Term, m: Term, f: Term, pair: Term) extends Term
@@ -13,7 +13,7 @@ trait PairAST extends AST {
   case class NProductElim(et: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait PairMetaSyntax extends MetaSyntax with PairAST {
+trait ProductMetaSyntax extends MetaSyntax with ProductAST {
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
       Product(translate(a), translate(b))
@@ -25,7 +25,7 @@ trait PairMetaSyntax extends MetaSyntax with PairAST {
   }
 }
 
-trait PairPrinter extends Printer with PairAST {
+trait ProductPrinter extends Printer with ProductAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       printL(p, ii, 'Product, a, b)
@@ -38,7 +38,7 @@ trait PairPrinter extends Printer with PairAST {
   }
 }
 
-trait PairPrinterAgda extends PrinterAgda with PairAST {
+trait ProductPrinterAgda extends PrinterAgda with ProductAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       printAL(p, ii, 'Pair, a, b)
@@ -51,7 +51,7 @@ trait PairPrinterAgda extends PrinterAgda with PairAST {
   }
 }
 
-trait PairPrinterCoq extends PrinterCoq with PairAST {
+trait ProductPrinterCoq extends PrinterCoq with ProductAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       printCL(p, ii, 'Pair, a, b)
@@ -64,7 +64,7 @@ trait PairPrinterCoq extends PrinterCoq with PairAST {
   }
 }
 
-trait PairPrinterIdris extends PrinterIdris with PairAST {
+trait ProductPrinterIdris extends PrinterIdris with ProductAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
       printIL(p, ii, 'TTPair, a, b)
@@ -77,7 +77,7 @@ trait PairPrinterIdris extends PrinterIdris with PairAST {
   }
 }
 
-trait PairEval extends Eval with PairAST { self: FunAST =>
+trait ProductEval extends Eval with ProductAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Product(a, b) =>
       VProduct(eval(a, ctx, bound), eval(b, ctx, bound))
@@ -102,7 +102,7 @@ trait PairEval extends Eval with PairAST { self: FunAST =>
     }
 }
 
-trait PairCheck extends Check with PairAST { self: FunAST =>
+trait ProductCheck extends Check with ProductAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Product(a, b) =>
       val aType = iType(i, path/(2, 3), ctx, a)
@@ -160,7 +160,7 @@ trait PairCheck extends Check with PairAST { self: FunAST =>
   }
 }
 
-trait PairQuoting extends Quoting with PairAST {
+trait ProductQuoting extends Quoting with ProductAST {
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VProduct(a, b) =>
       Product(quote(ii, a), quote(ii, b))
@@ -176,16 +176,16 @@ trait PairQuoting extends Quoting with PairAST {
   }
 }
 
-trait PairREPL
+trait ProductREPL
   extends CoreREPL
-  with PairAST
-  with PairMetaSyntax
-  with PairPrinter
-  with PairPrinterAgda
-  with PairPrinterCoq
-  with PairPrinterIdris
-  with PairCheck
-  with PairEval
-  with PairQuoting {
-  self: FunAST =>
+  with ProductAST
+  with ProductMetaSyntax
+  with ProductPrinter
+  with ProductPrinterAgda
+  with ProductPrinterCoq
+  with ProductPrinterIdris
+  with ProductCheck
+  with ProductEval
+  with ProductQuoting {
+  self: PiAST =>
 }

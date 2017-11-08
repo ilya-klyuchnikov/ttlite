@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait DPairDriver extends Driver with DPairAST with Eval { self: FunAST =>
+trait SigmaDriver extends Driver with SigmaAST with Eval { self: PiAST =>
 
   case object DPairLabel extends Label
 
@@ -34,7 +34,7 @@ trait DPairDriver extends Driver with DPairAST with Eval { self: FunAST =>
 
 }
 
-trait DPairResiduator extends Residuator with DPairDriver with DPairEval { self: FunAST =>
+trait SigmaResiduator extends Residuator with SigmaDriver with SigmaEval { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -52,7 +52,7 @@ trait DPairResiduator extends Residuator with DPairDriver with DPairEval { self:
     }
 }
 
-trait DPairProofResiduator extends DPairResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait SigmaProofResiduator extends SigmaResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

@@ -3,7 +3,7 @@ package ttlite.core
 import ttlite.common._
 
 // chapter 6. Enumeration sets
-trait FinAST extends AST {
+trait EnumAST extends AST {
 
   // ⊥, Void, empty type
   case object Falsity extends Term
@@ -33,7 +33,7 @@ trait FinAST extends AST {
   case class NBoolElim(m: Value, v1: Value, v2: Value, elem: Neutral) extends Neutral
 }
 
-trait FinMetaSyntax extends MetaSyntax with FinAST {
+trait EnumMetaSyntax extends MetaSyntax with EnumAST {
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Falsity")) => Falsity
     case MVar(Global("Truth")) => Truth
@@ -51,7 +51,7 @@ trait FinMetaSyntax extends MetaSyntax with FinAST {
   }
 }
 
-trait FinPrinter extends Printer with FinAST {
+trait EnumPrinter extends Printer with EnumAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
       "Falsity"
@@ -76,7 +76,7 @@ trait FinPrinter extends Printer with FinAST {
   }
 }
 
-trait FinPrinterAgda extends PrinterAgda with FinAST {
+trait EnumPrinterAgda extends PrinterAgda with EnumAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
       "Falsity"
@@ -101,7 +101,7 @@ trait FinPrinterAgda extends PrinterAgda with FinAST {
   }
 }
 
-trait FinPrinterCoq extends PrinterCoq with FinAST {
+trait EnumPrinterCoq extends PrinterCoq with EnumAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
       "Falsity"
@@ -126,7 +126,7 @@ trait FinPrinterCoq extends PrinterCoq with FinAST {
   }
 }
 
-trait FinPrinterIdris extends PrinterIdris with FinAST {
+trait EnumPrinterIdris extends PrinterIdris with EnumAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Falsity =>
       "Falsity"
@@ -151,7 +151,7 @@ trait FinPrinterIdris extends PrinterIdris with FinAST {
   }
 }
 
-trait FinEval extends FunEval with FinAST {
+trait EnumEval extends PiEval with EnumAST {
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Falsity =>
       VFalsity
@@ -206,7 +206,7 @@ trait FinEval extends FunEval with FinAST {
   }
 }
 
-trait FinCheck extends FunCheck with FinAST {
+trait EnumCheck extends PiCheck with EnumAST {
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Falsity | Truth | Bool =>
       VUniverse(0)
@@ -276,7 +276,7 @@ trait FinCheck extends FunCheck with FinAST {
   }
 }
 
-trait FinQuoting extends Quoting with FinAST {
+trait EnumQuoting extends Quoting with EnumAST {
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VFalsity => Falsity
     case VTruth => Truth
@@ -298,14 +298,14 @@ trait FinQuoting extends Quoting with FinAST {
   }
 }
 
-trait FinREPL
+trait EnumREPL
   extends CoreREPL
-  with FinAST
-  with FinMetaSyntax
-  with FinPrinter
-  with FinPrinterAgda
-  with FinPrinterCoq
-  with FinPrinterIdris
-  with FinCheck
-  with FinEval
-  with FinQuoting
+  with EnumAST
+  with EnumMetaSyntax
+  with EnumPrinter
+  with EnumPrinterAgda
+  with EnumPrinterCoq
+  with EnumPrinterIdris
+  with EnumCheck
+  with EnumEval
+  with EnumQuoting

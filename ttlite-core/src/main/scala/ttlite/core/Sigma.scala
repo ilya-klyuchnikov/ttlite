@@ -3,7 +3,8 @@ package ttlite.core
 import ttlite.common._
 
 // Chapter 13. Disjoint union of a family of sets
-trait DPairAST extends AST {
+// Dependent pair type, dependent sum type or sigma-type.
+trait SigmaAST extends AST {
   // exists
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term
@@ -14,7 +15,7 @@ trait DPairAST extends AST {
   case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait DPairMetaSyntax extends DPairAST with MetaSyntax {
+trait SigmaMetaSyntax extends SigmaAST with MetaSyntax {
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
       SigmaElim(translate(sigma), translate(m), translate(f), translate(p))
@@ -26,7 +27,7 @@ trait DPairMetaSyntax extends DPairAST with MetaSyntax {
   }
 }
 
-trait DPairPrinter extends Printer with DPairAST {
+trait SigmaPrinter extends Printer with SigmaAST {
   import scala.collection.immutable.Seq
 
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
@@ -52,7 +53,7 @@ trait DPairPrinter extends Printer with DPairAST {
   }
 }
 
-trait DPairPrinterAgda extends PrinterAgda with DPairAST { self: FunAST =>
+trait SigmaPrinterAgda extends PrinterAgda with SigmaAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
       printAL(p, ii, 'Sigma, d, Lam(d, r))
@@ -65,7 +66,7 @@ trait DPairPrinterAgda extends PrinterAgda with DPairAST { self: FunAST =>
   }
 }
 
-trait DPairPrinterCoq extends PrinterCoq with DPairAST { self: FunAST =>
+trait SigmaPrinterCoq extends PrinterCoq with SigmaAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
       printCL(p, ii, 'Sigma, d, Lam(d, r))
@@ -78,7 +79,7 @@ trait DPairPrinterCoq extends PrinterCoq with DPairAST { self: FunAST =>
   }
 }
 
-trait DPairPrinterIdris extends PrinterIdris with DPairAST { self: FunAST =>
+trait SigmaPrinterIdris extends PrinterIdris with SigmaAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
       printIL(p, ii, 'TTSigma, d, Lam(d, r))
@@ -91,7 +92,7 @@ trait DPairPrinterIdris extends PrinterIdris with DPairAST { self: FunAST =>
   }
 }
 
-trait DPairQuoting extends Quoting with DPairAST {
+trait SigmaQuoting extends Quoting with SigmaAST {
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VSigma(v, f) =>
       Sigma(quote(ii, v), quote(ii + 1, f(vfree(Quote(ii)))))
@@ -107,7 +108,7 @@ trait DPairQuoting extends Quoting with DPairAST {
   }
 }
 
-trait DPairEval extends Eval with DPairAST { self: FunAST =>
+trait SigmaEval extends Eval with SigmaAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Sigma(ty, ty1) =>
       VSigma(eval(ty, ctx, bound), x => eval(ty1, ctx, x :: bound))
@@ -129,7 +130,7 @@ trait DPairEval extends Eval with DPairAST { self: FunAST =>
   }
 }
 
-trait DPairCheck extends Check with DPairAST { self: FunAST =>
+trait SigmaCheck extends Check with SigmaAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // Sigma is a bind, so arity is 2
     case Sigma(x, tp) =>
@@ -196,16 +197,16 @@ trait DPairCheck extends Check with DPairAST { self: FunAST =>
 
 }
 
-trait DPairREPL
+trait SigmaREPL
   extends CoreREPL
-  with DPairAST
-  with DPairMetaSyntax
-  with DPairPrinter
-  with DPairPrinterAgda
-  with DPairPrinterCoq
-  with DPairPrinterIdris
-  with DPairCheck
-  with DPairEval
-  with DPairQuoting {
-  self: FunAST =>
+  with SigmaAST
+  with SigmaMetaSyntax
+  with SigmaPrinter
+  with SigmaPrinterAgda
+  with SigmaPrinterCoq
+  with SigmaPrinterIdris
+  with SigmaCheck
+  with SigmaEval
+  with SigmaQuoting {
+  self: PiAST =>
 }

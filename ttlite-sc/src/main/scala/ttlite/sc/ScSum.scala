@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait SumDriver extends Driver with SumAST with SumEval { self: FunAST =>
+trait SumDriver extends Driver with SumAST with SumEval { self: PiAST =>
 
   case object SumLabel extends Label
   case object InLLabel extends Label
@@ -47,7 +47,7 @@ trait SumDriver extends Driver with SumAST with SumEval { self: FunAST =>
   }
 }
 
-trait SumResiduator extends Residuator with SumDriver { self: FunAST =>
+trait SumResiduator extends Residuator with SumDriver { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeL, ElimLabel(sel, InL(et, Free(lN)), _, _)) ::
@@ -76,7 +76,7 @@ trait SumResiduator extends Residuator with SumDriver { self: FunAST =>
     }
 }
 
-trait SumProofResiduator extends SumResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait SumProofResiduator extends SumResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

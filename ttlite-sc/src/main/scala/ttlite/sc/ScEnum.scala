@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait FinDriver extends Driver with FinAST with FinEval {
+trait EnumDriver extends Driver with EnumAST with EnumEval {
 
   override def nv(t: Neutral): Option[Name] = t match {
     case NTruthElim(_, _, NFree(n)) => Some(n)
@@ -28,7 +28,7 @@ trait FinDriver extends Driver with FinAST with FinEval {
 
 }
 
-trait FinResiduator extends Residuator with FinDriver {
+trait EnumResiduator extends Residuator with EnumDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
@@ -45,7 +45,7 @@ trait FinResiduator extends Residuator with FinDriver {
     }
 }
 
-trait FinProofResiduator extends FinResiduator with ProofResiduator { self: FunAST with IdAST =>
+trait EnumProofResiduator extends EnumResiduator with ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(node: N,
                          env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
                          env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =

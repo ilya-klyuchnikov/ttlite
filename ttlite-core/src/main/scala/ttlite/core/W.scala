@@ -41,7 +41,7 @@ trait WPrinter extends Printer with WAST {
   }
 }
 
-trait WPrinterAgda extends PrinterAgda with WAST { self: FunAST =>
+trait WPrinterAgda extends PrinterAgda with WAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
       printAL(p, ii, 'W, d, Lam(d, r))
@@ -58,7 +58,7 @@ trait WPrinterAgda extends PrinterAgda with WAST { self: FunAST =>
   }
 }
 
-trait WPrinterCoq extends PrinterCoq with WAST { self: FunAST =>
+trait WPrinterCoq extends PrinterCoq with WAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
       printCL(p, ii, 'W, d, Lam(d, r))
@@ -75,7 +75,7 @@ trait WPrinterCoq extends PrinterCoq with WAST { self: FunAST =>
   }
 }
 
-trait WPrinterIdris extends PrinterIdris with WAST { self: FunAST =>
+trait WPrinterIdris extends PrinterIdris with WAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
       printIL(p, ii, 'W, d, Lam(d, r))
@@ -108,7 +108,7 @@ trait WQuoting extends Quoting with WAST {
   }
 }
 
-trait WEval extends Eval with WAST { self: FunAST =>
+trait WEval extends Eval with WAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case W(t1, t2) =>
       VW(eval(t1, ctx, bound), x => eval(t2, ctx, x :: bound))
@@ -136,7 +136,7 @@ trait WEval extends Eval with WAST { self: FunAST =>
   }
 }
 
-trait WCheck extends Check with WAST { self: FunAST =>
+trait WCheck extends Check with WAST { self: PiAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     // this is a bind, so arity = 2
     case W(x, tp) =>
@@ -218,5 +218,5 @@ trait WREPL
   with WCheck
   with WEval
   with WQuoting {
-  self: FunAST =>
+  self: PiAST =>
 }
