@@ -154,3 +154,17 @@ elimVec : (A : Type) ->
 
 elimVec A m f1 f2 Zero (VNil A) = f1
 elimVec A m f1 f2 (Succ n) (VCons A n a as) = f2 n a as (elimVec A m f1 f2 n as)
+
+------------------------------------------
+-- W (Well-Ordered sets)
+------------------------------------------
+
+data W : (A : Type) -> (B : A -> Type) -> Type where
+   Sup : (A : Type) -> (B : A -> Type) -> (a : A) -> (b : B a -> W A B) -> W A B
+
+rec : (A : Type) ->
+      (B : A -> Type) ->
+      (C : W A B -> Type) ->
+      (d : ((a : A) -> (b : B a -> W A B) -> ((x : B a) -> C (b x)) -> C (Sup A B a b))) ->
+      (c : W A B) -> C c
+rec A B C d (Sup A B a b) = d a b (\x => rec A B C d (b x))

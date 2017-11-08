@@ -1,14 +1,14 @@
--- examples of well founded types
+-- examples of well ordered types
 
 -- data Nat = Zero | Succ Nat
 
-zero = False;
-succ = True;
+wzero = False;
+wsucc = True;
 z_or_succ = Bool;
 
 z_children = Falsity;
 
-pred = Triv;
+wpred = Triv;
 pred_children = Truth;
 
 abort =
@@ -21,12 +21,12 @@ WNat =
 zeroCon : WNat;
 zeroCon =
     Sup (W (x : z_or_succ) . elim Bool (\ (x : z_or_succ) -> Set) z_children pred_children x)
-        zero
+        wzero
         (abort WNat);
 
 succCon : forall (_ : WNat) . WNat;
 succCon = \ (a : WNat) ->
-    Sup WNat succ (\ (v : pred_children) -> a );
+    Sup WNat wsucc (\ (v : pred_children) -> a );
 
 
 two : WNat;
@@ -103,8 +103,8 @@ wplus = \ (n1 : WNat) (n2 : WNat) ->
         (\ (y : z_or_succ) ->
             elim Bool
                 (\ (y : z_or_succ) -> forall (_ : forall (_ : zzNat y) . WNat) (_ : forall (_ : zzNat y) . WNat) . WNat )
-                (\ (z : forall (_ : zzNat zero) . WNat) (u : forall (_ : zzNat zero) . WNat) -> n2)
-                (\ (z : forall (_ : zzNat succ) . WNat) (u : forall (_ : zzNat succ) . WNat) -> succCon (u pred))
+                (\ (z : forall (_ : zzNat wzero) . WNat) (u : forall (_ : zzNat wzero) . WNat) -> n2)
+                (\ (z : forall (_ : zzNat wsucc) . WNat) (u : forall (_ : zzNat wsucc) . WNat) -> succCon (u wpred))
                 y)
         n1;
 
@@ -121,23 +121,23 @@ simpleNatFold =
         (\ (y : z_or_succ) ->
             elim Bool
                 (\ (y : z_or_succ) -> forall (_ : forall (_ : zzNat y) . WNat) (_ : forall (_ : zzNat y) . A) . A)
-                (\ (z : forall (_ : zzNat zero) . WNat) (u : forall (_ : zzNat zero) . A) -> zCase)
-                (\ (z : forall (_ : zzNat succ) . WNat) (u : forall (_ : zzNat succ) . A) -> sCase (u pred))
+                (\ (z : forall (_ : zzNat wzero) . WNat) (u : forall (_ : zzNat wzero) . A) -> zCase)
+                (\ (z : forall (_ : zzNat wsucc) . WNat) (u : forall (_ : zzNat wsucc) . A) -> sCase (u wpred))
                 y)
                 n;
 
 -- monomorphic nat fold
-natFold :
+wnatFold :
     forall (A : Set) (zCase : A) (sCase : forall (_ : WNat) (_ : A) . A) (n : WNat) . A;
-natFold =
+wnatFold =
     \ (A : Set) (zCase : A) (sCase : forall (_ : WNat) (_ : A) . A) (n : WNat) ->
         Rec WNat
         (\ (_ : WNat) -> A)
         (\ (y : z_or_succ) ->
             elim Bool
                 (\ (y : z_or_succ) -> forall (_ : forall (_ : zzNat y) . WNat) (_ : forall (_ : zzNat y) . A) . A)
-                (\ (z : forall (_ : zzNat zero) . WNat) (u : forall (_ : zzNat zero) . A) -> zCase)
-                (\ (z : forall (_ : zzNat succ) . WNat) (u : forall (_ : zzNat succ) . A) -> sCase (z pred) (u pred))
+                (\ (z : forall (_ : zzNat wzero) . WNat) (u : forall (_ : zzNat wzero) . A) -> zCase)
+                (\ (z : forall (_ : zzNat wsucc) . WNat) (u : forall (_ : zzNat wsucc) . A) -> sCase (z wpred) (u wpred))
                 y)
                 n;
 ---
@@ -207,8 +207,8 @@ wNatId =
         (\ (y : z_or_succ) ->
             elim Bool
                 (\ (y : z_or_succ) -> forall (_ : forall (_ : zzNat y) . WNat) (_ : forall (_ : zzNat y) . WNat) . WNat)
-                (\ (z : forall (_ : zzNat zero) . WNat) (u : forall (_ : zzNat zero) . WNat) -> zeroCon)
-                (\ (z : forall (_ : zzNat succ) . WNat) (u : forall (_ : zzNat succ) . WNat) -> succCon (u pred))
+                (\ (z : forall (_ : zzNat wzero) . WNat) (u : forall (_ : zzNat wzero) . WNat) -> zeroCon)
+                (\ (z : forall (_ : zzNat wsucc) . WNat) (u : forall (_ : zzNat wsucc) . WNat) -> succCon (u wpred))
                 y)
                 n;
 
@@ -218,7 +218,7 @@ $tC : $m tCon;
 --$A : Set;
 --ff = (\ (y : z_or_succ) -> {-- pattern matching here!!! --} forall (_ : forall (_ : zzNat y) . WNat) (_ : forall (_ : zzNat y) . $A) . $A);
 
-wboolMotive = forall (m : forall (_ : WBool) . Set) (y : f_or_t) . Set;
+wboolMotive : forall (m : forall (_ : WBool) . Set) (y : f_or_t) . Set;
 wboolMotive = \ (m : forall (_ : WBool) . Set) (y : f_or_t) ->
     elim Bool (\ (b : Bool) -> Set )
         (forall (z : forall (_ : zzBool y) . WBool) (_ : forall (_ : zzBool y) . WBool) . m fCon)

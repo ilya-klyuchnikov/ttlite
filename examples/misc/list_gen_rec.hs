@@ -80,12 +80,12 @@ bl2 = bl Nat m1 l2;
 bl3 = bl Nat m1 l3;
 
 {- general structural recursion on lists: -}
-rec : forall
+listRec : forall
     (A: Set)
     (p: forall (_: List A) . Set)
     (below: forall (xs: List A)(_: belowList A p xs) . p xs)
     (xs: List A) . p xs;
-rec = \(A: Set) (p: forall (_: List A) . Set) (below: forall (xs: List A)(_: belowList A p xs) . p xs) (xs: List A) ->
+listRec = \(A: Set) (p: forall (_: List A) . Set) (below: forall (xs: List A)(_: belowList A p xs) . p xs) (xs: List A) ->
   below xs (h A p below xs);
 
 -- trivial function
@@ -164,17 +164,17 @@ bo1 =
                )
             xs;
 
-odd = rec Nat modd bo1;
+odd = listRec Nat modd bo1;
 
 -- the same, so the second element is the previous iteration!!
 k = belowList Nat m1 (cons Nat $n $l);
 z = Product (belowList Nat m1 $l) (m1 $l);
 
 f1 : forall (_ : List Nat) . Bool;
-f1 = rec Nat m1 below1;
+f1 = listRec Nat m1 below1;
 
 f3 : forall (_ : List Nat) . Bool;
-f3 = rec Nat m1 below3;
+f3 = listRec Nat m1 below3;
 
 test0 : Id (List Nat) (odd (seq1 n0 n0)) (seq2 n0 n0);
 test0 = Refl (List Nat) (seq2 n0 n0);

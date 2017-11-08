@@ -204,5 +204,27 @@ elimVec A m f₁ f₂ zero vnil₀  = f₁
 elimVec A m f₁ f₂ (succ n) (vcons₀ a _ as) = f₂ n a as (elimVec A m f₁ f₂ n as)
 
 ------------------------------------------
--- TODO: W
+-- W (Well-Ordered sets)
 ------------------------------------------
+
+data W {i j} (A : Set i) (B : A -> Set j) : Set (i ⊔ j) where
+   sup₀ : (a : A) -> (b : B a -> W A B) -> W A B
+
+rec₀ : ∀ {i j k}
+         {A : Set i}
+         {B : A -> Set j}
+         {C : W A B -> Set k}
+         (d : ((a : A) -> (b : B a -> W A B) -> ((x : B a) -> C (b x)) -> C (sup₀ a b)))
+         (c : W A B) -> C c
+rec₀ {C = C} d (sup₀ a b) = d a b (\x -> rec₀ {C = C} d (b x))
+
+sup : ∀ {i j} (A : Set i) (B : A -> Set j) (a : A) (b : B a -> W A B) -> W A B
+sup A B a b = sup₀ a b
+
+rec : ∀ {i j k}
+        (A : Set i)
+        (B : A -> Set j)
+        (C : W A B -> Set k)
+        (d : ((a : A) -> (b : B a -> W A B) -> ((x : B a) -> C (b x)) -> C (sup A B a b)))
+        (c : W A B) -> C c
+rec A B C d c = rec₀ {C = C} d c

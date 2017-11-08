@@ -43,6 +43,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("vec.hs") {
       checkAgda("vec")
     }
+    it("w.hs") {
+      checkAgda("w")
+    }
   }
 
   describe("Export to Coq") {
@@ -82,6 +85,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     it("vec.hs") {
       checkCoq("vec")
     }
+    it("w.hs") {
+      checkCoq("w")
+    }
   }
 
   describe("Export to Idris") {
@@ -120,6 +126,9 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
     it("vec.hs") {
       checkIdris("vec")
+    }
+    it("w.hs") {
+      checkIdris("w")
     }
   }
 

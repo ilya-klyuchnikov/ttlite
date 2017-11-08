@@ -157,3 +157,18 @@ Fixpoint elimVec
   | vnil _ =>         f1
   | vcons _ n1 x xs => f2 n1 x xs (elimVec A m f1 f2 n1 xs)
   end.
+
+(** W **)
+
+Inductive W (A : Type) (B : A -> Type) : Type :=
+  | sup : forall (a : A) , (B a -> W A B) -> W A B.
+
+Fixpoint rec
+    (A : Type)
+    (B : A -> Type)
+    (C : W A B -> Type)
+    (d : (forall (a : A) (b : B a -> W A B) , (forall (x : B a) , C (b x)) -> C (sup A B a b)))
+    (c : W A B) : C c :=
+    match c with
+    | (sup _ _ a b) => d a b (fun (x : B a) => rec A B C d (b x))
+    end.

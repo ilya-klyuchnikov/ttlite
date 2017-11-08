@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// chapter 15: Well-Orderings
 trait WAST extends AST {
   case class W(t1: Term, t2: Term) extends Term
   case class Sup(w: Term, t1: Term, t2: Term) extends Term
@@ -37,6 +38,57 @@ trait WPrinter extends Printer with WAST {
       printL(p, ii, 'Rec, w, m, a, b)
     case _ =>
       super.print(p, ii, t)
+  }
+}
+
+trait WPrinterAgda extends PrinterAgda with WAST { self: FunAST =>
+  abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
+    case W(d, r) =>
+      printAL(p, ii, 'W, d, Lam(d, r))
+    case Sup(W(d, r), a, b) =>
+      printAL(p, ii, 'sup, d, Lam(d, r), a, b)
+    case Sup(_, _, _) =>
+      sys.error("Wrong term: " + t)
+    case Rec(W(d, r), m, a, b) =>
+      printAL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+    case Rec(_, _, _, _) =>
+      sys.error("Wrong term: " + t)
+    case _ =>
+      super.printA(p, ii, t)
+  }
+}
+
+trait WPrinterCoq extends PrinterCoq with WAST { self: FunAST =>
+  abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
+    case W(d, r) =>
+      printCL(p, ii, 'W, d, Lam(d, r))
+    case Sup(W(d, r), a, b) =>
+      printCL(p, ii, 'sup, d, Lam(d, r), a, b)
+    case Sup(_, _, _) =>
+      sys.error("Wrong term: " + t)
+    case Rec(W(d, r), m, a, b) =>
+      printCL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+    case Rec(_, _, _, _) =>
+      sys.error("Wrong term: " + t)
+    case _ =>
+      super.printC(p, ii, t)
+  }
+}
+
+trait WPrinterIdris extends PrinterIdris with WAST { self: FunAST =>
+  abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
+    case W(d, r) =>
+      printIL(p, ii, 'W, d, Lam(d, r))
+    case Sup(W(d, r), a, b) =>
+      printIL(p, ii, 'Sup, d, Lam(d, r), a, b)
+    case Sup(_, _, _) =>
+      sys.error("Wrong term: " + t)
+    case Rec(W(d, r), m, a, b) =>
+      printIL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+    case Rec(_, _, _, _) =>
+      sys.error("Wrong term: " + t)
+    case _ =>
+      super.printI(p, ii, t)
   }
 }
 
@@ -160,6 +212,9 @@ trait WREPL
   with WAST
   with WMetaSyntax
   with WPrinter
+  with WPrinterAgda
+  with WPrinterCoq
+  with WPrinterIdris
   with WCheck
   with WEval
   with WQuoting {
