@@ -2,7 +2,9 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 13. Disjoint union of a family of sets
 trait DPairAST extends AST {
+  // exists
   case class Sigma(c1: Term, c2: Term) extends Term
   case class DPair(sigma: Term, t: Term, e: Term) extends Term
   case class SigmaElim(sigma: Term, m: Term, f: Term, pair: Term) extends Term

@@ -2,7 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
-trait VectorAST extends CoreAST {
+trait VecAST extends CoreAST {
   case class Vec(A: Term, n: Term) extends Term
   case class VecNil(A: Term) extends Term
   case class VecCons(A: Term, n: Term, head: Term, tail: Term) extends Term
@@ -14,7 +14,7 @@ trait VectorAST extends CoreAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
-trait VectorMetaSyntax extends MetaSyntax with VectorAST {
+trait VecMetaSyntax extends MetaSyntax with VecAST {
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Vec")) @@ a @@ n =>
       Vec(translate(a), translate(n))
@@ -28,7 +28,7 @@ trait VectorMetaSyntax extends MetaSyntax with VectorAST {
   }
 }
 
-trait VectorPrinter extends Printer with VectorAST {
+trait VecPrinter extends Printer with VecAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
       printL(p, ii, 'Vec, a, n)
@@ -43,7 +43,7 @@ trait VectorPrinter extends Printer with VectorAST {
   }
 }
 
-trait VectorPrinterAgda extends PrinterAgda with VectorAST {
+trait VecPrinterAgda extends PrinterAgda with VecAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
       printAL(p, ii, 'Vec, a, n)
@@ -58,7 +58,7 @@ trait VectorPrinterAgda extends PrinterAgda with VectorAST {
   }
 }
 
-trait VectorPrinterCoq extends PrinterCoq with VectorAST {
+trait VecPrinterCoq extends PrinterCoq with VecAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
       printCL(p, ii, 'Vec, a, n)
@@ -73,7 +73,7 @@ trait VectorPrinterCoq extends PrinterCoq with VectorAST {
   }
 }
 
-trait VectorPrinterIdris extends PrinterIdris with VectorAST {
+trait VecPrinterIdris extends PrinterIdris with VecAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
       printIL(p, ii, 'Vec, a, n)
@@ -88,7 +88,7 @@ trait VectorPrinterIdris extends PrinterIdris with VectorAST {
   }
 }
 
-trait VectorEval extends Eval with VectorAST { self: FunAST =>
+trait VecEval extends Eval with VecAST { self: FunAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value = t match {
     case Vec(a, n) =>
       VVec(eval(a, ctx, bound), eval(n, ctx, bound))
@@ -113,7 +113,7 @@ trait VectorEval extends Eval with VectorAST { self: FunAST =>
   }
 }
 
-trait VectorCheck extends Check with VectorAST { self: FunAST with NatAST =>
+trait VecCheck extends Check with VecAST { self: FunAST with NatAST =>
   abstract override def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value = t match {
     case Vec(a, n) =>
       val aType = iType(i, path/(2, 3), ctx, a)
@@ -200,7 +200,7 @@ trait VectorCheck extends Check with VectorAST { self: FunAST with NatAST =>
   }
 }
 
-trait VectorQuoting extends Quoting with VectorAST {
+trait VecQuoting extends Quoting with VecAST {
   abstract override def quote(ii: Int, v: Value): Term = v match {
     case VVec(a, n) =>
       Vec(quote(ii, a), quote(ii, n))
@@ -224,16 +224,16 @@ trait VectorQuoting extends Quoting with VectorAST {
   }
 }
 
-trait VectorREPL
+trait VecREPL
   extends CoreREPL
-  with VectorAST
-  with VectorMetaSyntax
-  with VectorPrinter
-  with VectorPrinterAgda
-  with VectorPrinterCoq
-  with VectorPrinterIdris
-  with VectorCheck
-  with VectorEval
-  with VectorQuoting {
+  with VecAST
+  with VecMetaSyntax
+  with VecPrinter
+  with VecPrinterAgda
+  with VecPrinterCoq
+  with VecPrinterIdris
+  with VecCheck
+  with VecEval
+  with VecQuoting {
   self: FunAST with NatAST =>
 }

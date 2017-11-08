@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 12. Disjoint union of two sets
 trait SumAST extends AST {
   case class Sum(A: Term, B: Term) extends Term
   case class InL(et: Term, l: Term) extends Term

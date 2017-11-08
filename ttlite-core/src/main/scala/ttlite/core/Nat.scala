@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 9. Natural numbers
 trait NatAST extends AST {
   case object Nat extends Term
   case object Zero extends Term

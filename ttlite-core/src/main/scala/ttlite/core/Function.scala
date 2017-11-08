@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 7. Cartesian product of a family of sets
 trait FunAST extends AST {
   import scala.language.implicitConversions
 

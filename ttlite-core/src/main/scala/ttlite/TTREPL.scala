@@ -7,7 +7,7 @@ class TTREPL
   with FunREPL
   with DPairREPL
   with NatREPL
-  with VectorREPL
+  with VecREPL
   with IdREPL
   with FinREPL
   with ListREPL

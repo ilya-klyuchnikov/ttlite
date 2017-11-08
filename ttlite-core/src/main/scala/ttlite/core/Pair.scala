@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 11. Cartesian product of two sets
 trait PairAST extends AST {
   case class Product(A: Term, B: Term) extends Term
   case class Pair(et: Term, a: Term, b: Term) extends Term

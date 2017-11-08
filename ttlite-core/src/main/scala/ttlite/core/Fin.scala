@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// chapter 6. Enumeration sets
 trait FinAST extends AST {
 
   // ⊥, Void, empty type

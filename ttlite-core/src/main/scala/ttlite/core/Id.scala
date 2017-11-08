@@ -2,6 +2,7 @@ package ttlite.core
 
 import ttlite.common._
 
+// Chapter 8. Equality sets. Section 8.1 Intensional equality
 trait IdAST extends CoreAST {
   case class Id(A: Term, x: Term, y: Term) extends Term
   case class Refl(A: Term, x: Term) extends Term
