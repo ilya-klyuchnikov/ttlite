@@ -4,13 +4,13 @@ lazy val commonSettings = Seq(
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
   resolvers += "lambdamix-bintray" at "http://dl.bintray.com/lambdamix/maven/",
-  baseDirectory in run := file("."),
-  testOptions in Test += Tests.Argument("-oD"),
-  testOptions in IntegrationTest += Tests.Argument("-oD"),
-  fork in Test := true,
-  fork in IntegrationTest := true,
-  baseDirectory in Test := file("."),
-  baseDirectory in IntegrationTest := file("."),
+  run / baseDirectory := file("."),
+  Test / testOptions += Tests.Argument("-oD"),
+  IntegrationTest / testOptions += Tests.Argument("-oD"),
+  Test / fork  := true,
+  IntegrationTest / fork := true,
+  Test / baseDirectory := file("."),
+  IntegrationTest / baseDirectory := file("."),
 )
 
 lazy val core = (project in file("ttlite-core"))
@@ -21,7 +21,7 @@ lazy val core = (project in file("ttlite-core"))
     libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.8.0",
     libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
-    Defaults.itSettings
+    Defaults.itSettings,
   )
 
 
@@ -32,6 +32,6 @@ lazy val sc = (project in file("ttlite-sc"))
     name := "sc",
     libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
-    Defaults.itSettings
+    Defaults.itSettings,
   )
   .dependsOn(core)
