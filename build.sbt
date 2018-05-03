@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.4",
+  scalaVersion := "2.12.6",
   organization := "ttlite",
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
@@ -19,8 +19,8 @@ lazy val core = (project in file("ttlite-core"))
   .settings(
     name := "core",
     libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.8.0",
-    libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.11",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
+    libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.17.1",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
     Defaults.itSettings,
   )
 
@@ -31,7 +31,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(
     name := "sc",
     libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.4" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
     Defaults.itSettings,
   )
   .dependsOn(core)
