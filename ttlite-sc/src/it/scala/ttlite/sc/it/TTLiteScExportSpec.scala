@@ -135,7 +135,7 @@ class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
   def checkIdris(module : String) {
     import scala.sys.process._
     TTScREPL.main(Array(s"examples/test/idris-sc/${module}.hs"))
-    val cmd = s"${idrisCmd} --noprelude --check -i generated/ -i syntax/ generated/${module}.idr"
+    val cmd = s"${idrisCmd} --noprelude --check --allow-capitalized-pattern-variables -i generated/ -i syntax/ generated/${module}.idr"
     info(cmd)
     val exitCode = cmd.!
     exitCode shouldBe 0
