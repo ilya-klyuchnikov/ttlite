@@ -41,7 +41,7 @@ class ErrorHandlingSpec extends FunSpec with Matchers {
       thrown.column should equal (10)
     }
 
-    it("should report not saturated eliminator") {
+    it("should report incorrect eliminator") {
       val thrown = the[FiledTTLiteError] thrownBy { TTREPL.main(Array(s"$root/03_elim.hs")) }
       thrown.file should equal (s"$root/03_elim.hs")
       thrown.getMessage should startWith("incorrect eliminator")
