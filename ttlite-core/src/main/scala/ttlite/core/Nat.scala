@@ -16,6 +16,9 @@ trait NatAST extends AST {
 }
 
 trait NatMetaSyntax extends MetaSyntax with NatAST {
+  private val predefinedGlobals = Set("Nat", "Zero", "Succ")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Nat")) =>
       Nat

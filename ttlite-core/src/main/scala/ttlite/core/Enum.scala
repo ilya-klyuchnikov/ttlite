@@ -34,6 +34,9 @@ trait EnumAST extends AST {
 }
 
 trait EnumMetaSyntax extends MetaSyntax with EnumAST {
+  private val predefinedGlobals = Set("Falsity", "Truth", "Bool", "Triv", "False", "True")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Falsity")) => Falsity
     case MVar(Global("Truth")) => Truth

@@ -24,6 +24,9 @@ trait PiAST extends AST {
 }
 
 trait PiMetaSyntax extends MetaSyntax with PiAST {
+  private val predefinedGlobals = Set("forall")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MBind("forall", t1, t2) =>
       Pi(translate(t1), translate(t2))

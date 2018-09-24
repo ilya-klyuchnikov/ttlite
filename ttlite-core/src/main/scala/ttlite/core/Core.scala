@@ -15,6 +15,9 @@ trait CoreAST extends AST {
 }
 
 trait CoreMetaSyntax extends CoreAST with MetaSyntax {
+  private val predefinedGlobals = Set("Set", "Set0", "Set1", "Set2")
+  override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n)
   def translate(m: MTerm): Term = m match {
     case MVar(Global("Set")) =>
       Universe(0)
@@ -28,6 +31,8 @@ trait CoreMetaSyntax extends CoreAST with MetaSyntax {
       throw TranslationError(m, s"incorrect eliminator")
     case MVar(Quote(i)) =>
       Bound(i)
+    case MVar(g: Global) if isPredefinedGlobal(g) =>
+      throw TranslationError(m, s"incorrect usage of $g")
     case MVar(n) =>
       Free(n)
     case MAnn(t1, t2) =>

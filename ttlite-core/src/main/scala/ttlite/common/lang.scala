@@ -29,6 +29,7 @@ trait AST {
 
 trait MetaSyntax extends AST {
   def translate(m: MTerm): Term
+  def isPredefinedGlobal(g: Global): Boolean
 }
 
 trait Printer extends AST with PrettyPrinter {

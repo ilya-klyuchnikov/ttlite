@@ -1,2 +1,2 @@
--- constructor is not saturated
+-- incorrect usage of predefined id
 x = Succ;
