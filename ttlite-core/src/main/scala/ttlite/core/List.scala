@@ -16,6 +16,9 @@ trait ListAST extends AST {
 }
 
 trait ListMetaSyntax extends MetaSyntax with ListAST {
+  private val predefinedGlobals = Set("List", "Nic", "Cons")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(mt: MTerm): Term = mt match {
     case MVar(Global("List")) @@ a =>
       PiList(translate(a))

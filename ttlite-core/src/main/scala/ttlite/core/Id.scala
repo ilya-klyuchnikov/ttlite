@@ -14,6 +14,9 @@ trait IdAST extends CoreAST {
 }
 
 trait IdMetaSyntax extends MetaSyntax with IdAST {
+  private val predefinedGlobals = Set("Id", "Refl")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Id")) @@ a @@ x @@ y =>
       Id(translate(a), translate(x), translate(y))

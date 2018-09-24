@@ -14,6 +14,9 @@ trait ProductAST extends AST {
 }
 
 trait ProductMetaSyntax extends MetaSyntax with ProductAST {
+  private val predefinedGlobals = Set("Product", "Pair")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Product")) @@ a @@ b =>
       Product(translate(a), translate(b))

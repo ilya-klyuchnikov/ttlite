@@ -15,6 +15,9 @@ trait VecAST extends CoreAST {
 }
 
 trait VecMetaSyntax extends MetaSyntax with VecAST {
+  private val predefinedGlobals = Set("Vec", "VNil", "VCons", "vecElim")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Vec")) @@ a @@ n =>
       Vec(translate(a), translate(n))

@@ -15,6 +15,9 @@ trait WAST extends AST {
 }
 
 trait WMetaSyntax extends MetaSyntax with WAST {
+  private val predefinedGlobals = Set("W", "Sup", "Rec")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MBind("W", t1, t2) =>
       W(translate(t1), translate(t2))

@@ -16,6 +16,9 @@ trait SumAST extends AST {
 }
 
 trait SumMetaSyntax extends MetaSyntax with SumAST {
+  private val predefinedGlobals = Set("Sum", "InL", "InR")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("Sum")) @@ l @@ r =>
       Sum(translate(l), translate(r))

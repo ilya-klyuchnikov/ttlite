@@ -16,6 +16,9 @@ trait SigmaAST extends AST {
 }
 
 trait SigmaMetaSyntax extends SigmaAST with MetaSyntax {
+  private val predefinedGlobals = Set("dpair", "exists")
+  abstract override def isPredefinedGlobal(g: Global): Boolean =
+    predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
   abstract override def translate(m: MTerm): Term = m match {
     case MVar(Global("elim")) @@ (sigma @ MBind("exists", t1, t2)) @@ m @@ f @@ p =>
       SigmaElim(translate(sigma), translate(m), translate(f), translate(p))
