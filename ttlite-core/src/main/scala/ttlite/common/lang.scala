@@ -35,7 +35,7 @@ trait MetaSyntax extends AST {
 trait Printer extends AST with PrettyPrinter {
 
   def pp(c: Term): String =
-    pretty(print(0, 0, c))
+    layout(print(0, 0, c))
 
   def print(p: Int, ii: Int, t: Term): Doc
 

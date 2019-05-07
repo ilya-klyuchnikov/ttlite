@@ -18,7 +18,8 @@ lazy val core = (project in file("ttlite-core"))
   .settings(commonSettings)
   .settings(
     name := "core",
-    libraryDependencies += "com.googlecode.kiama" %% "kiama" % "1.8.0",
+    libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.1",
+    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.0.0",
     libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.18",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
     Defaults.itSettings,

@@ -204,11 +204,11 @@ trait CoreREPL
   override def pretty(c: T): String =
     pp(c)
   override def prettyAgda(c: T): String =
-    pretty(nest(printA(0, 0, c)))
+    layout(nest(printA(0, 0, c)))
   override def prettyCoq(c: T): String =
-    pretty(nest(printC(0, 0, c)))
+    layout(nest(printC(0, 0, c)))
   override def prettyIdris(c: T): String =
-    pretty(nest(printI(0, 0, c)))
+    layout(nest(printI(0, 0, c)))
   def assume(state: Context[V], id: Id, t: Term): Context[V] = {
     val name = Assumed(id.n)
     if (state.ids.contains(name)) {

@@ -1,5 +1,7 @@
 package ttlite.common
 
+import org.bitbucket.inkytonik.kiama
+
 import scala.language.postfixOps
 
 trait REPL {
@@ -267,7 +269,7 @@ trait REPL {
     }
   }
 
-  def loop(state : Context[V], console : org.kiama.util.Console) : Unit = {
+  def loop(state : Context[V], console : kiama.util.Console) : Unit = {
     val st1 = try {
       step(state, console)
     } catch {
@@ -283,7 +285,7 @@ trait REPL {
     loop(st1, console)
   }
 
-  def step(state: Context[V], console : org.kiama.util.Console): Context[V] = {
+  def step(state: Context[V], console : kiama.util.Console): Context[V] = {
     val in = console.readLine(ansi(s"@|bold $name> |@"))
     try {
       val stm = parser.parseIO(parser.stmt, in)
@@ -293,19 +295,28 @@ trait REPL {
     }
   }
 
-  def mainRepl(args: Array[String]) {
+  private def setUpConsole(): Unit = {
+    import jline.console.completer.CandidateListCompletionHandler
+
     org.fusesource.jansi.AnsiConsole.systemInstall()
-    org.kiama.util.JLineConsole.reader.addCompleter(new ImportCompleter())
+    kiama.util.JLineConsole.reader.addCompleter(new ImportCompleter())
+    val completionHandler = kiama.util.JLineConsole.reader.getCompletionHandler
+    val candidateListCompletionHandler = completionHandler.asInstanceOf[CandidateListCompletionHandler]
+    candidateListCompletionHandler.setPrintSpaceAfterFullCompletion(false)
+  }
+
+  def mainRepl(args: Array[String]) {
+    setUpConsole()
 
     var state = Context.empty[V]
     modules = Set()
     try {
       args match {
         case Array() =>
-          loop(state, org.kiama.util.JLineConsole)
+          loop(state, kiama.util.JLineConsole)
         case Array("-v") =>
           verbose = true
-          loop(state, org.kiama.util.JLineConsole)
+          loop(state, kiama.util.JLineConsole)
         case _ =>
           batch = true
           args.foreach { f =>

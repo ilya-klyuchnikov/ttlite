@@ -80,6 +80,6 @@ object TTLiteExit extends TTLiteError {
   override def withFile(f : String): TTLiteError = this
 }
 
-trait PrettyPrinter extends org.kiama.output.PrettyPrinter {
+trait PrettyPrinter extends org.bitbucket.inkytonik.kiama.output.PrettyPrinter {
   def parensIf(b: Boolean, d: Doc): Doc = if (b) parens(d) else d
 }

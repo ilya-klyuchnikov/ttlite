@@ -11,7 +11,7 @@ trait GraphPrettyPrinter2 extends SC {
 
   // kiama pretty printer is not able to produce single string, so here is a hack
   def toString(c: Conf): String = {
-    val s = pretty(pp(c.term), 1000) + " |||| " + pretty(pp(c.tp), 1000)
+    val s = layout(pp(c.term), 1000) + " |||| " + layout(pp(c.tp), 1000)
     s.replace('\n', ' ').replaceAll("\\s+", " ")
   }
 
