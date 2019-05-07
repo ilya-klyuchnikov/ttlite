@@ -110,6 +110,8 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
   def parseStatements(in: String) : List[Stmt[MTerm]]  =
     parseIO(stmt+, in)
+  def parseStatement(in: String) : Stmt[MTerm]  =
+    parseIO(stmt, in)
   def parseMTerm(in: String) : MTerm =
     parseIO(term, in)(Nil)
 
@@ -120,31 +122,31 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   lexical.delimiters +=
     ("(", ")", ":", ".", "=", "->", ";")
   // Ctx is a sequence of named binders. In the spirit of TAPL implementation.
-  type Ctx = List[String]
-  type Res = Ctx => MTerm
+  private type Ctx = List[String]
+  private type Res = Ctx => MTerm
   // PosRes propagates positional information to the final result
   case class RichPosRes(res : Ctx => MTerm) extends (Ctx => MTerm) with RichPositional {
     override def apply(c : Ctx): MTerm = res(c).setPs(startPos, endPos)
   }
   // Parser combinator which enriches/updates the result of a parser `p` with positional information
   // Caveat: it works up to whitespaces/comments
-  def pos[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in1 =>
+  private def pos[T <: RichPositional](p: => Parser[T]): Parser[T] = Parser { in1 =>
     p(in1) match {
       case Success(t, in2) => Success(t.setPs(in1.pos, in2.pos), in2)
       case r => r
     }
   }
-  case class Arg(name : String, tp : RichPosRes) extends RichPositional
+  private case class Arg(name : String, tp : RichPosRes) extends RichPositional
 
   lazy val term: PackratParser[RichPosRes] = bind | app
-  lazy val aTerm: PackratParser[RichPosRes] =
+  private lazy val aTerm: PackratParser[RichPosRes] =
     pos(mVar | "(" ~> term <~ ")")
-  lazy val mVar: PackratParser[RichPosRes] =
+  private lazy val mVar: PackratParser[RichPosRes] =
     pos(ident ^^ {i => RichPosRes {ctx: Ctx => ctx.indexOf(i) match {case -1 => MVar(s2name(i)) case j => MVar(Quote(j))}} })
-  lazy val app: PackratParser[RichPosRes] =
+  private lazy val app: PackratParser[RichPosRes] =
     pos((aTerm+) ^^ {ts => RichPosRes {ctx: Ctx => ts.map{_(ctx)}.reduce(_ ~ _)} })
 
-  lazy val bind: PackratParser[RichPosRes] =
+  private lazy val bind: PackratParser[RichPosRes] =
     pos(ident ~ (arg+) ~ (("." | "->") ~> term) ^^
       {case id ~ args ~ body =>
         RichPosRes { ctx: Ctx =>
@@ -158,10 +160,10 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
           mkBind(args, ctx)
         }})
 
-  val arg: PackratParser[Arg] =
+  private val arg: PackratParser[Arg] =
     pos("(" ~> (ident ~ (":" ~> term)) <~ ")" ^^ {case i ~ x => Arg(i, x)})
 
-  lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
+  private lazy val stmt: PackratParser[Stmt[MTerm]] = stmts.reduce(_ | _)
   def stmts =
     List(
       quitStmt,
@@ -176,33 +178,33 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
       evalStmt
     )
 
-  lazy val letStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val letStmt: PackratParser[Stmt[MTerm]] =
     globalId ~ ("=" ~> term <~ ";") ^^ {case x ~ y => Let(x, y(Nil))}
-  lazy val typedLetStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val typedLetStmt: PackratParser[Stmt[MTerm]] =
     (globalId ~ (":" ~> term) <~ ";") >> {
       case id ~ tp =>
         (ident ^?({case n if n == id.n => id}, _ => s"definition of ${id.n} expected")) ~ ("=" ~> term <~ ";") ^^ {
           case x ~ y => TypedLet(x, y(Nil), tp(Nil))
         }
     }
-  lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
     (assumedId ~ (":" ~> term) <~ ";") ^^ {case x ~ y  => Assume(x, y(Nil))}
-  lazy val importStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val importStmt: PackratParser[Stmt[MTerm]] =
     "import" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Import
-  lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
     "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda
-  lazy val exportToCoqStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val exportToCoqStmt: PackratParser[Stmt[MTerm]] =
     "exportToCoq" ~> ident <~ ";" ^^ ExportToCoq
-  lazy val exportToIdrisStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val exportToIdrisStmt: PackratParser[Stmt[MTerm]] =
     "exportToIdris" ~> ident <~ ";" ^^ ExportToIdris
-  lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
     "reload" ~> (stringLit | ident ^^ {x => s"$x.hs"}) <~ ";" ^^ Reload
-  lazy val evalStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val evalStmt: PackratParser[Stmt[MTerm]] =
     term <~ ";" ^^ {t => EvalStmt(t(Nil))}
-  lazy val quitStmt: PackratParser[Stmt[MTerm]] =
+  private lazy val quitStmt: PackratParser[Stmt[MTerm]] =
     "quit" <~ ";" ^^ {t => Quit}
 
-  def assumedId: PackratParser[Id] =
+  private def assumedId: PackratParser[Id] =
     pos(ident ^? {case id if id.startsWith("$") => Id(id)})
   def globalId: PackratParser[Id] =
     pos(ident ^? {case id if !id.startsWith("$") => Id(id)})

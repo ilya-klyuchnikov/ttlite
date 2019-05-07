@@ -260,7 +260,7 @@ trait REPL {
       return state1
     try {
       val input = scala.io.Source.fromFile(f).mkString
-      val stmts = parser.parseIO(parser.stmt+, input)
+      val stmts = parser.parseStatements(input)
       val s1 = stmts.foldLeft(state1){(s, stm) => handleStmt(s, stm)}
       modules = modules + f
       s1
@@ -288,7 +288,7 @@ trait REPL {
   def step(state: Context[V], console : kiama.util.Console): Context[V] = {
     val in = console.readLine(ansi(s"@|bold $name> |@"))
     try {
-      val stm = parser.parseIO(parser.stmt, in)
+      val stm = parser.parseStatement(in)
       handleStmt(state, stm)
     } catch {
       case ttError : TTLiteError => throw ttError.withFile("repl input")
