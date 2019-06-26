@@ -4,15 +4,6 @@ object IoUtil {
   import org.fusesource.jansi._
   def ansi(s : String) : String =
     Ansi.ansi.render(s).toString
-
-  // This is a hack, but allows to detect that Eclipse/Idea consoles are not ANSI once
-  private def isAnsi_? : Boolean =
-    !AnsiConsole.wrapOutputStream(null).isInstanceOf[AnsiOutputStream]
-
-  // left marker
-  lazy val lm: String = if (isAnsi_?) "" else "▶"
-  //right marker
-  lazy val rm: String = if (isAnsi_?) "" else "◀"
 }
 
 trait TTLiteError extends Exception {
@@ -49,7 +40,7 @@ case class TranslationError(override val mt : MTerm, override val msg : String) 
 class MTermError(val errorKind : String, val mt : MTerm, val msg : String) extends TTLiteError {
   import IoUtil._
   val details: String =
-    ansi(s"${mt.originPrefix}${lm}@|magenta,bold ${mt.origin}|@${rm}${mt.originSuffix}")
+    ansi(s"${mt.originPrefix}@|magenta,bold ${mt.origin}|@${mt.originSuffix}")
   val line: Int = mt.startPos.line
   val column: Int = mt.startPos.column
   override val origin: String = mt.origin
@@ -58,7 +49,7 @@ class MTermError(val errorKind : String, val mt : MTerm, val msg : String) exten
 case class DuplicateIdError(id : Id) extends TTLiteError {
   import IoUtil._
   val details: String =
-    ansi(s"${id.originPrefix}${lm}@|magenta,bold ${id.origin}|@${rm}${id.originSuffix}")
+    ansi(s"${id.originPrefix}@|magenta,bold ${id.origin}|@${id.originSuffix}")
   val line: Int = id.startPos.line
   val column: Int = id.startPos.column
   override val origin: String = id.origin
