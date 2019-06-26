@@ -19,8 +19,9 @@ lazy val core = (project in file("ttlite-core"))
   .settings(
     name := "core",
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.1.0",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
+    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.2.1",
+    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.2.1",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test,it",
     Defaults.itSettings,
   )
 
@@ -31,7 +32,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(
     name := "sc",
     libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test,it",
     Defaults.itSettings,
   )
   .dependsOn(core)
