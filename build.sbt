@@ -20,7 +20,6 @@ lazy val core = (project in file("ttlite-core"))
     name := "core",
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
     libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.1.0",
-    libraryDependencies += "org.fusesource.jansi" %  "jansi" % "1.18",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test,it",
     Defaults.itSettings,
   )

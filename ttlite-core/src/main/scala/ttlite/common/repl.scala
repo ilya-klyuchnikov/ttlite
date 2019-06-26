@@ -295,19 +295,7 @@ trait REPL {
     }
   }
 
-  private def setUpConsole(): Unit = {
-    import jline.console.completer.CandidateListCompletionHandler
-
-    org.fusesource.jansi.AnsiConsole.systemInstall()
-    kiama.util.JLineConsole.reader.addCompleter(new ImportCompleter())
-    val completionHandler = kiama.util.JLineConsole.reader.getCompletionHandler
-    val candidateListCompletionHandler = completionHandler.asInstanceOf[CandidateListCompletionHandler]
-    candidateListCompletionHandler.setPrintSpaceAfterFullCompletion(false)
-  }
-
   def mainRepl(args: Array[String]) {
-    setUpConsole()
-
     var state = Context.empty[V]
     modules = Set()
     try {
