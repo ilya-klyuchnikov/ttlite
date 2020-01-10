@@ -97,7 +97,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator { se
         val y2 = fold(y, env1, bound1, recM1)
         val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
-        'cong2 @@ a @@ b @@ VProduct(a, b) @@
+        "cong2" @@ a @@ b @@ VProduct(a, b) @@
           VLam(a, x => VLam(b, y => VPair(VProduct(a, b), x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
@@ -115,7 +115,7 @@ trait ProductProofResiduator extends ProductResiduator with ProofResiduator { se
         val y2 = fold(y, env1, bound1, recM1)
         val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
-        'cong2 @@ xtp @@ ytp @@ tp @@
+        "cong2" @@ xtp @@ ytp @@ tp @@
           VLam(xtp, x => VLam(ytp, y => VProduct(x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2

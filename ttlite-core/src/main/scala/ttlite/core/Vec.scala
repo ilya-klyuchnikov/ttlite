@@ -34,13 +34,13 @@ trait VecMetaSyntax extends MetaSyntax with VecAST {
 trait VecPrinter extends Printer with VecAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      printL(p, ii, 'Vec, a, n)
+      printL(p, ii, "Vec", a, n)
     case VecNil(a) =>
-      printL(p, ii, 'VNil, a)
+      printL(p, ii, "VNil", a)
     case VecCons(a, n, x, xs) =>
-      printL(p, ii, 'VCons, a, n, x, xs)
+      printL(p, ii, "VCons", a, n, x, xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      printL(p, ii, 'vecElim, a, m, mn, mc, n, xs)
+      printL(p, ii, "vecElim", a, m, mn, mc, n, xs)
     case _ =>
       super.print(p, ii, t)
   }
@@ -49,13 +49,13 @@ trait VecPrinter extends Printer with VecAST {
 trait VecPrinterAgda extends PrinterAgda with VecAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      printAL(p, ii, 'Vec, a, n)
+      printAL(p, ii, "Vec", a, n)
     case VecNil(a) =>
-      printAL(p, ii, 'vnil, a)
+      printAL(p, ii, "vnil", a)
     case VecCons(a, n, x, xs) =>
-      printAL(p, ii, 'vcons, a, n, x, xs)
+      printAL(p, ii, "vcons", a, n, x, xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      printAL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+      printAL(p, ii, "elimVec", a, m, mn, mc, n, xs)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -64,13 +64,13 @@ trait VecPrinterAgda extends PrinterAgda with VecAST {
 trait VecPrinterCoq extends PrinterCoq with VecAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      printCL(p, ii, 'Vec, a, n)
+      printCL(p, ii, "Vec", a, n)
     case VecNil(a) =>
-      printCL(p, ii, 'vnil, a)
+      printCL(p, ii, "vnil", a)
     case VecCons(a, n, x, xs) =>
-      printCL(p, ii, 'vcons, a, n, x, xs)
+      printCL(p, ii, "vcons", a, n, x, xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      printCL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+      printCL(p, ii, "elimVec", a, m, mn, mc, n, xs)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -79,13 +79,13 @@ trait VecPrinterCoq extends PrinterCoq with VecAST {
 trait VecPrinterIdris extends PrinterIdris with VecAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Vec(a, n) =>
-      printIL(p, ii, 'Vec, a, n)
+      printIL(p, ii, "Vec", a, n)
     case VecNil(a) =>
-      printIL(p, ii, 'VNil, a)
+      printIL(p, ii, "VNil", a)
     case VecCons(a, n, x, xs) =>
-      printIL(p, ii, 'VCons, a, n, x, xs)
+      printIL(p, ii, "VCons", a, n, x, xs)
     case VecElim(a, m, mn, mc, n, xs) =>
-      printIL(p, ii, 'elimVec, a, m, mn, mc, n, xs)
+      printIL(p, ii, "elimVec", a, m, mn, mc, n, xs)
     case _ =>
       super.printI(p, ii, t)
   }

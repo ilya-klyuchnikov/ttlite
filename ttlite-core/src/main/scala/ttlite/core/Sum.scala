@@ -35,13 +35,13 @@ trait SumMetaSyntax extends MetaSyntax with SumAST {
 trait SumPrinter extends Printer with SumAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printL(p, ii, 'Sum, a, b)
+      printL(p, ii, "Sum", a, b)
     case InL(et, l) =>
-      printL(p, ii, 'InL, et, l)
+      printL(p, ii, "InL", et, l)
     case InR(et, r) =>
-      printL(p, ii, 'InR, et, r)
+      printL(p, ii, "InR", et, r)
     case SumElim(et, m, lc, rc, sum) =>
-      printL(p, ii, 'elim, et, m, lc, rc, sum)
+      printL(p, ii, "elim", et, m, lc, rc, sum)
     case _ =>
       super.print(p, ii, t)
   }
@@ -50,13 +50,13 @@ trait SumPrinter extends Printer with SumAST {
 trait SumPrinterAgda extends PrinterAgda with SumAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printAL(p, ii, 'Sum, a, b)
+      printAL(p, ii, "Sum", a, b)
     case InL(Sum(a, b), l) =>
-      printAL(p, ii, 'inl, a, b, l)
+      printAL(p, ii, "inl", a, b, l)
     case InR(Sum(a, b), r) =>
-      printAL(p, ii, 'inr, a, b, r)
+      printAL(p, ii, "inr", a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printAL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
+      printAL(p, ii, "elimSum", a, b, m, lc, rc, sum)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -65,13 +65,13 @@ trait SumPrinterAgda extends PrinterAgda with SumAST {
 trait SumPrinterCoq extends PrinterCoq with SumAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printCL(p, ii, 'Sum, a, b)
+      printCL(p, ii, "Sum", a, b)
     case InL(Sum(a, b), l) =>
-      printCL(p, ii, 'inl, a, b, l)
+      printCL(p, ii, "inl", a, b, l)
     case InR(Sum(a, b), r) =>
-      printCL(p, ii, 'inr, a, b, r)
+      printCL(p, ii, "inr", a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printCL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
+      printCL(p, ii, "elimSum", a, b, m, lc, rc, sum)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -80,13 +80,13 @@ trait SumPrinterCoq extends PrinterCoq with SumAST {
 trait SumPrinterIdris extends PrinterIdris with SumAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sum(a, b) =>
-      printIL(p, ii, 'Sum, a, b)
+      printIL(p, ii, "Sum", a, b)
     case InL(Sum(a, b), l) =>
-      printIL(p, ii, 'Inl, a, b, l)
+      printIL(p, ii, "Inl", a, b, l)
     case InR(Sum(a, b), r) =>
-      printIL(p, ii, 'Inr, a, b, r)
+      printIL(p, ii, "Inr", a, b, r)
     case SumElim(Sum(a, b), m, lc, rc, sum) =>
-      printIL(p, ii, 'elimSum, a, b, m, lc, rc, sum)
+      printIL(p, ii, "elimSum", a, b, m, lc, rc, sum)
     case _ =>
       super.printI(p, ii, t)
   }

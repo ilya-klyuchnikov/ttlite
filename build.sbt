@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  scalaVersion := "2.12.8",
+  scalaVersion := "2.13.1",
   organization := "ttlite",
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
@@ -31,7 +31,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(commonSettings)
   .settings(
     name := "sc",
-    libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.2",
+    libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.3",
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test,it",
     Defaults.itSettings,
   )

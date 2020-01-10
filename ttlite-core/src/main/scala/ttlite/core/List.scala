@@ -35,13 +35,13 @@ trait ListMetaSyntax extends MetaSyntax with ListAST {
 trait ListPrinter extends Printer with ListAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printL(p, ii, 'List, a)
+      printL(p, ii, "List", a)
     case PiNil(a) =>
-      printL(p, ii, 'Nil, a)
+      printL(p, ii, "Nil", a)
     case PiCons(a, x, xs) =>
-      printL(p, ii, 'Cons, a, x, xs)
+      printL(p, ii, "Cons", a, x, xs)
     case PiListElim(a, m, mn, mc, xs) =>
-      printL(p, ii, 'elim, a, m, mn, mc, xs)
+      printL(p, ii, "elim", a, m, mn, mc, xs)
     case _ =>
       super.print(p, ii, t)
   }
@@ -50,13 +50,13 @@ trait ListPrinter extends Printer with ListAST {
 trait ListPrinterAgda extends PrinterAgda with ListAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printAL(p, ii, 'List, a)
+      printAL(p, ii, "List", a)
     case PiNil(PiList(a)) =>
-      printAL(p, ii, 'nil, a)
+      printAL(p, ii, "nil", a)
     case PiCons(PiList(a), x, xs) =>
-      printAL(p, ii, 'cons, a, x, xs)
+      printAL(p, ii, "cons", a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printAL(p, ii, 'elimList, a, m, mn, mc, xs)
+      printAL(p, ii, "elimList", a, m, mn, mc, xs)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -65,13 +65,13 @@ trait ListPrinterAgda extends PrinterAgda with ListAST {
 trait ListPrinterCoq extends PrinterCoq with ListAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printCL(p, ii, 'List, a)
+      printCL(p, ii, "List", a)
     case PiNil(PiList(a)) =>
-      printCL(p, ii, 'nil, a)
+      printCL(p, ii, "nil", a)
     case PiCons(PiList(a), x, xs) =>
-      printCL(p, ii, 'cons, a, x, xs)
+      printCL(p, ii, "cons", a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printCL(p, ii, 'elimList, a, m, mn, mc, xs)
+      printCL(p, ii, "elimList", a, m, mn, mc, xs)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -80,13 +80,13 @@ trait ListPrinterCoq extends PrinterCoq with ListAST {
 trait ListPrinterIdris extends PrinterIdris with ListAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case PiList(a) =>
-      printIL(p, ii, 'List, a)
+      printIL(p, ii, "List", a)
     case PiNil(PiList(a)) =>
-      printIL(p, ii, 'Nil, a)
+      printIL(p, ii, "Nil", a)
     case PiCons(PiList(a), x, xs) =>
-      printIL(p, ii, 'Cons, a, x, xs)
+      printIL(p, ii, "Cons", a, x, xs)
     case PiListElim(PiList(a), m, mn, mc, xs) =>
-      printIL(p, ii, 'elimList, a, m, mn, mc, xs)
+      printIL(p, ii, "elimList", a, m, mn, mc, xs)
     case _ =>
       super.printI(p, ii, t)
   }

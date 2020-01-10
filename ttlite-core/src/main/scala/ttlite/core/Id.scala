@@ -31,11 +31,11 @@ trait IdMetaSyntax extends MetaSyntax with IdAST {
 trait IdPrinter extends Printer with IdAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printL(p, ii, 'Id, a, x, y)
+      printL(p, ii, "Id", a, x, y)
     case Refl(a, x) =>
-      printL(p, ii, 'Refl, a, x)
+      printL(p, ii, "Refl", a, x)
     case IdElim(et, m, mr, eq) =>
-      printL(p, ii, 'elim, et, m, mr, eq)
+      printL(p, ii, "elim", et, m, mr, eq)
     case _ =>
       super.print(p, ii, t)
   }
@@ -44,11 +44,11 @@ trait IdPrinter extends Printer with IdAST {
 trait IdPrinterAgda extends PrinterAgda with IdAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printAL(p, ii, 'Id, a, x, y)
+      printAL(p, ii, "Id", a, x, y)
     case Refl(a, x) =>
-      printAL(p, ii, 'refl, a, x)
+      printAL(p, ii, "refl", a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printAL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
+      printAL(p, ii, "elimId", a, a1, a2, m, mr, eq)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -57,11 +57,11 @@ trait IdPrinterAgda extends PrinterAgda with IdAST {
 trait IdPrinterCoq extends PrinterCoq with IdAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printCL(p, ii, 'Id, a, x, y)
+      printCL(p, ii, "Id", a, x, y)
     case Refl(a, x) =>
-      printCL(p, ii, 'refl, a, x)
+      printCL(p, ii, "refl", a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printCL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
+      printCL(p, ii, "elimId", a, a1, a2, m, mr, eq)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -70,11 +70,11 @@ trait IdPrinterCoq extends PrinterCoq with IdAST {
 trait IdPrinterIdris extends PrinterIdris with IdAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Id(a, x, y) =>
-      printIL(p, ii, 'Id, a, x, y)
+      printIL(p, ii, "Id", a, x, y)
     case Refl(a, x) =>
-      printIL(p, ii, 'TTRefl, a, x)
+      printIL(p, ii, "TTRefl", a, x)
     case IdElim(Id(a, a1, a2), m, mr, eq) =>
-      printIL(p, ii, 'elimId, a, a1, a2, m, mr, eq)
+      printIL(p, ii, "elimId", a, a1, a2, m, mr, eq)
     case _ =>
       super.printI(p, ii, t)
   }

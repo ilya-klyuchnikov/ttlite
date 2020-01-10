@@ -31,11 +31,11 @@ trait ProductMetaSyntax extends MetaSyntax with ProductAST {
 trait ProductPrinter extends Printer with ProductAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printL(p, ii, 'Product, a, b)
+      printL(p, ii, "Product", a, b)
     case Pair(et, x, y) =>
-      printL(p, ii, 'Pair, et, x, y)
+      printL(p, ii, "Pair", et, x, y)
     case ProductElim(et, m, f, pair) =>
-      printL(p, ii, 'elim, et, m, f, pair)
+      printL(p, ii, "elim", et, m, f, pair)
     case _ =>
       super.print(p, ii, t)
   }
@@ -44,11 +44,11 @@ trait ProductPrinter extends Printer with ProductAST {
 trait ProductPrinterAgda extends PrinterAgda with ProductAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printAL(p, ii, 'Pair, a, b)
+      printAL(p, ii, "Pair", a, b)
     case Pair(Product(a, b), x, y) =>
-      printAL(p, ii, 'pair, a, b, x, y)
+      printAL(p, ii, "pair", a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printAL(p, ii, 'elimPair, a, b, m, f, pair)
+      printAL(p, ii, "elimPair", a, b, m, f, pair)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -57,11 +57,11 @@ trait ProductPrinterAgda extends PrinterAgda with ProductAST {
 trait ProductPrinterCoq extends PrinterCoq with ProductAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printCL(p, ii, 'Pair, a, b)
+      printCL(p, ii, "Pair", a, b)
     case Pair(Product(a, b), x, y) =>
-      printCL(p, ii, 'pair, a, b, x, y)
+      printCL(p, ii, "pair", a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printCL(p, ii, 'elimPair, a, b, m, f, pair)
+      printCL(p, ii, "elimPair", a, b, m, f, pair)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -70,11 +70,11 @@ trait ProductPrinterCoq extends PrinterCoq with ProductAST {
 trait ProductPrinterIdris extends PrinterIdris with ProductAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Product(a, b) =>
-      printIL(p, ii, 'TTPair, a, b)
+      printIL(p, ii, "TTPair", a, b)
     case Pair(Product(a, b), x, y) =>
-      printIL(p, ii, 'Pair, a, b, x, y)
+      printIL(p, ii, "Pair", a, b, x, y)
     case ProductElim(Product(a, b), m, f, pair) =>
-      printIL(p, ii, 'elimPair, a, b, m, f, pair)
+      printIL(p, ii, "elimPair", a, b, m, f, pair)
     case _ =>
       super.printI(p, ii, t)
   }

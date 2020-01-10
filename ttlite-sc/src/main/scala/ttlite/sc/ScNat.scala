@@ -93,7 +93,7 @@ trait NatProofResiduator extends NatResiduator with ProofResiduator { self: PiAS
 
         natElim(motive, zCase, sCase, env1(sel))
       case TEdge(n1, SuccLabel) :: Nil =>
-        'cong1 @@
+        "cong1" @@
           VNat @@
           VNat @@
           VLam(VNat, n => VSucc(n)) @@

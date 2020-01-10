@@ -37,11 +37,11 @@ trait NatPrinter extends Printer with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printL(p, ii, 'elim, Nat, m, z, s, n)
+      printL(p, ii, "elim", Nat, m, z, s, n)
     case Zero =>
       "Zero"
     case Succ(n) =>
-      printL(p, ii, 'Succ, n)
+      printL(p, ii, "Succ", n)
     case _ =>
       super.print(p, ii, t)
   }
@@ -52,11 +52,11 @@ trait NatPrinterAgda extends PrinterAgda with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printAL(p, ii, 'elimNat, m, z, s, n)
+      printAL(p, ii, "elimNat", m, z, s, n)
     case Zero =>
       "zero"
     case Succ(n) =>
-      printAL(p, ii, 'succ, n)
+      printAL(p, ii, "succ", n)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -67,11 +67,11 @@ trait NatPrinterCoq extends PrinterCoq with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printCL(p, ii, 'elimNat, m, z, s, n)
+      printCL(p, ii, "elimNat", m, z, s, n)
     case Zero =>
       "zero"
     case Succ(n) =>
-      printCL(p, ii, 'succ, n)
+      printCL(p, ii, "succ", n)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -82,11 +82,11 @@ trait NatPrinterIdris extends PrinterIdris with NatAST {
     case Nat =>
       "Nat"
     case NatElim(m, z, s, n) =>
-      printIL(p, ii, 'elimNat, m, z, s, n)
+      printIL(p, ii, "elimNat", m, z, s, n)
     case Zero =>
       "Zero"
     case Succ(n) =>
-      printIL(p, ii, 'Succ, n)
+      printIL(p, ii, "Succ", n)
     case _ =>
       super.printI(p, ii, t)
   }

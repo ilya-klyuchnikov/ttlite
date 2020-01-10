@@ -132,7 +132,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     }
   }
 
-  def checkAgda(module : String) {
+  def checkAgda(module : String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/agda/${module}.hs"))
     val cmd = s"agda -v 0 -i generated/ -i syntax/ generated/${module}.agda"
@@ -141,7 +141,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
     exitCode shouldBe 0
   }
 
-  def checkCoq(module : String) {
+  def checkCoq(module : String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/coq/${module}.hs"))
     val cmd = s"coqc generated/${module}.v"
@@ -152,7 +152,7 @@ class TTLiteExportSpec extends org.scalatest.FunSpec with org.scalatest.Matchers
 
   val idrisCmd = "idris"
 
-  def checkIdris(module : String) {
+  def checkIdris(module : String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/idris/${module}.hs"))
     val cmd = s"${idrisCmd} --noprelude --check --allow-capitalized-pattern-variables -i generated/ -i syntax/ generated/${module}.idr"

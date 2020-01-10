@@ -40,12 +40,12 @@ trait Printer extends AST with PrettyPrinter {
   def print(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
-  def printL(p: Int, ii: Int, s: Symbol, op2: Term, ops: Term*): Doc = {
+  def printL(p: Int, ii: Int, s: String, op2: Term, ops: Term*): Doc = {
 
     val second: Doc =
       if (ops.nonEmpty) print(3, ii, ops.last) else print(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printL(2, ii, s, op2, ops.init:_*) else s.name
+      if (ops.nonEmpty) printL(2, ii, s, op2, ops.init:_*) else s
 
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
@@ -55,11 +55,11 @@ trait PrinterAgda extends AST with PrettyPrinter {
   def printA(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
-  def printAL(p: Int, ii: Int, s: Symbol, op2: Term, ops: Term*): Doc = {
+  def printAL(p: Int, ii: Int, s: String, op2: Term, ops: Term*): Doc = {
     val second: Doc =
       if (ops.nonEmpty) printA(3, ii, ops.last) else printA(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printAL(2, ii, s, op2, ops.init:_*) else s.name
+      if (ops.nonEmpty) printAL(2, ii, s, op2, ops.init:_*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -68,11 +68,11 @@ trait PrinterCoq extends AST with PrettyPrinter {
   def printC(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
-  def printCL(p: Int, ii: Int, s: Symbol, op2: Term, ops: Term*): Doc = {
+  def printCL(p: Int, ii: Int, s: String, op2: Term, ops: Term*): Doc = {
     val second: Doc =
       if (ops.nonEmpty) printC(3, ii, ops.last) else printC(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printCL(2, ii, s, op2, ops.init:_*) else s.name
+      if (ops.nonEmpty) printCL(2, ii, s, op2, ops.init:_*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -81,11 +81,11 @@ trait PrinterIdris extends AST with PrettyPrinter {
   def printI(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
-  def printIL(p: Int, ii: Int, s: Symbol, op2: Term, ops: Term*): Doc = {
+  def printIL(p: Int, ii: Int, s: String, op2: Term, ops: Term*): Doc = {
     val second: Doc =
       if (ops.nonEmpty) printI(3, ii, ops.last) else printI(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printIL(2, ii, s, op2, ops.init:_*) else s.name
+      if (ops.nonEmpty) printIL(2, ii, s, op2, ops.init:_*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -109,20 +109,20 @@ trait Eval extends AST {
 
 trait Check extends AST with Quoting with Eval with Printer {
 
-  final def checkEqual(i: Int, inferred: Term, expected: Term, path : Path) {
+  final def checkEqual(i: Int, inferred: Term, expected: Term, path : Path): Unit = {
     if (inferred != expected) {
       throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
     }
   }
 
-  final def checkEqual(i: Int, inferred: Value, expected: Term, path : Path) {
+  final def checkEqual(i: Int, inferred: Value, expected: Term, path : Path): Unit = {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
       throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
-  final def checkEqual(i: Int, inferred: Value, expected: Value, path : Path) {
+  final def checkEqual(i: Int, inferred: Value, expected: Value, path : Path): Unit = {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
@@ -130,7 +130,7 @@ trait Check extends AST with Quoting with Eval with Printer {
     }
   }
 
-  final def require(cond : Boolean, path : Path, expected : String, inferred: Term) {
+  final def require(cond : Boolean, path : Path, expected : String, inferred: Term): Unit = {
     if (!cond) {
       throw TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
     }

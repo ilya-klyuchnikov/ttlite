@@ -47,7 +47,7 @@ trait IdProofResiduator extends IdResiduator with ProofResiduator { self: PiAST 
     node.outs match {
       case TEdge(x, ReflLabel) :: Nil =>
         val eq@VId(a, _, _) = eval(node.conf.tp, env1, bound1)
-        'cong1 @@
+        "cong1" @@
           a @@
           eq @@
           // This is an interesting difference due to dependent types!!
@@ -69,7 +69,7 @@ trait IdProofResiduator extends IdResiduator with ProofResiduator { self: PiAST 
         val y2 = fold(y, env1, bound1, recM1)
         val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
-        'cong2 @@ a @@ a @@ tp @@
+        "cong2" @@ a @@ a @@ tp @@
           VLam(a, x => VLam(a, y => VId(a, x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2

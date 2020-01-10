@@ -135,7 +135,7 @@ trait REPL {
         state
     }
 
-  private def exportToAgda(f : String, state : Context[V]) {
+  private def exportToAgda(f : String, state : Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val agdaFile = new File(s"generated/${f}.agda")
@@ -170,7 +170,7 @@ trait REPL {
     out.close()
   }
 
-  private def exportToCoq(f : String, state : Context[V]) {
+  private def exportToCoq(f : String, state : Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val coqFile = new File(s"generated/${f}.v")
@@ -201,7 +201,7 @@ trait REPL {
     out.close()
   }
 
-  private def exportToIdris(f : String, state : Context[V]) {
+  private def exportToIdris(f : String, state : Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val idrisFile = new File(s"generated/${f}.idr")
@@ -295,7 +295,7 @@ trait REPL {
     }
   }
 
-  def mainRepl(args: Array[String]) {
+  def mainRepl(args: Array[String]): Unit = {
     var state = Context.empty[V]
     modules = Set()
     try {

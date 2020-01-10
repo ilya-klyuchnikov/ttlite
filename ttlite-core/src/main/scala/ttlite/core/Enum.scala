@@ -69,11 +69,11 @@ trait EnumPrinter extends Printer with EnumAST {
     case True =>
       "True"
     case FalsityElim(m, elem) =>
-      printL(p, ii, 'elim, Falsity, m, elem)
+      printL(p, ii, "elim", Falsity, m, elem)
     case TruthElim(m, v, elem) =>
-      printL(p, ii, 'elim, Truth, m, v, elem)
+      printL(p, ii, "elim", Truth, m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printL(p, ii, 'elim, Bool, m, v1, v2, elem)
+      printL(p, ii, "elim", Bool, m, v1, v2, elem)
     case _ =>
       super.print(p, ii, t)
   }
@@ -94,11 +94,11 @@ trait EnumPrinterAgda extends PrinterAgda with EnumAST {
     case True =>
       "true"
     case FalsityElim(m, elem) =>
-      printAL(p, ii, 'elimFalsity, m, elem)
+      printAL(p, ii, "elimFalsity", m, elem)
     case TruthElim(m, v, elem) =>
-      printAL(p, ii, 'elimTruth, m, v, elem)
+      printAL(p, ii, "elimTruth", m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printAL(p, ii, 'elimBool, m, v1, v2, elem)
+      printAL(p, ii, "elimBool", m, v1, v2, elem)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -119,11 +119,11 @@ trait EnumPrinterCoq extends PrinterCoq with EnumAST {
     case True =>
       "true"
     case FalsityElim(m, elem) =>
-      printCL(p, ii, 'elimFalsity, m, elem)
+      printCL(p, ii, "elimFalsity", m, elem)
     case TruthElim(m, v, elem) =>
-      printCL(p, ii, 'elimTruth, m, v, elem)
+      printCL(p, ii, "elimTruth", m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printCL(p, ii, 'elimBool, m, v1, v2, elem)
+      printCL(p, ii, "elimBool", m, v1, v2, elem)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -144,11 +144,11 @@ trait EnumPrinterIdris extends PrinterIdris with EnumAST {
     case True =>
       "True"
     case FalsityElim(m, elem) =>
-      printIL(p, ii, 'elimFalsity, m, elem)
+      printIL(p, ii, "elimFalsity", m, elem)
     case TruthElim(m, v, elem) =>
-      printIL(p, ii, 'elimTruth, m, v, elem)
+      printIL(p, ii, "elimTruth", m, v, elem)
     case BoolElim(m, v1, v2, elem) =>
-      printIL(p, ii, 'elimBool, m, v1, v2, elem)
+      printIL(p, ii, "elimBool", m, v1, v2, elem)
     case _ =>
       super.printI(p, ii, t)
   }

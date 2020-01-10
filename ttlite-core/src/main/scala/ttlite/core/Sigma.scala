@@ -39,9 +39,9 @@ trait SigmaPrinter extends Printer with SigmaAST {
     case Sigma(d, r) =>
       parensIf(p > 0, sep(Seq("exists " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case DPair(s, a, b) =>
-      printL(p, ii, 'dpair, s, a, b)
+      printL(p, ii, "dpair", s, a, b)
     case SigmaElim(s, m, f, dp) =>
-      printL(p, ii, 'elim, s, m, f, dp)
+      printL(p, ii, "elim", s, m, f, dp)
     case _ =>
       super.print(p, ii, t)
   }
@@ -59,11 +59,11 @@ trait SigmaPrinter extends Printer with SigmaAST {
 trait SigmaPrinterAgda extends PrinterAgda with SigmaAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printAL(p, ii, 'Sigma, d, Lam(d, r))
+      printAL(p, ii, "Sigma", d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printAL(p, ii, 'sigma, d, Lam(d, r), a, b)
+      printAL(p, ii, "sigma", d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printAL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
+      printAL(p, ii, "elimSigma", d, Lam(d, r), m, f, dp)
     case _ =>
       super.printA(p, ii, t)
   }
@@ -72,11 +72,11 @@ trait SigmaPrinterAgda extends PrinterAgda with SigmaAST { self: PiAST =>
 trait SigmaPrinterCoq extends PrinterCoq with SigmaAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printCL(p, ii, 'Sigma, d, Lam(d, r))
+      printCL(p, ii, "Sigma", d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printCL(p, ii, 'sigma, d, Lam(d, r), a, b)
+      printCL(p, ii, "sigma", d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printCL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
+      printCL(p, ii, "elimSigma", d, Lam(d, r), m, f, dp)
     case _ =>
       super.printC(p, ii, t)
   }
@@ -85,11 +85,11 @@ trait SigmaPrinterCoq extends PrinterCoq with SigmaAST { self: PiAST =>
 trait SigmaPrinterIdris extends PrinterIdris with SigmaAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case Sigma(d, r) =>
-      printIL(p, ii, 'TTSigma, d, Lam(d, r))
+      printIL(p, ii, "TTSigma", d, Lam(d, r))
     case DPair(Sigma(d, r), a, b) =>
-      printIL(p, ii, 'Sigma, d, Lam(d, r), a, b)
+      printIL(p, ii, "Sigma", d, Lam(d, r), a, b)
     case SigmaElim(Sigma(d, r), m, f, dp) =>
-      printIL(p, ii, 'elimSigma, d, Lam(d, r), m, f, dp)
+      printIL(p, ii, "elimSigma", d, Lam(d, r), m, f, dp)
     case _ =>
       super.printI(p, ii, t)
   }

@@ -36,9 +36,9 @@ trait WPrinter extends Printer with WAST {
     case W(d, r) =>
       parensIf(p > 0, sep(Seq("W " <> parens(vars(ii) <> " : " <> print(0, ii, d)) <> " .", nest(print(0, ii + 1, r)))))
     case Sup(s, a, b) =>
-      printL(p, ii, 'Sup, s, a, b)
+      printL(p, ii, "Sup", s, a, b)
     case Rec(w, m, a, b) =>
-      printL(p, ii, 'Rec, w, m, a, b)
+      printL(p, ii, "Rec", w, m, a, b)
     case _ =>
       super.print(p, ii, t)
   }
@@ -47,13 +47,13 @@ trait WPrinter extends Printer with WAST {
 trait WPrinterAgda extends PrinterAgda with WAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
-      printAL(p, ii, 'W, d, Lam(d, r))
+      printAL(p, ii, "W", d, Lam(d, r))
     case Sup(W(d, r), a, b) =>
-      printAL(p, ii, 'sup, d, Lam(d, r), a, b)
+      printAL(p, ii, "sup", d, Lam(d, r), a, b)
     case Sup(_, _, _) =>
       sys.error("Wrong term: " + t)
     case Rec(W(d, r), m, a, b) =>
-      printAL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+      printAL(p, ii, "rec", d, Lam(d, r), m, a, b)
     case Rec(_, _, _, _) =>
       sys.error("Wrong term: " + t)
     case _ =>
@@ -64,13 +64,13 @@ trait WPrinterAgda extends PrinterAgda with WAST { self: PiAST =>
 trait WPrinterCoq extends PrinterCoq with WAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
-      printCL(p, ii, 'W, d, Lam(d, r))
+      printCL(p, ii, "W", d, Lam(d, r))
     case Sup(W(d, r), a, b) =>
-      printCL(p, ii, 'sup, d, Lam(d, r), a, b)
+      printCL(p, ii, "sup", d, Lam(d, r), a, b)
     case Sup(_, _, _) =>
       sys.error("Wrong term: " + t)
     case Rec(W(d, r), m, a, b) =>
-      printCL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+      printCL(p, ii, "rec", d, Lam(d, r), m, a, b)
     case Rec(_, _, _, _) =>
       sys.error("Wrong term: " + t)
     case _ =>
@@ -81,13 +81,13 @@ trait WPrinterCoq extends PrinterCoq with WAST { self: PiAST =>
 trait WPrinterIdris extends PrinterIdris with WAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc = t match {
     case W(d, r) =>
-      printIL(p, ii, 'W, d, Lam(d, r))
+      printIL(p, ii, "W", d, Lam(d, r))
     case Sup(W(d, r), a, b) =>
-      printIL(p, ii, 'Sup, d, Lam(d, r), a, b)
+      printIL(p, ii, "Sup", d, Lam(d, r), a, b)
     case Sup(_, _, _) =>
       sys.error("Wrong term: " + t)
     case Rec(W(d, r), m, a, b) =>
-      printIL(p, ii, 'rec, d, Lam(d, r), m, a, b)
+      printIL(p, ii, "rec", d, Lam(d, r), m, a, b)
     case Rec(_, _, _, _) =>
       sys.error("Wrong term: " + t)
     case _ =>

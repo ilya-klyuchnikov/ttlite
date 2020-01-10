@@ -117,13 +117,13 @@ trait ListProofResiduator extends ListResiduator with ProofResiduator { self: Pi
         val t2 = fold(t, env1, bound1, recM1)
         val eq_t1_t2 = proofFold(t, env1, bound1, recM1, env2, bound2, recM2)
 
-        'cong2 @@ a @@ VPiList(a) @@ VPiList(a) @@
+        "cong2" @@ a @@ VPiList(a) @@ VPiList(a) @@
           VLam(a, x => VLam(VPiList(a), y => VPiCons(VPiList(a), x, y))) @@
           h1 @@ h2 @@ eq_h1_h2 @@
           t1 @@ t2 @@ eq_t1_t2
       case TEdge(n1, ListLabel) :: Nil =>
         val tp = eval(node.conf.tp, env1, bound1)
-        'cong1 @@
+        "cong1" @@
           tp @@
           tp @@
           VLam(tp, a => VPiList(a)) @@

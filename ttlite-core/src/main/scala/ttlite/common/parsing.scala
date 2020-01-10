@@ -117,10 +117,10 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
 
   // Setting up lexer
   override val lexical = new MetaLexical
-  lexical.reserved +=
-    ("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda", "exportToCoq", "exportToIdris")
-  lexical.delimiters +=
-    ("(", ")", ":", ".", "=", "->", ";")
+  lexical.reserved ++=
+    Seq("assume", "let", "import", "sc", "sc2", "quit", "reload", "exportToAgda", "exportToCoq", "exportToIdris")
+  lexical.delimiters ++=
+    Seq("(", ")", ":", ".", "=", "->", ";")
   // Ctx is a sequence of named binders. In the spirit of TAPL implementation.
   private type Ctx = List[String]
   private type Res = Ctx => MTerm

@@ -108,7 +108,7 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator { self: PiAS
 
       case TEdge(l, InLLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env1, bound1)
-        'cong1 @@
+        "cong1" @@
           a @@
           VSum(a, b) @@
           VLam(a, x => VInL(VSum(a, b), x)) @@
@@ -118,7 +118,7 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator { self: PiAS
 
       case TEdge(r, InRLabel) :: Nil =>
         val VSum(a, b) = eval(node.conf.tp, env1, bound1)
-        'cong1 @@
+        "cong1" @@
           b @@
           VSum(a, b) @@
           VLam(b, y => VInR(VSum(a, b), y)) @@
@@ -138,7 +138,7 @@ trait SumProofResiduator extends SumResiduator with ProofResiduator { self: PiAS
         val y2 = fold(y, env1, bound1, recM1)
         val eq_y1_y2 = proofFold(y, env1, bound1, recM1, env2, bound2, recM2)
 
-        'cong2 @@ xtp @@ ytp @@ tp @@
+        "cong2" @@ xtp @@ ytp @@ tp @@
           VLam(xtp, x => VLam(ytp, y => VSum(x, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
