@@ -10,6 +10,9 @@ It is structured into two sub-projects:
 The main feature of the supercompiler is that for any transformation performed by
 the supercompiler a proof of correctness is provided.
 
+TT Lite also supports exporting into Agda, Coq and Idris languages, which allows to verify
+performed transformations and generated proofs independently of TT Lite.
+
 The technical internals of TT Lite are described in the preprint:
 
 * Ilya Klyuchnikov, Sergei Romanenko. **TT Lite: a
@@ -31,11 +34,11 @@ TT Lite is built using SBT. You need to install SBT first from [here](http://www
     $ sbt
     > test
 
-TTLite contains integration tests which invoke Agda and Coq compilers for generated proofs:
+TTLite contains integration tests which invoke Agda, Coq and Idris compilers for generated proofs:
 
     > it:test
 
-In order to run these test you should have `agda` and `coqc` executables in path.
+In order to run these test you should have `agda`, `coqc` and `idris` executables in path.
 
 ## Quick Start
 
