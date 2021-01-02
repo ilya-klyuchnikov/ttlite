@@ -1,13 +1,13 @@
 package ttlite.core.test
 
-import org.scalatest.Matchers
-import org.scalatest.FunSpec
+import org.scalatest.funspec._
+import org.scalatest.matchers._
 
 import ttlite.common._
 import ttlite.TTREPL
 
 // a lot of boilerplate error checking
-class ErrorHandlingSpec extends FunSpec with Matchers {
+class ErrorHandlingSpec extends AnyFunSpec with should.Matchers {
   describe("Error handling of shallow parsing") {
     val root = "examples/test/err/in"
     it("should report parse errors") {

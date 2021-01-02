@@ -1,8 +1,10 @@
 package ttlite.sc.test
 
+import org.scalatest.funspec._
+
 import ttlite.TTScREPL
 
-class TTLiteSCExamples extends org.scalatest.FunSpec {
+class TTLiteSCExamples extends AnyFunSpec {
   describe("Hosc Examples") {
     it ("01. compose (map f) unit x = compose unit f x") {
       TTScREPL.main(Array("examples/hosc/01.hs"))

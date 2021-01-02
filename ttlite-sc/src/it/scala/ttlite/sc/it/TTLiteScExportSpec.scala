@@ -1,9 +1,11 @@
 package ttlite.sc.it
 
-import org.scalatest.Matchers
+import org.scalatest.funspec._
+import org.scalatest.matchers._
+
 import ttlite.TTScREPL
 
-class TTLiteScExportSpec extends org.scalatest.FunSpec with Matchers {
+class TTLiteScExportSpec extends AnyFunSpec with should.Matchers {
   describe("Export to Agda") {
     it("ids_sc.hs") {
       checkAgda("ids_sc")

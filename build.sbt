@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  scalaVersion := "2.13.2",
+  scalaVersion := "2.13.4",
   organization := "ttlite",
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
@@ -19,9 +19,9 @@ lazy val core = (project in file("ttlite-core"))
   .settings(
     name := "core",
     libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2",
-    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.3.0",
-    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.3.0",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test,it",
+    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0",
+    libraryDependencies += "org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0" % "test,it",
     Defaults.itSettings,
   )
 
@@ -32,7 +32,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(
     name := "sc",
     libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.3",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.8" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.0" % "test,it",
     Defaults.itSettings,
   )
   .dependsOn(core)
