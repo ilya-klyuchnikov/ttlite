@@ -1,0 +1,13 @@
+name: TT Lite CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: install sbt, agda, coq, idris
+      run: brew install sbt agda coq idris
+    - name: test
+      run: sbt test it:test

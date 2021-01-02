@@ -1,5 +1,0 @@
-os: osx
-
-before_install: brew update && brew bundle
-
-script: sbt test it:test
