@@ -19,7 +19,7 @@ trait NatDriver extends Driver with NatAST with NatEval { self: PiAST =>
     nt match {
       case VNat =>
         val caseZ = ElimLabel(n, Zero, Map(), Map())
-        val v1 = freshName
+        val v1 = freshName()
         val caseS = ElimLabel(n, Succ(v1), Map(n -> v1), Map(v1 -> VNat))
         ElimDStep(caseZ, caseS)
       case _ =>
