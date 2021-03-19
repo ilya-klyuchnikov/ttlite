@@ -13,7 +13,7 @@ trait SC extends Eval with Quoting with Check {
     ScLocal(v)
   }
 
-  implicit def name2Term(n: Name) = Free(n)
+  implicit def name2Term(n: Name): Term = Free(n)
   type Subst = Map[Name, Term]
 
   implicit class TermSubst(t: Term) {
@@ -39,7 +39,7 @@ trait SC extends Eval with Quoting with Check {
   }
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(cases.toList.map { lbl: ElimLabel =>
+      VariantsStep(cases.toList.map { (lbl: ElimLabel) =>
         lbl -> Conf(t.term / Map(lbl.sel -> lbl.ptr), lbl.types.foldLeft(t.ctx)((ctx, nt) => ctx.addType(nt._1, nt._2)))
       })
   }

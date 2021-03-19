@@ -138,7 +138,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
     pos(mVar | "(" ~> term <~ ")")
   private lazy val mVar: PackratParser[RichPosRes] =
     pos(ident ^^ { i =>
-      RichPosRes { ctx: Ctx =>
+      RichPosRes { (ctx: Ctx) =>
         ctx.indexOf(i) match {
           case -1 => MVar(s2name(i))
           case j  => MVar(Quote(j))
@@ -146,11 +146,11 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
       }
     })
   private lazy val app: PackratParser[RichPosRes] =
-    pos((aTerm +) ^^ { ts => RichPosRes { ctx: Ctx => ts.map { _(ctx) }.reduce(_ ~ _) } })
+    pos((aTerm +) ^^ { ts => RichPosRes { (ctx: Ctx) => ts.map { _(ctx) }.reduce(_ ~ _) } })
 
   private lazy val bind: PackratParser[RichPosRes] =
     pos(ident ~ (arg +) ~ (("." | "->") ~> term) ^^ { case id ~ args ~ body =>
-      RichPosRes { ctx: Ctx =>
+      RichPosRes { (ctx: Ctx) =>
         def mkBind(args: List[Arg], c: Ctx): MTerm =
           args match {
             case Nil => body(c)
