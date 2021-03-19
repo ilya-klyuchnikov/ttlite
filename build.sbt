@@ -4,13 +4,13 @@ lazy val commonSettings = Seq(
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
   resolvers += "lambdamix-bintray" at "https://dl.bintray.com/lambdamix/maven/",
-  run / baseDirectory := file("."),
+  run / baseDirectory := (ThisBuild / baseDirectory).value,
   Test / testOptions += Tests.Argument("-oD"),
   IntegrationTest / testOptions += Tests.Argument("-oD"),
   Test / fork  := true,
   IntegrationTest / fork := true,
-  Test / baseDirectory := file("."),
-  IntegrationTest / baseDirectory := file("."),
+  Test / baseDirectory := (ThisBuild / baseDirectory).value,
+  IntegrationTest / baseDirectory := (ThisBuild / baseDirectory).value,
 )
 
 lazy val core = (project in file("ttlite-core"))
