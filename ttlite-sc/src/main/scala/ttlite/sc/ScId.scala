@@ -9,20 +9,22 @@ trait IdDriver extends Driver with IdEval { self: PiAST =>
   case object ReflLabel extends Label
   case object EqLabel extends Label
 
-  override def nv(t: Neutral): Option[Name] = t match {
-    case NIdElim(_, _, _, NFree(n)) => Some(n)
-    case NIdElim(_, _, _, n) => nv(n)
-    case _ => super.nv(t)
-  }
+  override def nv(t: Neutral): Option[Name] =
+    t match {
+      case NIdElim(_, _, _, NFree(n)) => Some(n)
+      case NIdElim(_, _, _, n)        => nv(n)
+      case _                          => super.nv(t)
+    }
 
-  override def decompose(c: Conf): DriveStep = c.term match {
-    case Refl(a, x) =>
-      DecomposeDStep(ReflLabel, Conf(x, c.ctx))
-    case Id(a, x, y) =>
-      DecomposeDStep(EqLabel, Conf(x, c.ctx), Conf(y, c.ctx))
-    case _ =>
-      super.decompose(c)
-  }
+  override def decompose(c: Conf): DriveStep =
+    c.term match {
+      case Refl(a, x) =>
+        DecomposeDStep(ReflLabel, Conf(x, c.ctx))
+      case Id(a, x, y) =>
+        DecomposeDStep(EqLabel, Conf(x, c.ctx), Conf(y, c.ctx))
+      case _ =>
+        super.decompose(c)
+    }
 
 }
 
@@ -41,12 +43,18 @@ trait IdResiduator extends Residuator with IdDriver { self: PiAST =>
 }
 
 trait IdProofResiduator extends IdResiduator with ProofResiduator { self: PiAST with IdAST =>
-  override def proofFold(node: N,
-                         env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
-                         env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+  override def proofFold(
+      node: N,
+      env1: NameEnv[Value],
+      bound1: Env,
+      recM1: Map[TPath, Value],
+      env2: NameEnv[Value],
+      bound2: Env,
+      recM2: Map[TPath, Value],
+  ): Value =
     node.outs match {
       case TEdge(x, ReflLabel) :: Nil =>
-        val eq@VId(a, _, _) = eval(node.conf.tp, env1, bound1)
+        val eq @ VId(a, _, _) = eval(node.conf.tp, env1, bound1)
         "cong1" @@
           a @@
           eq @@

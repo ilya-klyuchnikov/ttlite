@@ -16,20 +16,18 @@ trait REPL {
   /** Infers a type for a term. */
   def infer(ctx: Context[V], term: T): V
 
-  /**
-   * Evaluates (= normalizes) a given term in the context.
-   * In a sense, this is reification. (AST => Value)
-   *
-   * @param ctx a context
-   * @param term a term
-   * @return a value of this term
-   */
+  /** Evaluates (= normalizes) a given term in the context.
+    * In a sense, this is reification. (AST => Value)
+    *
+    * @param ctx a context
+    * @param term a term
+    * @return a value of this term
+    */
   def eval(ctx: Context[V], term: T): V
 
-  /**
-   * Quotes given value.
-   * In a sense, this is reflection. (Value => AST)
-   */
+  /** Quotes given value.
+    * In a sense, this is reflection. (Value => AST)
+    */
   def quote(value: V): T
 
   def translate(shallowTerm: MTerm): T
@@ -46,9 +44,8 @@ trait REPL {
   /** Pretty printing of terms into Idris syntax */
   def prettyIdris(term: T): String
 
-  /**
-   * Extends a context with an assumption
-   */
+  /** Extends a context with an assumption
+    */
   def assume(ctx: Context[V], id: Id, term: T): Context[V]
 
   // if batch, we do not output info into console.
@@ -68,13 +65,13 @@ trait REPL {
     Console.println(tte.getMessage)
     Console.println()
     Console.println(tte.details)
-    if  (verbose) {
+    if (verbose) {
       tte.printStackTrace()
     }
   }
 
   // we assume that it is input/output error
-  def handleGeneralError(t : Throwable): Unit = {
+  def handleGeneralError(t: Throwable): Unit = {
     Console.println(ansi(s"@|bold,red IO error:|@"))
     Console.println(t.getMessage)
     if (verbose) {
@@ -95,14 +92,14 @@ trait REPL {
         try {
           assume(state, n, translate(mt))
         } catch {
-          case t : TypeError => throw t.withMTerm(mt)
+          case t: TypeError => throw t.withMTerm(mt)
         }
       case Let(x, mt) =>
         val e = translate(mt)
         try {
           handleLet(state, x, e)
         } catch {
-          case t : TypeError => throw t.withMTerm(mt)
+          case t: TypeError => throw t.withMTerm(mt)
         }
       case TypedLet(x, mt1, mt2) =>
         val mtAnn = MAnn(mt1, mt2)
@@ -110,7 +107,7 @@ trait REPL {
         try {
           handleLet(state, x, e)
         } catch {
-          case t : TypeError => throw t.withMTerm(mtAnn)
+          case t: TypeError => throw t.withMTerm(mtAnn)
         }
       case EvalStmt(mt) =>
         val e = translate(mt)
@@ -118,7 +115,7 @@ trait REPL {
           res += 1
           handleLet(state, Id(s"res_${res}"), e)
         } catch {
-          case t : TypeError => throw t.withMTerm(mt)
+          case t: TypeError => throw t.withMTerm(mt)
         }
       case Import(f) =>
         loadModule(f, state, reload = false)
@@ -135,7 +132,7 @@ trait REPL {
         state
     }
 
-  private def exportToAgda(f : String, state : Context[V]): Unit = {
+  private def exportToAgda(f: String, state: Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val agdaFile = new File(s"generated/${f}.agda")
@@ -150,14 +147,14 @@ trait REPL {
     out.write(s"module ${f}")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
-    for {id <- assumed} {
+    for { id <- assumed } {
       val tp = quote(state.types(id))
       out.write(s" (${id} : ${prettyAgda(tp)})")
     }
     out.write(s" where\n")
 
-    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
-    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
+    def internalName(n: Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n: Name): Boolean = n.isInstanceOf[Global]
 
     for (id <- state.ids.filterNot(internalName).filter(globalName)) {
       val v = quote(state.vals(id))
@@ -170,7 +167,7 @@ trait REPL {
     out.close()
   }
 
-  private def exportToCoq(f : String, state : Context[V]): Unit = {
+  private def exportToCoq(f: String, state: Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val coqFile = new File(s"generated/${f}.v")
@@ -183,13 +180,13 @@ trait REPL {
     out.write(s"""Load "syntax/ttlite".\n\n""")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
-    for {Assumed(id) <- assumed} {
+    for { Assumed(id) <- assumed } {
       val tp = quote(state.types(Assumed(id)))
       out.write(s"Parameter ${id.replace("$", "")}__ : ${prettyCoq(tp)}.\n")
     }
 
-    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
-    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
+    def internalName(n: Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n: Name): Boolean = n.isInstanceOf[Global]
 
     for (id <- state.ids.filterNot(internalName).filter(globalName)) {
       val id1 = if (id.toString == "if") "if__" else id.toString
@@ -201,7 +198,7 @@ trait REPL {
     out.close()
   }
 
-  private def exportToIdris(f : String, state : Context[V]): Unit = {
+  private def exportToIdris(f: String, state: Context[V]): Unit = {
     import java.io.{File, FileWriter}
 
     val idrisFile = new File(s"generated/${f}.idr")
@@ -218,13 +215,13 @@ trait REPL {
     out.write(s"%auto_implicits off\n\n")
 
     val assumed = state.ids.filter(_.isInstanceOf[Assumed])
-    for {Assumed(id) <- assumed} {
+    for { Assumed(id) <- assumed } {
       val tp = quote(state.types(Assumed(id)))
       out.write(s"${id.replace("$", "")}__ : ${prettyIdris(tp)}\n")
     }
 
-    def internalName(n : Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
-    def globalName(n : Name): Boolean = n.isInstanceOf[Global]
+    def internalName(n: Name): Boolean = List("pair", "cons", "nil", "_").contains(n.toString)
+    def globalName(n: Name): Boolean = n.isInstanceOf[Global]
 
     for (id <- state.ids.filterNot(internalName).filter(globalName)) {
       val v = quote(state.vals(id))
@@ -261,37 +258,38 @@ trait REPL {
     try {
       val input = scala.io.Source.fromFile(f).mkString
       val stmts = parser.parseStatements(input)
-      val s1 = stmts.foldLeft(state1){(s, stm) => handleStmt(s, stm)}
+      val s1 = stmts.foldLeft(state1) { (s, stm) => handleStmt(s, stm) }
       modules = modules + f
       s1
     } catch {
-      case ttError : TTLiteError => throw ttError.withFile(f)
+      case ttError: TTLiteError => throw ttError.withFile(f)
     }
   }
 
-  def loop(state : Context[V], console : kiama.util.Console) : Unit = {
-    val st1 = try {
-      step(state, console)
-    } catch {
-      case TTLiteExit =>
-        throw TTLiteExit
-      case t : TTLiteError =>
-        handleError(t)
-        state
-      case t : Throwable =>
-        handleGeneralError(t)
-        state
-    }
+  def loop(state: Context[V], console: kiama.util.Console): Unit = {
+    val st1 =
+      try {
+        step(state, console)
+      } catch {
+        case TTLiteExit =>
+          throw TTLiteExit
+        case t: TTLiteError =>
+          handleError(t)
+          state
+        case t: Throwable =>
+          handleGeneralError(t)
+          state
+      }
     loop(st1, console)
   }
 
-  def step(state: Context[V], console : kiama.util.Console): Context[V] = {
+  def step(state: Context[V], console: kiama.util.Console): Context[V] = {
     val in = console.readLine(ansi(s"@|bold $name> |@"))
     try {
       val stm = parser.parseStatement(in)
       handleStmt(state, stm)
     } catch {
-      case ttError : TTLiteError => throw ttError.withFile("repl input")
+      case ttError: TTLiteError => throw ttError.withFile("repl input")
     }
   }
 

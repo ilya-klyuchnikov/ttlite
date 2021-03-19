@@ -21,16 +21,26 @@ class TTLiteSpec extends AnyFunSpec {
     }
 
     it("should parse binder term") {
-      assert(MetaParser.parseMTerm("forall (x : a) . x") ==
-        MBind("forall", MVar(Global("a")),MVar(Quote(0))))
-      assert(MetaParser.parseMTerm("forall (x : a) (y : x). x") ==
-        MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
-      assert(MetaParser.parseMTerm("forall (x : a) (y : x). y") ==
-        MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(0)))))
-      assert(MetaParser.parseMTerm("forall (x : a) . forall (y : x) . x") ==
-        MBind("forall",MVar(Global("a")),MBind("forall",MVar(Quote(0)),MVar(Quote(1)))))
-      assert(MetaParser.parseMTerm("forall (x : a) . exists (y : x) . f x") ===
-        MBind("forall", MVar(Global("a")), MBind("exists",MVar(Quote(0)), MVar(Global("f")) ~ MVar(Quote(1)))))
+      assert(
+        MetaParser.parseMTerm("forall (x : a) . x") ==
+          MBind("forall", MVar(Global("a")), MVar(Quote(0)))
+      )
+      assert(
+        MetaParser.parseMTerm("forall (x : a) (y : x). x") ==
+          MBind("forall", MVar(Global("a")), MBind("forall", MVar(Quote(0)), MVar(Quote(1))))
+      )
+      assert(
+        MetaParser.parseMTerm("forall (x : a) (y : x). y") ==
+          MBind("forall", MVar(Global("a")), MBind("forall", MVar(Quote(0)), MVar(Quote(0))))
+      )
+      assert(
+        MetaParser.parseMTerm("forall (x : a) . forall (y : x) . x") ==
+          MBind("forall", MVar(Global("a")), MBind("forall", MVar(Quote(0)), MVar(Quote(1))))
+      )
+      assert(
+        MetaParser.parseMTerm("forall (x : a) . exists (y : x) . f x") ===
+          MBind("forall", MVar(Global("a")), MBind("exists", MVar(Quote(0)), MVar(Global("f")) ~ MVar(Quote(1))))
+      )
     }
   }
 
@@ -40,9 +50,9 @@ class TTLiteSpec extends AnyFunSpec {
     //             |   |    |    |    |    |
     val input = """\ (f : A) (x : B) -> f x"""
     val mt = MetaParser.parseMTerm(input)
-    val topBind : MBind = mt.asInstanceOf[MBind]
-    val innerBind : MBind = topBind.body.asInstanceOf[MBind]
-    val innerBody  = innerBind.body
+    val topBind: MBind = mt.asInstanceOf[MBind]
+    val innerBind: MBind = topBind.body.asInstanceOf[MBind]
+    val innerBody = innerBind.body
     it("should mark positions of a binder in a correct way") {
       assert(mt.startPos.column == 1)
       assert(mt.endPos.column == 25)
@@ -58,12 +68,12 @@ class TTLiteSpec extends AnyFunSpec {
       assert(xTp.endPos.column == 17)
     }
 
-    it ("should mark position of an inner binder starting from an argument to the end of the body") {
+    it("should mark position of an inner binder starting from an argument to the end of the body") {
       assert(innerBind.startPos.column == 11)
       assert(innerBind.endPos.column == 25)
     }
 
-    it ("should mark position of an inner body") {
+    it("should mark position of an inner body") {
       assert(innerBody.startPos.column == 22)
       assert(innerBody.endPos.column == 25)
     }

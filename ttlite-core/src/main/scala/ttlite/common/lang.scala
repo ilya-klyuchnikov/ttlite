@@ -21,7 +21,7 @@ trait AST {
   val vars: List[String] = {
     val ids = "abcdefghijklmnopqrstuvwxyz"
     val suffs = List("", "1")
-    for {j <- suffs; i <- ids} yield s"$i$j"
+    for { j <- suffs; i <- ids } yield s"$i$j"
   }
 
   def vfree(n: Name): Value = VNeutral(NFree(n))
@@ -45,7 +45,7 @@ trait Printer extends AST with PrettyPrinter {
     val second: Doc =
       if (ops.nonEmpty) print(3, ii, ops.last) else print(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printL(2, ii, s, op2, ops.init:_*) else s
+      if (ops.nonEmpty) printL(2, ii, s, op2, ops.init: _*) else s
 
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
@@ -59,7 +59,7 @@ trait PrinterAgda extends AST with PrettyPrinter {
     val second: Doc =
       if (ops.nonEmpty) printA(3, ii, ops.last) else printA(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printAL(2, ii, s, op2, ops.init:_*) else s
+      if (ops.nonEmpty) printAL(2, ii, s, op2, ops.init: _*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -72,7 +72,7 @@ trait PrinterCoq extends AST with PrettyPrinter {
     val second: Doc =
       if (ops.nonEmpty) printC(3, ii, ops.last) else printC(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printCL(2, ii, s, op2, ops.init:_*) else s
+      if (ops.nonEmpty) printCL(2, ii, s, op2, ops.init: _*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -85,7 +85,7 @@ trait PrinterIdris extends AST with PrettyPrinter {
     val second: Doc =
       if (ops.nonEmpty) printI(3, ii, ops.last) else printI(3, ii, op2)
     val first: Doc =
-      if (ops.nonEmpty) printIL(2, ii, s, op2, ops.init:_*) else s
+      if (ops.nonEmpty) printIL(2, ii, s, op2, ops.init: _*) else s
     parensIf(p > 2, sep(Seq(first, nest(second))))
   }
 }
@@ -109,20 +109,20 @@ trait Eval extends AST {
 
 trait Check extends AST with Quoting with Eval with Printer {
 
-  final def checkEqual(i: Int, inferred: Term, expected: Term, path : Path): Unit = {
+  final def checkEqual(i: Int, inferred: Term, expected: Term, path: Path): Unit = {
     if (inferred != expected) {
       throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(inferred)}", path)
     }
   }
 
-  final def checkEqual(i: Int, inferred: Value, expected: Term, path : Path): Unit = {
+  final def checkEqual(i: Int, inferred: Value, expected: Term, path: Path): Unit = {
     val infTerm = quote(i, inferred)
     if (infTerm != expected) {
       throw TypeError(s"expected: ${pp(expected)},\ninferred: ${pp(infTerm)}", path)
     }
   }
 
-  final def checkEqual(i: Int, inferred: Value, expected: Value, path : Path): Unit = {
+  final def checkEqual(i: Int, inferred: Value, expected: Value, path: Path): Unit = {
     val infTerm = quote(i, inferred)
     val expTerm = quote(i, expected)
     if (infTerm != expTerm) {
@@ -130,22 +130,23 @@ trait Check extends AST with Quoting with Eval with Printer {
     }
   }
 
-  final def require(cond : Boolean, path : Path, expected : String, inferred: Term): Unit = {
+  final def require(cond: Boolean, path: Path, expected: String, inferred: Term): Unit = {
     if (!cond) {
       throw TypeError(s"expected: ${expected},\nfound: ${pp(inferred)}", path)
     }
   }
 
-  def checkUniverse(i: Int, inferred: Value, path : Path): Int = inferred match {
-    case VUniverse(k) =>
-      k
-    case _ =>
-      val infTerm = quote(i, inferred)
-      throw TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
-  }
+  def checkUniverse(i: Int, inferred: Value, path: Path): Int =
+    inferred match {
+      case VUniverse(k) =>
+        k
+      case _ =>
+        val infTerm = quote(i, inferred)
+        throw TypeError(s"expected: Set*,\ninferred: ${pp(infTerm)}", path)
+    }
 
   def iType0(ctx: Context[Value], i: Term): Value =
     iType(0, Path.empty, ctx, i)
-  def iType(i: Int, path : Path, ctx: Context[Value], t: Term): Value
+  def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value
   def iSubst(i: Int, r: Term, it: Term): Term
 }

@@ -18,7 +18,7 @@ trait SC extends Eval with Quoting with Check {
 
   implicit class TermSubst(t: Term) {
     def /(subst: Subst) = {
-      val env: NameEnv[Value] = subst.map {case (n, t) => (n, eval(t, Map[Name, Value](), Nil))}
+      val env: NameEnv[Value] = subst.map { case (n, t) => (n, eval(t, Map[Name, Value](), Nil)) }
       quote0(eval(t, env, Nil))
     }
   }
@@ -39,11 +39,9 @@ trait SC extends Eval with Quoting with Check {
   }
   case class ElimDStep(cases: ElimLabel*) extends DriveStep {
     override def step(t: Conf) =
-      VariantsStep(
-        cases.toList.map { lbl: ElimLabel =>
-          lbl -> Conf(
-            t.term / Map(lbl.sel -> lbl.ptr),
-            lbl.types.foldLeft(t.ctx)((ctx, nt) => ctx.addType(nt._1, nt._2)))})
+      VariantsStep(cases.toList.map { lbl: ElimLabel =>
+        lbl -> Conf(t.term / Map(lbl.sel -> lbl.ptr), lbl.types.foldLeft(t.ctx)((ctx, nt) => ctx.addType(nt._1, nt._2)))
+      })
   }
   case class DecomposeDStep(label: Label, args: Conf*) extends DriveStep {
     override def step(t: Conf) = DecomposeStep(label, args.toList)
@@ -74,24 +72,26 @@ trait SC extends Eval with Quoting with Check {
 
 trait Driver extends SC {
   // logic
-  override def singleDrive(c: Conf): DriveStep = eval0(c.term) match {
-    case VNeutral(n) =>
-      nv(n) match {
-        case Some(n) =>
-          elimVar(n, iType0(c.ctx, Free(n)))
-        case None =>
-          StopDStep
-      }
-    case _ => decompose(c)
-  }
+  override def singleDrive(c: Conf): DriveStep =
+    eval0(c.term) match {
+      case VNeutral(n) =>
+        nv(n) match {
+          case Some(n) =>
+            elimVar(n, iType0(c.ctx, Free(n)))
+          case None =>
+            StopDStep
+        }
+      case _ => decompose(c)
+    }
 
   // neutral variable of a value
   def nv(n: Neutral): Option[Name] =
     None
 
-  def elimVar(n: Name, nt: Value): DriveStep = nt match {
-    case _ => StopDStep
-  }
+  def elimVar(n: Name, nt: Value): DriveStep =
+    nt match {
+      case _ => StopDStep
+    }
 
   def decompose(c: Conf): DriveStep = StopDStep
 }
@@ -107,10 +107,11 @@ trait Residuator extends SC {
   def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.base match {
       case Some(tPath) => recM(tPath)
-      case None => node.outs match {
-        case Nil => eval(node.conf.term, env, bound)
-        case outs => sys.error(s"Do not know how to fold $outs")
-      }
+      case None =>
+        node.outs match {
+          case Nil  => eval(node.conf.term, env, bound)
+          case outs => sys.error(s"Do not know how to fold $outs")
+        }
     }
 }
 
@@ -124,15 +125,21 @@ trait ProofResiduator extends Residuator { self: PiAST with IdAST =>
     proofFold(g.root, env, Nil, Map(), env, Nil, Map())
   }
 
-  def proofFold(node: N,
-                env1: NameEnv[Value], bound1: Env, recM1: Map[TPath, Value],
-                env2: NameEnv[Value], bound2: Env, recM2: Map[TPath, Value]): Value =
+  def proofFold(
+      node: N,
+      env1: NameEnv[Value],
+      bound1: Env,
+      recM1: Map[TPath, Value],
+      env2: NameEnv[Value],
+      bound2: Env,
+      recM2: Map[TPath, Value],
+  ): Value =
     node.base match {
       case Some(tPath) =>
         recM2(tPath)
       case None =>
         node.outs match {
-          case Nil => eval(Refl(node.conf.tp, node.conf.term), env1, bound1)
+          case Nil  => eval(Refl(node.conf.tp, node.conf.term), env1, bound1)
           case outs => sys.error(s"Do not know how to fold $outs")
         }
     }
