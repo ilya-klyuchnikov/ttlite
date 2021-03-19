@@ -192,15 +192,15 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   private lazy val assumeStmt: PackratParser[Stmt[MTerm]] =
     (assumedId ~ (":" ~> term) <~ ";") ^^ { case x ~ y => Assume(x, y(Nil)) }
   private lazy val importStmt: PackratParser[Stmt[MTerm]] =
-    "import" ~> (stringLit | ident ^^ { x => s"$x.hs" }) <~ ";" ^^ Import
+    "import" ~> (stringLit | ident ^^ { x => s"$x.hs" }) <~ ";" ^^ Import.apply
   private lazy val exportToAgdaStmt: PackratParser[Stmt[MTerm]] =
-    "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda
+    "exportToAgda" ~> ident <~ ";" ^^ ExportToAgda.apply
   private lazy val exportToCoqStmt: PackratParser[Stmt[MTerm]] =
-    "exportToCoq" ~> ident <~ ";" ^^ ExportToCoq
+    "exportToCoq" ~> ident <~ ";" ^^ ExportToCoq.apply
   private lazy val exportToIdrisStmt: PackratParser[Stmt[MTerm]] =
-    "exportToIdris" ~> ident <~ ";" ^^ ExportToIdris
+    "exportToIdris" ~> ident <~ ";" ^^ ExportToIdris.apply
   private lazy val reloadStmt: PackratParser[Stmt[MTerm]] =
-    "reload" ~> (stringLit | ident ^^ { x => s"$x.hs" }) <~ ";" ^^ Reload
+    "reload" ~> (stringLit | ident ^^ { x => s"$x.hs" }) <~ ";" ^^ Reload.apply
   private lazy val evalStmt: PackratParser[Stmt[MTerm]] =
     term <~ ";" ^^ { t => EvalStmt(t(Nil)) }
   private lazy val quitStmt: PackratParser[Stmt[MTerm]] =
