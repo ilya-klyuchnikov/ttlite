@@ -15,7 +15,7 @@ class ErrorHandlingSpec extends AnyFunSpec with should.Matchers {
       thrown.errorKind should equal("Lexical")
       thrown.file should equal(s"$root/01_lexical.hs")
       thrown.line should equal(2)
-      thrown.column should equal(1)
+      thrown.column should equal(58)
     }
   }
 

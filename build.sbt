@@ -24,7 +24,7 @@ lazy val core = (project in file("ttlite-core"))
   .settings(commonSettings)
   .settings(
     name := "core",
-    libraryDependencies += ("org.scala-lang.modules" %% "scala-parser-combinators" % "1.1.2").cross(CrossVersion.for3Use2_13),
+    libraryDependencies += ("org.scala-lang.modules" %% "scala-parser-combinators" % "2.0.0"),
     libraryDependencies += ("org.bitbucket.inkytonik.kiama" %% "kiama" % "2.4.0").cross(CrossVersion.for3Use2_13),
     libraryDependencies += ("org.bitbucket.inkytonik.kiama" %% "kiama-extras" % "2.4.0").cross(CrossVersion.for3Use2_13),
     libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test,it",
