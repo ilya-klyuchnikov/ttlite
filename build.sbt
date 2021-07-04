@@ -1,9 +1,12 @@
+githubOwner := "ilya-klyuchnikov"
+githubRepository := "ttlite"
+githubTokenSource := TokenSource.GitConfig("github.token") || TokenSource.Environment("GITHUB_TOKEN")
+
 lazy val commonSettings = Seq(
   scalaVersion := "2.13.5",
   organization := "ttlite",
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
-  resolvers += "lambdamix-bintray" at "https://dl.bintray.com/lambdamix/maven/",
   run / baseDirectory := (ThisBuild / baseDirectory).value,
   Test / testOptions += Tests.Argument("-oD"),
   IntegrationTest / testOptions += Tests.Argument("-oD"),
@@ -11,6 +14,9 @@ lazy val commonSettings = Seq(
   IntegrationTest / fork := true,
   Test / baseDirectory := (ThisBuild / baseDirectory).value,
   IntegrationTest / baseDirectory := (ThisBuild / baseDirectory).value,
+  githubOwner := "ilya-klyuchnikov",
+  githubRepository := "ttlite",
+  githubTokenSource := TokenSource.GitConfig("github.token") || TokenSource.Environment("GITHUB_TOKEN"),
 )
 
 lazy val core = (project in file("ttlite-core"))
