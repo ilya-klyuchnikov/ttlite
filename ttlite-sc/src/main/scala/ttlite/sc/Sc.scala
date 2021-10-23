@@ -56,15 +56,15 @@ trait SC extends Eval with Quoting with Check {
   }
   case class VariantsStep(cases: List[(ElimLabel, Conf)]) extends Step {
     override val graphStep: GraphRewriteStep[Conf, Label] =
-      AddChildNodesStep[Conf, Label](cases.map(v => (v._2, v._1)))
+      GraphRewriteStep.AddChildNodesStep[Conf, Label](cases.map(v => (v._2, v._1)))
   }
   case class DecomposeStep(label: Label, args: List[Conf]) extends Step {
     override val graphStep: GraphRewriteStep[Conf, Label] =
-      AddChildNodesStep[Conf, Label](args.map(_ -> label))
+      GraphRewriteStep.AddChildNodesStep[Conf, Label](args.map(_ -> label))
   }
   case object StopStep extends Step {
     override val graphStep: GraphRewriteStep[Conf, Label] =
-      CompleteCurrentNodeStep[Conf, Label]()
+      GraphRewriteStep.CompleteCurrentNodeStep[Conf, Label]()
   }
 
   def singleDrive(c: Conf): DriveStep

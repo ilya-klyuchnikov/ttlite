@@ -114,7 +114,7 @@ trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with 
 
   trait Folding extends BaseRules {
     override def fold(signal: Signal, g: G): List[S] =
-      signal.map(n => FoldStep(n.sPath): S).toList
+      signal.map(n => GraphRewriteStep.FoldStep(n.sPath): S).toList
   }
   trait NoRebuildings extends BaseRules {
     override def rebuild(signal: Signal, g: G) = List()

@@ -1,5 +1,5 @@
 lazy val commonSettings = Seq(
-  scalaVersion := "3.1.0",
+  scalaVersion := "3.0.2",
   organization := "ttlite",
   version := "0.5-SNAPSHOT",
   scalacOptions ++= Seq("-deprecation", "-feature"),
@@ -10,14 +10,13 @@ lazy val commonSettings = Seq(
   IntegrationTest / fork := true,
   Test / baseDirectory := (ThisBuild / baseDirectory).value,
   IntegrationTest / baseDirectory := (ThisBuild / baseDirectory).value,
-  resolvers += "GitHub Package Registry" at "https://maven.pkg.github.com/ilya-klyuchnikov/_",
-  credentials += Credentials(
-    "GitHub Package Registry",
-    "maven.pkg.github.com",
-    "_",
-    "MWQQt1wPfZwtSBZIlaXm1BmFaU2nV2OprdIE_phg".reverse,
-  ),
 )
+
+lazy val mrsc = (project in file("mrsc-core"))
+  .settings(commonSettings)
+  .settings(
+    name := "mrsc-core",
+  )
 
 lazy val core = (project in file("ttlite-core"))
   .configs(IntegrationTest)
@@ -37,8 +36,7 @@ lazy val sc = (project in file("ttlite-sc"))
   .settings(commonSettings)
   .settings(
     name := "sc",
-    libraryDependencies += "mrsc" %% "mrsc-core" % "0.5.4",
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.9" % "test,it",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % "test,it",
     Defaults.itSettings,
   )
-  .dependsOn(core)
+  .dependsOn(core, mrsc)
