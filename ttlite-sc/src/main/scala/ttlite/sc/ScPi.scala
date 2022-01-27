@@ -31,5 +31,5 @@ trait PiDriver extends Driver, PiEval {
 
 trait PiResiduator extends Residuator, PiDriver
 trait PiProofResiduator extends ProofResiduator, PiResiduator {
-  self: PiAST with IdAST =>
+  self: PiAST & IdAST =>
 }

@@ -80,7 +80,7 @@ trait ListResiduator extends Residuator, ListDriver { self: PiAST =>
     }
 }
 
-trait ListProofResiduator extends ListResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait ListProofResiduator extends ListResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

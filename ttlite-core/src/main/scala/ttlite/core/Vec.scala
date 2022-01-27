@@ -123,7 +123,7 @@ trait VecEval extends Eval, VecAST { self: PiAST =>
     }
 }
 
-trait VecCheck extends Check, VecAST { self: PiAST with NatAST =>
+trait VecCheck extends Check, VecAST { self: PiAST & NatAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Vec(a, n) =>
@@ -268,5 +268,5 @@ trait VecREPL
       VecCheck,
       VecEval,
       VecQuoting {
-  self: PiAST with NatAST =>
+  self: PiAST & NatAST =>
 }

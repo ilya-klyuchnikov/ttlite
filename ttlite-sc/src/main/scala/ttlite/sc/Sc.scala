@@ -115,7 +115,7 @@ trait Residuator extends SC {
     }
 }
 
-trait ProofResiduator extends Residuator { self: PiAST with IdAST =>
+trait ProofResiduator extends Residuator { self: PiAST & IdAST =>
   import scala.language.implicitConversions
   implicit def sym2appV(s: String): VApplicable =
     VNeutral(NFree(Global(s)))

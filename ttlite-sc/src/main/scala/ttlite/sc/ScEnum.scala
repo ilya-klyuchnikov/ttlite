@@ -47,7 +47,7 @@ trait EnumResiduator extends Residuator, EnumDriver {
     }
 }
 
-trait EnumProofResiduator extends EnumResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait EnumProofResiduator extends EnumResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

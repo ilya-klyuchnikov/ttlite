@@ -78,7 +78,7 @@ trait SumResiduator extends Residuator, SumDriver { self: PiAST =>
     }
 }
 
-trait SumProofResiduator extends SumResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait SumProofResiduator extends SumResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

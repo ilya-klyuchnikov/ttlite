@@ -20,7 +20,7 @@ trait ScParser extends MetaParser {
 object ScParser extends ScParser
 
 trait ScREPL extends CoreREPL, SC, Residuator, ProofResiduator, GraphPrettyPrinter2 {
-  self: PiAST with IdAST =>
+  self: PiAST & IdAST =>
   import ttlite.common.IoUtil._
   override val parser = ScParser
   override def handleStmt(state: Context[V], stmt: Stmt[MTerm]): Context[V] =

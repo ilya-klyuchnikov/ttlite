@@ -67,7 +67,7 @@ trait ProductResiduator extends Residuator, ProductDriver { self: PiAST =>
     }
 }
 
-trait ProductProofResiduator extends ProductResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait ProductProofResiduator extends ProductResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

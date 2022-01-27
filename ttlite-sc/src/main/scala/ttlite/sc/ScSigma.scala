@@ -54,7 +54,7 @@ trait SigmaResiduator extends Residuator, SigmaDriver, SigmaEval { self: PiAST =
     }
 }
 
-trait SigmaProofResiduator extends SigmaResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait SigmaProofResiduator extends SigmaResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

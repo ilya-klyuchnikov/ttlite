@@ -62,7 +62,7 @@ trait NatResiduator extends Residuator, NatDriver { self: PiAST =>
 }
 
 // we need 2 maps here! - one for proof and one for ordinary!!!!
-trait NatProofResiduator extends NatResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait NatProofResiduator extends NatResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

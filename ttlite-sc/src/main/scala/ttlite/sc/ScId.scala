@@ -42,7 +42,7 @@ trait IdResiduator extends Residuator, IdDriver { self: PiAST =>
     }
 }
 
-trait IdProofResiduator extends IdResiduator, ProofResiduator { self: PiAST with IdAST =>
+trait IdProofResiduator extends IdResiduator, ProofResiduator { self: PiAST & IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],
