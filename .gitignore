@@ -11,3 +11,4 @@ generated/
 *.aux
 *.glob
 *.vo
+metals.sbt
