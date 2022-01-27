@@ -132,8 +132,7 @@ trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with 
         val t = g.current.conf
         val piStep = singleDrive(t).step(t)
         piStep.graphStep :: Nil
-      } else
-        Nil
+      } else Nil
   }
 
   object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {

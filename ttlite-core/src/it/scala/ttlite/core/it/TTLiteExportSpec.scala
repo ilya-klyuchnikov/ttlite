@@ -135,7 +135,7 @@ class TTLiteExportSpec extends AnyFunSpec with should.Matchers {
     }
   }
 
-  def checkAgda(module : String): Unit = {
+  def checkAgda(module: String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/agda/${module}.hs"))
     val cmd = s"agda -v 0 -i generated/ -i syntax/ generated/${module}.agda"
@@ -144,7 +144,7 @@ class TTLiteExportSpec extends AnyFunSpec with should.Matchers {
     exitCode shouldBe 0
   }
 
-  def checkCoq(module : String): Unit = {
+  def checkCoq(module: String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/coq/${module}.hs"))
     val cmd = s"coqc generated/${module}.v"
@@ -155,10 +155,11 @@ class TTLiteExportSpec extends AnyFunSpec with should.Matchers {
 
   val idrisCmd = "idris"
 
-  def checkIdris(module : String): Unit = {
+  def checkIdris(module: String): Unit = {
     import scala.sys.process._
     TTREPL.main(Array(s"examples/test/idris/${module}.hs"))
-    val cmd = s"${idrisCmd} --noprelude --check --allow-capitalized-pattern-variables -i generated/ -i syntax/ generated/${module}.idr"
+    val cmd =
+      s"${idrisCmd} --noprelude --check --allow-capitalized-pattern-variables -i generated/ -i syntax/ generated/${module}.idr"
     info(cmd)
     val exitCode = cmd.!
     exitCode shouldBe 0

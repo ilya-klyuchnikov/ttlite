@@ -112,7 +112,7 @@ trait SigmaProofResiduator extends SigmaResiduator with ProofResiduator { self: 
         val b = eval(y.conf.tp, env1, bound1)
 
         "cong2" @@ a @@ b @@ sigma @@
-          //VLam(a, _ => VLam(b, _ => VDPair(sigma, x1, y1))) @@
+          // VLam(a, _ => VLam(b, _ => VDPair(sigma, x1, y1))) @@
           VLam(a, _ => VLam(b, y => VDPair(sigma, x1, y))) @@
           x1 @@ x2 @@ eq_x1_x2 @@
           y1 @@ y2 @@ eq_y1_y2
