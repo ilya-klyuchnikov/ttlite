@@ -100,7 +100,7 @@ class MetaLexical extends lexical.StdLexical {
 /** Parser of "concrete shallow-terms". See documentation for the syntax of "shallow-language".
   * Entry points are `parseStatements` and `parseMTerm`
   */
-trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers with ImplicitConversions {
+trait MetaParser extends syntactical.StandardTokenParsers, PackratParsers, ImplicitConversions {
 
   def parseStatements(in: String): List[Stmt[MTerm]] =
     parseIO(stmt +, in)
@@ -119,7 +119,7 @@ trait MetaParser extends syntactical.StandardTokenParsers with PackratParsers wi
   private type Ctx = List[String]
   private type Res = Ctx => MTerm
   // PosRes propagates positional information to the final result
-  case class RichPosRes(res: Ctx => MTerm) extends (Ctx => MTerm) with RichPositional {
+  case class RichPosRes(res: Ctx => MTerm) extends (Ctx => MTerm), RichPositional {
     override def apply(c: Ctx): MTerm = res(c).setPs(startPos, endPos)
   }
   // Parser combinator which enriches/updates the result of a parser `p` with positional information

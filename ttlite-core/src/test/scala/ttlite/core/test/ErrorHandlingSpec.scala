@@ -7,7 +7,7 @@ import ttlite.common._
 import ttlite.TTREPL
 
 // a lot of boilerplate error checking
-class ErrorHandlingSpec extends AnyFunSpec with should.Matchers {
+class ErrorHandlingSpec extends AnyFunSpec, should.Matchers {
   describe("Error handling of shallow parsing") {
     val root = "examples/test/err/in"
     it("should report parse errors") {

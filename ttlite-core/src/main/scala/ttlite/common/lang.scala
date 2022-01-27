@@ -32,7 +32,7 @@ trait MetaSyntax extends AST {
   def isPredefinedGlobal(g: Global): Boolean
 }
 
-trait Printer extends AST with PrettyPrinter {
+trait Printer extends AST, PrettyPrinter {
 
   def pp(c: Term): String =
     layout(print(0, 0, c))
@@ -51,7 +51,7 @@ trait Printer extends AST with PrettyPrinter {
   }
 }
 
-trait PrinterAgda extends AST with PrettyPrinter {
+trait PrinterAgda extends AST, PrettyPrinter {
   def printA(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
@@ -64,7 +64,7 @@ trait PrinterAgda extends AST with PrettyPrinter {
   }
 }
 
-trait PrinterCoq extends AST with PrettyPrinter {
+trait PrinterCoq extends AST, PrettyPrinter {
   def printC(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
@@ -77,7 +77,7 @@ trait PrinterCoq extends AST with PrettyPrinter {
   }
 }
 
-trait PrinterIdris extends AST with PrettyPrinter {
+trait PrinterIdris extends AST, PrettyPrinter {
   def printI(p: Int, ii: Int, t: Term): Doc
 
   // print left-associative terms (like applications)
@@ -107,7 +107,7 @@ trait Eval extends AST {
   def eval(t: Term, ctx: Context[Value], bound: Env): Value
 }
 
-trait Check extends AST with Quoting with Eval with Printer {
+trait Check extends AST, Quoting, Eval, Printer {
 
   final def checkEqual(i: Int, inferred: Term, expected: Term, path: Path): Unit = {
     if (inferred != expected) {

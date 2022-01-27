@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait SigmaDriver extends Driver with SigmaAST with Eval { self: PiAST =>
+trait SigmaDriver extends Driver, SigmaAST, Eval { self: PiAST =>
 
   case object DPairLabel extends Label
 
@@ -37,7 +37,7 @@ trait SigmaDriver extends Driver with SigmaAST with Eval { self: PiAST =>
 
 }
 
-trait SigmaResiduator extends Residuator with SigmaDriver with SigmaEval { self: PiAST =>
+trait SigmaResiduator extends Residuator, SigmaDriver, SigmaEval { self: PiAST =>
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(nodeS, ElimLabel(sel, DPair(sigma, Free(xN), Free(yN)), _, _)) :: Nil =>
@@ -54,7 +54,7 @@ trait SigmaResiduator extends Residuator with SigmaDriver with SigmaEval { self:
     }
 }
 
-trait SigmaProofResiduator extends SigmaResiduator with ProofResiduator { self: PiAST with IdAST =>
+trait SigmaProofResiduator extends SigmaResiduator, ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

@@ -33,7 +33,7 @@ trait EnumAST extends AST {
   case class NBoolElim(m: Value, v1: Value, v2: Value, elem: Neutral) extends Neutral
 }
 
-trait EnumMetaSyntax extends MetaSyntax with EnumAST {
+trait EnumMetaSyntax extends MetaSyntax, EnumAST {
   private val predefinedGlobals = Set("Falsity", "Truth", "Bool", "Triv", "False", "True")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -55,7 +55,7 @@ trait EnumMetaSyntax extends MetaSyntax with EnumAST {
     }
 }
 
-trait EnumPrinter extends Printer with EnumAST {
+trait EnumPrinter extends Printer, EnumAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Falsity =>
@@ -81,7 +81,7 @@ trait EnumPrinter extends Printer with EnumAST {
     }
 }
 
-trait EnumPrinterAgda extends PrinterAgda with EnumAST {
+trait EnumPrinterAgda extends PrinterAgda, EnumAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Falsity =>
@@ -107,7 +107,7 @@ trait EnumPrinterAgda extends PrinterAgda with EnumAST {
     }
 }
 
-trait EnumPrinterCoq extends PrinterCoq with EnumAST {
+trait EnumPrinterCoq extends PrinterCoq, EnumAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Falsity =>
@@ -133,7 +133,7 @@ trait EnumPrinterCoq extends PrinterCoq with EnumAST {
     }
 }
 
-trait EnumPrinterIdris extends PrinterIdris with EnumAST {
+trait EnumPrinterIdris extends PrinterIdris, EnumAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Falsity =>
@@ -159,7 +159,7 @@ trait EnumPrinterIdris extends PrinterIdris with EnumAST {
     }
 }
 
-trait EnumEval extends PiEval with EnumAST {
+trait EnumEval extends PiEval, EnumAST {
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Falsity =>
@@ -218,7 +218,7 @@ trait EnumEval extends PiEval with EnumAST {
     }
 }
 
-trait EnumCheck extends PiCheck with EnumAST {
+trait EnumCheck extends PiCheck, EnumAST {
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Falsity | Truth | Bool =>
@@ -290,7 +290,7 @@ trait EnumCheck extends PiCheck with EnumAST {
     }
 }
 
-trait EnumQuoting extends Quoting with EnumAST {
+trait EnumQuoting extends Quoting, EnumAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VFalsity => Falsity
@@ -315,13 +315,13 @@ trait EnumQuoting extends Quoting with EnumAST {
 }
 
 trait EnumREPL
-    extends CoreREPL
-    with EnumAST
-    with EnumMetaSyntax
-    with EnumPrinter
-    with EnumPrinterAgda
-    with EnumPrinterCoq
-    with EnumPrinterIdris
-    with EnumCheck
-    with EnumEval
-    with EnumQuoting
+    extends CoreREPL,
+      EnumAST,
+      EnumMetaSyntax,
+      EnumPrinter,
+      EnumPrinterAgda,
+      EnumPrinterCoq,
+      EnumPrinterIdris,
+      EnumCheck,
+      EnumEval,
+      EnumQuoting

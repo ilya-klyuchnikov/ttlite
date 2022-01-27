@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.common._
 import ttlite.core._
 
-trait EnumDriver extends Driver with EnumAST with EnumEval {
+trait EnumDriver extends Driver, EnumAST, EnumEval {
 
   override def nv(t: Neutral): Option[Name] =
     t match {
@@ -30,7 +30,7 @@ trait EnumDriver extends Driver with EnumAST with EnumEval {
 
 }
 
-trait EnumResiduator extends Residuator with EnumDriver {
+trait EnumResiduator extends Residuator, EnumDriver {
   override def fold(node: N, env: NameEnv[Value], bound: Env, recM: Map[TPath, Value]): Value =
     node.outs match {
       case TEdge(n, ElimLabel(sel, Triv, _, _)) :: _ =>
@@ -47,7 +47,7 @@ trait EnumResiduator extends Residuator with EnumDriver {
     }
 }
 
-trait EnumProofResiduator extends EnumResiduator with ProofResiduator { self: PiAST with IdAST =>
+trait EnumProofResiduator extends EnumResiduator, ProofResiduator { self: PiAST with IdAST =>
   override def proofFold(
       node: N,
       env1: NameEnv[Value],

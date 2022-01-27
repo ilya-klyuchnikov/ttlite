@@ -15,7 +15,7 @@ trait ListAST extends AST {
   case class NPiListElim(et: Value, motive: Value, nilCase: Value, consCase: Value, l: Neutral) extends Neutral
 }
 
-trait ListMetaSyntax extends MetaSyntax with ListAST {
+trait ListMetaSyntax extends MetaSyntax, ListAST {
   private val predefinedGlobals = Set("List", "Nic", "Cons")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -33,7 +33,7 @@ trait ListMetaSyntax extends MetaSyntax with ListAST {
     }
 }
 
-trait ListPrinter extends Printer with ListAST {
+trait ListPrinter extends Printer, ListAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case PiList(a) =>
@@ -49,7 +49,7 @@ trait ListPrinter extends Printer with ListAST {
     }
 }
 
-trait ListPrinterAgda extends PrinterAgda with ListAST {
+trait ListPrinterAgda extends PrinterAgda, ListAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case PiList(a) =>
@@ -65,7 +65,7 @@ trait ListPrinterAgda extends PrinterAgda with ListAST {
     }
 }
 
-trait ListPrinterCoq extends PrinterCoq with ListAST {
+trait ListPrinterCoq extends PrinterCoq, ListAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case PiList(a) =>
@@ -81,7 +81,7 @@ trait ListPrinterCoq extends PrinterCoq with ListAST {
     }
 }
 
-trait ListPrinterIdris extends PrinterIdris with ListAST {
+trait ListPrinterIdris extends PrinterIdris, ListAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case PiList(a) =>
@@ -97,7 +97,7 @@ trait ListPrinterIdris extends PrinterIdris with ListAST {
     }
 }
 
-trait ListEval extends Eval with ListAST { self: PiAST =>
+trait ListEval extends Eval, ListAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case PiList(a) =>
@@ -128,7 +128,7 @@ trait ListEval extends Eval with ListAST { self: PiAST =>
     }
 }
 
-trait ListCheck extends Check with ListAST { self: PiAST =>
+trait ListCheck extends Check, ListAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case PiList(a) =>
@@ -203,7 +203,7 @@ trait ListCheck extends Check with ListAST { self: PiAST =>
     }
 }
 
-trait ListQuoting extends CoreQuoting with ListAST {
+trait ListQuoting extends CoreQuoting, ListAST {
   override def quote(ii: Int, v: Value): Term =
     v match {
       case VPiList(a) =>
@@ -224,15 +224,15 @@ trait ListQuoting extends CoreQuoting with ListAST {
 }
 
 trait ListREPL
-    extends CoreREPL
-    with ListAST
-    with ListMetaSyntax
-    with ListPrinter
-    with ListPrinterAgda
-    with ListPrinterCoq
-    with ListPrinterIdris
-    with ListCheck
-    with ListEval
-    with ListQuoting {
+    extends CoreREPL,
+      ListAST,
+      ListMetaSyntax,
+      ListPrinter,
+      ListPrinterAgda,
+      ListPrinterCoq,
+      ListPrinterIdris,
+      ListCheck,
+      ListEval,
+      ListQuoting {
   self: PiAST =>
 }

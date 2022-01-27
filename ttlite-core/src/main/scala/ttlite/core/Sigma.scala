@@ -15,7 +15,7 @@ trait SigmaAST extends AST {
   case class NSigmaElim(sigma: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait SigmaMetaSyntax extends SigmaAST with MetaSyntax {
+trait SigmaMetaSyntax extends SigmaAST, MetaSyntax {
   private val predefinedGlobals = Set("dpair", "exists")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -31,7 +31,7 @@ trait SigmaMetaSyntax extends SigmaAST with MetaSyntax {
     }
 }
 
-trait SigmaPrinter extends Printer with SigmaAST {
+trait SigmaPrinter extends Printer, SigmaAST {
   import scala.collection.immutable.Seq
 
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
@@ -62,7 +62,7 @@ trait SigmaPrinter extends Printer with SigmaAST {
     }
 }
 
-trait SigmaPrinterAgda extends PrinterAgda with SigmaAST { self: PiAST =>
+trait SigmaPrinterAgda extends PrinterAgda, SigmaAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sigma(d, r) =>
@@ -76,7 +76,7 @@ trait SigmaPrinterAgda extends PrinterAgda with SigmaAST { self: PiAST =>
     }
 }
 
-trait SigmaPrinterCoq extends PrinterCoq with SigmaAST { self: PiAST =>
+trait SigmaPrinterCoq extends PrinterCoq, SigmaAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sigma(d, r) =>
@@ -90,7 +90,7 @@ trait SigmaPrinterCoq extends PrinterCoq with SigmaAST { self: PiAST =>
     }
 }
 
-trait SigmaPrinterIdris extends PrinterIdris with SigmaAST { self: PiAST =>
+trait SigmaPrinterIdris extends PrinterIdris, SigmaAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sigma(d, r) =>
@@ -104,7 +104,7 @@ trait SigmaPrinterIdris extends PrinterIdris with SigmaAST { self: PiAST =>
     }
 }
 
-trait SigmaQuoting extends Quoting with SigmaAST {
+trait SigmaQuoting extends Quoting, SigmaAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VSigma(v, f) =>
@@ -122,7 +122,7 @@ trait SigmaQuoting extends Quoting with SigmaAST {
     }
 }
 
-trait SigmaEval extends Eval with SigmaAST { self: PiAST =>
+trait SigmaEval extends Eval, SigmaAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Sigma(ty, ty1) =>
@@ -146,7 +146,7 @@ trait SigmaEval extends Eval with SigmaAST { self: PiAST =>
     }
 }
 
-trait SigmaCheck extends Check with SigmaAST { self: PiAST =>
+trait SigmaCheck extends Check, SigmaAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       // Sigma is a bind, so arity is 2
@@ -215,15 +215,15 @@ trait SigmaCheck extends Check with SigmaAST { self: PiAST =>
 }
 
 trait SigmaREPL
-    extends CoreREPL
-    with SigmaAST
-    with SigmaMetaSyntax
-    with SigmaPrinter
-    with SigmaPrinterAgda
-    with SigmaPrinterCoq
-    with SigmaPrinterIdris
-    with SigmaCheck
-    with SigmaEval
-    with SigmaQuoting {
+    extends CoreREPL,
+      SigmaAST,
+      SigmaMetaSyntax,
+      SigmaPrinter,
+      SigmaPrinterAgda,
+      SigmaPrinterCoq,
+      SigmaPrinterIdris,
+      SigmaCheck,
+      SigmaEval,
+      SigmaQuoting {
   self: PiAST =>
 }

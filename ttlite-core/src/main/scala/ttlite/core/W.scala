@@ -14,7 +14,7 @@ trait WAST extends AST {
   case class NRec(w: Value, m: Value, b: Value, a: Neutral) extends Neutral
 }
 
-trait WMetaSyntax extends MetaSyntax with WAST {
+trait WMetaSyntax extends MetaSyntax, WAST {
   private val predefinedGlobals = Set("W", "Sup", "Rec")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -30,7 +30,7 @@ trait WMetaSyntax extends MetaSyntax with WAST {
     }
 }
 
-trait WPrinter extends Printer with WAST {
+trait WPrinter extends Printer, WAST {
   import scala.collection.immutable.Seq
 
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
@@ -49,7 +49,7 @@ trait WPrinter extends Printer with WAST {
     }
 }
 
-trait WPrinterAgda extends PrinterAgda with WAST { self: PiAST =>
+trait WPrinterAgda extends PrinterAgda, WAST { self: PiAST =>
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case W(d, r) =>
@@ -67,7 +67,7 @@ trait WPrinterAgda extends PrinterAgda with WAST { self: PiAST =>
     }
 }
 
-trait WPrinterCoq extends PrinterCoq with WAST { self: PiAST =>
+trait WPrinterCoq extends PrinterCoq, WAST { self: PiAST =>
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case W(d, r) =>
@@ -85,7 +85,7 @@ trait WPrinterCoq extends PrinterCoq with WAST { self: PiAST =>
     }
 }
 
-trait WPrinterIdris extends PrinterIdris with WAST { self: PiAST =>
+trait WPrinterIdris extends PrinterIdris, WAST { self: PiAST =>
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case W(d, r) =>
@@ -103,7 +103,7 @@ trait WPrinterIdris extends PrinterIdris with WAST { self: PiAST =>
     }
 }
 
-trait WQuoting extends Quoting with WAST {
+trait WQuoting extends Quoting, WAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VW(v, f) =>
@@ -121,7 +121,7 @@ trait WQuoting extends Quoting with WAST {
     }
 }
 
-trait WEval extends Eval with WAST { self: PiAST =>
+trait WEval extends Eval, WAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case W(t1, t2) =>
@@ -150,7 +150,7 @@ trait WEval extends Eval with WAST { self: PiAST =>
     }
 }
 
-trait WCheck extends Check with WAST { self: PiAST =>
+trait WCheck extends Check, WAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       // this is a bind, so arity = 2
@@ -229,15 +229,15 @@ trait WCheck extends Check with WAST { self: PiAST =>
 }
 
 trait WREPL
-    extends CoreREPL
-    with WAST
-    with WMetaSyntax
-    with WPrinter
-    with WPrinterAgda
-    with WPrinterCoq
-    with WPrinterIdris
-    with WCheck
-    with WEval
-    with WQuoting {
+    extends CoreREPL,
+      WAST,
+      WMetaSyntax,
+      WPrinter,
+      WPrinterAgda,
+      WPrinterCoq,
+      WPrinterIdris,
+      WCheck,
+      WEval,
+      WQuoting {
   self: PiAST =>
 }

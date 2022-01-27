@@ -24,7 +24,7 @@ trait PiAST extends AST {
   }
 }
 
-trait PiMetaSyntax extends MetaSyntax with PiAST {
+trait PiMetaSyntax extends MetaSyntax, PiAST {
   private val predefinedGlobals = Set("forall")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -40,7 +40,7 @@ trait PiMetaSyntax extends MetaSyntax with PiAST {
     }
 }
 
-trait PiPrinter extends Printer with PiAST {
+trait PiPrinter extends Printer, PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
@@ -83,7 +83,7 @@ trait PiPrinter extends Printer with PiAST {
     }
 }
 
-trait PiPrinterAgda extends PrinterAgda with PiAST {
+trait PiPrinterAgda extends PrinterAgda, PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
@@ -129,7 +129,7 @@ trait PiPrinterAgda extends PrinterAgda with PiAST {
     }
 }
 
-trait PiPrinterCoq extends PrinterCoq with PiAST {
+trait PiPrinterCoq extends PrinterCoq, PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
@@ -175,7 +175,7 @@ trait PiPrinterCoq extends PrinterCoq with PiAST {
     }
 }
 
-trait PiPrinterIdris extends PrinterIdris with PiAST {
+trait PiPrinterIdris extends PrinterIdris, PiAST {
   import scala.collection.immutable.Seq
 
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
@@ -191,7 +191,7 @@ trait PiPrinterIdris extends PrinterIdris with PiAST {
     }
 }
 
-trait PiQuoting extends Quoting with PiAST {
+trait PiQuoting extends Quoting, PiAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VPi(v, f) =>
@@ -208,7 +208,7 @@ trait PiQuoting extends Quoting with PiAST {
     }
 }
 
-trait PiEval extends Eval with PiAST {
+trait PiEval extends Eval, PiAST {
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Pi(ty, ty1) =>
@@ -222,7 +222,7 @@ trait PiEval extends Eval with PiAST {
     }
 }
 
-trait PiCheck extends Check with PiAST {
+trait PiCheck extends Check, PiAST {
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
 
@@ -268,13 +268,13 @@ trait PiCheck extends Check with PiAST {
 }
 
 trait PiREPL
-    extends CoreREPL
-    with PiAST
-    with PiMetaSyntax
-    with PiPrinter
-    with PiPrinterAgda
-    with PiPrinterCoq
-    with PiPrinterIdris
-    with PiCheck
-    with PiEval
-    with PiQuoting
+    extends CoreREPL,
+      PiAST,
+      PiMetaSyntax,
+      PiPrinter,
+      PiPrinterAgda,
+      PiPrinterCoq,
+      PiPrinterIdris,
+      PiCheck,
+      PiEval,
+      PiQuoting

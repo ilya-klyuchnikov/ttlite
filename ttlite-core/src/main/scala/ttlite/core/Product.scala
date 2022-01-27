@@ -13,7 +13,7 @@ trait ProductAST extends AST {
   case class NProductElim(et: Value, m: Value, f: Value, pair: Neutral) extends Neutral
 }
 
-trait ProductMetaSyntax extends MetaSyntax with ProductAST {
+trait ProductMetaSyntax extends MetaSyntax, ProductAST {
   private val predefinedGlobals = Set("Product", "Pair")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -29,7 +29,7 @@ trait ProductMetaSyntax extends MetaSyntax with ProductAST {
     }
 }
 
-trait ProductPrinter extends Printer with ProductAST {
+trait ProductPrinter extends Printer, ProductAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Product(a, b) =>
@@ -43,7 +43,7 @@ trait ProductPrinter extends Printer with ProductAST {
     }
 }
 
-trait ProductPrinterAgda extends PrinterAgda with ProductAST {
+trait ProductPrinterAgda extends PrinterAgda, ProductAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Product(a, b) =>
@@ -57,7 +57,7 @@ trait ProductPrinterAgda extends PrinterAgda with ProductAST {
     }
 }
 
-trait ProductPrinterCoq extends PrinterCoq with ProductAST {
+trait ProductPrinterCoq extends PrinterCoq, ProductAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Product(a, b) =>
@@ -71,7 +71,7 @@ trait ProductPrinterCoq extends PrinterCoq with ProductAST {
     }
 }
 
-trait ProductPrinterIdris extends PrinterIdris with ProductAST {
+trait ProductPrinterIdris extends PrinterIdris, ProductAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Product(a, b) =>
@@ -85,7 +85,7 @@ trait ProductPrinterIdris extends PrinterIdris with ProductAST {
     }
 }
 
-trait ProductEval extends Eval with ProductAST { self: PiAST =>
+trait ProductEval extends Eval, ProductAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Product(a, b) =>
@@ -111,7 +111,7 @@ trait ProductEval extends Eval with ProductAST { self: PiAST =>
     }
 }
 
-trait ProductCheck extends Check with ProductAST { self: PiAST =>
+trait ProductCheck extends Check, ProductAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Product(a, b) =>
@@ -171,7 +171,7 @@ trait ProductCheck extends Check with ProductAST { self: PiAST =>
     }
 }
 
-trait ProductQuoting extends Quoting with ProductAST {
+trait ProductQuoting extends Quoting, ProductAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VProduct(a, b) =>
@@ -190,15 +190,15 @@ trait ProductQuoting extends Quoting with ProductAST {
 }
 
 trait ProductREPL
-    extends CoreREPL
-    with ProductAST
-    with ProductMetaSyntax
-    with ProductPrinter
-    with ProductPrinterAgda
-    with ProductPrinterCoq
-    with ProductPrinterIdris
-    with ProductCheck
-    with ProductEval
-    with ProductQuoting {
+    extends CoreREPL,
+      ProductAST,
+      ProductMetaSyntax,
+      ProductPrinter,
+      ProductPrinterAgda,
+      ProductPrinterCoq,
+      ProductPrinterIdris,
+      ProductCheck,
+      ProductEval,
+      ProductQuoting {
   self: PiAST =>
 }

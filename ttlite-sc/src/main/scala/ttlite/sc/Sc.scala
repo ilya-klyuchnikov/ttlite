@@ -4,7 +4,7 @@ import mrsc.core._
 import ttlite.core._
 import ttlite.common._
 
-trait SC extends Eval with Quoting with Check {
+trait SC extends Eval, Quoting, Check {
   import scala.language.implicitConversions
 
   var v = 0

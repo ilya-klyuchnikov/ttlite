@@ -15,7 +15,7 @@ trait NatAST extends AST {
   case class NNatElim(m: Value, caseZ: Value, caseS: Value, n: Neutral) extends Neutral
 }
 
-trait NatMetaSyntax extends MetaSyntax with NatAST {
+trait NatMetaSyntax extends MetaSyntax, NatAST {
   private val predefinedGlobals = Set("Nat", "Zero", "Succ")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -33,7 +33,7 @@ trait NatMetaSyntax extends MetaSyntax with NatAST {
     }
 }
 
-trait NatPrinter extends Printer with NatAST {
+trait NatPrinter extends Printer, NatAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Nat =>
@@ -49,7 +49,7 @@ trait NatPrinter extends Printer with NatAST {
     }
 }
 
-trait NatPrinterAgda extends PrinterAgda with NatAST {
+trait NatPrinterAgda extends PrinterAgda, NatAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Nat =>
@@ -65,7 +65,7 @@ trait NatPrinterAgda extends PrinterAgda with NatAST {
     }
 }
 
-trait NatPrinterCoq extends PrinterCoq with NatAST {
+trait NatPrinterCoq extends PrinterCoq, NatAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Nat =>
@@ -81,7 +81,7 @@ trait NatPrinterCoq extends PrinterCoq with NatAST {
     }
 }
 
-trait NatPrinterIdris extends PrinterIdris with NatAST {
+trait NatPrinterIdris extends PrinterIdris, NatAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Nat =>
@@ -97,7 +97,7 @@ trait NatPrinterIdris extends PrinterIdris with NatAST {
     }
 }
 
-trait NatQuoting extends Quoting with NatAST {
+trait NatQuoting extends Quoting, NatAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VNat     => Nat
@@ -113,7 +113,7 @@ trait NatQuoting extends Quoting with NatAST {
     }
 }
 
-trait NatEval extends Eval with NatAST { self: PiAST =>
+trait NatEval extends Eval, NatAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Zero =>
@@ -143,7 +143,7 @@ trait NatEval extends Eval with NatAST { self: PiAST =>
     }
 }
 
-trait NatCheck extends Check with NatAST { self: PiAST =>
+trait NatCheck extends Check, NatAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Nat =>
@@ -191,15 +191,15 @@ trait NatCheck extends Check with NatAST { self: PiAST =>
 }
 
 trait NatREPL
-    extends CoreREPL
-    with NatAST
-    with NatMetaSyntax
-    with NatPrinter
-    with NatPrinterAgda
-    with NatPrinterCoq
-    with NatPrinterIdris
-    with NatCheck
-    with NatEval
-    with NatQuoting {
+    extends CoreREPL,
+      NatAST,
+      NatMetaSyntax,
+      NatPrinter,
+      NatPrinterAgda,
+      NatPrinterCoq,
+      NatPrinterIdris,
+      NatCheck,
+      NatEval,
+      NatQuoting {
   self: PiAST =>
 }

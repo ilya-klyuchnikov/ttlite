@@ -5,7 +5,7 @@ import org.scalatest.matchers._
 
 import ttlite.TTREPL
 
-class TTLiteExportSpec extends AnyFunSpec with should.Matchers {
+class TTLiteExportSpec extends AnyFunSpec, should.Matchers {
   describe("Export to Agda") {
     it("core.hs") {
       checkAgda("core")

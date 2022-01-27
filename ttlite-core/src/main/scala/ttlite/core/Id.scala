@@ -13,7 +13,7 @@ trait IdAST extends CoreAST {
   case class NIdElim(et: Value, prop: Value, propR: Value, eq: Neutral) extends Neutral
 }
 
-trait IdMetaSyntax extends MetaSyntax with IdAST {
+trait IdMetaSyntax extends MetaSyntax, IdAST {
   private val predefinedGlobals = Set("Id", "Refl")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -29,7 +29,7 @@ trait IdMetaSyntax extends MetaSyntax with IdAST {
     }
 }
 
-trait IdPrinter extends Printer with IdAST {
+trait IdPrinter extends Printer, IdAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Id(a, x, y) =>
@@ -43,7 +43,7 @@ trait IdPrinter extends Printer with IdAST {
     }
 }
 
-trait IdPrinterAgda extends PrinterAgda with IdAST {
+trait IdPrinterAgda extends PrinterAgda, IdAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Id(a, x, y) =>
@@ -57,7 +57,7 @@ trait IdPrinterAgda extends PrinterAgda with IdAST {
     }
 }
 
-trait IdPrinterCoq extends PrinterCoq with IdAST {
+trait IdPrinterCoq extends PrinterCoq, IdAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Id(a, x, y) =>
@@ -71,7 +71,7 @@ trait IdPrinterCoq extends PrinterCoq with IdAST {
     }
 }
 
-trait IdPrinterIdris extends PrinterIdris with IdAST {
+trait IdPrinterIdris extends PrinterIdris, IdAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Id(a, x, y) =>
@@ -85,7 +85,7 @@ trait IdPrinterIdris extends PrinterIdris with IdAST {
     }
 }
 
-trait IdEval extends Eval with IdAST with CoreQuoting { self: PiAST =>
+trait IdEval extends Eval, IdAST, CoreQuoting { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Id(a, x, y) =>
@@ -110,7 +110,7 @@ trait IdEval extends Eval with IdAST with CoreQuoting { self: PiAST =>
     }
 }
 
-trait IdCheck extends Check with IdAST { self: PiAST =>
+trait IdCheck extends Check, IdAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Id(a, x, y) =>
@@ -176,7 +176,7 @@ trait IdCheck extends Check with IdAST { self: PiAST =>
     }
 }
 
-trait IdQuoting extends CoreQuoting with IdAST {
+trait IdQuoting extends CoreQuoting, IdAST {
   override def quote(ii: Int, v: Value): Term =
     v match {
       case VId(a, x, y) =>
@@ -194,15 +194,15 @@ trait IdQuoting extends CoreQuoting with IdAST {
 }
 
 trait IdREPL
-    extends CoreREPL
-    with IdAST
-    with IdMetaSyntax
-    with IdPrinter
-    with IdPrinterAgda
-    with IdPrinterCoq
-    with IdPrinterIdris
-    with IdCheck
-    with IdEval
-    with IdQuoting {
+    extends CoreREPL,
+      IdAST,
+      IdMetaSyntax,
+      IdPrinter,
+      IdPrinterAgda,
+      IdPrinterCoq,
+      IdPrinterIdris,
+      IdCheck,
+      IdEval,
+      IdQuoting {
   self: PiAST =>
 }

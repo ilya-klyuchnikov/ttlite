@@ -3,17 +3,17 @@ package ttlite
 import ttlite.core._
 
 class TTREPL
-    extends CoreREPL
-    with PiREPL
-    with SigmaREPL
-    with NatREPL
-    with VecREPL
-    with IdREPL
-    with EnumREPL
-    with ListREPL
-    with ProductREPL
-    with SumREPL
-    with WREPL {
+    extends CoreREPL,
+      PiREPL,
+      SigmaREPL,
+      NatREPL,
+      VecREPL,
+      IdREPL,
+      EnumREPL,
+      ListREPL,
+      ProductREPL,
+      SumREPL,
+      WREPL {
   override val name = "TT"
 }
 

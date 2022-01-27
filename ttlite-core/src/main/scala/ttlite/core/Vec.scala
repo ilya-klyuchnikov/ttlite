@@ -14,7 +14,7 @@ trait VecAST extends CoreAST {
   case class NVecElim(A: Value, motive: Value, nilCase: Value, consCase: Value, n: Value, vec: Neutral) extends Neutral
 }
 
-trait VecMetaSyntax extends MetaSyntax with VecAST {
+trait VecMetaSyntax extends MetaSyntax, VecAST {
   private val predefinedGlobals = Set("Vec", "VNil", "VCons", "vecElim")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -32,7 +32,7 @@ trait VecMetaSyntax extends MetaSyntax with VecAST {
     }
 }
 
-trait VecPrinter extends Printer with VecAST {
+trait VecPrinter extends Printer, VecAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Vec(a, n) =>
@@ -48,7 +48,7 @@ trait VecPrinter extends Printer with VecAST {
     }
 }
 
-trait VecPrinterAgda extends PrinterAgda with VecAST {
+trait VecPrinterAgda extends PrinterAgda, VecAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Vec(a, n) =>
@@ -64,7 +64,7 @@ trait VecPrinterAgda extends PrinterAgda with VecAST {
     }
 }
 
-trait VecPrinterCoq extends PrinterCoq with VecAST {
+trait VecPrinterCoq extends PrinterCoq, VecAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Vec(a, n) =>
@@ -80,7 +80,7 @@ trait VecPrinterCoq extends PrinterCoq with VecAST {
     }
 }
 
-trait VecPrinterIdris extends PrinterIdris with VecAST {
+trait VecPrinterIdris extends PrinterIdris, VecAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Vec(a, n) =>
@@ -96,7 +96,7 @@ trait VecPrinterIdris extends PrinterIdris with VecAST {
     }
 }
 
-trait VecEval extends Eval with VecAST { self: PiAST =>
+trait VecEval extends Eval, VecAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Vec(a, n) =>
@@ -123,7 +123,7 @@ trait VecEval extends Eval with VecAST { self: PiAST =>
     }
 }
 
-trait VecCheck extends Check with VecAST { self: PiAST with NatAST =>
+trait VecCheck extends Check, VecAST { self: PiAST with NatAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Vec(a, n) =>
@@ -231,7 +231,7 @@ trait VecCheck extends Check with VecAST { self: PiAST with NatAST =>
     }
 }
 
-trait VecQuoting extends Quoting with VecAST {
+trait VecQuoting extends Quoting, VecAST {
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VVec(a, n) =>
@@ -258,15 +258,15 @@ trait VecQuoting extends Quoting with VecAST {
 }
 
 trait VecREPL
-    extends CoreREPL
-    with VecAST
-    with VecMetaSyntax
-    with VecPrinter
-    with VecPrinterAgda
-    with VecPrinterCoq
-    with VecPrinterIdris
-    with VecCheck
-    with VecEval
-    with VecQuoting {
+    extends CoreREPL,
+      VecAST,
+      VecMetaSyntax,
+      VecPrinter,
+      VecPrinterAgda,
+      VecPrinterCoq,
+      VecPrinterIdris,
+      VecCheck,
+      VecEval,
+      VecQuoting {
   self: PiAST with NatAST =>
 }

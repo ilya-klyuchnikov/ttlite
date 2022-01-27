@@ -3,7 +3,7 @@ package ttlite.sc
 import ttlite.common._
 import ttlite.core._
 
-trait PiDriver extends Driver with PiEval {
+trait PiDriver extends Driver, PiEval {
 
   override def nv(t: Neutral): Option[Name] =
     t match {
@@ -29,7 +29,7 @@ trait PiDriver extends Driver with PiEval {
     }
 }
 
-trait PiResiduator extends Residuator with PiDriver
-trait PiProofResiduator extends ProofResiduator with PiResiduator {
+trait PiResiduator extends Residuator, PiDriver
+trait PiProofResiduator extends ProofResiduator, PiResiduator {
   self: PiAST with IdAST =>
 }

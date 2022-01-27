@@ -19,7 +19,7 @@ trait ScParser extends MetaParser {
 
 object ScParser extends ScParser
 
-trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with GraphPrettyPrinter2 {
+trait ScREPL extends CoreREPL, SC, Residuator, ProofResiduator, GraphPrettyPrinter2 {
   self: PiAST with IdAST =>
   import ttlite.common.IoUtil._
   override val parser = ScParser
@@ -135,50 +135,50 @@ trait ScREPL extends CoreREPL with SC with Residuator with ProofResiduator with 
       } else Nil
   }
 
-  object SingleRules extends BaseRules with SingleDriving with Folding with Termination with NoRebuildings {
+  object SingleRules extends BaseRules, SingleDriving, Folding, Termination, NoRebuildings {
     val maxDepth = 4
   }
 }
 
 class TTScREPL
-    extends SC
-    with CoreREPL
-    with Driver
-    with Residuator
-    with ProofResiduator
-    with PiREPL
-    with PiDriver
-    with PiResiduator
-    with PiProofResiduator
-    with SigmaREPL
-    with SigmaDriver
-    with SigmaResiduator
-    with SigmaProofResiduator
-    with SumREPL
-    with SumDriver
-    with SumResiduator
-    with SumProofResiduator
-    with IdREPL
-    with IdDriver
-    with IdResiduator
-    with IdProofResiduator
-    with NatREPL
-    with NatDriver
-    with NatResiduator
-    with NatProofResiduator
-    with ListREPL
-    with ListDriver
-    with ListResiduator
-    with ListProofResiduator
-    with ProductREPL
-    with ProductDriver
-    with ProductResiduator
-    with ProductProofResiduator
-    with EnumREPL
-    with EnumDriver
-    with EnumResiduator
-    with EnumProofResiduator
-    with ScREPL {
+    extends SC,
+      CoreREPL,
+      Driver,
+      Residuator,
+      ProofResiduator,
+      PiREPL,
+      PiDriver,
+      PiResiduator,
+      PiProofResiduator,
+      SigmaREPL,
+      SigmaDriver,
+      SigmaResiduator,
+      SigmaProofResiduator,
+      SumREPL,
+      SumDriver,
+      SumResiduator,
+      SumProofResiduator,
+      IdREPL,
+      IdDriver,
+      IdResiduator,
+      IdProofResiduator,
+      NatREPL,
+      NatDriver,
+      NatResiduator,
+      NatProofResiduator,
+      ListREPL,
+      ListDriver,
+      ListResiduator,
+      ListProofResiduator,
+      ProductREPL,
+      ProductDriver,
+      ProductResiduator,
+      ProductProofResiduator,
+      EnumREPL,
+      EnumDriver,
+      EnumResiduator,
+      EnumProofResiduator,
+      ScREPL {
   override val name = "TT-SC"
 }
 

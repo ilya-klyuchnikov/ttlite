@@ -15,7 +15,7 @@ trait SumAST extends AST {
   case class NSumElim(et: Value, m: Value, lCase: Value, rCase: Value, sum: Neutral) extends Neutral
 }
 
-trait SumMetaSyntax extends MetaSyntax with SumAST {
+trait SumMetaSyntax extends MetaSyntax, SumAST {
   private val predefinedGlobals = Set("Sum", "InL", "InR")
   abstract override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n) || super.isPredefinedGlobal(g)
@@ -33,7 +33,7 @@ trait SumMetaSyntax extends MetaSyntax with SumAST {
     }
 }
 
-trait SumPrinter extends Printer with SumAST {
+trait SumPrinter extends Printer, SumAST {
   abstract override def print(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sum(a, b) =>
@@ -49,7 +49,7 @@ trait SumPrinter extends Printer with SumAST {
     }
 }
 
-trait SumPrinterAgda extends PrinterAgda with SumAST {
+trait SumPrinterAgda extends PrinterAgda, SumAST {
   abstract override def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sum(a, b) =>
@@ -65,7 +65,7 @@ trait SumPrinterAgda extends PrinterAgda with SumAST {
     }
 }
 
-trait SumPrinterCoq extends PrinterCoq with SumAST {
+trait SumPrinterCoq extends PrinterCoq, SumAST {
   abstract override def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sum(a, b) =>
@@ -81,7 +81,7 @@ trait SumPrinterCoq extends PrinterCoq with SumAST {
     }
 }
 
-trait SumPrinterIdris extends PrinterIdris with SumAST {
+trait SumPrinterIdris extends PrinterIdris, SumAST {
   abstract override def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Sum(a, b) =>
@@ -97,7 +97,7 @@ trait SumPrinterIdris extends PrinterIdris with SumAST {
     }
 }
 
-trait SumEval extends Eval with SumAST { self: PiAST =>
+trait SumEval extends Eval, SumAST { self: PiAST =>
   abstract override def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Sum(lt, rt) =>
@@ -128,7 +128,7 @@ trait SumEval extends Eval with SumAST { self: PiAST =>
     }
 }
 
-trait SumCheck extends Check with SumAST { self: PiAST =>
+trait SumCheck extends Check, SumAST { self: PiAST =>
   abstract override def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
       case Sum(a, b) =>
@@ -202,7 +202,7 @@ trait SumCheck extends Check with SumAST { self: PiAST =>
     }
 }
 
-trait SumQuoting extends Quoting with SumAST { self: PiAST =>
+trait SumQuoting extends Quoting, SumAST { self: PiAST =>
   abstract override def quote(ii: Int, v: Value): Term =
     v match {
       case VSum(a, b) =>
@@ -224,15 +224,15 @@ trait SumQuoting extends Quoting with SumAST { self: PiAST =>
 }
 
 trait SumREPL
-    extends CoreREPL
-    with SumAST
-    with SumMetaSyntax
-    with SumPrinter
-    with SumPrinterAgda
-    with SumPrinterCoq
-    with SumPrinterIdris
-    with SumCheck
-    with SumEval
-    with SumQuoting {
+    extends CoreREPL,
+      SumAST,
+      SumMetaSyntax,
+      SumPrinter,
+      SumPrinterAgda,
+      SumPrinterCoq,
+      SumPrinterIdris,
+      SumCheck,
+      SumEval,
+      SumQuoting {
   self: PiAST =>
 }

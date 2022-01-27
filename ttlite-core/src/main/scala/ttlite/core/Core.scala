@@ -15,7 +15,7 @@ trait CoreAST extends AST {
   }
 }
 
-trait CoreMetaSyntax extends CoreAST with MetaSyntax {
+trait CoreMetaSyntax extends CoreAST, MetaSyntax {
   private val predefinedGlobals = Set("Set", "Set0", "Set1", "Set2")
   override def isPredefinedGlobal(g: Global): Boolean =
     predefinedGlobals(g.n)
@@ -44,7 +44,7 @@ trait CoreMetaSyntax extends CoreAST with MetaSyntax {
     }
 }
 
-trait CorePrinter extends CoreAST with Printer {
+trait CorePrinter extends CoreAST, Printer {
   import scala.collection.immutable.Seq
 
   def print(p: Int, ii: Int, t: Term): Doc =
@@ -64,7 +64,7 @@ trait CorePrinter extends CoreAST with Printer {
     }
 }
 
-trait CorePrinterAgda extends CoreAST with PrinterAgda {
+trait CorePrinterAgda extends CoreAST, PrinterAgda {
   def printA(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Universe(-1) =>
@@ -80,7 +80,7 @@ trait CorePrinterAgda extends CoreAST with PrinterAgda {
     }
 }
 
-trait CorePrinterCoq extends CoreAST with PrinterCoq {
+trait CorePrinterCoq extends CoreAST, PrinterCoq {
   def printC(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Universe(-1) =>
@@ -98,7 +98,7 @@ trait CorePrinterCoq extends CoreAST with PrinterCoq {
     }
 }
 
-trait CorePrinterIdris extends CoreAST with PrinterIdris {
+trait CorePrinterIdris extends CoreAST, PrinterIdris {
   def printI(p: Int, ii: Int, t: Term): Doc =
     t match {
       case Universe(_) =>
@@ -114,7 +114,7 @@ trait CorePrinterIdris extends CoreAST with PrinterIdris {
     }
 }
 
-trait CoreQuoting extends CoreAST with Quoting {
+trait CoreQuoting extends CoreAST, Quoting {
   def quote(ii: Int, v: Value): Term =
     v match {
       case VUniverse(i) =>
@@ -140,7 +140,7 @@ trait CoreQuoting extends CoreAST with Quoting {
     }
 }
 
-trait CoreEval extends CoreAST with Eval {
+trait CoreEval extends CoreAST, Eval {
   def eval(t: Term, ctx: Context[Value], bound: Env): Value =
     t match {
       case Ann(e, _) =>
@@ -154,7 +154,7 @@ trait CoreEval extends CoreAST with Eval {
     }
 }
 
-trait CoreCheck extends CoreAST with Quoting with Check {
+trait CoreCheck extends CoreAST, Quoting, Check {
 
   def iType(i: Int, path: Path, ctx: Context[Value], t: Term): Value =
     t match {
@@ -191,16 +191,16 @@ trait CoreCheck extends CoreAST with Quoting with Check {
 }
 
 trait CoreREPL
-    extends REPL
-    with CoreAST
-    with CoreMetaSyntax
-    with CorePrinter
-    with CorePrinterAgda
-    with CorePrinterCoq
-    with CorePrinterIdris
-    with CoreEval
-    with CoreCheck
-    with CoreQuoting {
+    extends REPL,
+      CoreAST,
+      CoreMetaSyntax,
+      CorePrinter,
+      CorePrinterAgda,
+      CorePrinterCoq,
+      CorePrinterIdris,
+      CoreEval,
+      CoreCheck,
+      CoreQuoting {
 
   type T = Term
   type V = Value
