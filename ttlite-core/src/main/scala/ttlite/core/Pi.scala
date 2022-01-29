@@ -5,8 +5,6 @@ import ttlite.common._
 // Chapter 7. Cartesian product of a family of sets.
 // Dependent product type, or pi-type.
 trait PiAST extends AST {
-  import scala.language.implicitConversions
-
   case class Pi(c1: Term, c2: Term) extends Term
   case class Lam(t: Term, e: Term) extends Term
   case class :@:(h: Term, t: Term) extends Term
@@ -15,7 +13,7 @@ trait PiAST extends AST {
   case class VLam(t: Value, e: Value => Value) extends Value
   case class NApp(n: Neutral, v: Value) extends Neutral
 
-  implicit class VApplicable(v: Value) {
+  extension (v: Value) {
     def @@(v1: Value): Value =
       v match {
         case VLam(_, f)  => f(v1)
