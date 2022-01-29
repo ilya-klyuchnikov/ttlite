@@ -42,7 +42,7 @@ object Path {
     }
   def subterm(mt: MTerm, path: Path): MTerm =
     subterm0(Nil, path.rawElems, mt)
-  val empty = Path(Queue())
+  val empty: Path = Path(Queue())
 }
 
 case class Path private (rawElems: Queue[(Int, Int)]) {

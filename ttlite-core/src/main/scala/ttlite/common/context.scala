@@ -3,9 +3,9 @@ package ttlite.common
 import scala.collection.immutable.Queue
 
 object Context {
-  def empty[V] =
+  def empty[V]: Context[V] =
     new Context[V](Map(), Map(), Queue())
-  def fromVals[V](vals: Map[Name, V]) =
+  def fromVals[V](vals: Map[Name, V]): Context[V] =
     new Context(vals, Map(), Queue())
 }
 

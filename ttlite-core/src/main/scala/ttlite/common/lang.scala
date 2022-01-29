@@ -1,7 +1,5 @@
 package ttlite.common
 
-import scala.collection.immutable.Seq
-
 trait AST {
 
   trait Term
