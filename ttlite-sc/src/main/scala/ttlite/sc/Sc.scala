@@ -16,9 +16,9 @@ trait SC extends Eval, Quoting, Check {
   implicit def name2Term(n: Name): Term = Free(n)
   type Subst = Map[Name, Term]
 
-  implicit class TermSubst(t: Term) {
+  extension (t: Term) {
     def /(subst: Subst) = {
-      val env: NameEnv[Value] = subst.map { case (n, t) => (n, eval(t, Map[Name, Value](), Nil)) }
+      val env: NameEnv[Value] = subst.map { (n, t) => (n, eval(t, Map[Name, Value](), Nil)) }
       quote0(eval(t, env, Nil))
     }
   }
